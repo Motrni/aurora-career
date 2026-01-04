@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    
     // === ЛОГИКА БУРГЕР-МЕНЮ ===
     const burger = document.querySelector('.burger-menu');
     const navMenu = document.querySelector('.nav-menu');
@@ -6,77 +7,84 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Клик по бургеру
     burger.addEventListener('click', () => {
-        burger.classList.toggle('active'); // Превращаем полоски в крестик
-        navMenu.classList.toggle('active'); // Выезжает меню
+        burger.classList.toggle('active');
+        navMenu.classList.toggle('active');
         
-        // Блокируем скролл сайта, если меню открыто
         if (navMenu.classList.contains('active')) {
-            document.body.style.overflow = 'hidden';
+            lockScroll(); // Блокируем скролл с компенсацией
         } else {
-            document.body.style.overflow = '';
+            unlockScroll(); // Разблокируем
         }
     });
 
-    // Закрываем меню при клике на любую ссылку (Якорь)
+    // Закрываем меню при клике на любую ссылку
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
             burger.classList.remove('active');
             navMenu.classList.remove('active');
-            document.body.style.overflow = '';
+            unlockScroll();
         });
     });
     
-    // 1. Находим элементы на странице
+    // === ЛОГИКА POP-UP ===
     const popupOverlay = document.getElementById('popup-overlay');
     const closeBtn = document.querySelector('.close-popup');
-    
-    // Находим ВСЕ кнопки, у которых есть класс 'open-popup'
-    // (и в шапке, и в первом экране, и в футере)
     const openButtons = document.querySelectorAll('.open-popup');
 
-    // 2. Функция: Открыть окно
     function openPopup() {
-        popupOverlay.classList.add('active'); // Добавляем класс, который меняет opacity на 1
-        document.body.style.overflow = 'hidden'; // Запрещаем скролл основного сайта, пока открыто окно
+        popupOverlay.classList.remove('hidden'); // Сначала показываем блок
+        lockScroll(); // Блокируем скролл с компенсацией
+        
+        // Небольшая задержка, чтобы браузер успел отрисовать display: flex перед opacity
+        setTimeout(() => {
+            popupOverlay.classList.add('active');
+        }, 10);
     }
 
-    // 3. Функция: Закрыть окно
     function closePopup() {
         popupOverlay.classList.remove('active');
-        popupOverlay.classList.add('hidden'); // На всякий случай возвращаем hidden
-        // Небольшой хак: убираем класс hidden через мгновение, чтобы transition сработал, 
-        // но в CSS мы управляем через .active, так что главное - убрать active.
-        document.body.style.overflow = ''; // Возвращаем скролл
+        
+        // Ждем окончания анимации (300мс), потом прячем и возвращаем скролл
+        setTimeout(() => {
+            popupOverlay.classList.add('hidden');
+            unlockScroll();
+        }, 300);
     }
 
-    // 4. Вешаем "слушателей" (события)
+    // === ФУНКЦИИ БЛОКИРОВКИ СКРОЛЛА (БЕЗ ДЕРГАНЬЯ) ===
+    function lockScroll() {
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+        // Хедер фиксированный, его тоже нужно отодвинуть
+        document.querySelector('.header').style.paddingRight = `${scrollbarWidth}px`; 
+        document.body.style.overflow = 'hidden';
+    }
 
-    // Проходимся по каждой кнопке-открывашке
+    function unlockScroll() {
+        document.body.style.paddingRight = '';
+        document.querySelector('.header').style.paddingRight = '';
+        document.body.style.overflow = '';
+    }
+
+    // === СЛУШАТЕЛИ СОБЫТИЙ ===
     openButtons.forEach(function(btn) {
         btn.addEventListener('click', function(e) {
-            e.preventDefault(); // Чтобы ссылка не подпрыгивала вверх
-            popupOverlay.classList.remove('hidden'); // Убираем жесткое скрытие
-            setTimeout(() => {
-                openPopup(); // Запускаем анимацию
-            }, 10);
+            e.preventDefault();
+            openPopup();
         });
     });
 
-    // Клик по крестику
     closeBtn.addEventListener('click', closePopup);
 
-    // Клик по темному фону (чтобы закрыть, кликнув мимо окна)
     popupOverlay.addEventListener('click', function(e) {
         if (e.target === popupOverlay) {
             closePopup();
         }
     });
 
-    // Закрытие по кнопке ESC (для удобства)
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && popupOverlay.classList.contains('active')) {
             closePopup();
         }
     });
-
 });

@@ -1,4 +1,24 @@
-/* === ОБНУЛЕНИЕ И БАЗА === */
+/* Добавьте в общие стили */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Усилим оптимизацию для анимированных элементов */
+.popup-window,
+.feature-card,
+.btn {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+}
+
+/* =========================================
+   1. ОБНУЛЕНИЕ И БАЗОВЫЕ НАСТРОЙКИ
+   ========================================= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -7,36 +27,38 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #050505; /* Почти черный, но мягче */
-    color: #E0E0E0;
+    background-color: #050505; /* Глубокий черный */
+    color: #E0E0E0; /* Светло-серый текст */
     line-height: 1.6;
     position: relative;
-    overflow-x: hidden; /* Чтобы сияние не растягивало сайт */
     
-    /* Рисуем сетку точками через CSS */
-    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-    background-size: 40px 40px; /* Размер ячейки сетки */
+    /* ТЕХНИЧЕСКАЯ СЕТКА (Grid) */
+    background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+    background-size: 40px 40px;
+    
+    /* Чтобы горизонтально не появлялся скролл из-за анимаций */
+    overflow-x: hidden; 
 }
 
-/* Добавляем "Аврору" - фоновое свечение */
+/* Эффект "АВРОРА" (Фоновое сияние сверху) */
 body::before {
     content: '';
     position: absolute;
-    top: -10%;
+    top: -150px;
     left: 50%;
     transform: translateX(-50%);
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(123, 97, 255, 0.25) 0%, rgba(0, 212, 255, 0.15) 50%, transparent 70%);
-    filter: blur(80px); /* Сильное размытие для эффекта газа/света */
-    z-index: -1;
+    background: radial-gradient(circle, rgba(123, 97, 255, 0.3) 0%, rgba(0, 212, 255, 0.2) 50%, transparent 70%);
+    filter: blur(100px); /* Мягкое размытие */
+    z-index: -1; /* Убираем НАЗАД под текст */
     pointer-events: none;
-    animation: aurora-pulse 10s infinite alternate; /* Анимация дыхания */
+    animation: aurora-pulse 8s infinite alternate;
 }
 
 @keyframes aurora-pulse {
-    0% { opacity: 0.5; transform: translateX(-50%) scale(1); }
-    100% { opacity: 0.8; transform: translateX(-50%) scale(1.2); }
+    0% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+    100% { opacity: 0.9; transform: translateX(-50%) scale(1.1); }
 }
 
 .container {
@@ -45,7 +67,14 @@ body::before {
     padding: 0 20px;
 }
 
-/* === ТИПОГРАФИКА === */
+/* Плавная прокрутка */
+html {
+    scroll-behavior: smooth;
+}
+
+/* =========================================
+   2. ТИПОГРАФИКА
+   ========================================= */
 h1, h2, h3 {
     color: #FFFFFF;
     font-weight: 700;
@@ -53,7 +82,7 @@ h1, h2, h3 {
 }
 
 h1 {
-    font-size: 3.5rem; /* Очень крупный заголовок */
+    font-size: 3.5rem;
     line-height: 1.1;
     letter-spacing: -0.02em;
 }
@@ -63,14 +92,17 @@ h2 {
     margin-bottom: 30px;
 }
 
+/* Градиентный текст (Фиолетовый) */
 .accent {
-    color: #7B61FF; /* Фиолетовый акцент (цвет Авроры) */
-    background: -webkit-linear-gradient(45deg, #7B61FF, #00D4FF); /* Градиент текста */
+    background: linear-gradient(90deg, #7B61FF, #00D4FF);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    font-weight: 800;
 }
 
-/* === КНОПКИ === */
+/* =========================================
+   3. КОМПОНЕНТЫ (Кнопки)
+   ========================================= */
 .btn {
     display: inline-block;
     padding: 16px 32px;
@@ -78,9 +110,9 @@ h2 {
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.3s ease;
     border: none;
     font-size: 1rem;
+    transition: all 0.3s ease;
 }
 
 .btn-primary {
@@ -90,8 +122,8 @@ h2 {
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(123, 97, 255, 0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(123, 97, 255, 0.6);
 }
 
 .btn-small {
@@ -99,20 +131,62 @@ h2 {
     font-size: 0.9rem;
     background: rgba(255, 255, 255, 0.1);
     color: white;
+    backdrop-filter: blur(5px);
 }
 
 .btn-small:hover {
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* === HEADER === */
+/* =========================================
+   4. СТЕКЛЯННЫЕ КАРТОЧКИ (CRYSTAL CLEAR)
+   ========================================= */
+
+.feature-card, 
+.table-wrapper, 
+.popup-window {
+    /* 1. ФОН: Ставим 0.2 (20% цвета, 80% прозрачности) */
+    background: rgba(255, 255, 255, 0.01); /* Еле заметный белесый оттенок */
+    /* Или если хочешь темное тонирование: background: rgba(0, 0, 0, 0.2); */
+    
+    /* 2. РАЗМЫТИЕ: Снижаем до 8-10px, чтобы сквозь стекло было видно сетку */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    
+    /* 3. ГРАНИЦЫ: Делаем их чуть ярче, иначе карточку будет не видно */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.2); /* Блик сверху */
+    
+    /* Тень оставляем мягкой */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    
+    border-radius: 24px;
+    will-change: transform;
+}
+
+/* Эффект при наведении (Ховер) */
+.feature-card {
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Плавная анимация Apple */
+}
+
+/* При наведении делаем стекло чуть плотнее, чтобы текст лучше читался */
+.feature-card:hover {
+    background: rgba(255, 255, 255, 0.07); /* Чуть больше белого */
+    border-color: rgba(123, 97, 255, 0.4); /* Фиолетовая рамка */
+    transform: translateY(-4px);
+    transition: all 0.3s ease;
+}
+/* =========================================
+   5. HEADER (Шапка)
+   ========================================= */
 .header {
     padding: 15px 0;
     position: fixed;
     width: 100%;
     top: 0;
-    background: rgba(15, 17, 21, 0.95); /* Чуть темнее */
-    backdrop-filter: blur(10px);
+    /* Фон шапки тоже стеклянный, но темнее */
+    background: rgba(5, 5, 5, 0.8);
+    backdrop-filter: blur(15px);
     z-index: 1000;
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
@@ -128,11 +202,8 @@ h2 {
     font-weight: 800;
     color: white;
     text-decoration: none;
-    z-index: 1001; /* Чтобы лого было поверх открытого меню */
 }
 
-
-/* Навигация (Десктоп) */
 .nav-list {
     display: flex;
     list-style: none;
@@ -156,50 +227,21 @@ h2 {
     gap: 20px;
 }
 
-.mobile-only-btn {
-    display: none; /* Скрыто на ПК */
+/* Бургер меню (скрыто на ПК) */
+.mobile-only-btn, .burger-menu {
+    display: none;
 }
 
-/* === БУРГЕР И МОБИЛЬНОЕ МЕНЮ === */
-.burger-menu {
-    display: none; /* Скрыто на ПК */
-    cursor: pointer;
-    width: 30px;
-    height: 20px;
-    position: relative;
-    z-index: 1001;
+/* =========================================
+   6. СЕКЦИИ САЙТА
+   ========================================= */
+section {
+    padding: 100px 0;
 }
 
-.burger-menu span {
-    display: block;
-    width: 100%;
-    height: 2px;
-    background-color: white;
-    position: absolute;
-    transition: all 0.3s ease;
-}
-
-.burger-menu span:nth-child(1) { top: 0; }
-.burger-menu span:nth-child(2) { top: 9px; }
-.burger-menu span:nth-child(3) { top: 18px; }
-
-/* Анимация превращения бургера в крестик */
-.burger-menu.active span:nth-child(1) {
-    transform: rotate(45deg);
-    top: 9px;
-}
-.burger-menu.active span:nth-child(2) {
-    opacity: 0;
-}
-.burger-menu.active span:nth-child(3) {
-    transform: rotate(-45deg);
-    top: 9px;
-}
-
-
-/* === HERO SECTION === */
+/* Hero Section */
 .hero {
-    padding: 180px 0 100px 0; /* Отступ сверху большой из-за фикс. хедера */
+    padding: 180px 0 100px 0;
     text-align: center;
 }
 
@@ -216,41 +258,36 @@ h2 {
     color: #cccccc;
 }
 
-/* === SECTIONS GENERAL === */
-section {
-    padding: 100px 0;
-}
-
-/* === PROBLEM BLOCK === */
+/* Problem Section (Карточки) */
 .features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Адаптивная сетка */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 30px;
     margin-top: 50px;
 }
 
 .feature-card {
-    background: rgba(255, 255, 255, 0.03); /* Очень прозрачный белый */
-    backdrop-filter: blur(20px); /* Размытие фона под карточкой (iOS эффект) */
-    -webkit-backdrop-filter: blur(20px); /* Для Safari */
-    border: 1px solid rgba(255, 255, 255, 0.08); /* Тонкая светящаяся рамка */
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Мягкая тень */
-    border-radius: 24px; /* Более сильное скругление, как у Apple */
+    padding: 30px; /* Вернули отступ, чтобы текст не прилипал */
+    transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
-/* === COMPARISON TABLE === */
+.feature-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(123, 97, 255, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Table Section */
 .table-wrapper {
-    background: rgba(255, 255, 255, 0.03); /* Очень прозрачный белый */
-    backdrop-filter: blur(20px); /* Размытие фона под карточкой (iOS эффект) */
-    -webkit-backdrop-filter: blur(20px); /* Для Safari */
-    border: 1px solid rgba(255, 255, 255, 0.08); /* Тонкая светящаяся рамка */
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Мягкая тень */
-    border-radius: 24px; /* Более сильное скругление, как у Apple */
+    overflow-x: auto;
+    margin-top: 40px;
+    padding: 20px; /* Вернули отступ */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 600px; /* Чтобы на телефоне можно было скроллить таблицу */
 }
 
 th, td {
@@ -268,9 +305,10 @@ th {
     color: #7B61FF;
     font-weight: 700;
     background: rgba(123, 97, 255, 0.05);
+    border-radius: 8px;
 }
 
-/* === FOOTER === */
+/* Footer */
 .footer {
     text-align: center;
     padding: 80px 0 40px 0;
@@ -283,84 +321,106 @@ th {
     color: #555;
 }
 
-/* === АДАПТИВНОСТЬ (МОБИЛКИ) === */
-@media (max-width: 768px) {
-    .desktop-only-btn {
-        display: none; /* Скрываем обычную кнопку */
-    }
 
-    .burger-menu {
-        display: block; /* Показываем бургер */
-    }
-
-    .nav-menu {
-        position: fixed;
-        top: 0;
-        right: -100%; /* Меню спрятано справа за экраном */
-        width: 100%;
-        height: 100vh;
-        background: #0F1115;
-        padding-top: 100px;
-        transition: 0.4s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .nav-menu.active {
-        right: 0; /* Выезжает */
-    }
-
-    .nav-list {
-        flex-direction: column;
-        align-items: center;
-        gap: 40px;
-        margin-bottom: 40px;
-    }
-
-    .nav-link {
-        font-size: 1.5rem; /* Крупные ссылки для пальцев */
-    }
-
-    .mobile-only-btn {
-        display: inline-block; /* Показываем кнопку внутри меню */
-    }
+/* Добавляем полосатый фон в секцию Problem */
+.problem {
+    position: relative;
+    /* Не даем декорациям вылезти за пределы секции */
+    overflow: visible; 
+    z-index: 1; /* Поднимаем контент секции, чтобы он был главным */
 }
 
-/* === POP-UP (Всплывающее окно) === */
+/* Пятно №1 (Фиолетовое) */
+.problem::before {
+    content: '';
+    position: absolute;
+    top: 60%;
+    left: 10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(123, 97, 255, 0.4) 0%, transparent 70%);
+    filter: blur(60px);
+    z-index: -1;
+    animation: move-glow 10s infinite alternate;
+}
+
+/* Пятно №2 (Голубое) - справа снизу */
+.problem::after {
+    content: '';
+    position: absolute;
+    bottom: 10%;
+    right: 10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.3) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: -1;
+    animation: move-glow 12s infinite alternate-reverse;
+}
+
+/* Легкое движение пятен, чтобы сайт казался живым */
+@keyframes move-glow {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(30px, -30px) scale(1.1); }
+}
+
+/* =========================================
+   7. POP-UP (Всплывающее окно)
+   ========================================= */
 .popup-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85); /* Сильное затемнение фона */
-    display: flex; /* Чтобы окно было по центру */
+    
+    /* ИЗМЕНЕНИЕ 1: Исходный фон прозрачный (rgba), а не через opacity */
+    background: rgba(0, 0, 0, 0); 
+    
+    display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999; /* Поверх всего сайта */
+    z-index: 9999;
     
-    /* Скрываем его плавно */
-    opacity: 0;
+    /* ИЗМЕНЕНИЕ 2: Убираем opacity у родителя. 
+       Анимируем background-color и visibility. */
     visibility: hidden;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, visibility 0.3s ease;
 }
 
-/* Этот класс мы будем добавлять через JS, чтобы показать окно */
 .popup-overlay.active {
-    opacity: 1;
+    /* При активации меняем цвет фона на темный */
+    background: rgba(0, 0, 0, 0.85);
     visibility: visible;
 }
 
 .popup-window {
-    background: rgba(255, 255, 255, 0.03); /* Очень прозрачный белый */
-    backdrop-filter: blur(20px); /* Размытие фона под карточкой (iOS эффект) */
-    -webkit-backdrop-filter: blur(20px); /* Для Safari */
-    border: 1px solid rgba(255, 255, 255, 0.08); /* Тонкая светящаяся рамка */
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Мягкая тень */
-    border-radius: 24px; /* Более сильное скругление, как у Apple */
+    position: relative;
+    max-width: 500px;
+    width: 90%;
+    padding: 40px; 
+    text-align: center;
+    
+    /* ИЗМЕНЕНИЕ 3: Теперь окно само отвечает за свое появление */
+    opacity: 0; 
+    transform: translateY(20px); 
+    
+    /* Добавляем opacity в список транзишенов САМОГО ОКНА */
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    
+    /* Подсказка браузеру держать слой готовым */
+    will-change: transform, opacity;
 }
 
+/* Стили backdrop-filter берутся из блока 4 (feature-card), 
+   их дублировать не нужно, они тут будут работать. */
+
+.popup-overlay.active .popup-window {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Остальные стили внутри попапа (крестик, списки) без изменений */
 .close-popup {
     position: absolute;
     top: 15px;
@@ -382,21 +442,21 @@ th {
 }
 
 .popup-list li {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     font-size: 1.1rem;
+    color: #ddd;
 }
 
 .btn-telegram {
-    display: inline-block;
-    background: #2AABEE; /* Цвет Telegram */
+    display: block; 
+    background: #2AABEE;
     color: white;
     padding: 16px 30px;
     border-radius: 12px;
     text-decoration: none;
     font-weight: bold;
-    margin-top: 10px;
+    margin-top: 20px;
     transition: transform 0.2s;
-    width: 100%;
 }
 
 .btn-telegram:hover {
@@ -410,20 +470,75 @@ th {
     margin-top: 15px;
 }
 
-/* Плавная прокрутка для всей страницы */
-html {
-    scroll-behavior: smooth;
-}
+/* =========================================
+   8. АДАПТИВНОСТЬ (Mobile)
+   ========================================= */
+@media (max-width: 768px) {
+    /* Шрифты поменьше */
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 2rem; }
+    
+    /* Скрываем десктопную кнопку */
+    .desktop-only-btn { display: none; }
+    
+    /* Показываем бургер */
+    .burger-menu {
+        display: block;
+        cursor: pointer;
+        width: 30px;
+        height: 20px;
+        position: relative;
+        z-index: 1001;
+    }
+    
+    .burger-menu span {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background-color: white;
+        position: absolute;
+        transition: all 0.3s ease;
+    }
+    
+    .burger-menu span:nth-child(1) { top: 0; }
+    .burger-menu span:nth-child(2) { top: 9px; }
+    .burger-menu span:nth-child(3) { top: 18px; }
+    
+    .burger-menu.active span:nth-child(1) { transform: rotate(45deg); top: 9px; }
+    .burger-menu.active span:nth-child(2) { opacity: 0; }
+    .burger-menu.active span:nth-child(3) { transform: rotate(-45deg); top: 9px; }
 
+    /* Мобильное меню */
+    .nav-menu {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 100%;
+        height: 100vh;
+        background: #0F1115; /* Плотный фон, чтобы текст не сливался */
+        padding-top: 120px;
+        transition: 0.4s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 
-/* Обновляем карточки преимуществ */
-.feature-card {
-    padding: 30px;
-    transition: transform 0.3s ease, border-color 0.3s ease;
-}
+    .nav-menu.active {
+        right: 0;
+    }
 
-.feature-card:hover {
-    transform: translateY(-5px);
-    border-color: rgba(123, 97, 255, 0.3); /* При наведении рамка фиолетовая */
-    background: rgba(255, 255, 255, 0.05);
+    .nav-list {
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+        margin-bottom: 40px;
+    }
+
+    .nav-link {
+        font-size: 1.5rem;
+    }
+
+    .mobile-only-btn {
+        display: inline-block;
+    }
 }
