@@ -6,10 +6,37 @@
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; /* Системный шрифт, как на Apple */
-    background-color: #0F1115; /* Глубокий темный фон */
-    color: #E0E0E0; /* Светло-серый текст, чтобы не резало глаза */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #050505; /* Почти черный, но мягче */
+    color: #E0E0E0;
     line-height: 1.6;
+    position: relative;
+    overflow-x: hidden; /* Чтобы сияние не растягивало сайт */
+    
+    /* Рисуем сетку точками через CSS */
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px; /* Размер ячейки сетки */
+}
+
+/* Добавляем "Аврору" - фоновое свечение */
+body::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(123, 97, 255, 0.25) 0%, rgba(0, 212, 255, 0.15) 50%, transparent 70%);
+    filter: blur(80px); /* Сильное размытие для эффекта газа/света */
+    z-index: -1;
+    pointer-events: none;
+    animation: aurora-pulse 10s infinite alternate; /* Анимация дыхания */
+}
+
+@keyframes aurora-pulse {
+    0% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+    100% { opacity: 0.8; transform: translateX(-50%) scale(1.2); }
 }
 
 .container {
@@ -203,19 +230,22 @@ section {
 }
 
 .feature-card {
-    background: #1A1D24;
-    padding: 30px;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.03); /* Очень прозрачный белый */
+    backdrop-filter: blur(20px); /* Размытие фона под карточкой (iOS эффект) */
+    -webkit-backdrop-filter: blur(20px); /* Для Safari */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Тонкая светящаяся рамка */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Мягкая тень */
+    border-radius: 24px; /* Более сильное скругление, как у Apple */
 }
 
 /* === COMPARISON TABLE === */
 .table-wrapper {
-    overflow-x: auto; /* Скролл на мобильных */
-    margin-top: 40px;
-    background: #1A1D24;
-    border-radius: 16px;
-    padding: 20px;
+    background: rgba(255, 255, 255, 0.03); /* Очень прозрачный белый */
+    backdrop-filter: blur(20px); /* Размытие фона под карточкой (iOS эффект) */
+    -webkit-backdrop-filter: blur(20px); /* Для Safari */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Тонкая светящаяся рамка */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Мягкая тень */
+    border-radius: 24px; /* Более сильное скругление, как у Apple */
 }
 
 table {
@@ -323,15 +353,12 @@ th {
 }
 
 .popup-window {
-    background: #1A1D24;
-    padding: 40px;
-    border-radius: 20px;
-    max-width: 500px;
-    width: 90%;
-    position: relative;
-    border: 1px solid rgba(123, 97, 255, 0.2); /* Легкая фиолетовая обводка */
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    text-align: center;
+    background: rgba(255, 255, 255, 0.03); /* Очень прозрачный белый */
+    backdrop-filter: blur(20px); /* Размытие фона под карточкой (iOS эффект) */
+    -webkit-backdrop-filter: blur(20px); /* Для Safari */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Тонкая светящаяся рамка */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Мягкая тень */
+    border-radius: 24px; /* Более сильное скругление, как у Apple */
 }
 
 .close-popup {
@@ -386,4 +413,17 @@ th {
 /* Плавная прокрутка для всей страницы */
 html {
     scroll-behavior: smooth;
+}
+
+
+/* Обновляем карточки преимуществ */
+.feature-card {
+    padding: 30px;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(123, 97, 255, 0.3); /* При наведении рамка фиолетовая */
+    background: rgba(255, 255, 255, 0.05);
 }
