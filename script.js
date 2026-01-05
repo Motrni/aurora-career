@@ -87,4 +87,26 @@ document.addEventListener('DOMContentLoaded', function() {
             closePopup();
         }
     });
+
+    // === АНИМАЦИЯ ПОЯВЛЕНИЯ ПРИ СКРОЛЛЕ ===
+    
+    // Настройки наблюдателя: срабатывать, когда 10% элемента видно
+    const observerOptions = {
+        threshold: 0.15 
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Добавляем класс, который запускает CSS-транзишн
+                entry.target.classList.add('visible');
+                // Перестаем следить за этим элементом (чтобы анимация была 1 раз)
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Находим все элементы, которые нужно анимировать
+    const scrollElements = document.querySelectorAll('.scroll-reveal');
+    scrollElements.forEach(el => observer.observe(el));
 });

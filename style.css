@@ -364,6 +364,157 @@ th {
     100% { transform: translate(30px, -30px) scale(1.1); }
 }
 
+
+/* --- СТИЛИ ДЛЯ ГОРИЗОНТАЛЬНЫХ КАРТОЧЕК --- */
+
+.vertical-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Расстояние между карточками */
+    margin-top: 40px;
+}
+
+/* Модификатор для широкой карточки */
+.wide-card {
+    width: 100%;
+    text-align: left; /* Текст выравниваем по левому краю для удобства чтения */
+    padding: 30px 40px; /* Чуть больше воздуха по бокам */
+    
+    /* Начальное состояние для анимации (Скрыто и сдвинуто вниз) */
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    
+    /* На всякий случай сохраняем стили стекла, если они не подтянулись */
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.wide-card h3 {
+    color: #fff;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.wide-card p {
+    color: #cccccc;
+    font-size: 1.1rem;
+    max-width: 90%; /* Чтобы строка не была бесконечно длинной на 4к мониторах */
+}
+
+/* --- АНИМАЦИЯ ПОЯВЛЕНИЯ (SCROLL REVEAL) --- */
+
+/* Класс visible добавляется JS-ом, когда карточка появляется на экране */
+.wide-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Добавляем задержку для каждой следующей карточки, чтобы они вылетали лесенкой */
+/* Если карточек больше 3, можно добавить еще nth-child(4) и т.д. */
+.wide-card:nth-child(1) { transition-delay: 0.1s; }
+.wide-card:nth-child(2) { transition-delay: 0.2s; }
+.wide-card:nth-child(3) { transition-delay: 0.3s; }
+
+/* Адаптив для телефонов */
+@media (max-width: 768px) {
+    .wide-card {
+        padding: 20px;
+        text-align: left;
+    }
+    .wide-card h3 {
+        font-size: 1.3rem;
+    }
+}
+
+/* --- ОБНОВЛЕННЫЙ HERO БЛОК (Full Height Video) --- */
+
+/* 1. Настраиваем родительскую секцию */
+.hero {
+    position: relative; /* Чтобы видео позиционировалось относительно этой секции */
+    overflow: hidden;   /* Обрезаем всё, что вылезет за границы */
+    display: flex;      /* Используем флекс для выравнивания */
+    align-items: center;
+    /* Убираем правый паддинг, чтобы видео прилипло к краю, если нужно */
+}
+
+/* 2. Контейнер теперь ограничивает только текст */
+.hero-split {
+    position: relative;
+    z-index: 2; /* Текст должен быть НАД видео */
+    width: 100%;
+    display: flex;
+    justify-content: flex-start; /* Прижимаем контент влево */
+}
+
+/* 3. Левая колонка (Текст) */
+.hero-text {
+    max-width: 550px; /* Ограничиваем ширину текста, чтобы он не налез на видео */
+    text-align: left;
+}
+
+/* 4. Правая колонка (ВИДЕО) - ТЕПЕРЬ НА ВСЮ ВЫСОТУ */
+.hero-media {
+    position: absolute; /* Вырываем из потока */
+    top: -30%;
+    right: 0;
+    bottom: 0;
+    width: 55%; /* Занимает 45% ширины экрана справа */
+    height: 150%; /* Полная высота секции */
+    z-index: 1; /* Под текстом (или на уровне фона) */
+}
+
+.ai-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ГЛАВНОЕ: Видео заполняет блок и обрезается, сохраняя пропорции */
+    
+    /* Если у видео черный фон, и ты хочешь сделать плавный переход в сайт,
+       можно добавить маску-градиент слева направо:
+    */
+    -webkit-mask-image: linear-gradient(to right, transparent, black 20%);
+    mask-image: linear-gradient(to right, transparent, black 50%);
+    
+    /* Или используй mix-blend-mode, как раньше, если хочешь прозрачность */
+    mix-blend-mode: screen; 
+}
+
+/* --- АДАПТИВНОСТЬ (Mobile) --- */
+@media (max-width: 992px) {
+    .hero {
+        display: block; /* Возвращаем обычный блок */
+    }
+
+    .hero-split {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-text {
+        max-width: 100%;
+        text-align: center; /* Центрируем текст на телефоне */
+        margin-bottom: 40px;
+    }
+
+    /* На телефоне видео не должно быть на всю высоту, делаем его обычным */
+    .hero-media {
+        position: relative;
+        width: 100%;
+        height: 400px; /* Фиксированная высота для телефона */
+        right: auto;
+        top: auto;
+        bottom: auto;
+    }
+    
+    .ai-avatar {
+        /* На телефоне убираем маску, чтобы видео было видно целиком */
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+}
+
+
 /* =========================================
    7. POP-UP (Всплывающее окно)
    ========================================= */
