@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://aurora-career.ru/sitemap.xml
