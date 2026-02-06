@@ -3,7 +3,8 @@
 
 // КОНФИГУРАЦИЯ
 // Замените на реальный адрес вашего бота (API)
-const API_BASE_URL = "https://hh-bot-api.aurora-career.ru"; // ВАЖНО: Это должен быть HTTPS адрес вашего бота (или ngrok для тестов)
+const API_BASE_URL = "http://194.87.161.188:5000"; // Используем прямой IP для теста
+// ВАЖНО: Это должен быть HTTPS адрес вашего бота (или ngrok для тестов)
 // Для локальной разработки можно использовать: "http://localhost:5000"
 
 document.addEventListener("DOMContentLoaded", async () => {
