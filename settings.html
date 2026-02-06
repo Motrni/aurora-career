@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки Aurora Career</title>
+    <link rel="stylesheet" href="style.css"> <!-- Используем тот же стиль что и на лендинге -->
+    <style>
+        /* Дополнительные стили для настроек */
+        body {
+            background-color: #0f0f0f;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 { text-align: center; margin-bottom: 20px; color: #a962ff; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #ccc; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 1rem;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #a962ff, #6247aa);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        button:hover { opacity: 0.9; }
+        .error { color: #ff4d4d; font-size: 0.8rem; margin-top: 10px; display: none; text-align: center;}
+        .info { font-size: 0.8rem; color: #888; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>⚙️ Настройки поиска</h2>
+    
+    <div class="form-group">
+        <label for="salaryInput">Желаемая зарплата (₽)</label>
+        <input type="number" id="salaryInput" placeholder="Например: 100000">
+    </div>
+
+    <div class="form-group">
+        <label for="experienceSelect">Опыт работы</label>
+        <select id="experienceSelect">
+            <option value="noExperience">Нет опыта</option>
+            <option value="between1And3">От 1 до 3 лет</option>
+            <option value="between3And6">От 3 до 6 лет</option>
+            <option value="moreThan6">Более 6 лет</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Регион</label>
+        <div id="cityStatus" style="padding: 10px; background: #222; border-radius: 8px; color: #888; font-size: 0.9rem;">
+            Загрузка...
+        </div>
+        <small style="color: #666;">(Смена региона пока доступна только в боте)</small>
+    </div>
+
+    <button id="saveBtn">Сохранить</button>
+    <div id="errorMsg" class="error"></div>
+    <div class="info">Изменения применятся в боте мгновенно</div>
+</div>
+
+<script src="settings.js"></script>
+</body>
+</html>
