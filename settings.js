@@ -12,7 +12,14 @@ let currentSelectedIds = new Set();
 let messageId = null;
 window.BOT_USERNAME = "Aurora_Career_Bot"; // Default
 
+// Loading Flags
+let isIndustriesLoaded = false;
+let isSettingsLoaded = false;
+
 document.addEventListener("DOMContentLoaded", async () => {
+    // Show Skeleton immediately
+    toggleGlobalLoading(true);
+
     // 1. URL Params
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
@@ -21,6 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!userId || !sign) {
         showError("Ошибка доступа. Ссылка не содержит необходимых параметров.");
+        toggleGlobalLoading(false); // Show content (with error)
         return;
     }
 
@@ -58,14 +66,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.href = `https://t.me/${window.BOT_USERNAME}`;
     });
 
-    // 5. Load Data
-    try {
-        await loadIndustriesDict(); // Fetches JSON
-        await loadSettings(userId, sign); // Fetches User Config
-    } catch (e) {
-        showError("Не удалось загрузить настройки. " + e.message);
-        toggleSkeleton(false); // Hide skeleton on error
-    }
+    // 5. Load Data (Parallel)
+    loadIndustriesDict();
+    loadSettings(userId, sign);
 
     // 6. Save Logic
     document.getElementById("saveBtn").addEventListener("click", async () => {
@@ -77,93 +80,116 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 });
 
-function toggleSkeleton(show) {
-    const skeleton = document.getElementById("industrySkeleton");
-    const tree = document.getElementById("industryTree");
-    if (show) {
-        skeleton.style.display = "block";
-        tree.style.display = "none";
+function toggleGlobalLoading(isLoading) {
+    const skeleton = document.getElementById("globalSkeleton");
+    const content = document.getElementById("mainContent");
+
+    if (isLoading) {
+        if (skeleton) skeleton.style.display = "block";
+        if (content) content.style.display = "none";
     } else {
-        skeleton.style.display = "none";
-        tree.style.display = "block";
+        if (skeleton) skeleton.style.display = "none";
+        if (content) content.style.display = "block";
+    }
+}
+
+function checkLoadingComplete() {
+    if (isIndustriesLoaded && isSettingsLoaded) {
+        toggleGlobalLoading(false);
     }
 }
 
 async function loadIndustriesDict() {
-    // Skeleton is already visible by default in HTML
     try {
         const resp = await fetch('industries.json');
         if (!resp.ok) throw new Error("Industries failed");
         allIndustries = await resp.json();
     } catch (e) {
         console.error(e);
-        // Don't show error yet, wait for loadSettings
+        showError("Не удалось загрузить справочник отраслей.");
+    } finally {
+        isIndustriesLoaded = true;
+        checkLoadingComplete();
     }
 }
 
 async function loadSettings(userId, sign) {
-    const response = await fetch(`${API_BASE_URL}/api/settings/get?user_id=${userId}&sign=${sign}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/settings/get?user_id=${userId}&sign=${sign}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        });
 
-    const data = await response.json();
-    if (data.status !== "ok") {
-        throw new Error(data.error || "Неизвестная ошибка");
+        const data = await response.json();
+        if (data.status !== "ok") {
+            throw new Error(data.error || "Неизвестная ошибка");
+        }
+
+        if (data.bot_username) {
+            window.BOT_USERNAME = data.bot_username;
+        }
+
+        const settings = data.settings;
+
+        // --- Apply UI State ---
+
+        // Salary
+        const salaryInput = document.getElementById("salaryInput");
+        const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
+
+        if (!settings.salary || settings.salary === 0) {
+            noSalaryCheckbox.checked = true;
+            salaryInput.value = "";
+            salaryInput.disabled = true;
+            salaryInput.placeholder = "Не указана";
+        } else {
+            noSalaryCheckbox.checked = false;
+            salaryInput.value = settings.salary;
+            salaryInput.disabled = false;
+        }
+
+        // Experience
+        if (settings.experience) {
+            document.getElementById("experienceSelect").value = settings.experience;
+        }
+
+        // Region
+        if (settings.search_area) {
+            document.getElementById("cityStatus").innerText = `Текущий регион ID: ${settings.search_area}`;
+        } else {
+            document.getElementById("cityStatus").innerText = "Регион не выбран";
+        }
+
+        // Industries
+        // Fix: Ensure we handle generic JSON array from API
+        let inds = settings.industry || [];
+        // If API returned string (should be fixed in backend now, but safe to check)
+        if (typeof inds === 'string') {
+            try { inds = JSON.parse(inds); } catch (e) { inds = []; }
+        }
+
+        currentSelectedIds = new Set(inds.map(String));
+
+        // Render Tree (needs Industries to be loaded, but usually dict loads fast)
+        // If dict not loaded yet, initIndustryTree will handle empty array
+        // But better to call initIndustryTree after BOTH loaded?
+        // Actually initIndustryTree relies on allIndustries. 
+        // Let's call it in checkLoadingComplete? 
+        // No, simplest is to check here if allIndustries is ready. if not, wait? 
+        // Let's rely on standard flow. If industries load later, they won't re-render checkboxes state unless we persist it.
+        // currentSelectedIds is global, so it persists. when industries load, we should render.
+
+    } catch (e) {
+        showError("Не удалось загрузить настройки. " + e.message);
+    } finally {
+        isSettingsLoaded = true;
+        // If industries are already loaded, we can init tree now. 
+        // If not, industries load will init tree? 
+        // Let's make initIndustryTree robust and call it when both ready.
+        if (isIndustriesLoaded) initIndustryTree();
+
+        checkLoadingComplete();
     }
-
-    if (data.bot_username) {
-        window.BOT_USERNAME = data.bot_username;
-    }
-
-    const settings = data.settings;
-
-    // --- Apply UI State ---
-
-    // Salary
-    const salaryInput = document.getElementById("salaryInput");
-    const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
-
-    if (!settings.salary || settings.salary === 0) {
-        noSalaryCheckbox.checked = true;
-        salaryInput.value = "";
-        salaryInput.disabled = true;
-        salaryInput.placeholder = "Не указана";
-    } else {
-        noSalaryCheckbox.checked = false;
-        salaryInput.value = settings.salary;
-        salaryInput.disabled = false;
-    }
-
-    // Experience
-    if (settings.experience) {
-        document.getElementById("experienceSelect").value = settings.experience;
-    }
-
-    // Region
-    if (settings.search_area) {
-        document.getElementById("cityStatus").innerText = `Текущий регион ID: ${settings.search_area}`;
-    } else {
-        document.getElementById("cityStatus").innerText = "Регион не выбран";
-    }
-
-    // Industries
-    // Force string conversion for IDs to match DOM values
-    currentSelectedIds = new Set((settings.industry || []).map(String));
-
-    // Render Tree
-    initIndustryTree();
-
-    // Hide Skeleton, Show Tree
-    toggleSkeleton(false);
-
-    // Save Initial State
-    initialSettings = {
-        salary: settings.salary || null,
-        experience: settings.experience || "noExperience",
-        industry: settings.industry ? settings.industry.map(String) : []
-    };
-    if (initialSettings.salary === 0) initialSettings.salary = null;
 }
 
 function initIndustryTree() {
