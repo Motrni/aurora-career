@@ -109,7 +109,7 @@ async function loadIndustriesDict() {
         showError("Не удалось загрузить справочник отраслей.");
     } finally {
         isIndustriesLoaded = true;
-        checkLoadingComplete();
+        tryInitTree();
     }
 }
 
@@ -170,25 +170,19 @@ async function loadSettings(userId, sign) {
 
         currentSelectedIds = new Set(inds.map(String));
 
-        // Render Tree (needs Industries to be loaded, but usually dict loads fast)
-        // If dict not loaded yet, initIndustryTree will handle empty array
-        // But better to call initIndustryTree after BOTH loaded?
-        // Actually initIndustryTree relies on allIndustries. 
-        // Let's call it in checkLoadingComplete? 
-        // No, simplest is to check here if allIndustries is ready. if not, wait? 
-        // Let's rely on standard flow. If industries load later, they won't re-render checkboxes state unless we persist it.
-        // currentSelectedIds is global, so it persists. when industries load, we should render.
-
     } catch (e) {
         showError("Не удалось загрузить настройки. " + e.message);
     } finally {
         isSettingsLoaded = true;
-        // If industries are already loaded, we can init tree now. 
-        // If not, industries load will init tree? 
-        // Let's make initIndustryTree robust and call it when both ready.
-        if (isIndustriesLoaded) initIndustryTree();
+        tryInitTree();
+    }
+}
 
-        checkLoadingComplete();
+function tryInitTree() {
+    // Render only when BOTH sources are ready to avoid overwriting or empty renders
+    if (isIndustriesLoaded && isSettingsLoaded) {
+        initIndustryTree();
+        toggleGlobalLoading(false);
     }
 }
 
