@@ -8,6 +8,14 @@
     <link rel="stylesheet" href="style.css"> <!-- Используем тот же стиль что и на лендинге -->
     <style>
         /* Дополнительные стили для настроек */
+        html,
+        body {
+            overflow-x: hidden;
+            /* Запрещаем горизонтальный скролл */
+            width: 100%;
+            max-width: 100%;
+        }
+
         body {
             background-color: #0f0f0f;
             color: #fff;
@@ -34,12 +42,17 @@
             width: 100%;
             /* Занимает всю ширину (но не больше max-width) */
             box-sizing: border-box;
+
+            /* На всякий случай, чтобы контейнер не вылезал */
+            margin: 0 auto;
         }
 
         h2 {
             text-align: center;
             margin-bottom: 24px;
-            color: #a962ff;
+            color: #ffffff;
+            /* Белый цвет заголовка */
+            font-weight: 600;
         }
 
         .form-group {
@@ -138,7 +151,7 @@
 <body>
 
     <div class="container">
-        <h2>⚙️ Настройки поиска</h2>
+        <h2>Настройки поиска</h2>
 
         <div class="form-group">
             <label for="salaryInput">Желаемая зарплата (₽)</label>
