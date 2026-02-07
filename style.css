@@ -27,17 +27,19 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #050505; /* Глубокий черный */
-    color: #E0E0E0; /* Светло-серый текст */
+    background-color: #050505;
+    /* Глубокий черный */
+    color: #E0E0E0;
+    /* Светло-серый текст */
     line-height: 1.6;
     position: relative;
-    
+
     /* ТЕХНИЧЕСКАЯ СЕТКА (Grid) */
     background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
     background-size: 40px 40px;
-    
+
     /* Чтобы горизонтально не появлялся скролл из-за анимаций */
-    overflow-x: hidden; 
+    overflow-x: hidden;
 }
 
 /* Эффект "АВРОРА" (Фоновое сияние сверху) */
@@ -50,15 +52,26 @@ body::before {
     width: 600px;
     height: 600px;
     background: radial-gradient(circle, rgba(123, 97, 255, 0.3) 0%, rgba(0, 212, 255, 0.2) 50%, transparent 70%);
-    filter: blur(100px); /* Мягкое размытие */
-    z-index: -1; /* Убираем НАЗАД под текст */
+    filter: blur(100px);
+    /* Мягкое размытие */
+    z-index: -1;
+    /* Убираем НАЗАД под текст */
     pointer-events: none;
     animation: aurora-pulse 8s infinite alternate;
+    will-change: transform, opacity;
+    transform: translateZ(0);
 }
 
 @keyframes aurora-pulse {
-    0% { opacity: 0.6; transform: translateX(-50%) scale(1); }
-    100% { opacity: 0.9; transform: translateX(-50%) scale(1.1); }
+    0% {
+        opacity: 0.6;
+        transform: translateX(-50%) scale(1);
+    }
+
+    100% {
+        opacity: 0.9;
+        transform: translateX(-50%) scale(1.1);
+    }
 }
 
 .container {
@@ -75,7 +88,9 @@ html {
 /* =========================================
    2. ТИПОГРАФИКА
    ========================================= */
-h1, h2, h3 {
+h1,
+h2,
+h3 {
     color: #FFFFFF;
     font-weight: 700;
     margin-bottom: 1rem;
@@ -142,40 +157,46 @@ h2 {
    4. СТЕКЛЯННЫЕ КАРТОЧКИ (CRYSTAL CLEAR)
    ========================================= */
 
-.feature-card, 
-.table-wrapper, 
+.feature-card,
+.table-wrapper,
 .popup-window {
     /* 1. ФОН: Ставим 0.2 (20% цвета, 80% прозрачности) */
-    background: rgba(255, 255, 255, 0.01); /* Еле заметный белесый оттенок */
+    background: rgba(255, 255, 255, 0.01);
+    /* Еле заметный белесый оттенок */
     /* Или если хочешь темное тонирование: background: rgba(0, 0, 0, 0.2); */
-    
+
     /* 2. РАЗМЫТИЕ: Снижаем до 8-10px, чтобы сквозь стекло было видно сетку */
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    
+
     /* 3. ГРАНИЦЫ: Делаем их чуть ярче, иначе карточку будет не видно */
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-top: 1px solid rgba(255, 255, 255, 0.2); /* Блик сверху */
-    
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    /* Блик сверху */
+
     /* Тень оставляем мягкой */
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-    
+
     border-radius: 24px;
     will-change: transform;
 }
 
 /* Эффект при наведении (Ховер) */
 .feature-card {
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Плавная анимация Apple */
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* Плавная анимация Apple */
 }
 
 /* При наведении делаем стекло чуть плотнее, чтобы текст лучше читался */
 .feature-card:hover {
-    background: rgba(255, 255, 255, 0.07); /* Чуть больше белого */
-    border-color: rgba(123, 97, 255, 0.4); /* Фиолетовая рамка */
+    background: rgba(255, 255, 255, 0.07);
+    /* Чуть больше белого */
+    border-color: rgba(123, 97, 255, 0.4);
+    /* Фиолетовая рамка */
     transform: translateY(-4px);
     transition: all 0.3s ease;
 }
+
 /* =========================================
    5. HEADER (Шапка)
    ========================================= */
@@ -188,7 +209,7 @@ h2 {
     background: rgba(5, 5, 5, 0.8);
     backdrop-filter: blur(15px);
     z-index: 1000;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .header-container {
@@ -228,7 +249,8 @@ h2 {
 }
 
 /* Бургер меню (скрыто на ПК) */
-.mobile-only-btn, .burger-menu {
+.mobile-only-btn,
+.burger-menu {
     display: none;
 }
 
@@ -267,7 +289,8 @@ section {
 }
 
 .feature-card {
-    padding: 30px; /* Вернули отступ, чтобы текст не прилипал */
+    padding: 30px;
+    /* Вернули отступ, чтобы текст не прилипал */
     transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
@@ -281,19 +304,22 @@ section {
 .table-wrapper {
     overflow-x: auto;
     margin-top: 40px;
-    padding: 20px; /* Вернули отступ */
+    padding: 20px;
+    /* Вернули отступ */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px; /* Чтобы на телефоне можно было скроллить таблицу */
+    min-width: 600px;
+    /* Чтобы на телефоне можно было скроллить таблицу */
 }
 
-th, td {
+th,
+td {
     padding: 20px;
     text-align: left;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 th {
@@ -312,7 +338,7 @@ th {
 .footer {
     text-align: center;
     padding: 80px 0 40px 0;
-    border-top: 1px solid rgba(255,255,255,0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .copyright {
@@ -326,8 +352,9 @@ th {
 .problem {
     position: relative;
     /* Не даем декорациям вылезти за пределы секции */
-    overflow: visible; 
-    z-index: 1; /* Поднимаем контент секции, чтобы он был главным */
+    overflow: visible;
+    z-index: 1;
+    /* Поднимаем контент секции, чтобы он был главным */
 }
 
 /* Пятно №1 (Фиолетовое) */
@@ -360,8 +387,13 @@ th {
 
 /* Легкое движение пятен, чтобы сайт казался живым */
 @keyframes move-glow {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(30px, -30px) scale(1.1); }
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(30px, -30px) scale(1.1);
+    }
 }
 
 
@@ -370,21 +402,24 @@ th {
 .vertical-cards {
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Расстояние между карточками */
+    gap: 20px;
+    /* Расстояние между карточками */
     margin-top: 40px;
 }
 
 /* Модификатор для широкой карточки */
 .wide-card {
     width: 100%;
-    text-align: left; /* Текст выравниваем по левому краю для удобства чтения */
-    padding: 30px 40px; /* Чуть больше воздуха по бокам */
-    
+    text-align: left;
+    /* Текст выравниваем по левому краю для удобства чтения */
+    padding: 30px 40px;
+    /* Чуть больше воздуха по бокам */
+
     /* Начальное состояние для анимации (Скрыто и сдвинуто вниз) */
     opacity: 0;
     transform: translateY(50px);
     transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-    
+
     /* На всякий случай сохраняем стили стекла, если они не подтянулись */
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -400,7 +435,8 @@ th {
 .wide-card p {
     color: #cccccc;
     font-size: 1.1rem;
-    max-width: 90%; /* Чтобы строка не была бесконечно длинной на 4к мониторах */
+    max-width: 90%;
+    /* Чтобы строка не была бесконечно длинной на 4к мониторах */
 }
 
 /* --- АНИМАЦИЯ ПОЯВЛЕНИЯ (SCROLL REVEAL) --- */
@@ -413,9 +449,17 @@ th {
 
 /* Добавляем задержку для каждой следующей карточки, чтобы они вылетали лесенкой */
 /* Если карточек больше 3, можно добавить еще nth-child(4) и т.д. */
-.wide-card:nth-child(1) { transition-delay: 0.1s; }
-.wide-card:nth-child(2) { transition-delay: 0.2s; }
-.wide-card:nth-child(3) { transition-delay: 0.3s; }
+.wide-card:nth-child(1) {
+    transition-delay: 0.1s;
+}
+
+.wide-card:nth-child(2) {
+    transition-delay: 0.2s;
+}
+
+.wide-card:nth-child(3) {
+    transition-delay: 0.3s;
+}
 
 /* Адаптив для телефонов */
 @media (max-width: 768px) {
@@ -423,6 +467,7 @@ th {
         padding: 20px;
         text-align: left;
     }
+
     .wide-card h3 {
         font-size: 1.3rem;
     }
@@ -432,9 +477,12 @@ th {
 
 /* 1. Настраиваем родительскую секцию */
 .hero {
-    position: relative; /* Чтобы видео позиционировалось относительно этой секции */
-    overflow: hidden;   /* Обрезаем всё, что вылезет за границы */
-    display: flex;      /* Используем флекс для выравнивания */
+    position: relative;
+    /* Чтобы видео позиционировалось относительно этой секции */
+    overflow: hidden;
+    /* Обрезаем всё, что вылезет за границы */
+    display: flex;
+    /* Используем флекс для выравнивания */
     align-items: center;
     /* Убираем правый паддинг, чтобы видео прилипло к краю, если нужно */
 }
@@ -442,48 +490,57 @@ th {
 /* 2. Контейнер теперь ограничивает только текст */
 .hero-split {
     position: relative;
-    z-index: 2; /* Текст должен быть НАД видео */
+    z-index: 2;
+    /* Текст должен быть НАД видео */
     width: 100%;
     display: flex;
-    justify-content: flex-start; /* Прижимаем контент влево */
+    justify-content: flex-start;
+    /* Прижимаем контент влево */
 }
 
 /* 3. Левая колонка (Текст) */
 .hero-text {
-    max-width: 550px; /* Ограничиваем ширину текста, чтобы он не налез на видео */
+    max-width: 550px;
+    /* Ограничиваем ширину текста, чтобы он не налез на видео */
     text-align: left;
 }
 
 /* 4. Правая колонка (ВИДЕО) - ТЕПЕРЬ НА ВСЮ ВЫСОТУ */
 .hero-media {
-    position: absolute; /* Вырываем из потока */
+    position: absolute;
+    /* Вырываем из потока */
     top: -30%;
     right: 0;
     bottom: 0;
-    width: 55%; /* Занимает 45% ширины экрана справа */
-    height: 150%; /* Полная высота секции */
-    z-index: 1; /* Под текстом (или на уровне фона) */
+    width: 55%;
+    /* Занимает 45% ширины экрана справа */
+    height: 150%;
+    /* Полная высота секции */
+    z-index: 1;
+    /* Под текстом (или на уровне фона) */
 }
 
 .ai-avatar {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* ГЛАВНОЕ: Видео заполняет блок и обрезается, сохраняя пропорции */
-    
+    object-fit: cover;
+    /* ГЛАВНОЕ: Видео заполняет блок и обрезается, сохраняя пропорции */
+
     /* Если у видео черный фон, и ты хочешь сделать плавный переход в сайт,
        можно добавить маску-градиент слева направо:
     */
     -webkit-mask-image: linear-gradient(to right, transparent, black 20%);
     mask-image: linear-gradient(to right, transparent, black 50%);
-    
+
     /* Или используй mix-blend-mode, как раньше, если хочешь прозрачность */
-    mix-blend-mode: screen; 
+    mix-blend-mode: screen;
 }
 
 /* --- АДАПТИВНОСТЬ (Mobile) --- */
 @media (max-width: 992px) {
     .hero {
-        display: block; /* Возвращаем обычный блок */
+        display: block;
+        /* Возвращаем обычный блок */
     }
 
     .hero-split {
@@ -493,7 +550,8 @@ th {
 
     .hero-text {
         max-width: 100%;
-        text-align: center; /* Центрируем текст на телефоне */
+        text-align: center;
+        /* Центрируем текст на телефоне */
         margin-bottom: 40px;
     }
 
@@ -501,12 +559,13 @@ th {
     .hero-media {
         position: relative;
         width: 100%;
-        height: 400px; /* Фиксированная высота для телефона */
+        height: 400px;
+        /* Фиксированная высота для телефона */
         right: auto;
         top: auto;
         bottom: auto;
     }
-    
+
     .ai-avatar {
         /* На телефоне убираем маску, чтобы видео было видно целиком */
         -webkit-mask-image: none;
@@ -524,15 +583,15 @@ th {
     left: 0;
     width: 100%;
     height: 100%;
-    
+
     /* ИЗМЕНЕНИЕ 1: Исходный фон прозрачный (rgba), а не через opacity */
-    background: rgba(0, 0, 0, 0); 
-    
+    background: rgba(0, 0, 0, 0);
+
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
-    
+
     /* ИЗМЕНЕНИЕ 2: Убираем opacity у родителя. 
        Анимируем background-color и visibility. */
     visibility: hidden;
@@ -549,16 +608,16 @@ th {
     position: relative;
     max-width: 500px;
     width: 90%;
-    padding: 40px; 
+    padding: 40px;
     text-align: center;
-    
+
     /* ИЗМЕНЕНИЕ 3: Теперь окно само отвечает за свое появление */
-    opacity: 0; 
-    transform: translateY(20px); 
-    
+    opacity: 0;
+    transform: translateY(20px);
+
     /* Добавляем opacity в список транзишенов САМОГО ОКНА */
     transition: transform 0.3s ease, opacity 0.3s ease;
-    
+
     /* Подсказка браузеру держать слой готовым */
     will-change: transform, opacity;
 }
@@ -599,7 +658,7 @@ th {
 }
 
 .btn-telegram {
-    display: block; 
+    display: block;
     background: #2AABEE;
     color: white;
     padding: 16px 30px;
@@ -625,13 +684,21 @@ th {
    8. АДАПТИВНОСТЬ (Mobile)
    ========================================= */
 @media (max-width: 768px) {
+
     /* Шрифты поменьше */
-    h1 { font-size: 2.5rem; }
-    h2 { font-size: 2rem; }
-    
+    h1 {
+        font-size: 2.5rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+    }
+
     /* Скрываем десктопную кнопку */
-    .desktop-only-btn { display: none; }
-    
+    .desktop-only-btn {
+        display: none;
+    }
+
     /* Показываем бургер */
     .burger-menu {
         display: block;
@@ -641,7 +708,7 @@ th {
         position: relative;
         z-index: 1001;
     }
-    
+
     .burger-menu span {
         display: block;
         width: 100%;
@@ -650,14 +717,32 @@ th {
         position: absolute;
         transition: all 0.3s ease;
     }
-    
-    .burger-menu span:nth-child(1) { top: 0; }
-    .burger-menu span:nth-child(2) { top: 9px; }
-    .burger-menu span:nth-child(3) { top: 18px; }
-    
-    .burger-menu.active span:nth-child(1) { transform: rotate(45deg); top: 9px; }
-    .burger-menu.active span:nth-child(2) { opacity: 0; }
-    .burger-menu.active span:nth-child(3) { transform: rotate(-45deg); top: 9px; }
+
+    .burger-menu span:nth-child(1) {
+        top: 0;
+    }
+
+    .burger-menu span:nth-child(2) {
+        top: 9px;
+    }
+
+    .burger-menu span:nth-child(3) {
+        top: 18px;
+    }
+
+    .burger-menu.active span:nth-child(1) {
+        transform: rotate(45deg);
+        top: 9px;
+    }
+
+    .burger-menu.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .burger-menu.active span:nth-child(3) {
+        transform: rotate(-45deg);
+        top: 9px;
+    }
 
     /* Мобильное меню */
     .nav-menu {
@@ -666,7 +751,8 @@ th {
         right: -100%;
         width: 100%;
         height: 100vh;
-        background: #0F1115; /* Плотный фон, чтобы текст не сливался */
+        background: #0F1115;
+        /* Плотный фон, чтобы текст не сливался */
         padding-top: 120px;
         transition: 0.4s ease;
         display: flex;
