@@ -4,9 +4,10 @@
 // КОНФИГУРАЦИЯ
 const API_BASE_URL = "https://api.aurora-career.ru";
 
-// Храним начальное состояние
+// Храним состояние
 let initialSettings = {};
 let allIndustries = []; // Кэш индустрий
+let currentSelectedIds = new Set(); // Текущие выбранные ID
 
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. Параметры URL
@@ -36,17 +37,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // 3. Загрузка данных
+    // 3. Поиск индустрии
+    const searchInput = document.getElementById("industrySearch");
+    searchInput.addEventListener("input", (e) => {
+        const text = e.target.value.trim().toLowerCase();
+        renderIndustryTree(text);
+    });
+
+    // 4. Загрузка данных
     try {
-        // Сначала грузим справочник индустрий
         await loadIndustriesDict();
-        // Потом настройки юзера
         await loadSettings(userId, sign);
     } catch (e) {
         showError("Не удалось загрузить настройки. " + e.message);
     }
 
-    // 4. Сохранение
+    // 5. Сохранение
     document.getElementById("saveBtn").addEventListener("click", async () => {
         try {
             await saveSettings(userId, sign);
@@ -105,183 +111,251 @@ async function loadSettings(userId, sign) {
     }
 
     // --- Индустрии ---
-    // settings.industry это массив строк ["7", "7.540"] или null
-    renderIndustryTree(settings.industry || []);
+    currentSelectedIds = new Set(settings.industry || []);
+    renderIndustryTree();
 
     // Сохраняем начальное состояние
     initialSettings = {
         salary: settings.salary || null,
         experience: settings.experience || "noExperience",
-        industry: settings.industry || [] // Для сравнения массивов придется заморочиться, но пока так
+        industry: settings.industry || []
     };
     if (initialSettings.salary === 0) initialSettings.salary = null;
 }
 
-// Рендер дерева с чекбоксами
-function renderIndustryTree(selectedIds) {
+// Рендер дерева с фильтрацией
+function renderIndustryTree(filterText = "") {
     const container = document.getElementById("industryTree");
     container.innerHTML = ""; // Очищаем
 
-    // selectedIds - это Set для быстрого поиска
-    const selectedSet = new Set(selectedIds);
+    // Если данных нет
+    if (!allIndustries || allIndustries.length === 0) {
+        container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Нет данных</div>';
+        return;
+    }
+
+    // Создаем SVG иконки заранее
+    const chevronSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
 
     allIndustries.forEach(category => {
-        // Контейнер категории
-        const catDiv = document.createElement("div");
-        catDiv.style.marginBottom = "8px";
-
-        // --- Заголовок Категории (Чекбокс + Имя) ---
-        const catHeader = document.createElement("div");
-        catHeader.style.display = "flex";
-        catHeader.style.alignItems = "center";
-
-        const catCheckbox = document.createElement("input");
-        catCheckbox.type = "checkbox";
-        catCheckbox.value = category.id;
-        catCheckbox.dataset.type = "parent";
-        catCheckbox.style.marginRight = "8px";
-        catCheckbox.style.width = "16px";
-        catCheckbox.style.height = "16px";
-        catCheckbox.style.accentColor = "#a962ff";
-        catCheckbox.style.cursor = "pointer";
-
-        const catLabel = document.createElement("label");
-        catLabel.innerText = category.name;
-        catLabel.style.cursor = "pointer";
-        catLabel.style.fontSize = "0.95rem";
-        catLabel.style.fontWeight = "600";
-        catLabel.style.color = "#eee";
-        catLabel.onclick = () => catCheckbox.click(); // Клик по тексту -> чек
-
-        catHeader.appendChild(catCheckbox);
-        catHeader.appendChild(catLabel);
-        catDiv.appendChild(catHeader);
-
-        // --- Подкатегории (Скрытый/Открытый список) ---
-        const childrenDiv = document.createElement("div");
-        childrenDiv.style.marginLeft = "24px";
-        childrenDiv.style.marginTop = "4px";
-        // По умолчанию можно показать, если что-то выбрано, или свернуть.
-        // Для простоты покажем всё. Если слишком длинно - можно свернуть.
-        // Давайте сделаем аккордеон.
+        const catNameLower = category.name.toLowerCase();
         const children = category.industries || [];
 
-        // Переменные состояния
-        let checkedChildrenCount = 0;
+        // Фильтрация: находим детей, которые подходят
+        let matchingChildren = children;
+        let isCatMatch = false;
 
-        children.forEach(sub => {
+        if (filterText) {
+            if (catNameLower.includes(filterText)) {
+                // Если категория подходит - показываем всех детей
+                isCatMatch = true;
+                matchingChildren = children;
+            } else {
+                // Иначе ищем только подходящих детей
+                matchingChildren = children.filter(c => c.name.toLowerCase().includes(filterText));
+            }
+
+            // Если ни категория, ни дети не подходят - пропускаем
+            if (!isCatMatch && matchingChildren.length === 0) return;
+        }
+
+        // --- Создание DOM ---
+        const catDiv = document.createElement("div");
+        catDiv.className = "ind-category";
+
+        const headerDiv = document.createElement("div");
+        headerDiv.className = "ind-header";
+
+        // 1. Иконка (House/Chevron)
+        const toggleIcon = document.createElement("div");
+        toggleIcon.className = "toggle-icon";
+        toggleIcon.innerHTML = chevronSvg;
+
+        // 2. Чекбокс родителя
+        const catCheckbox = document.createElement("input");
+        catCheckbox.type = "checkbox";
+        catCheckbox.className = "custom-checkbox";
+        catCheckbox.value = category.id;
+        catCheckbox.dataset.type = "parent";
+
+        // 3. Текст родителя
+        const catLabel = document.createElement("span");
+        catLabel.className = "ind-label";
+        catLabel.innerText = category.name;
+        // Подсветка при поиске
+        if (filterText && isCatMatch) catLabel.style.color = "#a962ff";
+
+        // 4. Счетчик (опционально)
+        // const countSpan = document.createElement("span");
+        // countSpan.className = "ind-count";
+        // countSpan.innerText = children.length;
+
+        headerDiv.appendChild(toggleIcon);
+        headerDiv.appendChild(catCheckbox);
+        headerDiv.appendChild(catLabel);
+        // headerDiv.appendChild(countSpan);
+        catDiv.appendChild(headerDiv);
+
+        // --- Контейнер детей ---
+        const childrenContainer = document.createElement("div");
+        childrenContainer.className = "ind-children";
+
+        // Если есть фильтр - раскрываем сразу
+        if (filterText) {
+            childrenContainer.classList.add("open");
+            toggleIcon.classList.add("expanded");
+        }
+
+        // Рендерим детей
+        matchingChildren.forEach(sub => {
             const subDiv = document.createElement("div");
-            subDiv.style.marginBottom = "4px";
-            subDiv.style.display = "flex";
-            subDiv.style.alignItems = "center";
+            subDiv.className = "ind-sub";
 
             const subCheckbox = document.createElement("input");
             subCheckbox.type = "checkbox";
+            subCheckbox.className = "custom-checkbox";
             subCheckbox.value = sub.id;
-            subCheckbox.dataset.parentId = category.id;
             subCheckbox.dataset.type = "child";
-            subCheckbox.style.marginRight = "8px";
-            subCheckbox.style.width = "14px";
-            subCheckbox.style.height = "14px";
-            subCheckbox.style.accentColor = "#a962ff";
-            subCheckbox.style.cursor = "pointer";
+            subCheckbox.dataset.parentId = category.id;
 
-            // Проверяем, выбран ли ребенок ИЛИ выбран ли родитель (если родитель выбран, то и дети визуально выбраны)
-            if (selectedSet.has(sub.id) || selectedSet.has(category.id)) {
+            // Восстанавливаем состояние выборки
+            if (currentSelectedIds.has(sub.id) || currentSelectedIds.has(category.id)) {
                 subCheckbox.checked = true;
-                checkedChildrenCount++;
             }
 
             const subLabel = document.createElement("span");
+            subLabel.className = "ind-sub-label ind-label"; // Используем те же стили
             subLabel.innerText = sub.name;
-            subLabel.style.color = "#ccc";
-            subLabel.style.fontSize = "0.85rem";
-            subLabel.style.cursor = "pointer";
-            subLabel.onclick = () => subCheckbox.click();
+            if (filterText && sub.name.toLowerCase().includes(filterText)) {
+                subLabel.style.color = "#fff"; // Чуть ярче
+                subLabel.style.fontWeight = "500";
+            }
+
+            // Клик по тексту -> чекбокс
+            subLabel.onclick = () => { subCheckbox.checked = !subCheckbox.checked; updateState(); };
 
             subDiv.appendChild(subCheckbox);
             subDiv.appendChild(subLabel);
-            childrenDiv.appendChild(subDiv);
+            childrenContainer.appendChild(subDiv);
 
-            // --- Логика клика по ребенку ---
+            // Листенеры изменения
             subCheckbox.addEventListener("change", () => {
-                updateParentState(catCheckbox, childrenDiv);
+                updateState();
             });
         });
 
-        catDiv.appendChild(childrenDiv);
+        catDiv.appendChild(childrenContainer);
         container.appendChild(catDiv);
 
-        // --- Состояние Родителя при загрузке ---
-        // Если выбран ID родителя -> он checked
-        if (selectedSet.has(category.id)) {
-            catCheckbox.checked = true;
-            // И все дети должны быть checked (мы это уже сделали в цикле выше, но на всякий случай)
-            Array.from(childrenDiv.querySelectorAll("input")).forEach(ch => ch.checked = true);
-        } else {
-            // Если родитель не выбран явно, но выбраны ВСЕ дети -> ставим галочку родителю?
-            // Или если выбраны ЧАСТЬ детей -> indeterminate
-            if (checkedChildrenCount > 0 && checkedChildrenCount === children.length) {
-                catCheckbox.checked = true;
-            } else if (checkedChildrenCount > 0) {
-                catCheckbox.indeterminate = true;
+        // --- ЛОГИКА ---
+
+        // Состояние родительского чекбокса (Indeterminate)
+        updateParentCheckboxState(catCheckbox, childrenContainer);
+
+        // 1. Клик по Иконке -> Раскрытие
+        toggleIcon.onclick = (e) => {
+            e.stopPropagation(); // Чтобы не триггерить клик по хедерам, если будут
+            childrenContainer.classList.toggle("open");
+            toggleIcon.classList.toggle("expanded");
+        };
+
+        // 2. Клик по Тексту Родителя -> Тоже раскрытие? Или выбор?
+        // Юзер: "нужно нажать на иконку... и список раскрывается".
+        // Обычно клик по тексту тоже раскрывает. Сделаем раскрытие.
+        catLabel.onclick = () => {
+            childrenContainer.classList.toggle("open");
+            toggleIcon.classList.toggle("expanded");
+        };
+
+        // 3. Клик по Чекбоксу Родителя -> Выбрать все/Снять все
+        catCheckbox.addEventListener("change", () => {
+            const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
+            childrenInputs.forEach(ch => ch.checked = catCheckbox.checked);
+            updateState(); // Обновляем Set
+        });
+
+        // Функция обновления сета (вызывается при любом клике)
+        function updateState() {
+            // Обновляем визуал родителя
+            updateParentCheckboxState(catCheckbox, childrenContainer);
+
+            // Синхронизируем currentSelectedIds
+            // Проходим по всем чекбоксам в ЭТОЙ категории (оптимизация)
+            // Но лучше глобально собрать в конце перед сохранением. 
+            // А здесь просто обновлять UI.
+
+            // Но нам нужно state хранить актуальным для поиска и перерендера.
+            // Поэтому давайте обновлять Set прямо здесь.
+
+            const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
+            childrenInputs.forEach(ch => {
+                if (ch.checked) currentSelectedIds.add(ch.value);
+                else currentSelectedIds.delete(ch.value);
+            });
+
+            // Родителя тоже можно добавить в сет, если он checked (для красоты), 
+            // но API принимает либо ID родителя, либо массив детей.
+            // Важно: если выбран родитель, то currentSelectedIds должен содержать его ID?
+            // Или лучше хранить только детей и вычислять родителя?
+            // HH API: если передать ID категории, он ищет по всей категории.
+            if (catCheckbox.checked && !catCheckbox.indeterminate) {
+                currentSelectedIds.add(category.id);
+            } else {
+                currentSelectedIds.delete(category.id);
             }
         }
-
-        // --- Логика клика по Родителю ---
-        catCheckbox.addEventListener("change", () => {
-            const childrenInputs = childrenDiv.querySelectorAll("input");
-            childrenInputs.forEach(ch => {
-                ch.checked = catCheckbox.checked;
-            });
-        });
     });
 }
 
-function updateParentState(parentCheckbox, childrenContainer) {
+function updateParentCheckboxState(parentCheckbox, childrenContainer) {
     const children = Array.from(childrenContainer.querySelectorAll("input"));
+    if (children.length === 0) return; // Нет детей
+
     const checkedCount = children.filter(c => c.checked).length;
 
     if (checkedCount === 0) {
         parentCheckbox.checked = false;
         parentCheckbox.indeterminate = false;
     } else if (checkedCount === children.length) {
+        // Все выбраны - значит родитель выбран полностью
         parentCheckbox.checked = true;
         parentCheckbox.indeterminate = false;
     } else {
+        // Частично
         parentCheckbox.checked = false;
         parentCheckbox.indeterminate = true;
     }
 }
 
-// Сбор выбранных ID
-function getSelectedIndustryIds() {
+// Сбор финальный (перед отправкой)
+function getFinalSelectedIds() {
+    // В currentSelectedIds у нас сейчас может быть каша (и дети, и родители).
+    // Нам нужно нормализовать:
+    // 1. Если выбраны ВСЕ дети категории -> заменяем их на ID категории.
+    // 2. Если выбрана ЧАСТЬ -> шлем ID детей.
+
+    // Но так как currentSelectedIds мы обновляли "на лету" довольно грубо,
+    // лучше пробежаться по DOM сейчас, так надежнее.
+
     const container = document.getElementById("industryTree");
-    const allCheckboxes = container.querySelectorAll("input[type='checkbox']");
-    const ids = [];
-
-    // Стратегия:
-    // 1. Если Parent Checked -> Берем Parent ID (игнорируем детей, т.к. API HH понимает ParentID = All subindustries).
-    // 2. Если Parent Indeterminate -> Берем только Checked Children.
-    // 3. Если Parent Unchecked -> Ничего (дети тоже unchecked).
-
-    // Но мы должны быть аккуратны. Если Parent ID = "7", а дети "7.540".
-
-    // Проходим по родителям
     const parents = container.querySelectorAll("input[data-type='parent']");
+    const resultIds = [];
+
     parents.forEach(p => {
         if (p.checked && !p.indeterminate) {
-            ids.push(p.value); // Добавляем категорию целиком
-        } else if (p.indeterminate || (!p.checked && !p.indeterminate)) {
-            // Если частично выбрано или вообще не выбрано (но вдруг дети выбраны багом?), проверяем детей
-            // Находим контейнер детей (он следующий сосед)
-            const childrenDiv = p.parentElement.nextElementSibling;
-            const children = childrenDiv.querySelectorAll("input[data-type='child']:checked");
-            children.forEach(c => ids.push(c.value));
+            resultIds.push(p.value); // Вся категория
+        } else {
+            // Иначе смотрим детей
+            // (p.parentElement это header, p.parentElement.nextSibling это childrenContainer)
+            const childrenContainer = p.parentElement.nextElementSibling;
+            if (childrenContainer) {
+                const checkedChildren = childrenContainer.querySelectorAll("input[data-type='child']:checked");
+                checkedChildren.forEach(c => resultIds.push(c.value));
+            }
         }
     });
 
-    return ids;
+    return resultIds;
 }
 
 
@@ -309,15 +383,20 @@ async function saveSettings(userId, sign) {
     }
 
     const experience = document.getElementById("experienceSelect").value;
-    const selectedIndustries = getSelectedIndustryIds();
+
+    // Получаем ID из DOM (наиболее актуально)
+    // Внимание: если был фильтр и часть дерева скрыта, getFinalSelectedIds не найдет их в DOM?
+    // ДА! Это проблема. При фильтрации мы перерисовываем дерево и теряем скрытые элементы.
+    // РЕШЕНИЕ: Нам нужно полагаться на currentSelectedIds, который должен быть Source of Truth.
+
+    // Но currentSelectedIds хранит flat list (и родителей и детей).
+    // Нам нужно его почистить перед отправкой.
+    const selectedIndustries = finalizeIdsFromSet();
 
     // ПРОВЕРКА НА ИЗМЕНЕНИЯ
     let initialSal = initialSettings.salary;
     if (initialSal === 0) initialSal = null;
-
-    // Сравнение массивов индустрий
     const initInd = initialSettings.industry || [];
-    // Простая проверка (сортировка + stringify) - для UI пойдет
     const isIndChanged = JSON.stringify(selectedIndustries.sort()) !== JSON.stringify(initInd.sort());
 
     if (salary === initialSal && experience === initialSettings.experience && !isIndChanged) {
@@ -362,6 +441,37 @@ async function saveSettings(userId, sign) {
     };
 
     document.getElementById("errorMsg").style.display = "none";
+}
+
+function finalizeIdsFromSet() {
+    // Превращаем Set в "умный список" (Родитель заменяет Детей)
+    const result = [];
+    const set = currentSelectedIds;
+
+    allIndustries.forEach(cat => {
+        // Проверяем всех детей категории
+        const children = cat.industries || [];
+        if (children.length === 0) return;
+
+        const allChildrenIds = children.map(c => c.id);
+        const selectedChildrenIds = allChildrenIds.filter(id => set.has(id));
+
+        if (selectedChildrenIds.length === allChildrenIds.length) {
+            // Если выбраны ВСЕ дети -> добавляем ID родителя
+            result.push(cat.id);
+        } else {
+            // Иначе добавляем только выбранных детей
+            // Нужно ли проверять, если в сете лежит сам cat.id? 
+            // Если лежит cat.id, считаем что все выбраны.
+            if (set.has(cat.id)) {
+                result.push(cat.id);
+            } else {
+                result.push(...selectedChildrenIds);
+            }
+        }
+    });
+
+    return result;
 }
 
 function showError(msg) {
