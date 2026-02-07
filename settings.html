@@ -15,10 +15,9 @@
             max-width: 100%;
         }
 
-        /* ОТКЛЮЧАЕМ АНИМАЦИЮ ФОНА ТОЛЬКО НА ЭТОЙ СТРАНИЦЕ (по просьбе пользователя) */
+        /* СКРЫВАЕМ ПСЕВДОЭЛЕМЕНТ (источник артефактов и моргания) */
         body::before {
-            animation: none !important;
-            will-change: auto !important;
+            display: none !important;
         }
 
         body {
@@ -32,6 +31,15 @@
             margin: 0;
             padding: 10px;
             box-sizing: border-box;
+
+            /* Статичный фон "Аврора" без тяжелых фильтров и анимаций */
+            background-image:
+                radial-gradient(circle at 50% 0%, rgba(123, 97, 255, 0.25) 0%, transparent 60%),
+                radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px;
+            background-repeat: no-repeat, repeat;
+            background-attachment: fixed;
+            /* Чтобы фон не ездил при скролле */
         }
 
         .container {
