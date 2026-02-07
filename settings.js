@@ -1,26 +1,29 @@
+/* 
+   AURORA CAREER SETTINGS - PROPRIETARY CODE 
+   (c) 2024-2025 Aurora Career. All rights reserved.
+*/
 
-// settings.js
-
-// КОНФИГУРАЦИЯ
 const API_BASE_URL = "https://api.aurora-career.ru";
 
-// Храним состояние
+// State
 let initialSettings = {};
-let allIndustries = []; // Кэш индустрий
-let currentSelectedIds = new Set(); // Текущие выбранные ID
+let allIndustries = [];
+let currentSelectedIds = new Set();
+let messageId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Параметры URL
+    // 1. URL Params
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
     const sign = urlParams.get('sign');
+    messageId = urlParams.get('message_id'); // Optional
 
     if (!userId || !sign) {
         showError("Ошибка доступа. Ссылка не содержит необходимых параметров.");
         return;
     }
 
-    // 2. Логика зарплаты
+    // 2. Salary Logic
     const salaryInput = document.getElementById("salaryInput");
     const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
 
@@ -37,22 +40,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // 3. Поиск индустрии
+    // 3. Search Logic
     const searchInput = document.getElementById("industrySearch");
     searchInput.addEventListener("input", (e) => {
         const text = e.target.value.trim().toLowerCase();
         filterIndustryTree(text);
     });
 
-    // 4. Загрузка данных
+    // 4. Return Button
+    document.getElementById("returnBtn").addEventListener("click", () => {
+        // Try to close webview if possible, otherwise redirect
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.close();
+        }
+        // Fallback redirection
+        window.location.href = "https://t.me/Aurora_Career_Bot";
+    });
+
+    // 5. Load Data
     try {
-        await loadIndustriesDict();
-        await loadSettings(userId, sign);
+        await loadIndustriesDict(); // Fetches JSON
+        await loadSettings(userId, sign); // Fetches User Config
     } catch (e) {
         showError("Не удалось загрузить настройки. " + e.message);
+        toggleSkeleton(false); // Hide skeleton on error
     }
 
-    // 5. Сохранение
+    // 6. Save Logic
     document.getElementById("saveBtn").addEventListener("click", async () => {
         try {
             await saveSettings(userId, sign);
@@ -62,14 +76,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 });
 
+function toggleSkeleton(show) {
+    const skeleton = document.getElementById("industrySkeleton");
+    const tree = document.getElementById("industryTree");
+    if (show) {
+        skeleton.style.display = "block";
+        tree.style.display = "none";
+    } else {
+        skeleton.style.display = "none";
+        tree.style.display = "block";
+    }
+}
+
 async function loadIndustriesDict() {
+    // Skeleton is already visible by default in HTML
     try {
         const resp = await fetch('industries.json');
         if (!resp.ok) throw new Error("Industries failed");
         allIndustries = await resp.json();
     } catch (e) {
         console.error(e);
-        document.getElementById("loadingIndustries").innerText = "Ошибка загрузки справочника индустрий.";
+        // Don't show error yet, wait for loadSettings
     }
 }
 
@@ -87,7 +114,9 @@ async function loadSettings(userId, sign) {
 
     const settings = data.settings;
 
-    // --- Зарплата ---
+    // --- Apply UI State ---
+
+    // Salary
     const salaryInput = document.getElementById("salaryInput");
     const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
 
@@ -102,32 +131,40 @@ async function loadSettings(userId, sign) {
         salaryInput.disabled = false;
     }
 
-    // --- Опыт ---
-    if (settings.experience) document.getElementById("experienceSelect").value = settings.experience;
-
-    // --- Регион ---
-    if (settings.search_area) {
-        document.getElementById("cityStatus").innerText = `Текущий регион ID: ${settings.search_area}`;
+    // Experience
+    if (settings.experience) {
+        document.getElementById("experienceSelect").value = settings.experience;
     }
 
-    // --- Индустрии ---
-    currentSelectedIds = new Set(settings.industry || []);
-    // Рендерим один раз полное дерево
+    // Region
+    if (settings.search_area) {
+        document.getElementById("cityStatus").innerText = `Текущий регион ID: ${settings.search_area}`;
+    } else {
+        document.getElementById("cityStatus").innerText = "Регион не выбран";
+    }
+
+    // Industries
+    // Force string conversion for IDs to match DOM values
+    currentSelectedIds = new Set((settings.industry || []).map(String));
+
+    // Render Tree
     initIndustryTree();
 
-    // Сохраняем начальное состояние
+    // Hide Skeleton, Show Tree
+    toggleSkeleton(false);
+
+    // Save Initial State
     initialSettings = {
         salary: settings.salary || null,
         experience: settings.experience || "noExperience",
-        industry: settings.industry || []
+        industry: settings.industry ? settings.industry.map(String) : []
     };
     if (initialSettings.salary === 0) initialSettings.salary = null;
 }
 
-// Инициализация дерева (один раз)
 function initIndustryTree() {
     const container = document.getElementById("industryTree");
-    container.innerHTML = ""; // Очищаем
+    container.innerHTML = "";
 
     if (!allIndustries || allIndustries.length === 0) {
         container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Нет данных</div>';
@@ -137,27 +174,24 @@ function initIndustryTree() {
     const chevronSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
 
     allIndustries.forEach(category => {
-        // --- Создание DOM ---
+        const catIdStr = String(category.id);
         const catDiv = document.createElement("div");
         catDiv.className = "ind-category";
-        catDiv.dataset.name = category.name.toLowerCase(); // Для поиска
+        catDiv.dataset.name = category.name.toLowerCase();
 
         const headerDiv = document.createElement("div");
         headerDiv.className = "ind-header";
 
-        // 1. Иконка
         const toggleIcon = document.createElement("div");
         toggleIcon.className = "toggle-icon";
         toggleIcon.innerHTML = chevronSvg;
 
-        // 2. Чекбокс родителя
         const catCheckbox = document.createElement("input");
         catCheckbox.type = "checkbox";
         catCheckbox.className = "custom-checkbox";
-        catCheckbox.value = category.id;
+        catCheckbox.value = catIdStr;
         catCheckbox.dataset.type = "parent";
 
-        // 3. Текст родителя
         const catLabel = document.createElement("span");
         catLabel.className = "ind-label";
         catLabel.innerText = category.name;
@@ -167,27 +201,27 @@ function initIndustryTree() {
         headerDiv.appendChild(catLabel);
         catDiv.appendChild(headerDiv);
 
-        // --- Контейнер детей ---
         const childrenContainer = document.createElement("div");
         childrenContainer.className = "ind-children";
 
-        // Рендерим детей
         const children = category.industries || [];
         children.forEach(sub => {
+            const subIdStr = String(sub.id);
             const subDiv = document.createElement("div");
             subDiv.className = "ind-sub";
-            subDiv.dataset.name = sub.name.toLowerCase(); // Для поиска
+            subDiv.dataset.name = sub.name.toLowerCase();
 
             const subCheckbox = document.createElement("input");
             subCheckbox.type = "checkbox";
             subCheckbox.className = "custom-checkbox";
-            subCheckbox.value = sub.id;
+            subCheckbox.value = subIdStr;
             subCheckbox.dataset.type = "child";
-            subCheckbox.dataset.parentId = category.id;
+            subCheckbox.dataset.parentId = catIdStr;
 
-            // Восстанавливаем состояние selection
-            if (currentSelectedIds.has(sub.id) || currentSelectedIds.has(category.id)) {
+            // Check if selected
+            if (currentSelectedIds.has(subIdStr) || currentSelectedIds.has(catIdStr)) {
                 subCheckbox.checked = true;
+                if (!currentSelectedIds.has(subIdStr)) currentSelectedIds.add(subIdStr); // Ensure granular ID is in set
             }
 
             const subLabel = document.createElement("span");
@@ -195,7 +229,6 @@ function initIndustryTree() {
             subLabel.innerText = sub.name;
 
             subLabel.onclick = () => { subCheckbox.checked = !subCheckbox.checked; updateState(); };
-
             subDiv.appendChild(subCheckbox);
             subDiv.appendChild(subLabel);
             childrenContainer.appendChild(subDiv);
@@ -206,7 +239,6 @@ function initIndustryTree() {
         catDiv.appendChild(childrenContainer);
         container.appendChild(catDiv);
 
-        // --- ЛОГИКА ---
         updateParentCheckboxState(catCheckbox, childrenContainer);
 
         const toggle = () => {
@@ -219,7 +251,6 @@ function initIndustryTree() {
 
         catCheckbox.addEventListener("change", () => {
             const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
-            // Если родитель чекнут - чекаем видимых детей (или всех? Логичнее всех)
             childrenInputs.forEach(ch => ch.checked = catCheckbox.checked);
             updateState();
         });
@@ -227,8 +258,7 @@ function initIndustryTree() {
         function updateState() {
             updateParentCheckboxState(catCheckbox, childrenContainer);
 
-            // Обновляем глобальный сет
-            // (Немного неоптимально бегать по всем, но надежно)
+            // Sync Set
             const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
             childrenInputs.forEach(ch => {
                 if (ch.checked) currentSelectedIds.add(ch.value);
@@ -236,15 +266,14 @@ function initIndustryTree() {
             });
 
             if (catCheckbox.checked && !catCheckbox.indeterminate) {
-                currentSelectedIds.add(category.id);
+                currentSelectedIds.add(catIdStr);
             } else {
-                currentSelectedIds.delete(category.id);
+                currentSelectedIds.delete(catIdStr);
             }
         }
     });
 }
 
-// Фильтрация (скрытие/показ) без перерисовки
 function filterIndustryTree(text) {
     const container = document.getElementById("industryTree");
     const categories = container.querySelectorAll(".ind-category");
@@ -255,7 +284,6 @@ function filterIndustryTree(text) {
         const childrenDivs = childrenContainer.querySelectorAll(".ind-sub");
         const toggleIcon = catDiv.querySelector(".toggle-icon");
 
-        // Используем 'includes', но можно усложнить
         let isCatMatch = catName.includes(text);
         let hasVisibleChild = false;
 
@@ -271,13 +299,9 @@ function filterIndustryTree(text) {
 
         if (isCatMatch || hasVisibleChild) {
             catDiv.style.display = "block";
-            // Если есть поиск, раскрываем
             if (text.length > 0) {
                 childrenContainer.classList.add("open");
                 toggleIcon.classList.add("expanded");
-            } else {
-                // Если поиск сброшен, можно не сворачивать (или сворачивать).
-                // Оставим открытым, если было открыто.
             }
         } else {
             catDiv.style.display = "none";
@@ -287,7 +311,7 @@ function filterIndustryTree(text) {
 
 function updateParentCheckboxState(parentCheckbox, childrenContainer) {
     const children = Array.from(childrenContainer.querySelectorAll("input"));
-    if (children.length === 0) return; // Нет детей
+    if (children.length === 0) return;
 
     const checkedCount = children.filter(c => c.checked).length;
 
@@ -295,35 +319,31 @@ function updateParentCheckboxState(parentCheckbox, childrenContainer) {
         parentCheckbox.checked = false;
         parentCheckbox.indeterminate = false;
     } else if (checkedCount === children.length) {
-        // Все выбраны - значит родитель выбран полностью
         parentCheckbox.checked = true;
         parentCheckbox.indeterminate = false;
     } else {
-        // Частично
         parentCheckbox.checked = false;
         parentCheckbox.indeterminate = true;
     }
 }
 
-// Сбор финальный (перед отправкой)
 function finalizeIdsFromSet() {
-    // Превращаем Set в "умный список" (Родитель заменяет Детей)
     const result = [];
     const set = currentSelectedIds;
 
     allIndustries.forEach(cat => {
+        const catIdStr = String(cat.id);
         const children = cat.industries || [];
         if (children.length === 0) return;
 
-        const allChildrenIds = children.map(c => c.id);
+        const allChildrenIds = children.map(c => String(c.id));
         const selectedChildrenIds = allChildrenIds.filter(id => set.has(id));
 
         if (selectedChildrenIds.length === allChildrenIds.length) {
-            result.push(cat.id);
+            result.push(catIdStr);
         } else {
-            // Если родитель в сете?
-            if (set.has(cat.id)) {
-                result.push(cat.id);
+            if (set.has(catIdStr)) {
+                result.push(catIdStr);
             } else {
                 result.push(...selectedChildrenIds);
             }
@@ -359,11 +379,12 @@ async function saveSettings(userId, sign) {
     const experience = document.getElementById("experienceSelect").value;
     const selectedIndustries = finalizeIdsFromSet();
 
-    // ПРОВЕРКА НА ИЗМЕНЕНИЯ
+    // Check changes (Sort inputs for comparison)
     let initialSal = initialSettings.salary;
-    if (initialSal === 0) initialSal = null;
-    const initInd = initialSettings.industry || [];
-    const isIndChanged = JSON.stringify(selectedIndustries.sort()) !== JSON.stringify(initInd.sort());
+    const initInd = (initialSettings.industry || []).sort();
+    const currInd = selectedIndustries.sort();
+
+    const isIndChanged = JSON.stringify(currInd) !== JSON.stringify(initInd);
 
     if (salary === initialSal && experience === initialSettings.experience && !isIndChanged) {
         alert("Данные не изменились 🤷‍♂️");
@@ -375,7 +396,8 @@ async function saveSettings(userId, sign) {
         sign: sign,
         salary: salary,
         experience: experience,
-        industry: selectedIndustries
+        industry: selectedIndustries,
+        message_id: messageId ? parseInt(messageId) : null // <--- Pass message_id
     };
 
     const response = await fetch(`${API_BASE_URL}/api/settings/update`, {
@@ -389,7 +411,6 @@ async function saveSettings(userId, sign) {
         throw new Error(data.error || "Ошибка сервера");
     }
 
-    // Показываем уведомление
     const saveBtn = document.getElementById("saveBtn");
     const originalText = saveBtn.innerText;
     saveBtn.innerText = "Сохранено! ✅";
@@ -399,7 +420,6 @@ async function saveSettings(userId, sign) {
         saveBtn.style.background = "linear-gradient(45deg, #a962ff, #6247aa)";
     }, 2000);
 
-    // Обновляем "начальное" состояние
     initialSettings = {
         salary: salary,
         experience: experience,
@@ -408,7 +428,6 @@ async function saveSettings(userId, sign) {
 
     document.getElementById("errorMsg").style.display = "none";
 }
-
 
 function showError(msg) {
     const errDiv = document.getElementById("errorMsg");
