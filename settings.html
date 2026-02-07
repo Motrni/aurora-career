@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,6 +18,7 @@
             min-height: 100vh;
             margin: 0;
         }
+
         .container {
             background: rgba(255, 255, 255, 0.05);
             padding: 2rem;
@@ -27,10 +29,26 @@
             max-width: 400px;
             width: 100%;
         }
-        h2 { text-align: center; margin-bottom: 20px; color: #a962ff; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #ccc; }
-        input, select {
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #a962ff;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        input,
+        select {
             width: 100%;
             padding: 10px;
             border-radius: 8px;
@@ -39,6 +57,7 @@
             color: #fff;
             font-size: 1rem;
         }
+
         button {
             width: 100%;
             padding: 12px;
@@ -51,44 +70,65 @@
             transition: 0.2s;
             margin-top: 10px;
         }
-        button:hover { opacity: 0.9; }
-        .error { color: #ff4d4d; font-size: 0.8rem; margin-top: 10px; display: none; text-align: center;}
-        .info { font-size: 0.8rem; color: #888; text-align: center; margin-top: 20px; }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .error {
+            color: #ff4d4d;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            display: none;
+            text-align: center;
+        }
+
+        .info {
+            font-size: 0.8rem;
+            color: #888;
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <h2>⚙️ Настройки поиска</h2>
-    
-    <div class="form-group">
-        <label for="salaryInput">Желаемая зарплата (₽)</label>
-        <input type="number" id="salaryInput" placeholder="Например: 100000">
-    </div>
+    <div class="container">
+        <h2>⚙️ Настройки поиска</h2>
 
-    <div class="form-group">
-        <label for="experienceSelect">Опыт работы</label>
-        <select id="experienceSelect">
-            <option value="noExperience">Нет опыта</option>
-            <option value="between1And3">От 1 до 3 лет</option>
-            <option value="between3And6">От 3 до 6 лет</option>
-            <option value="moreThan6">Более 6 лет</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Регион</label>
-        <div id="cityStatus" style="padding: 10px; background: #222; border-radius: 8px; color: #888; font-size: 0.9rem;">
-            Загрузка...
+        <div class="form-group">
+            <label for="salaryInput">Желаемая зарплата (₽)</label>
+            <input type="number" id="salaryInput" placeholder="Например: 100000" min="0" step="1000"
+                oninput="validity.valid||(value='');">
+            <small style="color: #666; font-size: 0.8rem;">Только цифры</small>
         </div>
-        <small style="color: #666;">(Смена региона пока доступна только в боте)</small>
+
+        <div class="form-group">
+            <label for="experienceSelect">Опыт работы</label>
+            <select id="experienceSelect">
+                <option value="noExperience">Нет опыта</option>
+                <option value="between1And3">От 1 до 3 лет</option>
+                <option value="between3And6">От 3 до 6 лет</option>
+                <option value="moreThan6">Более 6 лет</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Регион</label>
+            <div id="cityStatus"
+                style="padding: 10px; background: #222; border-radius: 8px; color: #888; font-size: 0.9rem;">
+                Загрузка...
+            </div>
+            <small style="color: #666;">(Смена региона пока доступна только в боте)</small>
+        </div>
+
+        <button id="saveBtn">Сохранить</button>
+        <div id="errorMsg" class="error"></div>
+        <div class="info">Изменения применятся в боте мгновенно</div>
     </div>
 
-    <button id="saveBtn">Сохранить</button>
-    <div id="errorMsg" class="error"></div>
-    <div class="info">Изменения применятся в боте мгновенно</div>
-</div>
-
-<script src="settings.js"></script>
+    <script src="settings.js"></script>
 </body>
+
 </html>
