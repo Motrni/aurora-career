@@ -9,7 +9,7 @@ const API_BASE_URL = "https://api.aurora-career.ru";
 let initialSettings = {};
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // ... (код получения URL параметров тот же) ...
+    // 1. Получаем параметры из URL
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
     const sign = urlParams.get('sign');
@@ -18,6 +18,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         showError("Ошибка доступа. Ссылка не содержит необходимых параметров.");
         return;
     }
+
+    // ЛОГИКА ЧЕКБОКСА (UI)
+    const salaryInput = document.getElementById("salaryInput");
+    const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
+
+    // Обработчик изменения чекбокса
+    noSalaryCheckbox.addEventListener("change", (e) => {
+        if (e.target.checked) {
+            salaryInput.value = ""; // Очищаем поле
+            salaryInput.disabled = true; // Блокируем ввод
+            salaryInput.placeholder = "Не указана";
+            // Убираем класс ошибки если был
+            salaryInput.style.borderColor = "#333";
+        } else {
+            salaryInput.disabled = false; // Разблокируем
+            salaryInput.placeholder = "Например: 100000";
+            salaryInput.focus();
+        }
+    });
 
     try {
         await loadSettings(userId, sign);
@@ -47,44 +66,71 @@ async function loadSettings(userId, sign) {
     }
 
     const settings = data.settings;
+    const salaryInput = document.getElementById("salaryInput");
+    const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
 
-    // Заполняем форму
-    if (settings.salary) document.getElementById("salaryInput").value = settings.salary;
+    // Логика отображения зарплаты
+    // Если null или 0 -> ставим галочку "Не указывать"
+    if (!settings.salary || settings.salary === 0) {
+        noSalaryCheckbox.checked = true;
+        salaryInput.value = "";
+        salaryInput.disabled = true;
+        salaryInput.placeholder = "Не указана";
+    } else {
+        noSalaryCheckbox.checked = false;
+        salaryInput.value = settings.salary;
+        salaryInput.disabled = false;
+    }
+
     if (settings.experience) document.getElementById("experienceSelect").value = settings.experience;
 
     if (settings.search_area) {
         document.getElementById("cityStatus").innerText = `Текущий регион ID: ${settings.search_area}`;
     }
 
-    // Сохраняем начальное состояние (для сравнения)
+    // Сохраняем начальное состояние
     initialSettings = {
-        salary: settings.salary || "",
+        salary: settings.salary || null, // Сохраняем как null если 0/undefined
         experience: settings.experience || "noExperience"
     };
+    // Если было 0, нормализуем в null для единообразия
+    if (initialSettings.salary === 0) initialSettings.salary = null;
 }
 
 async function saveSettings(userId, sign) {
     const salaryInput = document.getElementById("salaryInput");
-    // Если пусто, считаем как 0 или null, но input type=number может вернуть ""
-    let salaryVal = salaryInput.value.trim();
-    let salary = salaryVal === "" ? 0 : parseInt(salaryVal);
+    const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
 
-    // ВАЛИДАЦИЯ
-    if (isNaN(salary) || salary < 0) {
-        showError("Зарплата должна быть положительным числом!");
-        return;
+    let salary = null; // По умолчанию null
+
+    // Если галочка НЕ стоит, берем значение из инпута
+    if (!noSalaryCheckbox.checked) {
+        let val = salaryInput.value.trim();
+        if (val === "") {
+            showError("Введите сумму или поставьте галочку 'Не указывать'");
+            return;
+        }
+        salary = parseInt(val);
+
+        // ВАЛИДАЦИЯ
+        if (isNaN(salary) || salary < 0) {
+            showError("Зарплата должна быть положительным числом!");
+            return;
+        }
+        if (salary > 100000000) {
+            showError("Зарплата не может превышать 100 млн ₽");
+            return;
+        }
     }
-    // Лимит 100 млн
-    if (salary > 100000000) {
-        showError("Зарплата не может превышать 100 млн ₽");
-        return;
-    }
+    // Иначе salary остается null
 
     const experience = document.getElementById("experienceSelect").value;
 
     // ПРОВЕРКА НА ИЗМЕНЕНИЯ (Идемпотентность)
-    // Приводим к единому типу для сравнения
-    const initialSal = initialSettings.salary ? parseInt(initialSettings.salary) : 0;
+
+    // Нормализуем начальное значение
+    let initialSal = initialSettings.salary;
+    if (initialSal === 0) initialSal = null;
 
     if (salary === initialSal && experience === initialSettings.experience) {
         alert("Данные не изменились 🤷‍♂️");
@@ -111,13 +157,13 @@ async function saveSettings(userId, sign) {
 
     alert("Настройки успешно сохранены! ✅");
 
-    // Обновляем "начальное" состояние до текущего
+    // Обновляем "начальное" состояние
     initialSettings = {
         salary: salary,
         experience: experience
     };
 
-    // Скрываем ошибку, если была
+    // Скрываем ошибку
     document.getElementById("errorMsg").style.display = "none";
 }
 

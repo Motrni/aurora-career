@@ -17,32 +17,38 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 10px;
+            /* Отступ для мобилок (чтобы не прилипало к краям) */
+            box-sizing: border-box;
         }
 
         .container {
             background: rgba(255, 255, 255, 0.05);
-            padding: 2rem;
+            padding: 24px;
+            /* Оптимальный padding */
             border-radius: 16px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             max-width: 400px;
             width: 100%;
+            /* Занимает всю ширину (но не больше max-width) */
+            box-sizing: border-box;
         }
 
         h2 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             color: #a962ff;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             font-size: 0.9rem;
             color: #ccc;
         }
@@ -50,37 +56,62 @@
         input,
         select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
+            /* Удобнее для тача */
             border-radius: 8px;
             border: 1px solid #333;
             background: #1a1a1a;
             color: #fff;
             font-size: 1rem;
+            box-sizing: border-box;
+            /* Важно! */
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #a962ff;
+            outline: none;
+        }
+
+        input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #2a2a2a;
         }
 
         button {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
+            /* Крупнее кнопка */
             background: linear-gradient(45deg, #a962ff, #6247aa);
             border: none;
             border-radius: 8px;
             color: white;
             font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
-            margin-top: 10px;
+            margin-top: 12px;
         }
 
         button:hover {
             opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         .error {
             color: #ff4d4d;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             margin-top: 10px;
             display: none;
             text-align: center;
+            background: rgba(255, 77, 77, 0.1);
+            padding: 8px;
+            border-radius: 4px;
         }
 
         .info {
@@ -111,9 +142,15 @@
 
         <div class="form-group">
             <label for="salaryInput">Желаемая зарплата (₽)</label>
-            <input type="number" id="salaryInput" placeholder="Например: 100000" min="0" step="1000"
-                oninput="validity.valid||(value='');">
-            <small style="color: #666; font-size: 0.8rem;">Только цифры</small>
+            <input type="number" id="salaryInput" placeholder="Например: 100000" min="0" step="1000">
+
+            <div style="margin-top: 8px; display: flex; align-items: center;">
+                <input type="checkbox" id="noSalaryCheckbox"
+                    style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer; accent-color: #a962ff;">
+                <label for="noSalaryCheckbox"
+                    style="margin: 0; cursor: pointer; font-size: 0.95rem; user-select: none;">Не указывать
+                    (договорная)</label>
+            </div>
         </div>
 
         <div class="form-group">
@@ -129,10 +166,11 @@
         <div class="form-group">
             <label>Регион</label>
             <div id="cityStatus"
-                style="padding: 10px; background: #222; border-radius: 8px; color: #888; font-size: 0.9rem;">
+                style="padding: 12px; background: #222; border-radius: 8px; color: #aaa; font-size: 0.95rem; border: 1px solid #333;">
                 Загрузка...
             </div>
-            <small style="color: #666;">(Смена региона пока доступна только в боте)</small>
+            <small style="color: #666; margin-top: 4px; display: block;">(Смена региона пока доступна только в
+                боте)</small>
         </div>
 
         <button id="saveBtn">Сохранить</button>
