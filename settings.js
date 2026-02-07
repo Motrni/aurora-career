@@ -93,11 +93,7 @@ function toggleGlobalLoading(isLoading) {
     }
 }
 
-function checkLoadingComplete() {
-    if (isIndustriesLoaded && isSettingsLoaded) {
-        toggleGlobalLoading(false);
-    }
-}
+
 
 async function loadIndustriesDict() {
     try {
@@ -258,8 +254,9 @@ function initIndustryTree() {
             subCheckbox.dataset.type = "child";
             subCheckbox.dataset.parentId = catIdStr;
 
-            // Check if selected
-            if (currentSelectedIds.has(subIdStr)) {
+            // Check if selected (Directly OR via Parent)
+            // Fix: If API returns parent ID (e.g. "36"), all children should be checked.
+            if (currentSelectedIds.has(subIdStr) || currentSelectedIds.has(catIdStr)) {
                 subCheckbox.checked = true;
             }
 
