@@ -203,7 +203,23 @@ function initIndustryTree() {
 
     const chevronSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
 
-    allIndustries.forEach(category => {
+    // --- SORTING LOGIC ---
+    // 1. Helper to check if category is "selected" (has any ID in set)
+    const isCatSelected = (cat) => {
+        if (currentSelectedIds.has(String(cat.id))) return true;
+        return (cat.industries || []).some(sub => currentSelectedIds.has(String(sub.id)));
+    };
+
+    // 2. Sort: Selected First, then Alphabetical
+    const sortedIndustries = [...allIndustries].sort((a, b) => {
+        const selA = isCatSelected(a);
+        const selB = isCatSelected(b);
+        if (selA && !selB) return -1;
+        if (!selA && selB) return 1;
+        return a.name.localeCompare(b.name);
+    });
+
+    sortedIndustries.forEach(category => {
         const catIdStr = String(category.id);
         const catDiv = document.createElement("div");
         catDiv.className = "ind-category";
@@ -249,9 +265,8 @@ function initIndustryTree() {
             subCheckbox.dataset.parentId = catIdStr;
 
             // Check if selected
-            if (currentSelectedIds.has(subIdStr) || currentSelectedIds.has(catIdStr)) {
+            if (currentSelectedIds.has(subIdStr)) {
                 subCheckbox.checked = true;
-                if (!currentSelectedIds.has(subIdStr)) currentSelectedIds.add(subIdStr); // Ensure granular ID is in set
             }
 
             const subLabel = document.createElement("span");
@@ -263,13 +278,20 @@ function initIndustryTree() {
             subDiv.appendChild(subLabel);
             childrenContainer.appendChild(subDiv);
 
-            subCheckbox.addEventListener("change", updateState);
+            // Change event for child
+            subCheckbox.addEventListener("change", () => {
+                updateState(true); // pass true to indicate manual interaction
+            });
         });
 
         catDiv.appendChild(childrenContainer);
         container.appendChild(catDiv);
 
+        // Initial State Update (without moving)
         updateParentCheckboxState(catCheckbox, childrenContainer);
+        // Also ensure parent ID is in set if checked
+        if (catCheckbox.checked && !catCheckbox.indeterminate) currentSelectedIds.add(catIdStr);
+
 
         const toggle = () => {
             childrenContainer.classList.toggle("open");
@@ -279,13 +301,14 @@ function initIndustryTree() {
         toggleIcon.onclick = (e) => { e.stopPropagation(); toggle(); };
         catLabel.onclick = toggle;
 
+        // Change event for parent
         catCheckbox.addEventListener("change", () => {
             const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
             childrenInputs.forEach(ch => ch.checked = catCheckbox.checked);
-            updateState();
+            updateState(true); // pass true to indicate manual interaction
         });
 
-        function updateState() {
+        function updateState(isInteraction = false) {
             updateParentCheckboxState(catCheckbox, childrenContainer);
 
             // Sync Set
@@ -299,6 +322,19 @@ function initIndustryTree() {
                 currentSelectedIds.add(catIdStr);
             } else {
                 currentSelectedIds.delete(catIdStr);
+            }
+
+            // --- DYNAMIC SORTING (On Interaction) ---
+            if (isInteraction) {
+                const isSelected = catCheckbox.checked || catCheckbox.indeterminate;
+                if (isSelected) {
+                    // Move to top
+                    container.prepend(catDiv);
+                    // Scroll container to top
+                    // Use standard block scrolling (or smooth depends on UX)
+                    // User said "scroll the list to the top"
+                    container.scrollTop = 0;
+                }
             }
         }
     });
