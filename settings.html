@@ -353,6 +353,32 @@
             margin-left: auto;
             padding-left: 8px;
         }
+
+        /* --- SKELETON LOADER ANIMATION --- */
+        .skeleton {
+            background-color: #222;
+            background-image: linear-gradient(90deg, #222 0px, #333 40px, #222 80px);
+            background-size: 200px 100%;
+            background-repeat: no-repeat;
+            display: inline-block;
+            border-radius: 6px;
+            animation: skeleton-shimmer 1.5s infinite linear;
+        }
+
+        .skeleton-block {
+            width: 100%;
+            display: block;
+        }
+
+        @keyframes skeleton-shimmer {
+            0% {
+                background-position: -200px 0;
+            }
+
+            100% {
+                background-position: calc(100% + 200px) 0;
+            }
+        }
     </style>
 </head>
 

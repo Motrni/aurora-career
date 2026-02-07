@@ -10,6 +10,7 @@ let initialSettings = {};
 let allIndustries = [];
 let currentSelectedIds = new Set();
 let messageId = null;
+window.BOT_USERNAME = "Aurora_Career_Bot"; // Default
 
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. URL Params
@@ -54,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.Telegram.WebApp.close();
         }
         // Fallback redirection
-        window.location.href = "https://t.me/Aurora_Career_Bot";
+        window.location.href = `https://t.me/${window.BOT_USERNAME}`;
     });
 
     // 5. Load Data
@@ -101,15 +102,18 @@ async function loadIndustriesDict() {
 }
 
 async function loadSettings(userId, sign) {
-    const response = await fetch(`${API_BASE_URL}/api/settings/get`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: parseInt(userId), sign: sign })
+    const response = await fetch(`${API_BASE_URL}/api/settings/get?user_id=${userId}&sign=${sign}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
     });
 
     const data = await response.json();
     if (data.status !== "ok") {
         throw new Error(data.error || "Неизвестная ошибка");
+    }
+
+    if (data.bot_username) {
+        window.BOT_USERNAME = data.bot_username;
     }
 
     const settings = data.settings;
