@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchInput = document.getElementById("industrySearch");
     searchInput.addEventListener("input", (e) => {
         const text = e.target.value.trim().toLowerCase();
-        renderIndustryTree(text);
+        filterIndustryTree(text);
     });
 
     // 4. Загрузка данных
@@ -112,7 +112,8 @@ async function loadSettings(userId, sign) {
 
     // --- Индустрии ---
     currentSelectedIds = new Set(settings.industry || []);
-    renderIndustryTree();
+    // Рендерим один раз полное дерево
+    initIndustryTree();
 
     // Сохраняем начальное состояние
     initialSettings = {
@@ -123,50 +124,28 @@ async function loadSettings(userId, sign) {
     if (initialSettings.salary === 0) initialSettings.salary = null;
 }
 
-// Рендер дерева с фильтрацией
-function renderIndustryTree(filterText = "") {
+// Инициализация дерева (один раз)
+function initIndustryTree() {
     const container = document.getElementById("industryTree");
     container.innerHTML = ""; // Очищаем
 
-    // Если данных нет
     if (!allIndustries || allIndustries.length === 0) {
         container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Нет данных</div>';
         return;
     }
 
-    // Создаем SVG иконки заранее
     const chevronSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
 
     allIndustries.forEach(category => {
-        const catNameLower = category.name.toLowerCase();
-        const children = category.industries || [];
-
-        // Фильтрация: находим детей, которые подходят
-        let matchingChildren = children;
-        let isCatMatch = false;
-
-        if (filterText) {
-            if (catNameLower.includes(filterText)) {
-                // Если категория подходит - показываем всех детей
-                isCatMatch = true;
-                matchingChildren = children;
-            } else {
-                // Иначе ищем только подходящих детей
-                matchingChildren = children.filter(c => c.name.toLowerCase().includes(filterText));
-            }
-
-            // Если ни категория, ни дети не подходят - пропускаем
-            if (!isCatMatch && matchingChildren.length === 0) return;
-        }
-
         // --- Создание DOM ---
         const catDiv = document.createElement("div");
         catDiv.className = "ind-category";
+        catDiv.dataset.name = category.name.toLowerCase(); // Для поиска
 
         const headerDiv = document.createElement("div");
         headerDiv.className = "ind-header";
 
-        // 1. Иконка (House/Chevron)
+        // 1. Иконка
         const toggleIcon = document.createElement("div");
         toggleIcon.className = "toggle-icon";
         toggleIcon.innerHTML = chevronSvg;
@@ -182,34 +161,22 @@ function renderIndustryTree(filterText = "") {
         const catLabel = document.createElement("span");
         catLabel.className = "ind-label";
         catLabel.innerText = category.name;
-        // Подсветка при поиске
-        if (filterText && isCatMatch) catLabel.style.color = "#a962ff";
-
-        // 4. Счетчик (опционально)
-        // const countSpan = document.createElement("span");
-        // countSpan.className = "ind-count";
-        // countSpan.innerText = children.length;
 
         headerDiv.appendChild(toggleIcon);
         headerDiv.appendChild(catCheckbox);
         headerDiv.appendChild(catLabel);
-        // headerDiv.appendChild(countSpan);
         catDiv.appendChild(headerDiv);
 
         // --- Контейнер детей ---
         const childrenContainer = document.createElement("div");
         childrenContainer.className = "ind-children";
 
-        // Если есть фильтр - раскрываем сразу
-        if (filterText) {
-            childrenContainer.classList.add("open");
-            toggleIcon.classList.add("expanded");
-        }
-
         // Рендерим детей
-        matchingChildren.forEach(sub => {
+        const children = category.industries || [];
+        children.forEach(sub => {
             const subDiv = document.createElement("div");
             subDiv.className = "ind-sub";
+            subDiv.dataset.name = sub.name.toLowerCase(); // Для поиска
 
             const subCheckbox = document.createElement("input");
             subCheckbox.type = "checkbox";
@@ -218,91 +185,102 @@ function renderIndustryTree(filterText = "") {
             subCheckbox.dataset.type = "child";
             subCheckbox.dataset.parentId = category.id;
 
-            // Восстанавливаем состояние выборки
+            // Восстанавливаем состояние selection
             if (currentSelectedIds.has(sub.id) || currentSelectedIds.has(category.id)) {
                 subCheckbox.checked = true;
             }
 
             const subLabel = document.createElement("span");
-            subLabel.className = "ind-sub-label ind-label"; // Используем те же стили
+            subLabel.className = "ind-sub-label";
             subLabel.innerText = sub.name;
-            if (filterText && sub.name.toLowerCase().includes(filterText)) {
-                subLabel.style.color = "#fff"; // Чуть ярче
-                subLabel.style.fontWeight = "500";
-            }
 
-            // Клик по тексту -> чекбокс
             subLabel.onclick = () => { subCheckbox.checked = !subCheckbox.checked; updateState(); };
 
             subDiv.appendChild(subCheckbox);
             subDiv.appendChild(subLabel);
             childrenContainer.appendChild(subDiv);
 
-            // Листенеры изменения
-            subCheckbox.addEventListener("change", () => {
-                updateState();
-            });
+            subCheckbox.addEventListener("change", updateState);
         });
 
         catDiv.appendChild(childrenContainer);
         container.appendChild(catDiv);
 
         // --- ЛОГИКА ---
-
-        // Состояние родительского чекбокса (Indeterminate)
         updateParentCheckboxState(catCheckbox, childrenContainer);
 
-        // 1. Клик по Иконке -> Раскрытие
-        toggleIcon.onclick = (e) => {
-            e.stopPropagation(); // Чтобы не триггерить клик по хедерам, если будут
+        const toggle = () => {
             childrenContainer.classList.toggle("open");
             toggleIcon.classList.toggle("expanded");
         };
 
-        // 2. Клик по Тексту Родителя -> Тоже раскрытие? Или выбор?
-        // Юзер: "нужно нажать на иконку... и список раскрывается".
-        // Обычно клик по тексту тоже раскрывает. Сделаем раскрытие.
-        catLabel.onclick = () => {
-            childrenContainer.classList.toggle("open");
-            toggleIcon.classList.toggle("expanded");
-        };
+        toggleIcon.onclick = (e) => { e.stopPropagation(); toggle(); };
+        catLabel.onclick = toggle;
 
-        // 3. Клик по Чекбоксу Родителя -> Выбрать все/Снять все
         catCheckbox.addEventListener("change", () => {
             const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
+            // Если родитель чекнут - чекаем видимых детей (или всех? Логичнее всех)
             childrenInputs.forEach(ch => ch.checked = catCheckbox.checked);
-            updateState(); // Обновляем Set
+            updateState();
         });
 
-        // Функция обновления сета (вызывается при любом клике)
         function updateState() {
-            // Обновляем визуал родителя
             updateParentCheckboxState(catCheckbox, childrenContainer);
 
-            // Синхронизируем currentSelectedIds
-            // Проходим по всем чекбоксам в ЭТОЙ категории (оптимизация)
-            // Но лучше глобально собрать в конце перед сохранением. 
-            // А здесь просто обновлять UI.
-
-            // Но нам нужно state хранить актуальным для поиска и перерендера.
-            // Поэтому давайте обновлять Set прямо здесь.
-
+            // Обновляем глобальный сет
+            // (Немного неоптимально бегать по всем, но надежно)
             const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
             childrenInputs.forEach(ch => {
                 if (ch.checked) currentSelectedIds.add(ch.value);
                 else currentSelectedIds.delete(ch.value);
             });
 
-            // Родителя тоже можно добавить в сет, если он checked (для красоты), 
-            // но API принимает либо ID родителя, либо массив детей.
-            // Важно: если выбран родитель, то currentSelectedIds должен содержать его ID?
-            // Или лучше хранить только детей и вычислять родителя?
-            // HH API: если передать ID категории, он ищет по всей категории.
             if (catCheckbox.checked && !catCheckbox.indeterminate) {
                 currentSelectedIds.add(category.id);
             } else {
                 currentSelectedIds.delete(category.id);
             }
+        }
+    });
+}
+
+// Фильтрация (скрытие/показ) без перерисовки
+function filterIndustryTree(text) {
+    const container = document.getElementById("industryTree");
+    const categories = container.querySelectorAll(".ind-category");
+
+    categories.forEach(catDiv => {
+        const catName = catDiv.dataset.name;
+        const childrenContainer = catDiv.querySelector(".ind-children");
+        const childrenDivs = childrenContainer.querySelectorAll(".ind-sub");
+        const toggleIcon = catDiv.querySelector(".toggle-icon");
+
+        // Используем 'includes', но можно усложнить
+        let isCatMatch = catName.includes(text);
+        let hasVisibleChild = false;
+
+        childrenDivs.forEach(subDiv => {
+            const subName = subDiv.dataset.name;
+            if (isCatMatch || subName.includes(text)) {
+                subDiv.style.display = "flex";
+                hasVisibleChild = true;
+            } else {
+                subDiv.style.display = "none";
+            }
+        });
+
+        if (isCatMatch || hasVisibleChild) {
+            catDiv.style.display = "block";
+            // Если есть поиск, раскрываем
+            if (text.length > 0) {
+                childrenContainer.classList.add("open");
+                toggleIcon.classList.add("expanded");
+            } else {
+                // Если поиск сброшен, можно не сворачивать (или сворачивать).
+                // Оставим открытым, если было открыто.
+            }
+        } else {
+            catDiv.style.display = "none";
         }
     });
 }
@@ -328,36 +306,32 @@ function updateParentCheckboxState(parentCheckbox, childrenContainer) {
 }
 
 // Сбор финальный (перед отправкой)
-function getFinalSelectedIds() {
-    // В currentSelectedIds у нас сейчас может быть каша (и дети, и родители).
-    // Нам нужно нормализовать:
-    // 1. Если выбраны ВСЕ дети категории -> заменяем их на ID категории.
-    // 2. Если выбрана ЧАСТЬ -> шлем ID детей.
+function finalizeIdsFromSet() {
+    // Превращаем Set в "умный список" (Родитель заменяет Детей)
+    const result = [];
+    const set = currentSelectedIds;
 
-    // Но так как currentSelectedIds мы обновляли "на лету" довольно грубо,
-    // лучше пробежаться по DOM сейчас, так надежнее.
+    allIndustries.forEach(cat => {
+        const children = cat.industries || [];
+        if (children.length === 0) return;
 
-    const container = document.getElementById("industryTree");
-    const parents = container.querySelectorAll("input[data-type='parent']");
-    const resultIds = [];
+        const allChildrenIds = children.map(c => c.id);
+        const selectedChildrenIds = allChildrenIds.filter(id => set.has(id));
 
-    parents.forEach(p => {
-        if (p.checked && !p.indeterminate) {
-            resultIds.push(p.value); // Вся категория
+        if (selectedChildrenIds.length === allChildrenIds.length) {
+            result.push(cat.id);
         } else {
-            // Иначе смотрим детей
-            // (p.parentElement это header, p.parentElement.nextSibling это childrenContainer)
-            const childrenContainer = p.parentElement.nextElementSibling;
-            if (childrenContainer) {
-                const checkedChildren = childrenContainer.querySelectorAll("input[data-type='child']:checked");
-                checkedChildren.forEach(c => resultIds.push(c.value));
+            // Если родитель в сете?
+            if (set.has(cat.id)) {
+                result.push(cat.id);
+            } else {
+                result.push(...selectedChildrenIds);
             }
         }
     });
 
-    return resultIds;
+    return result;
 }
-
 
 async function saveSettings(userId, sign) {
     const salaryInput = document.getElementById("salaryInput");
@@ -383,14 +357,6 @@ async function saveSettings(userId, sign) {
     }
 
     const experience = document.getElementById("experienceSelect").value;
-
-    // Получаем ID из DOM (наиболее актуально)
-    // Внимание: если был фильтр и часть дерева скрыта, getFinalSelectedIds не найдет их в DOM?
-    // ДА! Это проблема. При фильтрации мы перерисовываем дерево и теряем скрытые элементы.
-    // РЕШЕНИЕ: Нам нужно полагаться на currentSelectedIds, который должен быть Source of Truth.
-
-    // Но currentSelectedIds хранит flat list (и родителей и детей).
-    // Нам нужно его почистить перед отправкой.
     const selectedIndustries = finalizeIdsFromSet();
 
     // ПРОВЕРКА НА ИЗМЕНЕНИЯ
@@ -443,36 +409,6 @@ async function saveSettings(userId, sign) {
     document.getElementById("errorMsg").style.display = "none";
 }
 
-function finalizeIdsFromSet() {
-    // Превращаем Set в "умный список" (Родитель заменяет Детей)
-    const result = [];
-    const set = currentSelectedIds;
-
-    allIndustries.forEach(cat => {
-        // Проверяем всех детей категории
-        const children = cat.industries || [];
-        if (children.length === 0) return;
-
-        const allChildrenIds = children.map(c => c.id);
-        const selectedChildrenIds = allChildrenIds.filter(id => set.has(id));
-
-        if (selectedChildrenIds.length === allChildrenIds.length) {
-            // Если выбраны ВСЕ дети -> добавляем ID родителя
-            result.push(cat.id);
-        } else {
-            // Иначе добавляем только выбранных детей
-            // Нужно ли проверять, если в сете лежит сам cat.id? 
-            // Если лежит cat.id, считаем что все выбраны.
-            if (set.has(cat.id)) {
-                result.push(cat.id);
-            } else {
-                result.push(...selectedChildrenIds);
-            }
-        }
-    });
-
-    return result;
-}
 
 function showError(msg) {
     const errDiv = document.getElementById("errorMsg");
