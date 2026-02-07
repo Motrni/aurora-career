@@ -4,12 +4,12 @@
 // КОНФИГУРАЦИЯ
 // Замените на реальный адрес вашего бота (API)
 const API_BASE_URL = "https://api.aurora-career.ru";
-// Используем прямой IP для теста
-// ВАЖНО: Это должен быть HTTPS адрес вашего бота (или ngrok для тестов)
-// Для локальной разработки можно использовать: "http://localhost:5000"
+
+// Храним начальное состояние для проверки изменений
+let initialSettings = {};
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Получаем параметры из URL
+    // ... (код получения URL параметров тот же) ...
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
     const sign = urlParams.get('sign');
@@ -19,14 +19,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // 2. Загружаем текущие настройки
     try {
         await loadSettings(userId, sign);
     } catch (e) {
         showError("Не удалось загрузить настройки. " + e.message);
     }
 
-    // 3. Вешаем обработчик сохранения
     document.getElementById("saveBtn").addEventListener("click", async () => {
         try {
             await saveSettings(userId, sign);
@@ -49,20 +47,49 @@ async function loadSettings(userId, sign) {
     }
 
     const settings = data.settings;
-    
+
     // Заполняем форму
     if (settings.salary) document.getElementById("salaryInput").value = settings.salary;
     if (settings.experience) document.getElementById("experienceSelect").value = settings.experience;
-    
-    // Город пока показываем как ID или текст (если это ID, можно маппить на клиенте или сервере)
+
     if (settings.search_area) {
         document.getElementById("cityStatus").innerText = `Текущий регион ID: ${settings.search_area}`;
     }
+
+    // Сохраняем начальное состояние (для сравнения)
+    initialSettings = {
+        salary: settings.salary || "",
+        experience: settings.experience || "noExperience"
+    };
 }
 
 async function saveSettings(userId, sign) {
-    const salary = parseInt(document.getElementById("salaryInput").value);
+    const salaryInput = document.getElementById("salaryInput");
+    // Если пусто, считаем как 0 или null, но input type=number может вернуть ""
+    let salaryVal = salaryInput.value.trim();
+    let salary = salaryVal === "" ? 0 : parseInt(salaryVal);
+
+    // ВАЛИДАЦИЯ
+    if (isNaN(salary) || salary < 0) {
+        showError("Зарплата должна быть положительным числом!");
+        return;
+    }
+    // Лимит 100 млн
+    if (salary > 100000000) {
+        showError("Зарплата не может превышать 100 млн ₽");
+        return;
+    }
+
     const experience = document.getElementById("experienceSelect").value;
+
+    // ПРОВЕРКА НА ИЗМЕНЕНИЯ (Идемпотентность)
+    // Приводим к единому типу для сравнения
+    const initialSal = initialSettings.salary ? parseInt(initialSettings.salary) : 0;
+
+    if (salary === initialSal && experience === initialSettings.experience) {
+        alert("Данные не изменились 🤷‍♂️");
+        return;
+    }
 
     const payload = {
         user_id: parseInt(userId),
@@ -83,6 +110,15 @@ async function saveSettings(userId, sign) {
     }
 
     alert("Настройки успешно сохранены! ✅");
+
+    // Обновляем "начальное" состояние до текущего
+    initialSettings = {
+        salary: salary,
+        experience: experience
+    };
+
+    // Скрываем ошибку, если была
+    document.getElementById("errorMsg").style.display = "none";
 }
 
 function showError(msg) {
