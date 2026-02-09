@@ -463,11 +463,11 @@
                 <option value="doesNotMatter">Не пиво</option>
             </select>
 
-            <!-- 2.1 График работы (New) -->
+            <!-- 2.1 График работы -->
             <div class="section-title">График работы</div>
             <div class="checkbox-group" id="scheduleContainer" style="display: flex; flex-direction: column; gap: 8px;">
                 <div class="checkbox-wrapper">
-                    <input type="checkbox" id="sch_remote" value="remote" class="custom-checkbox">
+                    <input type="checkbox" id="sch_remote" value="REMOTE" class="custom-checkbox">
                     <label for="sch_remote">Удаленная работа</label>
                 </div>
                 <div class="checkbox-wrapper">
@@ -478,7 +478,10 @@
                     <input type="checkbox" id="sch_hybrid" value="HYBRID" class="custom-checkbox">
                     <label for="sch_hybrid">Гибридный график</label>
                 </div>
-                <!-- FIELD_WORK (Разъездная) - опционально, если есть в энамах -->
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="sch_field" value="FIELD_WORK" class="custom-checkbox">
+                    <label for="sch_field">Разъездная работа</label>
+                </div>
             </div>
 
             <div class="divider"></div>
@@ -489,7 +492,6 @@
                 Загрузка региона... 🌍
             </div>
 
-            <!-- 4. Отрасли (Дерево) -->
             <!-- 4. Отрасли (Дерево) -->
             <div class="section-title" style="margin-top: 30px;">
                 Отрасли компаний
@@ -510,28 +512,35 @@
 
             <!-- Segmented Control -->
             <div class="segmented-control">
-                <div class="mode-btn active" id="modeSimpleBtn" onclick="switchQueryMode('simple')">
+                <div class="mode-btn active" id="modeSimpleBtn" onclick="window.switchQueryMode('simple')">
                     <span style="font-size: 1.2em;">✨</span> Простой (Keywords)
                 </div>
-                <div class="mode-btn" id="modeAdvancedBtn" onclick="switchQueryMode('advanced')">
+                <div class="mode-btn" id="modeAdvancedBtn" onclick="window.switchQueryMode('advanced')">
                     <span style="font-size: 1.2em;">🧠</span> Advanced (AI/Boolean)
                 </div>
             </div>
 
-            <!-- Simple Mode Content -->
+            <!-- Simple Mode Content (Tag Inputs) -->
             <div id="simpleQueryEditor" class="query-editor-block">
                 <div class="info-text" style="margin-bottom: 12px;">
-                    Введите ключевые слова через запятую. <br>
+                    Введите ключевые слова и нажмите <b>Enter</b>. <br>
                     Бот будет искать резюме, содержащие <b>ВСЕ</b> слова из "Включить" и <b>НИ ОДНОГО</b> из
                     "Исключить".
                 </div>
 
                 <label class="field-label">🔎 Искать (Include)</label>
-                <input type="text" id="keywordsInclude" class="input-field" placeholder="Python, Django, Backend..."
-                    style="margin-bottom: 12px;">
+                <div class="tags-container" id="tagsIncludeContainer">
+                    <!-- Tags will be rendered here -->
+                    <input type="text" id="keywordsIncludeInput" class="tag-input"
+                        placeholder="Введите слово и Enter...">
+                </div>
 
-                <label class="field-label">🚫 Исключить (Exclude)</label>
-                <input type="text" id="keywordsExclude" class="input-field" placeholder="Senior, Lead, Java...">
+                <label class="field-label" style="margin-top: 12px;">🚫 Исключить (Exclude)</label>
+                <div class="tags-container" id="tagsExcludeContainer">
+                    <!-- Tags will be rendered here -->
+                    <input type="text" id="keywordsExcludeInput" class="tag-input"
+                        placeholder="Введите слово и Enter...">
+                </div>
             </div>
 
             <!-- Advanced Mode Content -->
@@ -550,6 +559,66 @@
             </div>
 
             <style>
+                .tags-container {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    background: #1a1a1a;
+                    border: 1px solid #333;
+                    padding: 8px;
+                    border-radius: 8px;
+                    min-height: 42px;
+                    align-items: center;
+                }
+
+                .tags-container:focus-within {
+                    border-color: #a962ff;
+                    box-shadow: 0 0 0 2px rgba(169, 98, 255, 0.2);
+                }
+
+                .tag {
+                    background: rgba(169, 98, 255, 0.2);
+                    color: #fff;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    border: 1px solid rgba(169, 98, 255, 0.4);
+                }
+
+                .tag-remove {
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 16px;
+                    height: 16px;
+                    opacity: 0.7;
+                    transition: opacity 0.2s;
+                }
+
+                .tag-remove:hover {
+                    opacity: 1;
+                    color: #ff4d4d;
+                }
+
+                .tag-input {
+                    background: transparent;
+                    border: none;
+                    color: #fff;
+                    font-size: 0.95rem;
+                    outline: none;
+                    flex-grow: 1;
+                    min-width: 120px;
+                    padding: 4px;
+                }
+
+                .tag-input::placeholder {
+                    color: #555;
+                }
+
                 .segmented-control {
                     display: flex;
                     background: rgba(255, 255, 255, 0.05);
