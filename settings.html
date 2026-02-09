@@ -453,12 +453,117 @@
 
             <!-- 2. Опыт -->
             <div class="section-title">Опыт работы</div>
+            <!-- 2. Опыт -->
+            <div class="section-title">Опыт работы</div>
             <select id="experienceSelect" class="input-field">
                 <option value="noExperience">Нет опыта</option>
                 <option value="between1And3">От 1 года до 3 лет</option>
                 <option value="between3And6">От 3 до 6 лет</option>
                 <option value="moreThan6">Более 6 лет</option>
+                <option value="doesNotMatter">Не пиво</option>
             </select>
+
+            <!-- 2.1 График работы (New) -->
+            <div class="section-title">График работы</div>
+            <div class="checkbox-group" id="scheduleContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="sch_remote" value="remote" class="custom-checkbox">
+                    <label for="sch_remote">Удаленная работа</label>
+                </div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="sch_fullDay" value="fullDay" class="custom-checkbox">
+                    <label for="sch_fullDay">Полный день</label>
+                </div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="sch_shift" value="shift" class="custom-checkbox">
+                    <label for="sch_shift">Сменный график</label>
+                </div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="sch_flexible" value="flexible" class="custom-checkbox">
+                    <label for="sch_flexible">Гибкий график</label>
+                </div>
+            </div>
+
+            <!-- 2.2 Редактор запроса (New) -->
+            <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Поисковый запрос</span>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="queryModeToggle">
+                    <label for="queryModeToggle" class="slider"></label>
+                </div>
+            </div>
+            <div class="info-text" style="margin-bottom: 12px; font-size: 0.8rem;">
+                <span id="modeLabel">Простой режим (Ключевые слова)</span>
+            </div>
+
+            <!-- Simple Mode -->
+            <div id="simpleQueryEditor">
+                <label>Искать в названии (+)</label>
+                <input type="text" id="keywordsInclude" class="input-field" placeholder="Python, Django, Backend..."
+                    style="margin-bottom: 12px;">
+
+                <label>Исключить (-)</label>
+                <input type="text" id="keywordsExclude" class="input-field" placeholder="Senior, Lead, Java...">
+            </div>
+
+            <!-- Advanced Mode -->
+            <div id="advancedQueryEditor" style="display: none;">
+                <label>Boolean Query (SQL-like)</label>
+                <textarea id="booleanQueryInput" class="input-field" rows="4"
+                    placeholder="NAME:(Python OR Django) AND NOT NAME:(Senior)"
+                    style="font-family: monospace;"></textarea>
+                <div class="info" style="text-align: left; margin-top: 4px;">
+                    Используйте OR, AND, NOT, скобки и NAME:(...).
+                </div>
+            </div>
+
+            <style>
+                /* Switch Styles */
+                .toggle-switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 40px;
+                    height: 20px;
+                }
+
+                .toggle-switch input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: #333;
+                    transition: .4s;
+                    border-radius: 20px;
+                }
+
+                .slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 14px;
+                    width: 14px;
+                    left: 3px;
+                    bottom: 3px;
+                    background-color: white;
+                    transition: .4s;
+                    border-radius: 50%;
+                }
+
+                input:checked+.slider {
+                    background-color: #a962ff;
+                }
+
+                input:checked+.slider:before {
+                    transform: translateX(20px);
+                }
+            </style>
 
             <!-- 3. Регион (Инфо) -->
             <div class="section-title">Регион поиска</div>

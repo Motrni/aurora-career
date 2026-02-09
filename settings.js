@@ -78,7 +78,117 @@ document.addEventListener("DOMContentLoaded", async () => {
             showError("Ошибка при сохранении. " + e.message);
         }
     });
+
+    // 7. Query Mode Toggle Logic
+    const queryToggle = document.getElementById("queryModeToggle");
+    const simpleEditor = document.getElementById("simpleQueryEditor");
+    const advancedEditor = document.getElementById("advancedQueryEditor");
+    const modeLabel = document.getElementById("modeLabel");
+
+    queryToggle.addEventListener("change", (e) => {
+        const isAdvanced = e.target.checked;
+
+        if (isAdvanced) {
+            // Simple -> Advanced
+            modeLabel.innerText = "Расширенный режим (Boolean Query)";
+            simpleEditor.style.display = "none";
+            advancedEditor.style.display = "block";
+
+            // Convert Keywords -> Boolean String
+            const inc = document.getElementById("keywordsInclude").value;
+            const exc = document.getElementById("keywordsExclude").value;
+
+            // Only overwrite if boolean input is empty or we want to sync
+            // For now: always sync from keywords if they exist
+            const boolStr = buildBooleanQuery(inc, exc);
+            if (boolStr) {
+                document.getElementById("booleanQueryInput").value = boolStr;
+            }
+
+        } else {
+            // Advanced -> Simple
+            modeLabel.innerText = "Простой режим (Ключевые слова)";
+            simpleEditor.style.display = "block";
+            advancedEditor.style.display = "none";
+
+            // Try parse Boolean -> Keywords
+            const boolVal = document.getElementById("booleanQueryInput").value;
+            const parsed = parseBooleanQuery(boolVal);
+
+            if (parsed) {
+                document.getElementById("keywordsInclude").value = parsed.included.join(", ");
+                document.getElementById("keywordsExclude").value = parsed.excluded.join(", ");
+            } else {
+                // If too complex, maybe warn? Or just leave as is.
+                // console.log("Complex query, cannot revert fully");
+            }
+        }
+    });
 });
+
+// --- HELPER FUNCTIONS FOR QUERY ---
+
+function buildBooleanQuery(incStr, excStr) {
+    // incStr: "Python, Django" -> NAME:(Python OR Django)
+    const incList = incStr.split(',').map(s => s.trim()).filter(s => s);
+    const excList = excStr.split(',').map(s => s.trim()).filter(s => s);
+
+    let parts = [];
+
+    if (incList.length > 0) {
+        const joined = incList.map(w => w.includes(' ') ? `"${w}"` : w).join(' OR ');
+        parts.push(`NAME:(${joined})`);
+    }
+
+    if (excList.length > 0) {
+        const joined = excList.map(w => w.includes(' ') ? `"${w}"` : w).join(' OR ');
+        parts.push(`NAME:(NOT (${joined}))`);
+    }
+
+    return parts.join(' AND ');
+}
+
+function parseBooleanQuery(query) {
+    // Reverse logic: NAME:(A OR B) AND NAME:(NOT (C))
+    // Very basic parser.
+    try {
+        let included = [];
+        let excluded = [];
+
+        // Split by AND (assuming top level AND)
+        const parts = query.split(' AND ');
+
+        parts.forEach(part => {
+            part = part.trim();
+            if (part.includes('NAME:(NOT (')) {
+                // Excluded
+                const match = part.match(/NAME:\(NOT \((.*)\)\)/);
+                if (match && match[1]) {
+                    excluded.push(...extractWords(match[1]));
+                }
+            } else if (part.includes('NAME:(')) {
+                // Included
+                const match = part.match(/NAME:\((.*)\)/);
+                if (match && match[1]) {
+                    included.push(...extractWords(match[1]));
+                }
+            }
+        });
+
+        return { included, excluded };
+    } catch (e) {
+        console.error("Parse error", e);
+        return null; // Failed to parse (complex query)
+    }
+}
+
+function extractWords(innerStr) {
+    // "Python OR Django OR \"Machine Learning\""
+    // Simple split by OR
+    return innerStr.split(' OR ').map(w => w.trim().replace(/"/g, "").replace(/^\(/, "").replace(/\)$/, ""));
+}
+
+// ----------------------------------
 
 function toggleGlobalLoading(isLoading) {
     const skeleton = document.getElementById("globalSkeleton");
@@ -92,8 +202,6 @@ function toggleGlobalLoading(isLoading) {
         if (content) content.style.display = "block";
     }
 }
-
-
 
 async function loadIndustriesDict() {
     try {
@@ -156,10 +264,46 @@ async function loadSettings(userId, sign) {
             document.getElementById("cityStatus").innerText = "Регион не выбран";
         }
 
+        // Schedule
+        if (settings.search_schedule) {
+            let sched = [];
+            try { sched = JSON.parse(settings.search_schedule); } catch (e) { sched = []; }
+            // If string comes as ['remote'], it might be parsed or not. 
+            // Assume backend sends JSON string or list. 
+            // If it's pure string from DB "['remote']", we need to parse.
+            if (typeof settings.search_schedule === 'string') {
+                try { sched = JSON.parse(settings.search_schedule); } catch (e) { }
+            } else if (Array.isArray(settings.search_schedule)) {
+                sched = settings.search_schedule;
+            }
+
+            sched.forEach(val => {
+                const cb = document.querySelector(`#scheduleContainer input[value="${val}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
+
+        // Query Mode & Boolean Logic
+        const mode = settings.query_mode || 'simple';
+        const isAdvanced = (mode === 'advanced');
+        document.getElementById("queryModeToggle").checked = isAdvanced;
+
+        // Load Keywords
+        const keys = settings.keywords_data || { included: [], excluded: [] };
+        document.getElementById("keywordsInclude").value = (keys.included || []).join(", ");
+        document.getElementById("keywordsExclude").value = (keys.excluded || []).join(", ");
+
+        // Load Boolean Draft or Custom Query
+        // If we represent the custom_query as the boolean input
+        let boolVal = settings.boolean_draft || settings.custom_query || "";
+        document.getElementById("booleanQueryInput").value = boolVal;
+
+        // Trigger Switch UI
+        const queryToggle = document.getElementById("queryModeToggle");
+        queryToggle.dispatchEvent(new Event('change')); // Update UI visibility
+
         // Industries
-        // Fix: Ensure we handle generic JSON array from API
         let inds = settings.industry || [];
-        // If API returned string (should be fixed in backend now, but safe to check)
         if (typeof inds === 'string') {
             try { inds = JSON.parse(inds); } catch (e) { inds = []; }
         }
@@ -436,16 +580,29 @@ async function saveSettings(userId, sign) {
     const experience = document.getElementById("experienceSelect").value;
     const selectedIndustries = finalizeIdsFromSet();
 
-    // Check changes (Sort inputs for comparison)
-    let initialSal = initialSettings.salary;
-    const initInd = (initialSettings.industry || []).sort();
-    const currInd = selectedIndustries.sort();
+    // Schedule
+    const scheduleInputs = document.querySelectorAll("#scheduleContainer input:checked");
+    const selectedSchedule = Array.from(scheduleInputs).map(cb => cb.value);
 
-    const isIndChanged = JSON.stringify(currInd) !== JSON.stringify(initInd);
+    // Query Data
+    const isAdvanced = document.getElementById("queryModeToggle").checked;
+    const queryMode = isAdvanced ? 'advanced' : 'simple';
 
-    if (salary === initialSal && experience === initialSettings.experience && !isIndChanged) {
-        alert("Данные не изменились 🤷‍♂️");
-        return;
+    const incStr = document.getElementById("keywordsInclude").value;
+    const excStr = document.getElementById("keywordsExclude").value;
+    const keywordsData = {
+        included: incStr.split(',').map(s => s.trim()).filter(s => s),
+        excluded: excStr.split(',').map(s => s.trim()).filter(s => s)
+    };
+
+    const booleanDraft = document.getElementById("booleanQueryInput").value;
+
+    // Logic: What is the final custom_query?
+    let finalQuery = "";
+    if (isAdvanced) {
+        finalQuery = booleanDraft; // Whatever is in textarea
+    } else {
+        finalQuery = buildBooleanQuery(incStr, excStr);
     }
 
     const payload = {
@@ -454,7 +611,12 @@ async function saveSettings(userId, sign) {
         salary: salary,
         experience: experience,
         industry: selectedIndustries,
-        message_id: messageId ? parseInt(messageId) : null // <--- Pass message_id
+        work_formats: selectedSchedule, // [NEW]
+        query_mode: queryMode,          // [NEW]
+        keywords: keywordsData,         // [NEW]
+        boolean_draft: booleanDraft,    // [NEW]
+        custom_query: finalQuery,       // [NEW]
+        message_id: messageId ? parseInt(messageId) : null
     };
 
     const response = await fetch(`${API_BASE_URL}/api/settings/update`, {
@@ -480,7 +642,8 @@ async function saveSettings(userId, sign) {
     initialSettings = {
         salary: salary,
         experience: experience,
-        industry: selectedIndustries
+        industry: selectedIndustries,
+        // Update other init states if needed for dirty checking
     };
 
     document.getElementById("errorMsg").style.display = "none";
