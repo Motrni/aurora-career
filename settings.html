@@ -471,53 +471,139 @@
                     <label for="sch_remote">Удаленная работа</label>
                 </div>
                 <div class="checkbox-wrapper">
-                    <input type="checkbox" id="sch_fullDay" value="fullDay" class="custom-checkbox">
-                    <label for="sch_fullDay">Полный день</label>
+                    <input type="checkbox" id="sch_office" value="ON_SITE" class="custom-checkbox">
+                    <label for="sch_office">В офисе/На территории</label>
                 </div>
                 <div class="checkbox-wrapper">
-                    <input type="checkbox" id="sch_shift" value="shift" class="custom-checkbox">
-                    <label for="sch_shift">Сменный график</label>
+                    <input type="checkbox" id="sch_hybrid" value="HYBRID" class="custom-checkbox">
+                    <label for="sch_hybrid">Гибридный график</label>
                 </div>
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" id="sch_flexible" value="flexible" class="custom-checkbox">
-                    <label for="sch_flexible">Гибкий график</label>
+                <!-- FIELD_WORK (Разъездная) - опционально, если есть в энамах -->
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- 3. Регион (Инфо) -->
+            <div class="section-title">Регион поиска</div>
+            <div id="cityStatus" class="info-text">
+                Загрузка региона... 🌍
+            </div>
+
+            <!-- 4. Отрасли (Дерево) -->
+            <!-- 4. Отрасли (Дерево) -->
+            <div class="section-title" style="margin-top: 30px;">
+                Отрасли компаний
+            </div>
+
+            <div id="industryContainer">
+                <div class="industry-search-wrapper">
+                    <input type="text" id="industrySearch" class="industry-search-input"
+                        placeholder="Поиск отрасли..." />
+                </div>
+                <div id="industryTree">
+                    <!-- Сюда рендерится JS -->
                 </div>
             </div>
 
-            <!-- 2.2 Редактор запроса (New) -->
-            <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Поисковый запрос</span>
-                <div class="toggle-switch">
-                    <input type="checkbox" id="queryModeToggle">
-                    <label for="queryModeToggle" class="slider"></label>
+            <!-- 2.2 Редактор запроса (Moved to Bottom) -->
+            <div class="section-title" style="margin-bottom: 12px;">Настройка Поиска</div>
+
+            <!-- Segmented Control -->
+            <div class="segmented-control">
+                <div class="mode-btn active" id="modeSimpleBtn" onclick="switchQueryMode('simple')">
+                    <span style="font-size: 1.2em;">✨</span> Простой (Keywords)
+                </div>
+                <div class="mode-btn" id="modeAdvancedBtn" onclick="switchQueryMode('advanced')">
+                    <span style="font-size: 1.2em;">🧠</span> Advanced (AI/Boolean)
                 </div>
             </div>
-            <div class="info-text" style="margin-bottom: 12px; font-size: 0.8rem;">
-                <span id="modeLabel">Простой режим (Ключевые слова)</span>
-            </div>
 
-            <!-- Simple Mode -->
-            <div id="simpleQueryEditor">
-                <label>Искать в названии (+)</label>
+            <!-- Simple Mode Content -->
+            <div id="simpleQueryEditor" class="query-editor-block">
+                <div class="info-text" style="margin-bottom: 12px;">
+                    Введите ключевые слова через запятую. <br>
+                    Бот будет искать резюме, содержащие <b>ВСЕ</b> слова из "Включить" и <b>НИ ОДНОГО</b> из
+                    "Исключить".
+                </div>
+
+                <label class="field-label">🔎 Искать (Include)</label>
                 <input type="text" id="keywordsInclude" class="input-field" placeholder="Python, Django, Backend..."
                     style="margin-bottom: 12px;">
 
-                <label>Исключить (-)</label>
+                <label class="field-label">🚫 Исключить (Exclude)</label>
                 <input type="text" id="keywordsExclude" class="input-field" placeholder="Senior, Lead, Java...">
             </div>
 
-            <!-- Advanced Mode -->
-            <div id="advancedQueryEditor" style="display: none;">
-                <label>Boolean Query (SQL-like)</label>
-                <textarea id="booleanQueryInput" class="input-field" rows="4"
+            <!-- Advanced Mode Content -->
+            <div id="advancedQueryEditor" class="query-editor-block" style="display: none;">
+                <div class="info-text" style="margin-bottom: 12px;">
+                    Полный контроль над запросом используя язык запросов hh.ru (Boolean Search).
+                    Рекомендуется для сложных выборок.
+                </div>
+                <textarea id="booleanQueryInput" class="input-field" rows="6"
                     placeholder="NAME:(Python OR Django) AND NOT NAME:(Senior)"
-                    style="font-family: monospace;"></textarea>
-                <div class="info" style="text-align: left; margin-top: 4px;">
-                    Используйте OR, AND, NOT, скобки и NAME:(...).
+                    style="font-family: monospace; font-size: 13px; line-height: 1.4;"></textarea>
+                <div class="info" style="text-align: left; margin-top: 6px; opacity: 0.7; font-size: 0.8rem;">
+                    Доступные операторы: <code>OR</code>, <code>AND</code>, <code>NOT</code>, <code>()</code>,
+                    <code>NAME:()</code>.
                 </div>
             </div>
 
             <style>
+                .segmented-control {
+                    display: flex;
+                    background: rgba(255, 255, 255, 0.05);
+                    padding: 4px;
+                    border-radius: 12px;
+                    margin-bottom: 16px;
+                }
+
+                .mode-btn {
+                    flex: 1;
+                    text-align: center;
+                    padding: 10px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    font-size: 0.9rem;
+                    color: rgba(255, 255, 255, 0.6);
+                    font-weight: 500;
+                }
+
+                .mode-btn.active {
+                    background: rgba(255, 255, 255, 0.15);
+                    color: #fff;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                }
+
+                .query-editor-block {
+                    animation: fadeIn 0.3s ease;
+                    background: rgba(255, 255, 255, 0.02);
+                    padding: 16px;
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                }
+
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(5px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .field-label {
+                    display: block;
+                    font-size: 0.85rem;
+                    color: #aaa;
+                    margin-bottom: 6px;
+                    margin-left: 2px;
+                }
+
                 /* Switch Styles */
                 .toggle-switch {
                     position: relative;

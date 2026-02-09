@@ -79,51 +79,46 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // 7. Query Mode Toggle Logic
-    const queryToggle = document.getElementById("queryModeToggle");
-    const simpleEditor = document.getElementById("simpleQueryEditor");
-    const advancedEditor = document.getElementById("advancedQueryEditor");
-    const modeLabel = document.getElementById("modeLabel");
+    // 7. Query Mode Logic (RESTORED & IMPROVED)
+    // We expose switchQueryMode to global scope for HTML onclick
+    window.switchQueryMode = (mode) => {
+        const simpleBtn = document.getElementById("modeSimpleBtn");
+        const advancedBtn = document.getElementById("modeAdvancedBtn");
+        const simpleEditor = document.getElementById("simpleQueryEditor");
+        const advancedEditor = document.getElementById("advancedQueryEditor");
 
-    queryToggle.addEventListener("change", (e) => {
-        const isAdvanced = e.target.checked;
+        if (mode === 'simple') {
+            simpleBtn.classList.add('active');
+            advancedBtn.classList.remove('active');
+            simpleEditor.style.display = 'block';
+            advancedEditor.style.display = 'none';
 
-        if (isAdvanced) {
-            // Simple -> Advanced
-            modeLabel.innerText = "Расширенный режим (Boolean Query)";
-            simpleEditor.style.display = "none";
-            advancedEditor.style.display = "block";
+            // Try Sync: Advanced -> Simple
+            // Only if advanced input has content
+            const raw = document.getElementById("booleanQueryInput").value.trim();
+            if (raw) {
+                const parsed = parseBooleanQuery(raw);
+                if (parsed) {
+                    document.getElementById("keywordsInclude").value = parsed.included.join(", ");
+                    document.getElementById("keywordsExclude").value = parsed.excluded.join(", ");
+                }
+            }
+        } else {
+            simpleBtn.classList.remove('active');
+            advancedBtn.classList.add('active');
+            simpleEditor.style.display = 'none';
+            advancedEditor.style.display = 'block';
 
-            // Convert Keywords -> Boolean String
+            // Sync: Simple -> Advanced
             const inc = document.getElementById("keywordsInclude").value;
             const exc = document.getElementById("keywordsExclude").value;
-
-            // Only overwrite if boolean input is empty or we want to sync
-            // For now: always sync from keywords if they exist
-            const boolStr = buildBooleanQuery(inc, exc);
-            if (boolStr) {
-                document.getElementById("booleanQueryInput").value = boolStr;
-            }
-
-        } else {
-            // Advanced -> Simple
-            modeLabel.innerText = "Простой режим (Ключевые слова)";
-            simpleEditor.style.display = "block";
-            advancedEditor.style.display = "none";
-
-            // Try parse Boolean -> Keywords
-            const boolVal = document.getElementById("booleanQueryInput").value;
-            const parsed = parseBooleanQuery(boolVal);
-
-            if (parsed) {
-                document.getElementById("keywordsInclude").value = parsed.included.join(", ");
-                document.getElementById("keywordsExclude").value = parsed.excluded.join(", ");
-            } else {
-                // If too complex, maybe warn? Or just leave as is.
-                // console.log("Complex query, cannot revert fully");
+            const built = buildBooleanQuery(inc, exc);
+            // Only overwrite if built is valid, otherwise keep existing draft
+            if (built) {
+                document.getElementById("booleanQueryInput").value = built;
             }
         }
-    });
+    };
 });
 
 // --- HELPER FUNCTIONS FOR QUERY ---
@@ -264,29 +259,28 @@ async function loadSettings(userId, sign) {
             document.getElementById("cityStatus").innerText = "Регион не выбран";
         }
 
-        // Schedule
-        if (settings.search_schedule) {
+        // Schedule (Work Formats)
+        // [FIX] Priority: work_formats (new) > search_schedule (old)
+        let scheduleData = settings.work_formats || settings.search_schedule;
+
+        if (scheduleData) {
             let sched = [];
-            try { sched = JSON.parse(settings.search_schedule); } catch (e) { sched = []; }
-            // If string comes as ['remote'], it might be parsed or not. 
-            // Assume backend sends JSON string or list. 
-            // If it's pure string from DB "['remote']", we need to parse.
-            if (typeof settings.search_schedule === 'string') {
-                try { sched = JSON.parse(settings.search_schedule); } catch (e) { }
-            } else if (Array.isArray(settings.search_schedule)) {
-                sched = settings.search_schedule;
+            // Ensure it's an array
+            if (typeof scheduleData === 'string') {
+                try { sched = JSON.parse(scheduleData); } catch (e) { sched = []; }
+            } else if (Array.isArray(scheduleData)) {
+                sched = scheduleData;
             }
 
             sched.forEach(val => {
-                const cb = document.querySelector(`#scheduleContainer input[value="${val}"]`);
+                // Checkboxes now have uppercase values (REMOTE, ON_SITE...)
+                const cb = document.querySelector(`#scheduleContainer input[value="${val.toUpperCase()}"]`);
                 if (cb) cb.checked = true;
             });
         }
 
         // Query Mode & Boolean Logic
         const mode = settings.query_mode || 'simple';
-        const isAdvanced = (mode === 'advanced');
-        document.getElementById("queryModeToggle").checked = isAdvanced;
 
         // Load Keywords
         const keys = settings.keywords_data || { included: [], excluded: [] };
@@ -294,13 +288,13 @@ async function loadSettings(userId, sign) {
         document.getElementById("keywordsExclude").value = (keys.excluded || []).join(", ");
 
         // Load Boolean Draft or Custom Query
-        // If we represent the custom_query as the boolean input
         let boolVal = settings.boolean_draft || settings.custom_query || "";
         document.getElementById("booleanQueryInput").value = boolVal;
 
-        // Trigger Switch UI
-        const queryToggle = document.getElementById("queryModeToggle");
-        queryToggle.dispatchEvent(new Event('change')); // Update UI visibility
+        // Init Mode UI
+        if (window.switchQueryMode) {
+            window.switchQueryMode(mode);
+        }
 
         // Industries
         let inds = settings.industry || [];
@@ -585,7 +579,7 @@ async function saveSettings(userId, sign) {
     const selectedSchedule = Array.from(scheduleInputs).map(cb => cb.value);
 
     // Query Data
-    const isAdvanced = document.getElementById("queryModeToggle").checked;
+    const isAdvanced = document.getElementById("modeAdvancedBtn").classList.contains("active");
     const queryMode = isAdvanced ? 'advanced' : 'simple';
 
     const incStr = document.getElementById("keywordsInclude").value;
@@ -643,7 +637,7 @@ async function saveSettings(userId, sign) {
         salary: salary,
         experience: experience,
         industry: selectedIndustries,
-        // Update other init states if needed for dirty checking
+        work_formats: selectedSchedule
     };
 
     document.getElementById("errorMsg").style.display = "none";
