@@ -95,30 +95,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             advancedBtn.classList.remove('active');
             simpleEditor.style.display = 'block';
             advancedEditor.style.display = 'none';
-
-            // Try Sync: Advanced -> Simple
-            const raw = document.getElementById("booleanQueryInput").value.trim();
-            if (raw) {
-                const parsed = parseBooleanQuery(raw);
-                if (parsed) {
-                    // Update Tags
-                    window.tagsInclude.setTags(parsed.included);
-                    window.tagsExclude.setTags(parsed.excluded);
-                }
-            }
+            // No Sync: independent modes
         } else {
             simpleBtn.classList.remove('active');
             advancedBtn.classList.add('active');
             simpleEditor.style.display = 'none';
             advancedEditor.style.display = 'block';
-
-            // Sync: Simple -> Advanced
-            const inc = window.tagsInclude.getTags().join(", ");
-            const exc = window.tagsExclude.getTags().join(", ");
-            const built = buildBooleanQuery(inc, exc);
-            if (built) {
-                document.getElementById("booleanQueryInput").value = built;
-            }
+            // No Sync: independent modes
         }
     };
 
