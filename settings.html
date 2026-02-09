@@ -497,16 +497,6 @@
                 Отрасли компаний
             </div>
 
-            <div id="industryContainer">
-                <div class="industry-search-wrapper">
-                    <input type="text" id="industrySearch" class="industry-search-input"
-                        placeholder="Поиск отрасли..." />
-                </div>
-                <div id="industryTree">
-                    <!-- Сюда рендерится JS -->
-                </div>
-            </div>
-
             <!-- 2.2 Редактор запроса (Moved to Bottom) -->
             <div class="section-title" style="margin-bottom: 12px;">Настройка Поиска</div>
 
@@ -522,7 +512,7 @@
 
             <!-- Simple Mode Content (Tag Inputs) -->
             <div id="simpleQueryEditor" class="query-editor-block">
-                <div class="info-text" style="margin-bottom: 12px;">
+                <div class="info-text" style="color: rgba(255,255,255,0.9); margin-bottom: 15px; line-height: 1.5;">
                     Введите ключевые слова и нажмите <b>Enter</b>. <br>
                     Бот будет искать резюме, содержащие <b>ВСЕ</b> слова из "Включить" и <b>НИ ОДНОГО</b> из
                     "Исключить".
@@ -545,20 +535,47 @@
 
             <!-- Advanced Mode Content -->
             <div id="advancedQueryEditor" class="query-editor-block" style="display: none;">
-                <div class="info-text" style="margin-bottom: 12px;">
+                <div class="info-text" style="color: rgba(255,255,255,0.9); margin-bottom: 15px; line-height: 1.5;">
                     Полный контроль над запросом используя язык запросов hh.ru (Boolean Search).
                     Рекомендуется для сложных выборок.
                 </div>
-                <textarea id="booleanQueryInput" class="input-field" rows="6"
-                    placeholder="NAME:(Python OR Django) AND NOT NAME:(Senior)"
-                    style="font-family: monospace; font-size: 13px; line-height: 1.4;"></textarea>
-                <div class="info" style="text-align: left; margin-top: 6px; opacity: 0.7; font-size: 0.8rem;">
+                <textarea id="booleanQueryInput" class="advanced-textarea" rows="5"
+                    placeholder="NAME:(Python OR Django) AND NOT NAME:(Senior)"></textarea>
+                <div class="info" style="text-align: left; margin-top: 8px; opacity: 0.7; font-size: 0.8rem;">
                     Доступные операторы: <code>OR</code>, <code>AND</code>, <code>NOT</code>, <code>()</code>,
                     <code>NAME:()</code>.
                 </div>
             </div>
 
             <style>
+                /* Advanced Textarea Styling to match Search Input */
+                .advanced-textarea {
+                    width: 100%;
+                    background: #1a1a1a;
+                    /* Matches .tags-container */
+                    border: 1px solid #333;
+                    color: #fff;
+                    padding: 12px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    /* Slightly larger */
+                    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+                    line-height: 1.5;
+                    resize: vertical;
+                    transition: all 0.2s ease;
+                    outline: none;
+                    min-height: 120px;
+                }
+
+                .advanced-textarea:focus {
+                    border-color: #a962ff;
+                    box-shadow: 0 0 0 2px rgba(169, 98, 255, 0.2);
+                }
+
+                .advanced-textarea::placeholder {
+                    color: #555;
+                }
+
                 .tags-container {
                     display: flex;
                     flex-wrap: wrap;
@@ -624,7 +641,8 @@
                     background: rgba(255, 255, 255, 0.05);
                     padding: 4px;
                     border-radius: 12px;
-                    margin-bottom: 16px;
+                    margin-bottom: 20px;
+                    /* Increased margin */
                 }
 
                 .mode-btn {
