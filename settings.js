@@ -854,8 +854,8 @@ async function loadSettings(userId, sign) {
 
         // Load Keywords
         const keys = settings.keywords_data || { included: [], excluded: [] };
-        document.getElementById("keywordsInclude").value = (keys.included || []).join(", ");
-        document.getElementById("keywordsExclude").value = (keys.excluded || []).join(", ");
+        if (window.tagsInclude) window.tagsInclude.setTags(keys.included || []);
+        if (window.tagsExclude) window.tagsExclude.setTags(keys.excluded || []);
 
         // Load Boolean Draft or Custom Query
         let boolVal = settings.boolean_draft || settings.custom_query || "";
@@ -882,243 +882,10 @@ async function loadSettings(userId, sign) {
     }
 }
 
-function tryInitTree() {
-    // Render only when BOTH sources are ready to avoid overwriting or empty renders
-    if (isIndustriesLoaded && isSettingsLoaded) {
-        initIndustryTree();
-        toggleGlobalLoading(false);
-    }
-}
-
-function initIndustryTree() {
-    const container = document.getElementById("industryTree");
-    container.innerHTML = "";
-
-    if (!allIndustries || allIndustries.length === 0) {
-        container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Нет данных</div>';
-        return;
-    }
-
-    const chevronSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
-
-    // --- SORTING LOGIC ---
-    // 1. Helper to check if category is "selected" (has any ID in set)
-    const isCatSelected = (cat) => {
-        if (currentSelectedIds.has(String(cat.id))) return true;
-        return (cat.industries || []).some(sub => currentSelectedIds.has(String(sub.id)));
-    };
-
-    // 2. Sort: Selected First, then Alphabetical
-    const sortedIndustries = [...allIndustries].sort((a, b) => {
-        const selA = isCatSelected(a);
-        const selB = isCatSelected(b);
-        if (selA && !selB) return -1;
-        if (!selA && selB) return 1;
-        return a.name.localeCompare(b.name);
-    });
-
-    sortedIndustries.forEach(category => {
-        const catIdStr = String(category.id);
-        const catDiv = document.createElement("div");
-        catDiv.className = "ind-category";
-        catDiv.dataset.name = category.name.toLowerCase();
-
-        const headerDiv = document.createElement("div");
-        headerDiv.className = "ind-header";
-
-        const toggleIcon = document.createElement("div");
-        toggleIcon.className = "toggle-icon";
-        toggleIcon.innerHTML = chevronSvg;
-
-        const catCheckbox = document.createElement("input");
-        catCheckbox.type = "checkbox";
-        catCheckbox.className = "custom-checkbox";
-        catCheckbox.value = catIdStr;
-        catCheckbox.dataset.type = "parent";
-
-        const catLabel = document.createElement("span");
-        catLabel.className = "ind-label";
-        catLabel.innerText = category.name;
-
-        headerDiv.appendChild(toggleIcon);
-        headerDiv.appendChild(catCheckbox);
-        headerDiv.appendChild(catLabel);
-        catDiv.appendChild(headerDiv);
-
-        const childrenContainer = document.createElement("div");
-        childrenContainer.className = "ind-children";
-
-        const children = category.industries || [];
-        children.forEach(sub => {
-            const subIdStr = String(sub.id);
-            const subDiv = document.createElement("div");
-            subDiv.className = "ind-sub";
-            subDiv.dataset.name = sub.name.toLowerCase();
-
-            const subCheckbox = document.createElement("input");
-            subCheckbox.type = "checkbox";
-            subCheckbox.className = "custom-checkbox";
-            subCheckbox.value = subIdStr;
-            subCheckbox.dataset.type = "child";
-            subCheckbox.dataset.parentId = catIdStr;
-
-            // Check if selected (Directly OR via Parent)
-            // Fix: If API returns parent ID (e.g. "36"), all children should be checked.
-            if (currentSelectedIds.has(subIdStr) || currentSelectedIds.has(catIdStr)) {
-                subCheckbox.checked = true;
-            }
-
-            const subLabel = document.createElement("span");
-            subLabel.className = "ind-sub-label";
-            subLabel.innerText = sub.name;
-
-            subLabel.onclick = () => { subCheckbox.checked = !subCheckbox.checked; updateState(); };
-            subDiv.appendChild(subCheckbox);
-            subDiv.appendChild(subLabel);
-            childrenContainer.appendChild(subDiv);
-
-            // Change event for child
-            subCheckbox.addEventListener("change", () => {
-                updateState(true); // pass true to indicate manual interaction
-            });
-        });
-
-        catDiv.appendChild(childrenContainer);
-        container.appendChild(catDiv);
-
-        // Initial State Update (without moving)
-        updateParentCheckboxState(catCheckbox, childrenContainer);
-        // Also ensure parent ID is in set if checked
-        if (catCheckbox.checked && !catCheckbox.indeterminate) currentSelectedIds.add(catIdStr);
-
-
-        const toggle = () => {
-            childrenContainer.classList.toggle("open");
-            toggleIcon.classList.toggle("expanded");
-        };
-
-        toggleIcon.onclick = (e) => { e.stopPropagation(); toggle(); };
-        catLabel.onclick = toggle;
-
-        // Change event for parent
-        catCheckbox.addEventListener("change", () => {
-            const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
-            childrenInputs.forEach(ch => ch.checked = catCheckbox.checked);
-            updateState(true); // pass true to indicate manual interaction
-        });
-
-        function updateState(isInteraction = false) {
-            updateParentCheckboxState(catCheckbox, childrenContainer);
-
-            // Sync Set
-            const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
-            childrenInputs.forEach(ch => {
-                if (ch.checked) currentSelectedIds.add(ch.value);
-                else currentSelectedIds.delete(ch.value);
-            });
-
-            if (catCheckbox.checked && !catCheckbox.indeterminate) {
-                currentSelectedIds.add(catIdStr);
-            } else {
-                currentSelectedIds.delete(catIdStr);
-            }
-
-            // --- DYNAMIC SORTING (On Interaction) ---
-            if (isInteraction) {
-                const isSelected = catCheckbox.checked || catCheckbox.indeterminate;
-                if (isSelected) {
-                    // Move to top
-                    container.prepend(catDiv);
-                    // Scroll container to top
-                    // Use standard block scrolling (or smooth depends on UX)
-                    // User said "scroll the list to the top"
-                    container.scrollTop = 0;
-                }
-            }
-        }
-    });
-}
-
-function filterIndustryTree(text) {
-    const container = document.getElementById("industryTree");
-    const categories = container.querySelectorAll(".ind-category");
-
-    categories.forEach(catDiv => {
-        const catName = catDiv.dataset.name;
-        const childrenContainer = catDiv.querySelector(".ind-children");
-        const childrenDivs = childrenContainer.querySelectorAll(".ind-sub");
-        const toggleIcon = catDiv.querySelector(".toggle-icon");
-
-        let isCatMatch = catName.includes(text);
-        let hasVisibleChild = false;
-
-        childrenDivs.forEach(subDiv => {
-            const subName = subDiv.dataset.name;
-            if (isCatMatch || subName.includes(text)) {
-                subDiv.style.display = "flex";
-                hasVisibleChild = true;
-            } else {
-                subDiv.style.display = "none";
-            }
-        });
-
-        if (isCatMatch || hasVisibleChild) {
-            catDiv.style.display = "block";
-            if (text.length > 0) {
-                childrenContainer.classList.add("open");
-                toggleIcon.classList.add("expanded");
-            }
-        } else {
-            catDiv.style.display = "none";
-        }
-    });
-}
-
-function updateParentCheckboxState(parentCheckbox, childrenContainer) {
-    const children = Array.from(childrenContainer.querySelectorAll("input"));
-    if (children.length === 0) return;
-
-    const checkedCount = children.filter(c => c.checked).length;
-
-    if (checkedCount === 0) {
-        parentCheckbox.checked = false;
-        parentCheckbox.indeterminate = false;
-    } else if (checkedCount === children.length) {
-        parentCheckbox.checked = true;
-        parentCheckbox.indeterminate = false;
-    } else {
-        parentCheckbox.checked = false;
-        parentCheckbox.indeterminate = true;
-    }
-}
-
-function finalizeIdsFromSet() {
-    const result = [];
-    const set = currentSelectedIds;
-
-    allIndustries.forEach(cat => {
-        const catIdStr = String(cat.id);
-        const children = cat.industries || [];
-        if (children.length === 0) return;
-
-        const allChildrenIds = children.map(c => String(c.id));
-        const selectedChildrenIds = allChildrenIds.filter(id => set.has(id));
-
-        if (selectedChildrenIds.length === allChildrenIds.length) {
-            result.push(catIdStr);
-        } else {
-            if (set.has(catIdStr)) {
-                result.push(catIdStr);
-            } else {
-                result.push(...selectedChildrenIds);
-            }
-        }
-    });
-
-    return result;
-}
+// ... (skip lines) ...
 
 async function saveSettings(userId, sign) {
+    // ... (salary checks) ...
     const salaryInput = document.getElementById("salaryInput");
     const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
 
@@ -1152,11 +919,13 @@ async function saveSettings(userId, sign) {
     const isAdvanced = document.getElementById("modeAdvancedBtn").classList.contains("active");
     const queryMode = isAdvanced ? 'advanced' : 'simple';
 
-    const incStr = document.getElementById("keywordsInclude").value;
-    const excStr = document.getElementById("keywordsExclude").value;
+    // Tags
+    const incTags = window.tagsInclude ? window.tagsInclude.getTags() : [];
+    const excTags = window.tagsExclude ? window.tagsExclude.getTags() : [];
+
     const keywordsData = {
-        included: incStr.split(',').map(s => s.trim()).filter(s => s),
-        excluded: excStr.split(',').map(s => s.trim()).filter(s => s)
+        included: incTags,
+        excluded: excTags
     };
 
     const booleanDraft = document.getElementById("booleanQueryInput").value;
@@ -1166,6 +935,8 @@ async function saveSettings(userId, sign) {
     if (isAdvanced) {
         finalQuery = booleanDraft; // Whatever is in textarea
     } else {
+        const incStr = incTags.join(", ");
+        const excStr = excTags.join(", ");
         finalQuery = buildBooleanQuery(incStr, excStr);
     }
 
