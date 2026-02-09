@@ -849,11 +849,22 @@ async function loadSettings(userId, sign) {
             });
         }
 
-        // Query Mode & Boolean Logic
+        // Query Mode (Determine early, apply late)
+        // [FIX] Ensure we handle 'advanced' correctly.
         const mode = settings.query_mode || 'simple';
 
         // Load Keywords
-        const keys = settings.keywords_data || { included: [], excluded: [] };
+        let keywordsData = settings.keywords_data;
+        if (typeof keywordsData === 'string') {
+            try {
+                keywordsData = JSON.parse(keywordsData);
+            } catch (e) {
+                console.error("Failed to parse keywords_data", e);
+                keywordsData = { included: [], excluded: [] };
+            }
+        }
+        const keys = keywordsData || { included: [], excluded: [] };
+
         if (window.tagsInclude) window.tagsInclude.setTags(keys.included || []);
         if (window.tagsExclude) window.tagsExclude.setTags(keys.excluded || []);
 
@@ -861,7 +872,7 @@ async function loadSettings(userId, sign) {
         let boolVal = settings.boolean_draft || settings.custom_query || "";
         document.getElementById("booleanQueryInput").value = boolVal;
 
-        // Init Mode UI
+        // Init Mode UI (Call LAST to ensure UI is ready)
         if (window.switchQueryMode) {
             window.switchQueryMode(mode);
         }
