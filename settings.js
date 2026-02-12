@@ -8,12 +8,15 @@ const API_BASE_URL = "https://api.aurora-career.ru";
 // State
 let initialSettings = {};
 let allIndustries = [];
+let allAreas = []; // [NEW]
 let currentSelectedIds = new Set();
+let currentSelectedAreaIds = new Set(); // [NEW]
 let messageId = null;
 window.BOT_USERNAME = "Aurora_Career_Bot"; // Default
 
 // Loading Flags
 let isIndustriesLoaded = false;
+let isAreasLoaded = false; // [NEW]
 let isSettingsLoaded = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -60,6 +63,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         filterIndustryTree(text);
     });
 
+    // 3.1 Region Search
+    const regionSearch = document.getElementById("regionSearch");
+    if (regionSearch) {
+        regionSearch.addEventListener("input", (e) => {
+            const text = e.target.value.trim().toLowerCase();
+            filterAreaTree(text);
+        });
+    }
+
     // 4. Return Button
     document.getElementById("returnBtn").addEventListener("click", () => {
         // Try to close webview if possible, otherwise redirect
@@ -72,6 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 5. Load Data (Parallel)
     loadIndustriesDict();
+    loadAreasDict(); // [NEW]
     loadSettings(userId, sign);
 
     // 6. Save Logic
@@ -311,11 +324,21 @@ async function loadSettings(userId, sign) {
         }
 
         // Region
-        if (settings.search_area) {
-            document.getElementById("cityStatus").innerText = `Текущий регион ID: ${settings.search_area}`;
-        } else {
-            document.getElementById("cityStatus").innerText = "Регион не выбран";
+        // Region
+        // Old: search_area (int) -> New: search_areas (list[int])
+        currentSelectedAreaIds.clear();
+
+        let areaIds = [];
+        if (settings.search_areas && Array.isArray(settings.search_areas)) {
+            // New format
+            areaIds = settings.search_areas;
+        } else if (settings.search_area && settings.search_area !== 113) {
+            // Legacy fallback
+            areaIds = [settings.search_area];
         }
+
+        areaIds.forEach(id => currentSelectedAreaIds.add(String(id)));
+        updateSelectedRegionsSummary();
 
         // Schedule (Work Formats)
         // [FIX] Priority: work_formats (new) > search_schedule (old)
@@ -370,10 +393,26 @@ async function loadSettings(userId, sign) {
     }
 }
 
+async function loadAreasDict() {
+    try {
+        const resp = await fetch('areas_tree.json');
+        if (!resp.ok) throw new Error("Areas failed");
+        allAreas = await resp.json();
+    } catch (e) {
+        console.error(e);
+        const tree = document.getElementById("regionTree");
+        if (tree) tree.innerHTML = '<div style="padding:20px; text-align:center; color:red;">Ошибка загрузки регионов</div>';
+    } finally {
+        isAreasLoaded = true;
+        tryInitTree();
+    }
+}
+
 function tryInitTree() {
-    // Render only when BOTH sources are ready to avoid overwriting or empty renders
-    if (isIndustriesLoaded && isSettingsLoaded) {
+    // Render only when ALL sources are ready
+    if (isIndustriesLoaded && isSettingsLoaded && isAreasLoaded) {
         initIndustryTree();
+        initAreaTree(); // [NEW]
         toggleGlobalLoading(false);
     }
 }
@@ -653,6 +692,7 @@ async function saveSettings(userId, sign) {
         salary: salary,
         experience: experience,
         industry: selectedIndustries,
+        search_areas: Array.from(currentSelectedAreaIds).map(Number), // [NEW]
         work_formats: selectedSchedule, // [NEW]
         query_mode: queryMode,          // [NEW]
         keywords: keywordsData,         // [NEW]
@@ -999,4 +1039,182 @@ function showError(msg) {
     const errDiv = document.getElementById("errorMsg");
     errDiv.innerText = msg;
     errDiv.style.display = "block";
+}
+
+// --- AREA TREE LOGIC (RECURSIVE) ---
+
+function initAreaTree() {
+    const container = document.getElementById("regionTree");
+    container.innerHTML = "";
+
+    if (!allAreas || allAreas.length === 0) {
+        container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Нет данных</div>';
+        return;
+    }
+
+    // Render root nodes (Countries)
+    allAreas.forEach(area => {
+        container.appendChild(createAreaNode(area));
+    });
+}
+
+function createAreaNode(area) {
+    const idStr = String(area.id);
+    const hasChildren = area.areas && area.areas.length > 0;
+
+    const nodeDiv = document.createElement("div");
+    nodeDiv.className = "area-node";
+    nodeDiv.dataset.name = area.name.toLowerCase();
+    nodeDiv.style.marginLeft = "10px"; // Indent
+
+    // Header (Icon + Checkbox + Label)
+    const headerDiv = document.createElement("div");
+    headerDiv.className = "area-header";
+    headerDiv.style.display = "flex";
+    headerDiv.style.alignItems = "center";
+    headerDiv.style.padding = "4px 0";
+
+    // Toggle Icon
+    const toggleIcon = document.createElement("div");
+    toggleIcon.className = "toggle-icon";
+    toggleIcon.style.width = "20px";
+    toggleIcon.style.cursor = "pointer";
+    toggleIcon.innerHTML = hasChildren
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><polyline points="6 9 12 15 18 9"></polyline></svg>`
+        : `<span style="width:14px; display:inline-block;"></span>`;
+
+    // Checkbox
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "custom-checkbox";
+    checkbox.value = idStr;
+    if (currentSelectedAreaIds.has(idStr)) {
+        checkbox.checked = true;
+    }
+
+    // Label
+    const label = document.createElement("span");
+    label.className = "area-label";
+    label.innerText = area.name;
+    label.style.marginLeft = "8px";
+    label.style.cursor = "pointer";
+    label.style.color = "#ececec";
+
+    headerDiv.appendChild(toggleIcon);
+    headerDiv.appendChild(checkbox);
+    headerDiv.appendChild(label);
+    nodeDiv.appendChild(headerDiv);
+
+    // Children Container
+    let childrenContainer = null;
+    if (hasChildren) {
+        childrenContainer = document.createElement("div");
+        childrenContainer.className = "area-children";
+        childrenContainer.style.display = "none"; // Hidden by default
+        childrenContainer.style.paddingLeft = "12px";
+        childrenContainer.style.borderLeft = "1px solid #333";
+
+        area.areas.forEach(child => {
+            childrenContainer.appendChild(createAreaNode(child));
+        });
+        nodeDiv.appendChild(childrenContainer);
+
+        // Toggle Logic
+        const toggle = () => {
+            const isOpen = childrenContainer.style.display !== "none";
+            childrenContainer.style.display = isOpen ? "none" : "block";
+            toggleIcon.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+        };
+        toggleIcon.onclick = toggle;
+        label.onclick = toggle;
+    } else {
+        // If no children, click label toggles checkbox
+        label.onclick = () => { checkbox.click(); };
+    }
+
+    // Checkbox Logic
+    checkbox.addEventListener("change", () => {
+        const isChecked = checkbox.checked;
+
+        // 1. Update Self
+        if (isChecked) currentSelectedAreaIds.add(idStr);
+        else currentSelectedAreaIds.delete(idStr);
+
+        // 2. Cascade Down (Select/Deselect All Children)
+        if (childrenContainer) {
+            const childCheckboxes = childrenContainer.querySelectorAll("input[type='checkbox']");
+            childCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+                if (isChecked) currentSelectedAreaIds.add(cb.value);
+                else currentSelectedAreaIds.delete(cb.value);
+            });
+        }
+
+        updateSelectedRegionsSummary();
+    });
+
+    return nodeDiv;
+}
+
+function updateSelectedRegionsSummary() {
+    const el = document.getElementById("selectedRegionsSummary");
+    const count = currentSelectedAreaIds.size;
+
+    if (count === 0) {
+        el.innerText = "🌍 Весь мир (регион не выбран)";
+        el.style.color = "#aaa";
+    } else {
+        el.innerText = `Выбрано регионов: ${count}`;
+        el.style.color = "#4caf50";
+    }
+}
+
+function filterAreaTree(text) {
+    const container = document.getElementById("regionTree");
+    // Simple filter: Show all nodes that match, or have children that match.
+    // This is complex with DOM. Easier to rebuild or hide/show.
+    // Let's use CSS hiding.
+
+    const nodes = container.querySelectorAll(".area-node");
+
+    if (!text) {
+        nodes.forEach(n => n.style.display = "block");
+        return;
+    }
+
+    // Traverse logic is tricky on DOM. 
+    // Implementation: Go through all nodes, if name matches -> show. 
+    // If child matches -> show parent.
+
+    // We can use a recursive function on the DOM nodes?
+    // Or just iterate.
+
+    // For simplicity in this iteration:
+    // Just find all labels containing text, show them and their parents.
+
+    // Hide all first
+    nodes.forEach(n => n.style.display = "none");
+
+    const allLabels = container.querySelectorAll(".area-label");
+    allLabels.forEach(lbl => {
+        if (lbl.innerText.toLowerCase().includes(text)) {
+            // Show this node
+            const node = lbl.closest(".area-node");
+            node.style.display = "block";
+
+            // Show all parents
+            let parent = node.parentElement.closest(".area-node");
+            while (parent) {
+                parent.style.display = "block";
+                // Expand parent
+                const childrenCont = parent.querySelector(".area-children");
+                if (childrenCont) childrenCont.style.display = "block";
+
+                parent = parent.parentElement.closest(".area-node");
+            }
+
+            // Show all children? Maybe yes, maybe no. 
+            // Usually if I search "Russia", I want to see cities.
+        }
+    });
 }
