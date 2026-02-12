@@ -325,14 +325,18 @@ async function loadSettings(userId, sign) {
         }
 
         // Region
-        // Region
-        // Old: search_area (int) -> New: search_areas (list[int])
         currentSelectedAreaIds.clear();
 
         let areaIds = [];
-        if (settings.search_areas && Array.isArray(settings.search_areas)) {
+        let rawAreas = settings.search_areas;
+
+        if (typeof rawAreas === 'string') {
+            try { rawAreas = JSON.parse(rawAreas); } catch (e) { rawAreas = []; }
+        }
+
+        if (rawAreas && Array.isArray(rawAreas)) {
             // New format
-            areaIds = settings.search_areas;
+            areaIds = rawAreas;
         } else if (settings.search_area && settings.search_area !== 113) {
             // Legacy fallback
             areaIds = [settings.search_area];
@@ -342,7 +346,6 @@ async function loadSettings(userId, sign) {
         updateSelectedRegionsSummary();
 
         // Schedule (Work Formats)
-        // [FIX] Priority: work_formats (new) > search_schedule (old)
         let scheduleData = settings.work_formats || settings.search_schedule;
 
         if (scheduleData) {
@@ -354,7 +357,6 @@ async function loadSettings(userId, sign) {
             }
 
             sched.forEach(val => {
-                // Try uppercase, then original
                 let cb = document.querySelector(`#scheduleContainer input[value="${val.toUpperCase()}"]`);
                 if (!cb) cb = document.querySelector(`#scheduleContainer input[value="${val}"]`);
                 if (cb) cb.checked = true;
@@ -365,7 +367,16 @@ async function loadSettings(userId, sign) {
         const mode = settings.query_mode || 'simple';
 
         // Load Keywords -> Tags
-        const keys = settings.keywords_data || { included: [], excluded: [] };
+        let keywordsData = settings.keywords_data;
+        if (typeof keywordsData === 'string') {
+            try {
+                keywordsData = JSON.parse(keywordsData);
+            } catch (e) {
+                console.error("Failed to parse keywords_data", e);
+                keywordsData = { included: [], excluded: [] };
+            }
+        }
+        const keys = keywordsData || { included: [], excluded: [] };
         if (window.tagsInclude) window.tagsInclude.setTags(keys.included || []);
         if (window.tagsExclude) window.tagsExclude.setTags(keys.excluded || []);
 
@@ -774,7 +785,8 @@ function renderSelectedRegions() {
     }
 
     currentSelectedAreaIds.forEach(idStr => {
-        const name = flatAreaMap[idStr] || `ID: ${idStr}`; // Fallback if name not found
+        const item = flatAreaMap[idStr];
+        const name = item ? item.name : `ID: ${idStr}`; // Fallback if name not found
 
         const chip = document.createElement("div");
         chip.className = "region-chip";
@@ -842,7 +854,7 @@ function initAreaTree() {
 function renderRegionList() {
     const container = document.getElementById("regionTree");
     if (!container) return;
-    
+
     // 1. Prepare Data: All Selected Objects + All Root Objects
     // use a Map to ensure uniqueness by ID
     const itemsMap = new Map();
@@ -871,7 +883,7 @@ function renderRegionList() {
 
     if (searchText) {
         // Search in ALL flat items
-        combinedItems = Object.values(flatAreaMap).filter(item => 
+        combinedItems = Object.values(flatAreaMap).filter(item =>
             item.name.toLowerCase().includes(searchText)
         );
     }
@@ -892,7 +904,7 @@ function renderRegionList() {
 
     // 5. Render
     container.innerHTML = "";
-    
+
     if (itemsToShow.length === 0) {
         container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Ничего не найдено</div>';
         return;
@@ -925,7 +937,7 @@ function renderRegionList() {
         cb.onchange = () => {
             if (cb.checked) currentSelectedAreaIds.add(String(area.id));
             else currentSelectedAreaIds.delete(String(area.id));
-            
+
             renderSelectedRegions();
             // We do NOT re-render the list immediately to prevent jumping.
             // Just ensure the checkbox state is consistent.
@@ -954,13 +966,13 @@ function renderRegionList() {
         btnMore.style.fontSize = "0.9rem";
         btnMore.style.background = "#1a1a1a";
         btnMore.style.marginTop = "4px";
-        
+
         btnMore.onmouseover = () => btnMore.style.background = "#222";
         btnMore.onmouseout = () => btnMore.style.background = "#1a1a1a";
-        
+
         btnMore.onclick = () => {
-             currentRegionLimit += 30;
-             renderRegionList(); // Re-render with new limit
+            currentRegionLimit += 30;
+            renderRegionList(); // Re-render with new limit
         };
 
         container.appendChild(btnMore);
@@ -971,7 +983,7 @@ function renderRegionList() {
 function filterAreaTree(text) {
     // Reset limit on search
     currentRegionLimit = 30;
-    renderRegionList(); 
+    renderRegionList();
 }
 
 function updateFlatListCheckbox(id, checked) {
