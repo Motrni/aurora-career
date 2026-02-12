@@ -849,6 +849,7 @@ function initAreaTree() {
     // Reset limit on init
     currentRegionLimit = 30;
     renderRegionList();
+    renderSelectedRegions(); // [FIX] Re-render chips now that names are loaded
 }
 
 function renderRegionList() {
