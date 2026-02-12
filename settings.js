@@ -827,3 +827,154 @@ function updateSelectedRegionsSummary() {
     // Replaced by renderSelectedRegions, but kept for compatibility if called elsewhere
     renderSelectedRegions();
 }
+
+// --- FLAT REGION LIST LOGIC (PAGINATED) ---
+
+let currentRegionLimit = 30;
+let displayedRegions = [];
+
+function initAreaTree() {
+    // Reset limit on init
+    currentRegionLimit = 30;
+    renderRegionList();
+}
+
+function renderRegionList() {
+    const container = document.getElementById("regionTree");
+    if (!container) return;
+    
+    // 1. Prepare Data: All Selected Objects + All Root Objects
+    // use a Map to ensure uniqueness by ID
+    const itemsMap = new Map();
+
+    // A. Add ALL Selected items (from flat map)
+    currentSelectedAreaIds.forEach(id => {
+        const item = flatAreaMap[String(id)];
+        if (item) itemsMap.set(String(item.id), item);
+    });
+
+    // B. Add Root items (Countries) from allAreas
+    if (allAreas) {
+        allAreas.forEach(area => {
+            if (!itemsMap.has(String(area.id))) {
+                itemsMap.set(String(area.id), area);
+            }
+        });
+    }
+
+    // Convert to array
+    let combinedItems = Array.from(itemsMap.values());
+
+    // 2. Filter via Search
+    const searchInput = document.getElementById("regionSearch");
+    const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+    if (searchText) {
+        // Search in ALL flat items
+        combinedItems = Object.values(flatAreaMap).filter(item => 
+            item.name.toLowerCase().includes(searchText)
+        );
+    }
+
+    // 3. Sort: Selected First, then Alphabetical
+    combinedItems.sort((a, b) => {
+        const selA = currentSelectedAreaIds.has(String(a.id));
+        const selB = currentSelectedAreaIds.has(String(b.id));
+
+        if (selA && !selB) return -1;
+        if (!selA && selB) return 1;
+        return a.name.localeCompare(b.name);
+    });
+
+    // 4. Paginate
+    const totalCount = combinedItems.length;
+    const itemsToShow = combinedItems.slice(0, currentRegionLimit);
+
+    // 5. Render
+    container.innerHTML = "";
+    
+    if (itemsToShow.length === 0) {
+        container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Ничего не найдено</div>';
+        return;
+    }
+
+    const list = document.createElement("div");
+    list.style.display = "flex";
+    list.style.flexDirection = "column";
+
+    itemsToShow.forEach(area => {
+        const row = document.createElement("label");
+        row.className = "region-flat-row";
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.padding = "8px 12px";
+        row.style.cursor = "pointer";
+        row.style.borderBottom = "1px solid #222";
+        row.onmouseover = () => row.style.background = "#252525";
+        row.onmouseout = () => row.style.background = "transparent";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.className = "custom-checkbox";
+        cb.style.marginRight = "10px";
+        cb.value = String(area.id);
+        if (currentSelectedAreaIds.has(String(area.id))) {
+            cb.checked = true;
+        }
+
+        cb.onchange = () => {
+            if (cb.checked) currentSelectedAreaIds.add(String(area.id));
+            else currentSelectedAreaIds.delete(String(area.id));
+            
+            renderSelectedRegions();
+            // We do NOT re-render the list immediately to prevent jumping.
+            // Just ensure the checkbox state is consistent.
+        };
+
+        const nameSpan = document.createElement("span");
+        nameSpan.innerText = area.name;
+        nameSpan.style.color = "#ececec";
+        nameSpan.style.fontSize = "0.95rem";
+
+        row.appendChild(cb);
+        row.appendChild(nameSpan);
+        list.appendChild(row);
+    });
+
+    container.appendChild(list);
+
+    // 6. Show More Button
+    if (totalCount > currentRegionLimit) {
+        const btnMore = document.createElement("div");
+        btnMore.innerText = `Показать еще (${totalCount - currentRegionLimit})`;
+        btnMore.style.padding = "10px";
+        btnMore.style.textAlign = "center";
+        btnMore.style.color = "#a962ff";
+        btnMore.style.cursor = "pointer";
+        btnMore.style.fontSize = "0.9rem";
+        btnMore.style.background = "#1a1a1a";
+        btnMore.style.marginTop = "4px";
+        
+        btnMore.onmouseover = () => btnMore.style.background = "#222";
+        btnMore.onmouseout = () => btnMore.style.background = "#1a1a1a";
+        
+        btnMore.onclick = () => {
+             currentRegionLimit += 30;
+             renderRegionList(); // Re-render with new limit
+        };
+
+        container.appendChild(btnMore);
+    }
+}
+
+// Override Filter to use render
+function filterAreaTree(text) {
+    // Reset limit on search
+    currentRegionLimit = 30;
+    renderRegionList(); 
+}
+
+function updateFlatListCheckbox(id, checked) {
+    const cb = document.querySelector(`#regionTree input[value="${id}"]`);
+    if (cb) cb.checked = checked;
+}
