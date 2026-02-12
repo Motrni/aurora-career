@@ -827,4 +827,3 @@ function updateSelectedRegionsSummary() {
     // Replaced by renderSelectedRegions, but kept for compatibility if called elsewhere
     renderSelectedRegions();
 }
-}
