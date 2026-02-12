@@ -1041,10 +1041,14 @@ function showError(msg) {
     errDiv.style.display = "block";
 }
 
-// --- AREA TREE LOGIC (RECURSIVE) ---
+// --- OPTIMIZED AREA TREE LOGIC ---
+
+// Cache for search results to avoid lag
+let areaSearchTimeout = null;
 
 function initAreaTree() {
     const container = document.getElementById("regionTree");
+    if (!container) return;
     container.innerHTML = "";
 
     if (!allAreas || allAreas.length === 0) {
@@ -1052,20 +1056,26 @@ function initAreaTree() {
         return;
     }
 
-    // Render root nodes (Countries)
+    // Render only top-level nodes initially for performance
+    const list = document.createElement("div");
+    list.className = "area-list-root";
+
     allAreas.forEach(area => {
-        container.appendChild(createAreaNode(area));
+        list.appendChild(createAreaNode(area));
     });
+
+    container.appendChild(list);
+    updateSelectedRegionsSummary();
 }
 
-function createAreaNode(area) {
+function createAreaNode(area, forceExpand = false) {
     const idStr = String(area.id);
     const hasChildren = area.areas && area.areas.length > 0;
 
     const nodeDiv = document.createElement("div");
     nodeDiv.className = "area-node";
-    nodeDiv.dataset.name = area.name.toLowerCase();
-    nodeDiv.style.marginLeft = "10px"; // Indent
+    nodeDiv.dataset.id = idStr;
+    nodeDiv.style.marginLeft = "12px";
 
     // Header (Icon + Checkbox + Label)
     const headerDiv = document.createElement("div");
@@ -1074,19 +1084,25 @@ function createAreaNode(area) {
     headerDiv.style.alignItems = "center";
     headerDiv.style.padding = "4px 0";
 
-    // Toggle Icon
+    // Icons
+    const expandIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: #888;"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+    const collapseIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: #a962ff;"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+
+    // Toggle Icon Container
     const toggleIcon = document.createElement("div");
     toggleIcon.className = "toggle-icon";
     toggleIcon.style.width = "20px";
+    toggleIcon.style.height = "20px";
+    toggleIcon.style.display = "flex";
+    toggleIcon.style.alignItems = "center";
+    toggleIcon.style.justifyContent = "center";
     toggleIcon.style.cursor = "pointer";
-    toggleIcon.innerHTML = hasChildren
-        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><polyline points="6 9 12 15 18 9"></polyline></svg>`
-        : `<span style="width:14px; display:inline-block;"></span>`;
+    toggleIcon.innerHTML = hasChildren ? expandIcon : "";
 
     // Checkbox
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.className = "custom-checkbox";
+    checkbox.className = "custom-checkbox"; // Uses existing CSS
     checkbox.value = idStr;
     if (currentSelectedAreaIds.has(idStr)) {
         checkbox.checked = true;
@@ -1099,57 +1115,78 @@ function createAreaNode(area) {
     label.style.marginLeft = "8px";
     label.style.cursor = "pointer";
     label.style.color = "#ececec";
+    label.style.fontSize = "0.95rem";
+    label.style.userSelect = "none";
+
+    // Hover effect
+    label.onmouseover = () => label.style.color = "#fff";
+    label.onmouseout = () => label.style.color = "#ececec";
 
     headerDiv.appendChild(toggleIcon);
     headerDiv.appendChild(checkbox);
     headerDiv.appendChild(label);
     nodeDiv.appendChild(headerDiv);
 
-    // Children Container
+    // Children Container (Lazy Loaded)
     let childrenContainer = null;
+    let areChildrenRendered = false;
+
     if (hasChildren) {
         childrenContainer = document.createElement("div");
         childrenContainer.className = "area-children";
-        childrenContainer.style.display = "none"; // Hidden by default
-        childrenContainer.style.paddingLeft = "12px";
+        childrenContainer.style.display = forceExpand ? "block" : "none";
         childrenContainer.style.borderLeft = "1px solid #333";
+        childrenContainer.style.marginLeft = "9px"; // Align with icon center
 
-        area.areas.forEach(child => {
-            childrenContainer.appendChild(createAreaNode(child));
-        });
         nodeDiv.appendChild(childrenContainer);
 
-        // Toggle Logic
-        const toggle = () => {
-            const isOpen = childrenContainer.style.display !== "none";
-            childrenContainer.style.display = isOpen ? "none" : "block";
-            toggleIcon.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
-        };
-        toggleIcon.onclick = toggle;
-        label.onclick = toggle;
-    } else {
-        // If no children, click label toggles checkbox
-        label.onclick = () => { checkbox.click(); };
-    }
-
-    // Checkbox Logic
-    checkbox.addEventListener("change", () => {
-        const isChecked = checkbox.checked;
-
-        // 1. Update Self
-        if (isChecked) currentSelectedAreaIds.add(idStr);
-        else currentSelectedAreaIds.delete(idStr);
-
-        // 2. Cascade Down (Select/Deselect All Children)
-        if (childrenContainer) {
-            const childCheckboxes = childrenContainer.querySelectorAll("input[type='checkbox']");
-            childCheckboxes.forEach(cb => {
-                cb.checked = isChecked;
-                if (isChecked) currentSelectedAreaIds.add(cb.value);
-                else currentSelectedAreaIds.delete(cb.value);
-            });
+        if (forceExpand) {
+            toggleIcon.innerHTML = collapseIcon;
+            renderChildren();
         }
 
+        function renderChildren() {
+            if (areChildrenRendered) return;
+            area.areas.forEach(child => {
+                // If forceExpand is true (search mode), we might look deep, 
+                // but here we just render direct children.
+                childrenContainer.appendChild(createAreaNode(child, false));
+            });
+            areChildrenRendered = true;
+        }
+
+        const toggle = (e) => {
+            e.stopPropagation();
+            const isClosed = childrenContainer.style.display === "none";
+            if (isClosed) {
+                childrenContainer.style.display = "block";
+                toggleIcon.innerHTML = collapseIcon;
+                renderChildren();
+            } else {
+                childrenContainer.style.display = "none";
+                toggleIcon.innerHTML = expandIcon;
+            }
+        };
+
+        toggleIcon.onclick = toggle;
+        // Clicking label toggles expand for parents, toggles checkbox for leaves?
+        // User wants: "Select Russia OR Moscow". 
+        // Let's make label toggle checkbox for better UX, expand only on icon?
+        // Or label expands? Standard UI: Label selects, Icon expands.
+        // But if label selects, it's easier.
+        // Let's make label click toggle selection to avoid confusion.
+        label.onclick = () => checkbox.click();
+    } else {
+        label.onclick = () => checkbox.click();
+    }
+
+    // Checkbox Logic (Independent)
+    checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+            currentSelectedAreaIds.add(idStr);
+        } else {
+            currentSelectedAreaIds.delete(idStr);
+        }
         updateSelectedRegionsSummary();
     });
 
@@ -1157,64 +1194,133 @@ function createAreaNode(area) {
 }
 
 function updateSelectedRegionsSummary() {
+    // We removed the summary element per user request? 
+    // "remove 'World' text between search and regions"
+    // But we might want to update some counter if it exists.
     const el = document.getElementById("selectedRegionsSummary");
-    const count = currentSelectedAreaIds.size;
+    if (!el) return;
 
+    const count = currentSelectedAreaIds.size;
     if (count === 0) {
-        el.innerText = "🌍 Весь мир (регион не выбран)";
-        el.style.color = "#aaa";
+        el.innerText = "🌍 Весь мир"; // Or hidden
+        el.style.display = "none"; // Hide if empty per request? Or show "World"
     } else {
-        el.innerText = `Выбрано регионов: ${count}`;
-        el.style.color = "#4caf50";
+        el.style.display = "block";
+        el.innerText = `Выбрано: ${count}`;
+        el.style.color = "#a962ff";
     }
 }
 
 function filterAreaTree(text) {
-    const container = document.getElementById("regionTree");
-    // Simple filter: Show all nodes that match, or have children that match.
-    // This is complex with DOM. Easier to rebuild or hide/show.
-    // Let's use CSS hiding.
+    if (areaSearchTimeout) clearTimeout(areaSearchTimeout);
 
-    const nodes = container.querySelectorAll(".area-node");
+    areaSearchTimeout = setTimeout(() => {
+        performAreaSearch(text);
+    }, 300); // 300ms debounce
+}
+
+function performAreaSearch(text) {
+    const container = document.getElementById("regionTree");
+    if (!container) return;
 
     if (!text) {
-        nodes.forEach(n => n.style.display = "block");
+        // Restore full tree (top level)
+        initAreaTree();
         return;
     }
 
-    // Traverse logic is tricky on DOM. 
-    // Implementation: Go through all nodes, if name matches -> show. 
-    // If child matches -> show parent.
+    // Flat search for performance
+    // We need to find all matching nodes and render them as a flat list
+    // OR render a filtered tree. A flat list with path (Country > Region > City) is often better for search.
 
-    // We can use a recursive function on the DOM nodes?
-    // Or just iterate.
+    container.innerHTML = "";
+    const list = document.createElement("div");
+    list.style.padding = "4px";
 
-    // For simplicity in this iteration:
-    // Just find all labels containing text, show them and their parents.
+    let count = 0;
+    const maxResults = 50;
 
-    // Hide all first
-    nodes.forEach(n => n.style.display = "none");
+    function searchRecursive(node, pathName) {
+        if (count >= maxResults) return;
 
-    const allLabels = container.querySelectorAll(".area-label");
-    allLabels.forEach(lbl => {
-        if (lbl.innerText.toLowerCase().includes(text)) {
-            // Show this node
-            const node = lbl.closest(".area-node");
-            node.style.display = "block";
-
-            // Show all parents
-            let parent = node.parentElement.closest(".area-node");
-            while (parent) {
-                parent.style.display = "block";
-                // Expand parent
-                const childrenCont = parent.querySelector(".area-children");
-                if (childrenCont) childrenCont.style.display = "block";
-
-                parent = parent.parentElement.closest(".area-node");
-            }
-
-            // Show all children? Maybe yes, maybe no. 
-            // Usually if I search "Russia", I want to see cities.
+        // Check match
+        if (node.name.toLowerCase().includes(text)) {
+            const item = createSearchResultItem(node, pathName);
+            list.appendChild(item);
+            count++;
         }
-    });
+
+        // Recurse
+        if (node.areas) {
+            node.areas.forEach(child => {
+                const childPath = pathName ? `${pathName} > ${node.name}` : node.name;
+                searchRecursive(child, childPath);
+            });
+        }
+    }
+
+    allAreas.forEach(area => searchRecursive(area, ""));
+
+    if (count === 0) {
+        list.innerHTML = '<div style="color:#666; padding:10px; text-align:center;">Ничего не найдено</div>';
+    } else if (count >= maxResults) {
+        const more = document.createElement("div");
+        more.innerText = "...и еще результаты (уточните запрос)";
+        more.style.color = "#666";
+        more.style.padding = "8px";
+        more.style.fontSize = "0.85rem";
+        more.style.textAlign = "center";
+        list.appendChild(more);
+    }
+
+    container.appendChild(list);
+}
+
+function createSearchResultItem(area, pathContext) {
+    const div = document.createElement("div");
+    div.className = "area-search-result";
+    div.style.padding = "6px 8px";
+    div.style.borderBottom = "1px solid #222";
+    div.style.display = "flex";
+    div.style.alignItems = "center";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "custom-checkbox";
+    checkbox.value = String(area.id);
+    if (currentSelectedAreaIds.has(String(area.id))) checkbox.checked = true;
+
+    checkbox.onchange = () => {
+        if (checkbox.checked) currentSelectedAreaIds.add(String(area.id));
+        else currentSelectedAreaIds.delete(String(area.id));
+        updateSelectedRegionsSummary();
+    };
+
+    const textDiv = document.createElement("div");
+    textDiv.style.marginLeft = "10px";
+
+    const nameDiv = document.createElement("div");
+    nameDiv.innerText = area.name;
+    nameDiv.style.color = "#fff";
+
+    const pathDiv = document.createElement("div");
+    pathDiv.innerText = pathContext || "Страна";
+    pathDiv.style.color = "#666";
+    pathDiv.style.fontSize = "0.8rem";
+
+    textDiv.appendChild(nameDiv);
+    textDiv.appendChild(pathDiv);
+
+    div.appendChild(checkbox);
+    div.appendChild(textDiv);
+
+    // Allow clicking row to toggle
+    div.onclick = (e) => {
+        if (e.target !== checkbox) checkbox.click();
+    };
+    div.style.cursor = "pointer";
+    div.onmouseover = () => div.style.background = "rgba(255,255,255,0.05)";
+    div.onmouseout = () => div.style.background = "transparent";
+
+    return div;
 }

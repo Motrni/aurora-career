@@ -489,19 +489,19 @@
             <!-- 3. Регион -->
             <div class="section-title">Регион поиска</div>
 
-            <div id="regionContainer">
-                <div class="industry-search-wrapper">
-                    <input type="text" id="regionSearch" class="industry-search-input"
-                        placeholder="Поиск страны, региона или города..." />
+            <div id="regionContainer"
+                style="display: flex; flex-direction: column; height: 320px; background: #111; border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative;">
+                <div class="industry-search-wrapper"
+                    style="border-bottom: 1px solid #222; padding: 12px; background: #151515; flex-shrink: 0; position: sticky; top: 0; z-index: 10;">
+                    <input type="text" id="regionSearch" class="industry-search-input" placeholder="Поиск региона..."
+                        style="width: 100%; box-sizing: border-box;" />
                 </div>
 
-                <div id="selectedRegionsSummary" class="info-text"
-                    style="font-size: 13px; color: #aaa; margin-bottom: 8px;">
-                    🌍 Весь мир
-                </div>
+                <!-- Hidden summary element for JS compatibility -->
+                <div id="selectedRegionsSummary" style="display: none;"></div>
 
-                <div id="regionTree" class="tree-container"
-                    style="max-height: 250px; overflow-y: auto; border: 1px solid #333; border-radius: 8px; background: #1e1e1e;">
+                <div id="regionTree"
+                    style="overflow-y: auto; flex-grow: 1; padding: 8px; scrollbar-width: thin; scrollbar-color: #333 #111;">
                     <div style="padding: 20px; text-align: center; color: #666;">Загрузка регионов...</div>
                 </div>
             </div>
@@ -788,7 +788,7 @@
         }
     </style>
 
-    <script src="settings.js?v=1.6"></script>
+    <script src="settings.js?v=1.7"></script>
 </body>
 
 </html>
