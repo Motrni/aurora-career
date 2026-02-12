@@ -731,309 +731,9 @@ async function saveSettings(userId, sign) {
     document.getElementById("errorMsg").style.display = "none";
 }
 
-// --- HELPER FUNCTIONS FOR QUERY ---
+// (Duplicate code removed)
 
-function buildBooleanQuery(incStr, excStr) {
-    // incStr: "Python, Django" -> NAME:(Python OR Django)
-    const incList = incStr.split(',').map(s => s.trim()).filter(s => s);
-    const excList = excStr.split(',').map(s => s.trim()).filter(s => s);
 
-    let parts = [];
-
-    if (incList.length > 0) {
-        const joined = incList.map(w => w.includes(' ') ? `"${w}"` : w).join(' OR ');
-        parts.push(`NAME:(${joined})`);
-    }
-
-    if (excList.length > 0) {
-        const joined = excList.map(w => w.includes(' ') ? `"${w}"` : w).join(' OR ');
-        parts.push(`NAME:(NOT (${joined}))`);
-    }
-
-    return parts.join(' AND ');
-}
-
-function parseBooleanQuery(query) {
-    // Reverse logic: NAME:(A OR B) AND NAME:(NOT (C))
-    // Very basic parser.
-    try {
-        let included = [];
-        let excluded = [];
-
-        // Split by AND (assuming top level AND)
-        const parts = query.split(' AND ');
-
-        parts.forEach(part => {
-            part = part.trim();
-            if (part.includes('NAME:(NOT (')) {
-                // Excluded
-                const match = part.match(/NAME:\(NOT \((.*)\)\)/);
-                if (match && match[1]) {
-                    excluded.push(...extractWords(match[1]));
-                }
-            } else if (part.includes('NAME:(')) {
-                // Included
-                const match = part.match(/NAME:\((.*)\)/);
-                if (match && match[1]) {
-                    included.push(...extractWords(match[1]));
-                }
-            }
-        });
-
-        return { included, excluded };
-    } catch (e) {
-        console.error("Parse error", e);
-        return null; // Failed to parse (complex query)
-    }
-}
-
-function extractWords(innerStr) {
-    // "Python OR Django OR \"Machine Learning\""
-    // Simple split by OR
-    return innerStr.split(' OR ').map(w => w.trim().replace(/"/g, "").replace(/^\(/, "").replace(/\)$/, ""));
-}
-
-// ----------------------------------
-
-function toggleGlobalLoading(isLoading) {
-    const skeleton = document.getElementById("globalSkeleton");
-    const content = document.getElementById("mainContent");
-
-    if (isLoading) {
-        if (skeleton) skeleton.style.display = "block";
-        if (content) content.style.display = "none";
-    } else {
-        if (skeleton) skeleton.style.display = "none";
-        if (content) content.style.display = "block";
-    }
-}
-
-async function loadIndustriesDict() {
-    try {
-        const resp = await fetch('industries.json');
-        if (!resp.ok) throw new Error("Industries failed");
-        allIndustries = await resp.json();
-    } catch (e) {
-        console.error(e);
-        showError("Не удалось загрузить справочник отраслей.");
-    } finally {
-        isIndustriesLoaded = true;
-        tryInitTree();
-    }
-}
-
-async function loadSettings(userId, sign) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/settings/get?user_id=${userId}&sign=${sign}`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" }
-        });
-
-        const data = await response.json();
-        if (data.status !== "ok") {
-            throw new Error(data.error || "Неизвестная ошибка");
-        }
-
-        if (data.bot_username) {
-            window.BOT_USERNAME = data.bot_username;
-        }
-
-        const settings = data.settings;
-
-        // --- Apply UI State ---
-
-        // Salary
-        const salaryInput = document.getElementById("salaryInput");
-        const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
-
-        if (!settings.salary || settings.salary === 0) {
-            noSalaryCheckbox.checked = true;
-            salaryInput.value = "";
-            salaryInput.disabled = true;
-            salaryInput.placeholder = "Не указана";
-        } else {
-            noSalaryCheckbox.checked = false;
-            salaryInput.value = settings.salary;
-            salaryInput.disabled = false;
-        }
-
-        // Experience
-        if (settings.experience) {
-            document.getElementById("experienceSelect").value = settings.experience;
-        }
-
-        // Region
-        if (settings.search_area) {
-            document.getElementById("cityStatus").innerText = `Текущий регион ID: ${settings.search_area}`;
-        } else {
-            document.getElementById("cityStatus").innerText = "Регион не выбран";
-        }
-
-        // Schedule (Work Formats)
-        // [FIX] Priority: work_formats (new) > search_schedule (old)
-        let scheduleData = settings.work_formats || settings.search_schedule;
-
-        if (scheduleData) {
-            let sched = [];
-            // Ensure it's an array
-            if (typeof scheduleData === 'string') {
-                try { sched = JSON.parse(scheduleData); } catch (e) { sched = []; }
-            } else if (Array.isArray(scheduleData)) {
-                sched = scheduleData;
-            }
-
-            sched.forEach(val => {
-                // Checkboxes now have uppercase values (REMOTE, ON_SITE...)
-                const cb = document.querySelector(`#scheduleContainer input[value="${val.toUpperCase()}"]`);
-                if (cb) cb.checked = true;
-            });
-        }
-
-        // Query Mode (Determine early, apply late)
-        // [FIX] Ensure we handle 'advanced' correctly.
-        const mode = settings.query_mode || 'simple';
-
-        // Load Keywords
-        let keywordsData = settings.keywords_data;
-        if (typeof keywordsData === 'string') {
-            try {
-                keywordsData = JSON.parse(keywordsData);
-            } catch (e) {
-                console.error("Failed to parse keywords_data", e);
-                keywordsData = { included: [], excluded: [] };
-            }
-        }
-        const keys = keywordsData || { included: [], excluded: [] };
-
-        if (window.tagsInclude) window.tagsInclude.setTags(keys.included || []);
-        if (window.tagsExclude) window.tagsExclude.setTags(keys.excluded || []);
-
-        // Load Boolean Draft or Custom Query
-        let boolVal = settings.boolean_draft || settings.custom_query || "";
-        document.getElementById("booleanQueryInput").value = boolVal;
-
-        // Init Mode UI (Call LAST to ensure UI is ready)
-        if (window.switchQueryMode) {
-            window.switchQueryMode(mode);
-        }
-
-        // Industries
-        let inds = settings.industry || [];
-        if (typeof inds === 'string') {
-            try { inds = JSON.parse(inds); } catch (e) { inds = []; }
-        }
-
-        currentSelectedIds = new Set(inds.map(String));
-
-    } catch (e) {
-        showError("Не удалось загрузить настройки. " + e.message);
-    } finally {
-        isSettingsLoaded = true;
-        tryInitTree();
-    }
-}
-
-// ... (skip lines) ...
-
-async function saveSettings(userId, sign) {
-    // ... (salary checks) ...
-    const salaryInput = document.getElementById("salaryInput");
-    const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
-
-    let salary = null;
-
-    if (!noSalaryCheckbox.checked) {
-        let val = salaryInput.value.trim();
-        if (val === "") {
-            showError("Введите сумму или поставьте галочку 'Не указывать'");
-            return;
-        }
-        salary = parseInt(val);
-        if (isNaN(salary) || salary < 0) {
-            showError("Зарплата должна быть положительным числом!");
-            return;
-        }
-        if (salary > 100000000) {
-            showError("Зарплата не может превышать 100 млн ₽");
-            return;
-        }
-    }
-
-    const experience = document.getElementById("experienceSelect").value;
-    const selectedIndustries = finalizeIdsFromSet();
-
-    // Schedule
-    const scheduleInputs = document.querySelectorAll("#scheduleContainer input:checked");
-    const selectedSchedule = Array.from(scheduleInputs).map(cb => cb.value);
-
-    // Query Data
-    const isAdvanced = document.getElementById("modeAdvancedBtn").classList.contains("active");
-    const queryMode = isAdvanced ? 'advanced' : 'simple';
-
-    // Tags
-    const incTags = window.tagsInclude ? window.tagsInclude.getTags() : [];
-    const excTags = window.tagsExclude ? window.tagsExclude.getTags() : [];
-
-    const keywordsData = {
-        included: incTags,
-        excluded: excTags
-    };
-
-    const booleanDraft = document.getElementById("booleanQueryInput").value;
-
-    // Logic: What is the final custom_query?
-    let finalQuery = "";
-    if (isAdvanced) {
-        finalQuery = booleanDraft; // Whatever is in textarea
-    } else {
-        const incStr = incTags.join(", ");
-        const excStr = excTags.join(", ");
-        finalQuery = buildBooleanQuery(incStr, excStr);
-    }
-
-    const payload = {
-        user_id: parseInt(userId),
-        sign: sign,
-        salary: salary,
-        experience: experience,
-        industry: selectedIndustries,
-        work_formats: selectedSchedule, // [NEW]
-        query_mode: queryMode,          // [NEW]
-        keywords: keywordsData,         // [NEW]
-        boolean_draft: booleanDraft,    // [NEW]
-        custom_query: finalQuery,       // [NEW]
-        message_id: messageId ? parseInt(messageId) : null
-    };
-
-    const response = await fetch(`${API_BASE_URL}/api/settings/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-    if (data.status !== "ok") {
-        throw new Error(data.error || "Ошибка сервера");
-    }
-
-    const saveBtn = document.getElementById("saveBtn");
-    const originalText = saveBtn.innerText;
-    saveBtn.innerText = "Сохранено! ✅";
-    saveBtn.style.background = "#4caf50";
-    setTimeout(() => {
-        saveBtn.innerText = originalText;
-        saveBtn.style.background = "linear-gradient(45deg, #a962ff, #6247aa)";
-    }, 2000);
-
-    initialSettings = {
-        salary: salary,
-        experience: experience,
-        industry: selectedIndustries,
-        work_formats: selectedSchedule
-    };
-
-    document.getElementById("errorMsg").style.display = "none";
-}
 
 function showError(msg) {
     const errDiv = document.getElementById("errorMsg");
@@ -1045,6 +745,19 @@ function showError(msg) {
 
 // Cache for search results to avoid lag
 let areaSearchTimeout = null;
+
+function sortAreas(areas) {
+    return [...areas].sort((a, b) => {
+        const idA = String(a.id);
+        const idB = String(b.id);
+        const selA = currentSelectedAreaIds.has(idA);
+        const selB = currentSelectedAreaIds.has(idB);
+
+        if (selA && !selB) return -1;
+        if (!selA && selB) return 1;
+        return a.name.localeCompare(b.name);
+    });
+}
 
 function initAreaTree() {
     const container = document.getElementById("regionTree");
@@ -1060,7 +773,7 @@ function initAreaTree() {
     const list = document.createElement("div");
     list.className = "area-list-root";
 
-    allAreas.forEach(area => {
+    sortAreas(allAreas).forEach(area => {
         list.appendChild(createAreaNode(area));
     });
 
@@ -1147,9 +860,9 @@ function createAreaNode(area, forceExpand = false) {
 
         function renderChildren() {
             if (areChildrenRendered) return;
-            area.areas.forEach(child => {
-                // If forceExpand is true (search mode), we might look deep, 
-                // but here we just render direct children.
+            // Sort children too
+            const sortedChildren = sortAreas(area.areas);
+            sortedChildren.forEach(child => {
                 childrenContainer.appendChild(createAreaNode(child, false));
             });
             areChildrenRendered = true;
