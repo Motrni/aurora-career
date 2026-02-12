@@ -344,6 +344,9 @@ function checkVacancies() {
                 workFormats.push(cb.value);
             });
 
+            // Industry
+            const industry = finalizeIdsFromSet();
+
             // 2. Send Request
             const payload = {
                 user_id: userId ? parseInt(userId) : 0,
@@ -352,6 +355,7 @@ function checkVacancies() {
                 experience: experience,
                 search_areas: searchAreas,
                 work_formats: workFormats,
+                industry: industry,
                 query_mode: queryMode,
                 keywords_data: keywordsData,
                 boolean_draft: booleanDraft
@@ -651,13 +655,14 @@ function initIndustryTree() {
             subLabel.className = "ind-sub-label";
             subLabel.innerText = sub.name;
 
-            subLabel.onclick = () => { subCheckbox.checked = !subCheckbox.checked; updateState(); };
+            subLabel.onclick = () => { subCheckbox.checked = !subCheckbox.checked; updateState(); checkVacancies(); };
             subDiv.appendChild(subCheckbox);
             subDiv.appendChild(subLabel);
             childrenContainer.appendChild(subDiv);
 
             subCheckbox.addEventListener("change", () => {
                 updateState(true);
+                checkVacancies();
             });
         });
 
@@ -680,6 +685,7 @@ function initIndustryTree() {
             const childrenInputs = childrenContainer.querySelectorAll("input[data-type='child']");
             childrenInputs.forEach(ch => ch.checked = catCheckbox.checked);
             updateState(true);
+            checkVacancies();
         });
 
         function updateState(isInteraction = false) {
