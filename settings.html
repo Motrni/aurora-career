@@ -486,9 +486,24 @@
             <div class="divider"></div>
 
             <!-- 3. Регион (Инфо) -->
+            <!-- 3. Регион -->
             <div class="section-title">Регион поиска</div>
-            <div id="cityStatus" class="info-text">
-                Загрузка региона... 🌍
+
+            <div id="regionContainer">
+                <div class="industry-search-wrapper">
+                    <input type="text" id="regionSearch" class="industry-search-input"
+                        placeholder="Поиск страны, региона или города..." />
+                </div>
+
+                <div id="selectedRegionsSummary" class="info-text"
+                    style="font-size: 13px; color: #aaa; margin-bottom: 8px;">
+                    🌍 Весь мир
+                </div>
+
+                <div id="regionTree" class="tree-container"
+                    style="max-height: 250px; overflow-y: auto; border: 1px solid #333; border-radius: 8px; background: #1e1e1e;">
+                    <div style="padding: 20px; text-align: center; color: #666;">Загрузка регионов...</div>
+                </div>
             </div>
 
             <!-- 4. Отрасли (Дерево) -->
@@ -747,11 +762,7 @@
                 }
             </style>
 
-            <!-- 3. Регион (Инфо) -->
-            <div class="section-title">Регион поиска</div>
-            <div id="cityStatus" class="info-text">
-                Загрузка региона... 🌍
-            </div>
+
 
             <!-- Кнопки -->
             <button id="saveBtn">Сохранить</button>
@@ -777,7 +788,7 @@
         }
     </style>
 
-    <script src="settings.js?v=1.5"></script>
+    <script src="settings.js?v=1.6"></script>
 </body>
 
 </html>
