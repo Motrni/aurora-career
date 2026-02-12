@@ -490,15 +490,31 @@
             <div class="section-title">Регион поиска</div>
 
             <div id="regionContainer"
-                style="display: flex; flex-direction: column; height: 320px; background: #111; border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative;">
+                style="display: flex; flex-direction: column; height: 420px; background: #111; border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative;">
+
+                <!-- Selected Regions Header & List -->
+                <div style="background: #151515; padding: 10px; border-bottom: 1px solid #222;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span id="selectedRegionsSummary" style="color: #fff; font-size: 0.9rem; font-weight: 500;">
+                            Выбрано: 0
+                        </span>
+                        <span style="font-size: 12px; color: #666; cursor: pointer;"
+                            onclick="clearAllRegions()">Очистить</span>
+                    </div>
+                    <div id="selectedRegionsList"
+                        style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto; padding-right: 4px;">
+                        <!-- Chips will go here -->
+                    </div>
+                </div>
+
                 <div class="industry-search-wrapper"
-                    style="border-bottom: 1px solid #222; padding: 12px; background: #151515; flex-shrink: 0; position: sticky; top: 0; z-index: 10;">
+                    style="border-bottom: 1px solid #222; padding: 10px; background: #151515; flex-shrink: 0; position: sticky; top: 0; z-index: 10;">
                     <input type="text" id="regionSearch" class="industry-search-input" placeholder="Поиск региона..."
                         style="width: 100%; box-sizing: border-box;" />
                 </div>
 
-                <!-- Hidden summary element for JS compatibility -->
-                <div id="selectedRegionsSummary" style="display: none;"></div>
+
 
                 <div id="regionTree"
                     style="overflow-y: auto; flex-grow: 1; padding: 8px; scrollbar-width: thin; scrollbar-color: #333 #111;">

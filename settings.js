@@ -9,6 +9,7 @@ const API_BASE_URL = "https://api.aurora-career.ru";
 let initialSettings = {};
 let allIndustries = [];
 let allAreas = []; // [NEW]
+let flatAreaMap = {}; // [NEW] ID -> Name lookup
 let currentSelectedIds = new Set();
 let currentSelectedAreaIds = new Set(); // [NEW]
 let messageId = null;
@@ -398,6 +399,16 @@ async function loadAreasDict() {
         const resp = await fetch('areas_tree.json');
         if (!resp.ok) throw new Error("Areas failed");
         allAreas = await resp.json();
+
+        // Build flat map for fast lookup
+        flatAreaMap = {};
+        function buildFlatMap(list) {
+            list.forEach(a => {
+                flatAreaMap[String(a.id)] = a.name;
+                if (a.areas) buildFlatMap(a.areas);
+            });
+        }
+        buildFlatMap(allAreas);
     } catch (e) {
         console.error(e);
         const tree = document.getElementById("regionTree");
@@ -745,6 +756,77 @@ function showError(msg) {
 
 // Cache for search results to avoid lag
 let areaSearchTimeout = null;
+
+function renderSelectedRegions() {
+    const listContainer = document.getElementById("selectedRegionsList");
+    const summary = document.getElementById("selectedRegionsSummary");
+
+    if (!listContainer || !summary) return;
+
+    listContainer.innerHTML = "";
+    const count = currentSelectedAreaIds.size;
+
+    summary.innerText = `Выбрано: ${count}`;
+
+    if (count === 0) {
+        listContainer.innerHTML = '<span style="color: #666; font-size: 13px; padding: 4px;">Ничего не выбрано (поиск по всему миру)</span>';
+        return;
+    }
+
+    currentSelectedAreaIds.forEach(idStr => {
+        const name = flatAreaMap[idStr] || `ID: ${idStr}`; // Fallback if name not found
+
+        const chip = document.createElement("div");
+        chip.className = "region-chip";
+        chip.style.background = "#333";
+        chip.style.color = "#fff";
+        chip.style.padding = "4px 8px";
+        chip.style.borderRadius = "12px";
+        chip.style.fontSize = "12px";
+        chip.style.display = "flex";
+        chip.style.alignItems = "center";
+        chip.style.border = "1px solid #444";
+
+        const text = document.createElement("span");
+        text.innerText = name;
+
+        const close = document.createElement("span");
+        close.innerHTML = "&times;";
+        close.style.marginLeft = "6px";
+        close.style.cursor = "pointer";
+        close.style.color = "#aaa";
+        close.style.fontWeight = "bold";
+        close.onmouseover = () => close.style.color = "#fff";
+        close.onmouseout = () => close.style.color = "#aaa";
+
+        close.onclick = () => {
+            // Remove logic
+            currentSelectedAreaIds.delete(idStr);
+            // Re-render this list
+            renderSelectedRegions();
+            // Update checkbox in tree (if visible)
+            const checkbox = document.querySelector(`#regionTree input[value="${idStr}"]`);
+            if (checkbox) checkbox.checked = false;
+        };
+
+        chip.appendChild(text);
+        chip.appendChild(close);
+        listContainer.appendChild(chip);
+    });
+}
+
+function clearAllRegions() {
+    currentSelectedAreaIds.clear();
+    renderSelectedRegions();
+    // Uncheck visible checkboxes
+    const checkboxes = document.querySelectorAll("#regionTree input:checked");
+    checkboxes.forEach(cb => cb.checked = false);
+}
+
+function updateSelectedRegionsSummary() {
+    // Replaced by renderSelectedRegions, but kept for compatibility if called elsewhere
+    renderSelectedRegions();
+}
 
 function sortAreas(areas) {
     return [...areas].sort((a, b) => {
