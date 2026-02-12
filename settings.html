@@ -417,6 +417,18 @@
         <!-- Заголовок -->
         <h2>Настройки поиска</h2>
 
+        <!-- [NEW] СЧЕТЧИК ВАКАНСИЙ -->
+        <div id="vacancyCounterPanel"
+            style="background: rgba(169, 98, 255, 0.1); border: 1px solid rgba(169, 98, 255, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center; display: none;">
+            <div style="font-size: 0.9rem; color: #dcdcdc; margin-bottom: 8px;">
+                Найдено вакансий: <span id="vacancyCountValue" style="color: #fff; font-weight: bold;">...</span>
+            </div>
+            <a id="vacancyLink" href="#" target="_blank"
+                style="display: inline-block; background: #a962ff; color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; transition: background 0.2s;">
+                Посмотреть на hh.ru
+            </a>
+        </div>
+
         <!-- Блок ошибок -->
         <div id="errorMsg" class="error"></div>
 
@@ -543,10 +555,10 @@
             <!-- Segmented Control -->
             <div class="segmented-control">
                 <div class="mode-btn active" id="modeSimpleBtn" onclick="window.switchQueryMode('simple')">
-                    <span style="font-size: 1.2em;">✨</span> Простой (Keywords)
+                    Простой (Keywords)
                 </div>
                 <div class="mode-btn" id="modeAdvancedBtn" onclick="window.switchQueryMode('advanced')">
-                    <span style="font-size: 1.2em;">🧠</span> Advanced (AI/Boolean)
+                    Advanced (AI/Boolean)
                 </div>
             </div>
 
@@ -558,14 +570,14 @@
                     "Исключить".
                 </div>
 
-                <label class="field-label">🔎 Искать (Include)</label>
+                <label class="field-label">Искать (Include)</label>
                 <div class="tags-container" id="tagsIncludeContainer">
                     <!-- Tags will be rendered here -->
                     <input type="text" id="keywordsIncludeInput" class="tag-input"
                         placeholder="Введите слово и Enter...">
                 </div>
 
-                <label class="field-label" style="margin-top: 12px;">🚫 Исключить (Exclude)</label>
+                <label class="field-label" style="margin-top: 12px;">Исключить (Exclude)</label>
                 <div class="tags-container" id="tagsExcludeContainer">
                     <!-- Tags will be rendered here -->
                     <input type="text" id="keywordsExcludeInput" class="tag-input"

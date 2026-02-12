@@ -19,6 +19,7 @@ window.BOT_USERNAME = "Aurora_Career_Bot"; // Default
 let isIndustriesLoaded = false;
 let isAreasLoaded = false; // [NEW]
 let isSettingsLoaded = false;
+let vacancyCheckTimeout = null; // [NEW] Debounce
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Show Skeleton immediately
@@ -109,15 +110,31 @@ document.addEventListener("DOMContentLoaded", async () => {
             advancedBtn.classList.remove('active');
             simpleEditor.style.display = 'block';
             advancedEditor.style.display = 'none';
-            // No Sync: independent modes
         } else {
             simpleBtn.classList.remove('active');
             advancedBtn.classList.add('active');
             simpleEditor.style.display = 'none';
             advancedEditor.style.display = 'block';
-            // No Sync: independent modes
         }
+        // [NEW] Trigger check logic on switch
+        checkVacancies();
     };
+
+    // [NEW] 8. Bind Events for Vacancy Counter
+    // Salary
+    salaryInput.addEventListener("input", () => checkVacancies());
+    noSalaryCheckbox.addEventListener("change", () => checkVacancies());
+
+    // Experience
+    document.getElementById("experienceSelect").addEventListener("change", () => checkVacancies());
+
+    // Schedule
+    document.querySelectorAll("#scheduleContainer input").forEach(cb => {
+        cb.addEventListener("change", () => checkVacancies());
+    });
+
+    // Boolean Input
+    document.getElementById("booleanQueryInput").addEventListener("input", () => checkVacancies());
 
 }); // End of DOMContentLoaded
 
@@ -154,11 +171,13 @@ class TagInput {
         if (this.tags.includes(text)) return;
         this.tags.push(text);
         this.render();
+        checkVacancies(); // [NEW] Trigger check
     }
 
     removeTag(index) {
         this.tags.splice(index, 1);
         this.render();
+        checkVacancies(); // [NEW] Trigger check
     }
 
     setTags(tagsArray) {
@@ -256,6 +275,118 @@ function extractWords(innerStr) {
 }
 
 // ----------------------------------
+
+// [NEW] VACANCY COUNTER LOGIC
+function checkVacancies() {
+    // Debounce
+    if (vacancyCheckTimeout) clearTimeout(vacancyCheckTimeout);
+
+    // UI Loading state
+    const countSpan = document.getElementById("vacancyCountValue");
+    if (countSpan) countSpan.innerText = "...";
+
+    const counterPanel = document.getElementById("vacancyCounterPanel");
+    if (counterPanel) counterPanel.style.display = "block";
+
+    vacancyCheckTimeout = setTimeout(async () => {
+        try {
+            // 1. Collect Data (Similar to saveSettings)
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id');
+            const salaryInput = document.getElementById("salaryInput");
+            const experienceSelect = document.getElementById("experienceSelect");
+
+            // Salary
+            let salary = null;
+            if (!salaryInput.disabled && salaryInput.value) {
+                salary = parseInt(salaryInput.value);
+            }
+
+            // Experience
+            let experience = experienceSelect.value;
+
+            // Query Mode & Text
+            const simpleBtn = document.getElementById("modeSimpleBtn");
+            const isSimple = simpleBtn.classList.contains("active");
+            let queryMode = isSimple ? 'simple' : 'advanced';
+
+            let text = "";
+            let keywordsData = null;
+            let booleanDraft = null;
+
+            if (isSimple) {
+                const inc = window.tagsInclude ? window.tagsInclude.getTags() : [];
+                const exc = window.tagsExclude ? window.tagsExclude.getTags() : [];
+                keywordsData = { included: inc, excluded: exc };
+                // Build text for API locally (just to be safe/consistent)
+                if (inc.length > 0) {
+                    const joined = inc.map(w => w.includes(' ') ? `"${w}"` : w).join(' OR ');
+                    text = `NAME:(${joined})`;
+                    if (exc.length > 0) {
+                        const excJoined = exc.map(w => w.includes(' ') ? `"${w}"` : w).join(' OR ');
+                        text += ` AND NOT NAME:(${excJoined})`;
+                    }
+                }
+            } else {
+                const rawBool = document.getElementById("booleanQueryInput").value;
+                if (rawBool) {
+                    text = rawBool;
+                    booleanDraft = rawBool;
+                }
+            }
+
+            // Areas
+            let searchAreas = Array.from(currentSelectedAreaIds).map(Number);
+
+            // Schedule
+            let workFormats = [];
+            document.querySelectorAll("#scheduleContainer input:checked").forEach(cb => {
+                workFormats.push(cb.value);
+            });
+
+            // 2. Send Request
+            const payload = {
+                user_id: userId ? parseInt(userId) : 0,
+                text: text,
+                salary: salary,
+                experience: experience,
+                search_areas: searchAreas,
+                work_formats: workFormats,
+                query_mode: queryMode,
+                keywords_data: keywordsData,
+                boolean_draft: booleanDraft
+            };
+
+            const response = await fetch(`${API_BASE_URL}/api/check_vacancies`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (data.status === "ok") {
+                // Update UI
+                if (countSpan) countSpan.innerText = data.found.toLocaleString('ru-RU');
+
+                const linkBtn = document.getElementById("vacancyLink");
+                if (linkBtn) {
+                    linkBtn.href = data.url;
+                    // Ensure it is visible
+                    linkBtn.style.display = "inline-block";
+                }
+            } else {
+                console.error("Check vacancies error:", data.message);
+                if (countSpan) countSpan.innerText = "?";
+            }
+
+        } catch (e) {
+            console.error(e);
+            const countSpan = document.getElementById("vacancyCountValue");
+            if (countSpan) countSpan.innerText = "Error";
+        }
+    }, 700); // 700ms debounce
+}
 
 function toggleGlobalLoading(isLoading) {
     const skeleton = document.getElementById("globalSkeleton");
@@ -436,6 +567,7 @@ function tryInitTree() {
         initIndustryTree();
         initAreaTree(); // [NEW]
         toggleGlobalLoading(false);
+        checkVacancies(); // [NEW] Initial check
     }
 }
 
