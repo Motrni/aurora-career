@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadAreasDict(); // [NEW]
     loadSettings(userId, sign);
 
-    // 6. Save Logic
+    // 6. Save Logic (Search)
     document.getElementById("saveBtn").addEventListener("click", async () => {
         try {
             await saveSettings(userId, sign);
@@ -98,7 +98,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // 7. Query Mode Logic (RESTORED & IMPROVED)
+    // 6.1 Save Logic (Response)
+    document.getElementById("saveResponseBtn").addEventListener("click", async () => {
+        try {
+            await saveResponseSettings(userId, sign);
+        } catch (e) {
+            showError("Ошибка при сохранении настроек откликов. " + e.message);
+        }
+    });
+
+    // 7. Query Mode Logic
     window.switchQueryMode = (mode) => {
         const simpleBtn = document.getElementById("modeSimpleBtn");
         const advancedBtn = document.getElementById("modeAdvancedBtn");
@@ -136,7 +145,92 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Boolean Input
     document.getElementById("booleanQueryInput").addEventListener("input", () => checkVacancies());
 
+    // [NEW] 9. Matching Threshold Logic
+    const thresholdInput = document.getElementById("matchingThresholdInput");
+    const thresholdDisplay = document.getElementById("matchingThresholdValue");
+    if (thresholdInput && thresholdDisplay) {
+        thresholdInput.addEventListener("input", (e) => {
+            thresholdDisplay.innerText = e.target.value;
+        });
+    }
+
 }); // End of DOMContentLoaded
+
+// --- TAB SWITCHING LOGIC ---
+window.switchMainTab = function (tabName) {
+    // 1. Update Tabs UI
+    document.querySelectorAll('.segment-option').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+
+    // 2. Update Content Visibility
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    // Force hide/show (display: none handled by CSS class but ensure ID matches)
+    if (tabName === 'search') {
+        document.getElementById('searchSettingsTab').classList.add('active');
+    } else {
+        document.getElementById('responseSettingsTab').classList.add('active');
+    }
+}
+
+// --- DIRTY STATE LOGIC ---
+let initialSearchState = null;
+
+function serializeSearchForm() {
+    // Collects all data from Search Tab inputs
+    const data = {
+        salary: document.getElementById('salaryInput').value,
+        noSalary: document.getElementById('noSalaryCheckbox').checked,
+        experience: document.getElementById('experienceSelect').value,
+        industry: Array.from(currentSelectedIds || []).sort().join(','), // Assuming Set
+        area: Array.from(currentSelectedAreaIds || []).sort().join(','),
+
+        // Keywords
+        keywordsInclude: window.tagsInclude ? window.tagsInclude.getTags().sort().join(',') : '',
+        keywordsExclude: window.tagsExclude ? window.tagsExclude.getTags().sort().join(',') : '',
+
+        // Query Mode
+        queryMode: document.querySelector('.mode-btn.active') ? document.querySelector('.mode-btn.active').dataset.mode : 'simple',
+
+        // Schedule
+        schedule: Array.from(document.querySelectorAll('input[name="schedule"]:checked')).map(el => el.value).sort().join(',')
+    };
+    return JSON.stringify(data);
+}
+
+function updateSaveButtonState() {
+    const saveBtn = document.getElementById('saveBtn');
+    if (!initialSearchState) return;
+
+    const currentState = serializeSearchForm();
+    if (currentState !== initialSearchState) {
+        saveBtn.disabled = false;
+        saveBtn.innerText = "Сохранить изменения";
+        saveBtn.style.opacity = "1";
+    } else {
+        saveBtn.disabled = true;
+        saveBtn.innerText = "Нет изменений";
+        saveBtn.style.opacity = "0.5";
+    }
+}
+
+function initDirtyStateTracking() {
+    initialSearchState = serializeSearchForm();
+    updateSaveButtonState();
+
+    // Attach listeners to ALL inputs
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', updateSaveButtonState);
+        input.addEventListener('change', updateSaveButtonState);
+    });
+
+    // MutationObserver for tags or custom components
+    // (Simpler: Just call updateSaveButtonState when specific things change)
+}
+
+// Hook into existing logic
+// We need to call initDirtyStateTracking() AFTER settings are loaded.
+
 
 // --- TAG INPUT CLASS ---
 class TagInput {
@@ -532,6 +626,18 @@ async function loadSettings(userId, sign) {
 
         currentSelectedIds = new Set(inds.map(String));
 
+        // Matching Threshold
+        const threshold = settings.matching_threshold !== undefined ? settings.matching_threshold : 50;
+        const thresholdInput = document.getElementById("matchingThresholdInput");
+        const thresholdDisplay = document.getElementById("matchingThresholdValue");
+        if (thresholdInput && thresholdDisplay) {
+            thresholdInput.value = threshold;
+            thresholdDisplay.innerText = threshold;
+        }
+
+        // [NEW] Init Dirty State Tracking after everything is loaded
+        setTimeout(initDirtyStateTracking, 500); // Slight delay to ensure UI updates finish
+
     } catch (e) {
         showError("Не удалось загрузить настройки. " + e.message);
     } finally {
@@ -846,9 +952,13 @@ async function saveSettings(userId, sign) {
         finalQuery = buildBooleanQuery(incStr, excStr);
     }
 
+    // Collect Data (Response settings)
+    const thresholdInput = document.getElementById("matchingThresholdInput");
+
     const payload = {
         user_id: parseInt(userId),
         sign: sign,
+        matching_threshold: thresholdInput ? parseInt(thresholdInput.value) : 50,
         salary: salary,
         experience: experience,
         industry: selectedIndustries,
@@ -1129,3 +1239,5 @@ function updateFlatListCheckbox(id, checked) {
     const cb = document.querySelector(`#regionTree input[value="${id}"]`);
     if (cb) cb.checked = checked;
 }
+
+
