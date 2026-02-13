@@ -477,438 +477,328 @@
 
 <body>
 
-    <div class="container">
-        <!-- Заголовок -->
-        <h2>Настройки поиска</h2>
+    <!-- Блок ошибок -->
+    <div id="errorMsg" class="error"></div>
 
-        <!-- [NEW] СЧЕТЧИК ВАКАНСИЙ -->
-        <div id="vacancyCounterPanel"
-            style="background: rgba(169, 98, 255, 0.1); border: 1px solid rgba(169, 98, 255, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center; display: none;">
-            <div style="font-size: 0.9rem; color: #dcdcdc; margin-bottom: 8px;">
-                Найдено вакансий: <span id="vacancyCountValue" style="color: #fff; font-weight: bold;">...</span>
+    <!-- ГЛОБАЛЬНЫЙ СКЕЛЕТОН -->
+    <div id="globalSkeleton">
+        <!-- Зарплата -->
+        <div class="skeleton skeleton-block" style="height: 20px; width: 40%; margin-bottom: 12px;"></div>
+        <div class="skeleton skeleton-block" style="height: 48px; margin-bottom: 24px;"></div>
+
+        <!-- Опыт -->
+        <div class="skeleton skeleton-block" style="height: 20px; width: 30%; margin-bottom: 12px;"></div>
+        <div class="skeleton skeleton-block" style="height: 48px; margin-bottom: 24px;"></div>
+
+        <!-- Регион -->
+        <div class="skeleton skeleton-block" style="height: 20px; width: 35%; margin-bottom: 12px;"></div>
+        <div class="skeleton skeleton-block" style="height: 40px; margin-bottom: 30px;"></div>
+
+        <!-- Отрасли -->
+        <div class="skeleton skeleton-block" style="height: 20px; width: 50%; margin-bottom: 12px;"></div>
+        <div class="skeleton skeleton-block" style="height: 300px; border-radius: 12px;"></div>
+    </div>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ (Скрыт при загрузке) -->
+    <div id="mainContent" style="display: none; animation: fadeIn 0.3s ease-in-out;">
+
+        <!-- [NEW] TABS -->
+        <div class="segment-control">
+            <div class="segment-option active" id="tab-btn-search" onclick="switchMainTab('search')">Настройки
+                поиска</div>
+            <div class="segment-option" id="tab-btn-response" onclick="switchMainTab('response')">Настройки откликов
             </div>
-            <a id="vacancyLink" href="#" target="_blank"
-                style="display: inline-block; background: #a962ff; color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; transition: background 0.2s;">
-                Посмотреть на hh.ru
-            </a>
         </div>
 
-        <!-- Блок ошибок -->
-        <div id="errorMsg" class="error"></div>
+        <!-- TAB 1: SEARCH SETTINGS -->
+        <div id="searchSettingsTab" class="tab-content active">
 
-        <!-- ГЛОБАЛЬНЫЙ СКЕЛЕТОН -->
-        <div id="globalSkeleton">
-            <!-- Зарплата -->
-            <div class="skeleton skeleton-block" style="height: 20px; width: 40%; margin-bottom: 12px;"></div>
-            <div class="skeleton skeleton-block" style="height: 48px; margin-bottom: 24px;"></div>
+            <!-- Заголовок -->
+            <h2>Настройки поиска</h2>
 
-            <!-- Опыт -->
-            <div class="skeleton skeleton-block" style="height: 20px; width: 30%; margin-bottom: 12px;"></div>
-            <div class="skeleton skeleton-block" style="height: 48px; margin-bottom: 24px;"></div>
+            <!-- [NEW] СЧЕТЧИК ВАКАНСИЙ -->
+            <div id="vacancyCounterPanel"
+                style="background: rgba(169, 98, 255, 0.1); border: 1px solid rgba(169, 98, 255, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center; display: none;">
+                <div style="font-size: 0.9rem; color: #dcdcdc; margin-bottom: 8px;">
+                    Найдено вакансий: <span id="vacancyCountValue" style="color: #fff; font-weight: bold;">...</span>
+                </div>
+                <a id="vacancyLink" href="#" target="_blank"
+                    style="display: inline-block; background: #a962ff; color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; transition: background 0.2s;">
+                    Посмотреть на hh.ru
+                </a>
+            </div>
 
-            <!-- Регион -->
-            <div class="skeleton skeleton-block" style="height: 20px; width: 35%; margin-bottom: 12px;"></div>
-            <div class="skeleton skeleton-block" style="height: 40px; margin-bottom: 30px;"></div>
+            <!-- 1. Зарплата -->
 
-            <!-- Отрасли -->
-            <div class="skeleton skeleton-block" style="height: 20px; width: 50%; margin-bottom: 12px;"></div>
-            <div class="skeleton skeleton-block" style="height: 300px; border-radius: 12px;"></div>
+            <div class="section-title">Желаемая зарплата (₽)</div>
+            <div class="salary-group">
+                <input type="number" id="salaryInput" class="salary-input" placeholder="Например: 100000" min="0">
+                <input type="checkbox" id="noSalaryCheckbox" class="custom-checkbox">
+                <label for="noSalaryCheckbox">Не указана</label>
+            </div>
         </div>
 
-        <!-- ОСНОВНОЙ КОНТЕНТ (Скрыт при загрузке) -->
-        <div id="mainContent" style="display: none; animation: fadeIn 0.3s ease-in-out;">
+        <div class="divider"></div>
 
-            <!-- [NEW] TABS -->
-            <div class="segment-control">
-                <div class="segment-option active" id="tab-btn-search" onclick="switchMainTab('search')">Настройки
-                    поиска</div>
-                <div class="segment-option" id="tab-btn-response" onclick="switchMainTab('response')">Настройки откликов
+        <!-- 2. Опыт -->
+        <div class="section-title">Опыт работы</div>
+        <select id="experienceSelect" class="experience-select">
+            <option value="noExperience">Нет опыта</option>
+            <option value="between1And3">От 1 года до 3 лет</option>
+            <option value="between3And6">От 3 до 6 лет</option>
+            <option value="moreThan6">Более 6 лет</option>
+            <option value="doesNotMatter">Не важно</option>
+        </select>
+
+        <!-- 2.1 График работы -->
+        <div class="section-title">График работы</div>
+        <div class="checkbox-group" id="scheduleContainer" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="sch_remote" value="REMOTE" class="custom-checkbox">
+                <label for="sch_remote">Удаленная работа</label>
+            </div>
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="sch_office" value="ON_SITE" class="custom-checkbox">
+                <label for="sch_office">В офисе/На территории</label>
+            </div>
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="sch_hybrid" value="HYBRID" class="custom-checkbox">
+                <label for="sch_hybrid">Гибридный график</label>
+            </div>
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="sch_field" value="FIELD_WORK" class="custom-checkbox">
+                <label for="sch_field">Разъездная работа</label>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- 3. Регион (Инфо) -->
+        <!-- 3. Регион -->
+        <div class="section-title">Регион поиска</div>
+
+        <div id="regionContainer"
+            style="display: flex; flex-direction: column; height: 420px; background: #111; border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative;">
+
+            <!-- Selected Regions Header & List -->
+            <div style="background: #151515; padding: 10px; border-bottom: 1px solid #222;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span id="selectedRegionsSummary" style="color: #fff; font-size: 0.9rem; font-weight: 500;">
+                        Выбрано: 0
+                    </span>
+                    <span style="font-size: 12px; color: #666; cursor: pointer;"
+                        onclick="clearAllRegions()">Очистить</span>
+                </div>
+                <div id="selectedRegionsList"
+                    style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto; padding-right: 4px;">
+                    <!-- Chips will go here -->
                 </div>
             </div>
 
-            <!-- TAB 1: SEARCH SETTINGS -->
-            <div id="searchSettingsTab" class="tab-content active">
-
-                <!-- 1. Зарплата -->
-
-                <div class="section-title">Желаемая зарплата (₽)</div>
-                <div class="salary-group">
-                    <input type="number" id="salaryInput" class="salary-input" placeholder="Например: 100000" min="0">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="noSalaryCheckbox" class="custom-checkbox">
-                        <label for="noSalaryCheckbox">Не указана</label>
-                    </div>
-                </div>
-
-                <div class="divider"></div>
-
-                <!-- 2. Опыт -->
-                <div class="section-title">Опыт работы</div>
-                <select id="experienceSelect" class="experience-select">
-                    <option value="noExperience">Нет опыта</option>
-                    <option value="between1And3">От 1 года до 3 лет</option>
-                    <option value="between3And6">От 3 до 6 лет</option>
-                    <option value="moreThan6">Более 6 лет</option>
-                    <option value="doesNotMatter">Не важно</option>
-                </select>
-
-                <!-- 2.1 График работы -->
-                <div class="section-title">График работы</div>
-                <div class="checkbox-group" id="scheduleContainer"
-                    style="display: flex; flex-direction: column; gap: 8px;">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="sch_remote" value="REMOTE" class="custom-checkbox">
-                        <label for="sch_remote">Удаленная работа</label>
-                    </div>
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="sch_office" value="ON_SITE" class="custom-checkbox">
-                        <label for="sch_office">В офисе/На территории</label>
-                    </div>
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="sch_hybrid" value="HYBRID" class="custom-checkbox">
-                        <label for="sch_hybrid">Гибридный график</label>
-                    </div>
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="sch_field" value="FIELD_WORK" class="custom-checkbox">
-                        <label for="sch_field">Разъездная работа</label>
-                    </div>
-                </div>
-
-                <div class="divider"></div>
-
-                <!-- 3. Регион (Инфо) -->
-                <!-- 3. Регион -->
-                <div class="section-title">Регион поиска</div>
-
-                <div id="regionContainer"
-                    style="display: flex; flex-direction: column; height: 420px; background: #111; border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative;">
-
-                    <!-- Selected Regions Header & List -->
-                    <div style="background: #151515; padding: 10px; border-bottom: 1px solid #222;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span id="selectedRegionsSummary" style="color: #fff; font-size: 0.9rem; font-weight: 500;">
-                                Выбрано: 0
-                            </span>
-                            <span style="font-size: 12px; color: #666; cursor: pointer;"
-                                onclick="clearAllRegions()">Очистить</span>
-                        </div>
-                        <div id="selectedRegionsList"
-                            style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto; padding-right: 4px;">
-                            <!-- Chips will go here -->
-                        </div>
-                    </div>
-
-                    <div class="industry-search-wrapper"
-                        style="border-bottom: 1px solid #222; padding: 10px; background: #151515; flex-shrink: 0; position: sticky; top: 0; z-index: 10;">
-                        <input type="text" id="regionSearch" class="industry-search-input"
-                            placeholder="Поиск региона..." style="width: 100%; box-sizing: border-box;" />
-                    </div>
-
-
-
-                    <div id="regionTree"
-                        style="overflow-y: auto; flex-grow: 1; padding: 8px; scrollbar-width: thin; scrollbar-color: #333 #111;">
-                        <div style="padding: 20px; text-align: center; color: #666;">Загрузка регионов...</div>
-                    </div>
-                </div>
-
-                <!-- 4. Отрасли (Дерево) -->
-                <div class="section-title" style="margin-top: 30px;">
-                    Отрасли компаний
-                </div>
-
-                <div id="industryContainer">
-                    <div class="industry-search-wrapper">
-                        <input type="text" id="industrySearch" class="industry-search-input"
-                            placeholder="Поиск отрасли..." />
-                    </div>
-                    <div id="industryTree">
-                        <!-- Сюда рендерится JS -->
-                    </div>
-                </div>
-
-                <!-- 2.2 Редактор запроса (Moved to Bottom) -->
-                <div class="section-title" style="margin-bottom: 12px; margin-top: 30px;">Настройка Поиска</div>
-
-                <!-- Segmented Control -->
-                <div class="segmented-control">
-                    <div class="mode-btn active" id="modeSimpleBtn" onclick="window.switchQueryMode('simple')">
-                        Простой (Keywords)
-                    </div>
-                    <div class="mode-btn" id="modeAdvancedBtn" onclick="window.switchQueryMode('advanced')">
-                        Advanced (AI/Boolean)
-                    </div>
-                </div>
-
-                <!-- Simple Mode Content (Tag Inputs) -->
-                <div id="simpleQueryEditor" class="query-editor-block">
-                    <div class="info-text" style="color: rgba(255,255,255,0.9); margin-bottom: 15px; line-height: 1.5;">
-                        Введите ключевые слова и нажмите <b>Enter</b>. <br>
-                        Бот будет искать резюме, содержащие <b>ВСЕ</b> слова из "Включить" и <b>НИ ОДНОГО</b> из
-                        "Исключить".
-                    </div>
-
-                    <label class="field-label">Искать (Include)</label>
-                    <div class="tags-container" id="tagsIncludeContainer">
-                        <!-- Tags will be rendered here -->
-                        <input type="text" id="keywordsIncludeInput" class="tag-input"
-                            placeholder="Введите слово и Enter...">
-                    </div>
-
-                    <label class="field-label" style="margin-top: 12px;">Исключить (Exclude)</label>
-                    <div class="tags-container" id="tagsExcludeContainer">
-                        <!-- Tags will be rendered here -->
-                        <input type="text" id="keywordsExcludeInput" class="tag-input"
-                            placeholder="Введите слово и Enter...">
-                    </div>
-                </div>
-
-                <!-- Advanced Mode Content -->
-                <div id="advancedQueryEditor" class="query-editor-block" style="display: none;">
-                    <div class="info-text" style="color: rgba(255,255,255,0.9); margin-bottom: 15px; line-height: 1.5;">
-                        Полный контроль над запросом используя язык запросов hh.ru (Boolean Search).
-                        Рекомендуется для сложных выборок.
-                    </div>
-                    <textarea id="booleanQueryInput" class="advanced-textarea" rows="5"
-                        placeholder="NAME:(Python OR Django) AND NOT NAME:(Senior)"></textarea>
-                    <div class="info" style="text-align: left; margin-top: 8px; opacity: 0.7; font-size: 0.8rem;">
-                        Доступные операторы: <code>OR</code>, <code>AND</code>, <code>NOT</code>, <code>()</code>,
-                        <code>NAME:()</code>.
-                    </div>
-                </div>
-
-                <style>
-                    /* Advanced Textarea Styling to match Search Input */
-                    .advanced-textarea {
-                        width: 100%;
-                        background: #1a1a1a;
-                        /* Matches .tags-container */
-                        border: 1px solid #333;
-                        color: #fff;
-                        padding: 12px;
-                        border-radius: 8px;
-                        font-size: 14px;
-                        /* Slightly larger */
-                        font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-                        line-height: 1.5;
-                        resize: vertical;
-                        transition: all 0.2s ease;
-                        outline: none;
-                        min-height: 120px;
-                    }
-
-                    .advanced-textarea:focus {
-                        border-color: #a962ff;
-                        box-shadow: 0 0 0 2px rgba(169, 98, 255, 0.2);
-                    }
-
-                    .advanced-textarea::placeholder {
-                        color: #555;
-                    }
-
-                    .tags-container {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 6px;
-                        background: #1a1a1a;
-                        border: 1px solid #333;
-                        padding: 8px;
-                        border-radius: 8px;
-                        min-height: 42px;
-                        align-items: center;
-                    }
-
-                    .tags-container:focus-within {
-                        border-color: #a962ff;
-                        box-shadow: 0 0 0 2px rgba(169, 98, 255, 0.2);
-                    }
-
-                    .tag {
-                        background: rgba(169, 98, 255, 0.2);
-                        color: #fff;
-                        padding: 4px 8px;
-                        border-radius: 6px;
-                        font-size: 0.9rem;
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                        border: 1px solid rgba(169, 98, 255, 0.4);
-                    }
-
-                    .tag-remove {
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        width: 16px;
-                        height: 16px;
-                        opacity: 0.7;
-                        transition: opacity 0.2s;
-                    }
-
-                    .tag-remove:hover {
-                        opacity: 1;
-                        color: #ff4d4d;
-                    }
-
-                    .tag-input {
-                        background: transparent;
-                        border: none;
-                        color: #fff;
-                        font-size: 0.95rem;
-                        outline: none;
-                        flex-grow: 1;
-                        min-width: 120px;
-                        padding: 4px;
-                    }
-
-                    .tag-input::placeholder {
-                        color: #555;
-                    }
-
-                    .segmented-control {
-                        display: flex;
-                        background: rgba(255, 255, 255, 0.05);
-                        padding: 4px;
-                        border-radius: 12px;
-                        margin-bottom: 20px;
-                        /* Increased margin */
-                    }
-
-                    .mode-btn {
-                        flex: 1;
-                        text-align: center;
-                        padding: 10px;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                        font-size: 0.9rem;
-                        color: rgba(255, 255, 255, 0.6);
-                        font-weight: 500;
-                    }
-
-                    .mode-btn.active {
-                        background: rgba(255, 255, 255, 0.15);
-                        color: #fff;
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                    }
-
-                    .query-editor-block {
-                        animation: fadeIn 0.3s ease;
-                        background: rgba(255, 255, 255, 0.02);
-                        padding: 16px;
-                        border-radius: 12px;
-                        border: 1px solid rgba(255, 255, 255, 0.05);
-                    }
-
-                    @keyframes fadeIn {
-                        from {
-                            opacity: 0;
-                            transform: translateY(5px);
-                        }
-
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-
-                    .field-label {
-                        display: block;
-                        font-size: 0.85rem;
-                        color: #aaa;
-                        margin-bottom: 6px;
-                        margin-left: 2px;
-                    }
-
-                    /* Switch Styles */
-                    .toggle-switch {
-                        position: relative;
-                        display: inline-block;
-                        width: 40px;
-                        height: 20px;
-                    }
-
-                    .toggle-switch input {
-                        opacity: 0;
-                        width: 0;
-                        height: 0;
-                    }
-
-                    .slider {
-                        position: absolute;
-                        cursor: pointer;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        background-color: #333;
-                        transition: .4s;
-                        border-radius: 20px;
-                    }
-
-                    .slider:before {
-                        position: absolute;
-                        content: "";
-                        height: 14px;
-                        width: 14px;
-                        left: 3px;
-                        bottom: 3px;
-                        background-color: white;
-                        transition: .4s;
-                        border-radius: 50%;
-                    }
-
-                    input:checked+.slider {
-                        background-color: #a962ff;
-                    }
-
-                    input:checked+.slider:before {
-                        transform: translateX(20px);
-                    }
-                </style>
-
-
-
-                <!-- Кнопки Search Tab -->
-                <button id="saveBtn" disabled>Сохранить изменения</button>
-                <div class="info" style="margin-bottom: 10px;">Изменения применятся в боте мгновенно</div>
-            </div> <!-- End searchSettingsTab -->
-
-            <!-- TAB 2: RESPONSE SETTINGS -->
-            <div id="responseSettingsTab" class="tab-content">
-                <h2>Настройки откликов</h2>
-
-                <div class="section-title">Порог совпадения AI (0-100)</div>
-                <div class="info-text" style="text-align: center; margin-bottom: 20px;">
-                    Вакансии с процентом совпадения ниже указанного будут пропускаться автопилотом.
-                </div>
-
-                <div class="form-group" style="display: flex; align-items: center; gap: 15px;">
-                    <input type="range" id="matchingThresholdInput" min="0" max="100" value="50" style="flex: 1;">
-                    <span id="matchingThresholdValue"
-                        style="font-weight: bold; font-size: 1.2rem; width: 40px; text-align: right;">50</span>
-                </div>
-
-                <div class="info-text" style="text-align: center; margin-top: 40px; color: #888;">
-                    Скоро здесь появятся настройки сопроводительных писем и черных списков.
-                </div>
-
-                <button id="saveResponseBtn" style="margin-top: 40px;">Сохранить настройки откликов</button>
+            <div class="industry-search-wrapper"
+                style="border-bottom: 1px solid #222; padding: 10px; background: #151515; flex-shrink: 0; position: sticky; top: 0; z-index: 10;">
+                <input type="text" id="regionSearch" class="industry-search-input" placeholder="Поиск региона..."
+                    style="width: 100%; box-sizing: border-box;" />
             </div>
 
-            <!-- Global Footer -->
-            <button id="returnBtn" class="btn btn-secondary"
-                style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">Вернуться
-                в Аврору</button>
-        </div><!-- End Container -->
+
+
+            <div id="regionTree"
+                style="overflow-y: auto; flex-grow: 1; padding: 8px; scrollbar-width: thin; scrollbar-color: #333 #111;">
+                <div style="padding: 20px; text-align: center; color: #666;">Загрузка регионов...</div>
+            </div>
+        </div>
+
+        <!-- 4. Отрасли (Дерево) -->
+        <div class="section-title" style="margin-top: 30px;">
+            Отрасли компаний
+        </div>
+
+        <div id="industryContainer">
+            <div class="industry-search-wrapper">
+                <input type="text" id="industrySearch" class="industry-search-input" placeholder="Поиск отрасли..." />
+            </div>
+            <div id="industryTree">
+                <!-- Сюда рендерится JS -->
+            </div>
+        </div>
+
+        <!-- 2.2 Редактор запроса (Moved to Bottom) -->
+        <div class="section-title" style="margin-bottom: 12px; margin-top: 30px;">Настройка Поиска</div>
+
+        <!-- Segmented Control -->
+        <div class="segmented-control">
+            <div class="mode-btn active" id="modeSimpleBtn" onclick="window.switchQueryMode('simple')">
+                Простой (Keywords)
+            </div>
+            <div class="mode-btn" id="modeAdvancedBtn" onclick="window.switchQueryMode('advanced')">
+                Advanced (AI/Boolean)
+            </div>
+        </div>
+
+        <!-- Simple Mode Content (Tag Inputs) -->
+        <div id="simpleQueryEditor" class="query-editor-block">
+            <div class="info-text" style="color: rgba(255,255,255,0.9); margin-bottom: 15px; line-height: 1.5;">
+                Введите ключевые слова и нажмите <b>Enter</b>. <br>
+                Бот будет искать резюме, содержащие <b>ВСЕ</b> слова из "Включить" и <b>НИ ОДНОГО</b> из
+                "Исключить".
+            </div>
+
+            <label class="field-label">Искать (Include)</label>
+            <div class="tags-container" id="tagsIncludeContainer">
+                <!-- Tags will be rendered here -->
+                <input type="text" id="keywordsIncludeInput" class="tag-input" placeholder="Введите слово и Enter...">
+            </div>
+
+            <label class="field-label" style="margin-top: 12px;">Исключить (Exclude)</label>
+            <div class="tags-container" id="tagsExcludeContainer">
+                <!-- Tags will be rendered here -->
+                <input type="text" id="keywordsExcludeInput" class="tag-input" placeholder="Введите слово и Enter...">
+            </div>
+        </div>
+
+        <!-- Advanced Mode Content -->
+        <div id="advancedQueryEditor" class="query-editor-block" style="display: none;">
+            <div class="info-text" style="color: rgba(255,255,255,0.9); margin-bottom: 15px; line-height: 1.5;">
+                Полный контроль над запросом используя язык запросов hh.ru (Boolean Search).
+                Рекомендуется для сложных выборок.
+            </div>
+            <textarea id="booleanQueryInput" class="advanced-textarea" rows="5"
+                placeholder="NAME:(Python OR Django) AND NOT NAME:(Senior)"></textarea>
+            <div class="info" style="text-align: left; margin-top: 8px; opacity: 0.7; font-size: 0.8rem;">
+                Доступные операторы: <code>OR</code>, <code>AND</code>, <code>NOT</code>, <code>()</code>,
+                <code>NAME:()</code>.
+            </div>
+        </div>
 
         <style>
+            /* Advanced Textarea Styling to match Search Input */
+            .advanced-textarea {
+                width: 100%;
+                background: #1a1a1a;
+                /* Matches .tags-container */
+                border: 1px solid #333;
+                color: #fff;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 14px;
+                /* Slightly larger */
+                font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+                line-height: 1.5;
+                resize: vertical;
+                transition: all 0.2s ease;
+                outline: none;
+                min-height: 120px;
+            }
+
+            .advanced-textarea:focus {
+                border-color: #a962ff;
+                box-shadow: 0 0 0 2px rgba(169, 98, 255, 0.2);
+            }
+
+            .advanced-textarea::placeholder {
+                color: #555;
+            }
+
+            .tags-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                background: #1a1a1a;
+                border: 1px solid #333;
+                padding: 8px;
+                border-radius: 8px;
+                min-height: 42px;
+                align-items: center;
+            }
+
+            .tags-container:focus-within {
+                border-color: #a962ff;
+                box-shadow: 0 0 0 2px rgba(169, 98, 255, 0.2);
+            }
+
+            .tag {
+                background: rgba(169, 98, 255, 0.2);
+                color: #fff;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                border: 1px solid rgba(169, 98, 255, 0.4);
+            }
+
+            .tag-remove {
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 16px;
+                height: 16px;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+            }
+
+            .tag-remove:hover {
+                opacity: 1;
+                color: #ff4d4d;
+            }
+
+            .tag-input {
+                background: transparent;
+                border: none;
+                color: #fff;
+                font-size: 0.95rem;
+                outline: none;
+                flex-grow: 1;
+                min-width: 120px;
+                padding: 4px;
+            }
+
+            .tag-input::placeholder {
+                color: #555;
+            }
+
+            .segmented-control {
+                display: flex;
+                background: rgba(255, 255, 255, 0.05);
+                padding: 4px;
+                border-radius: 12px;
+                margin-bottom: 20px;
+                /* Increased margin */
+            }
+
+            .mode-btn {
+                flex: 1;
+                text-align: center;
+                padding: 10px;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-size: 0.9rem;
+                color: rgba(255, 255, 255, 0.6);
+                font-weight: 500;
+            }
+
+            .mode-btn.active {
+                background: rgba(255, 255, 255, 0.15);
+                color: #fff;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .query-editor-block {
+                animation: fadeIn 0.3s ease;
+                background: rgba(255, 255, 255, 0.02);
+                padding: 16px;
+                border-radius: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
             @keyframes fadeIn {
                 from {
                     opacity: 0;
-                    transform: translateY(10px);
+                    transform: translateY(5px);
                 }
 
                 to {
@@ -916,9 +806,112 @@
                     transform: translateY(0);
                 }
             }
+
+            .field-label {
+                display: block;
+                font-size: 0.85rem;
+                color: #aaa;
+                margin-bottom: 6px;
+                margin-left: 2px;
+            }
+
+            /* Switch Styles */
+            .toggle-switch {
+                position: relative;
+                display: inline-block;
+                width: 40px;
+                height: 20px;
+            }
+
+            .toggle-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #333;
+                transition: .4s;
+                border-radius: 20px;
+            }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 14px;
+                width: 14px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .4s;
+                border-radius: 50%;
+            }
+
+            input:checked+.slider {
+                background-color: #a962ff;
+            }
+
+            input:checked+.slider:before {
+                transform: translateX(20px);
+            }
         </style>
 
-        <script src="settings.js?v=1.9"></script>
+
+
+        <!-- Кнопки Search Tab -->
+        <button id="saveBtn" disabled>Сохранить изменения</button>
+        <div class="info" style="margin-bottom: 10px;">Изменения применятся в боте мгновенно</div>
+    </div> <!-- End searchSettingsTab -->
+
+    <!-- TAB 2: RESPONSE SETTINGS -->
+    <div id="responseSettingsTab" class="tab-content">
+        <h2>Настройки откликов</h2>
+
+        <div class="section-title">Порог совпадения AI (0-100)</div>
+        <div class="info-text" style="text-align: center; margin-bottom: 20px;">
+            Вакансии с процентом совпадения ниже указанного будут пропускаться автопилотом.
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 15px;">
+            <input type="range" id="matchingThresholdInput" min="0" max="100" value="50" style="flex: 1;">
+            <span id="matchingThresholdValue"
+                style="font-weight: bold; font-size: 1.2rem; width: 40px; text-align: right;">50</span>
+        </div>
+
+        <div class="info-text" style="text-align: center; margin-top: 40px; color: #888;">
+            Скоро здесь появятся настройки сопроводительных писем и черных списков.
+        </div>
+
+        <button id="saveResponseBtn" style="margin-top: 40px;">Сохранить настройки откликов</button>
+    </div>
+
+    <!-- Global Footer -->
+    <button id="returnBtn" class="btn btn-secondary"
+        style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">Вернуться
+        в Аврору</button>
+    </div><!-- End Container -->
+
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <script src="settings.js?v=1.9"></script>
 </body>
 
 </html>

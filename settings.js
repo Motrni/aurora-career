@@ -1250,3 +1250,52 @@ function updateFlatListCheckbox(id, checked) {
 }
 
 
+
+// --- SAVE RESPONSE SETTINGS ---
+async function saveResponseSettings(userId, sign) {
+    const saveBtn = document.getElementById("saveResponseBtn");
+    const originalText = saveBtn.innerText;
+
+    try {
+        saveBtn.disabled = true;
+        saveBtn.innerText = "Сохраняю...";
+
+        // Collect Data (Response settings)
+        const thresholdInput = document.getElementById("matchingThresholdInput");
+        const payload = {
+            user_id: parseInt(userId),
+            sign: sign,
+            matching_threshold: thresholdInput ? parseInt(thresholdInput.value) : 50
+        };
+
+        const response = await fetch(`${API_BASE_URL}/api/save_response_settings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.status === "ok") {
+            saveBtn.innerText = "Сохранено!";
+            saveBtn.style.background = "#4caf50";
+            setTimeout(() => {
+                saveBtn.innerText = "Сохранить настройки откликов";
+                saveBtn.style.background = ""; // Reset
+                saveBtn.disabled = false;
+            }, 2000);
+        } else {
+            throw new Error(data.error || "Ошибка сервера");
+        }
+
+    } catch (e) {
+        console.error(e);
+        saveBtn.innerText = "Ошибка";
+        saveBtn.style.background = "#ff4d4d";
+        setTimeout(() => {
+            saveBtn.innerText = "Сохранить настройки откликов";
+            saveBtn.style.background = "";
+            saveBtn.disabled = false;
+        }, 3000);
+    }
+}
