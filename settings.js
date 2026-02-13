@@ -265,13 +265,15 @@ class TagInput {
         if (this.tags.includes(text)) return;
         this.tags.push(text);
         this.render();
-        checkVacancies(); // [NEW] Trigger check
+        checkVacancies(); // Trigger check
+        updateSaveButtonState(); // [FIX] Trigger dirty state
     }
 
     removeTag(index) {
         this.tags.splice(index, 1);
         this.render();
-        checkVacancies(); // [NEW] Trigger check
+        checkVacancies(); // Trigger check
+        updateSaveButtonState(); // [FIX] Trigger dirty state
     }
 
     setTags(tagsArray) {
@@ -983,12 +985,19 @@ async function saveSettings(userId, sign) {
     }
 
     const saveBtn = document.getElementById("saveBtn");
-    const originalText = saveBtn.innerText;
+    const originalText = "Сохранить изменения"; // Reset to default text
     saveBtn.innerText = "Сохранено! ✅";
     saveBtn.style.background = "#4caf50";
+
+    // [FIX] Update initial state to current state so button gets disabled
+    initialSearchState = serializeSearchForm();
+    updateSaveButtonState(); // Should disable the button now
+
     setTimeout(() => {
         saveBtn.innerText = originalText;
         saveBtn.style.background = "linear-gradient(45deg, #a962ff, #6247aa)";
+        // Re-check state just in case user changed something during timeout
+        updateSaveButtonState();
     }, 2000);
 
     initialSettings = {
