@@ -1335,6 +1335,7 @@ async function saveResponseSettings(userId, sign) {
 
 
 function toggleCLFields(show) {
+    const div = document.getElementById("clCustomFields");
     if (div) {
         div.style.display = show ? "block" : "none";
     }
