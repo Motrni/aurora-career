@@ -646,12 +646,19 @@ async function loadSettings(userId, sign) {
         const clUseDefault = settings.cl_use_default !== false; // Default True if undefined
         const clHeader = settings.cl_header || "";
         const clFooter = settings.cl_footer || "";
+        const clStyle = settings.cl_style || "classic";
 
         const clCheckbox = document.getElementById("clUseDefaultCheckbox");
         if (clCheckbox) {
             clCheckbox.checked = clUseDefault;
             document.getElementById("clHeaderInput").value = clHeader;
             document.getElementById("clFooterInput").value = clFooter;
+
+            const clStyleSelect = document.getElementById("clStyleSelect");
+            if (clStyleSelect) {
+                clStyleSelect.value = clStyle;
+                clStyleSelect.addEventListener("change", updateCLPreview);
+            }
 
             toggleCLFields(!clUseDefault);
             updateCLPreview(); // Initial render
@@ -1298,7 +1305,8 @@ async function saveResponseSettings(userId, sign) {
             // [NEW] CL Settings
             cl_use_default: document.getElementById("clUseDefaultCheckbox").checked,
             cl_header: document.getElementById("clHeaderInput").value.trim(),
-            cl_footer: document.getElementById("clFooterInput").value.trim()
+            cl_footer: document.getElementById("clFooterInput").value.trim(),
+            cl_style: document.getElementById("clStyleSelect").value
         };
 
         const response = await fetch(`${API_BASE_URL}/api/save_response_settings`, {
@@ -1350,8 +1358,20 @@ function updateCLPreview() {
     const headerEl = document.getElementById("clPreviewHeader");
     const footerEl = document.getElementById("clPreviewFooter");
     const container = document.getElementById("clPreviewBox");
+    // Body is the div between header and footer (2nd child)
+    const bodyEl = container.children[1];
 
     if (!headerEl || !footerEl) return;
+
+    // Update Body Preview based on Style
+    const styleSelect = document.getElementById("clStyleSelect");
+    const clStyle = styleSelect ? styleSelect.value : 'classic';
+
+    if (clStyle === 'startup') {
+        bodyEl.innerHTML = `Здравствуйте! Увидел вашу вакансию...<br><br>Мой опыт в React и Node.js плотно ложится на ваши задачи...<br><br>Готов ворваться в задачи и приносить пользу! Буду рад пообщаться.`;
+    } else {
+        bodyEl.innerHTML = `Увидел вашу вакансию <b>Manual QA Engineer</b>. Мой опыт в финтех-проектах...<br><br>(Здесь будет сгенерированный AI текст под вакансию)`;
+    }
 
     if (shouldUseDefault) {
         // Default Mode
