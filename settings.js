@@ -634,7 +634,24 @@ async function loadSettings(userId, sign) {
         const thresholdDisplay = document.getElementById("matchingThresholdValue");
         if (thresholdInput && thresholdDisplay) {
             thresholdInput.value = threshold;
+            thresholdInput.value = threshold;
             thresholdDisplay.innerText = threshold;
+        }
+
+        // [NEW] Cover Letter
+        const clUseDefault = settings.cl_use_default !== false; // Default True if undefined
+        const clHeader = settings.cl_header || "";
+        const clFooter = settings.cl_footer || "";
+
+        const clCheckbox = document.getElementById("clUseDefaultCheckbox");
+        if (clCheckbox) {
+            clCheckbox.checked = clUseDefault;
+            document.getElementById("clHeaderInput").value = clHeader;
+            document.getElementById("clFooterInput").value = clFooter;
+            toggleCLFields(!clUseDefault);
+
+            // Add listener (idempotent check)
+            clCheckbox.onchange = (e) => toggleCLFields(!e.target.checked);
         }
 
         // [NEW] Init Dirty State Tracking after everything is loaded
@@ -1265,7 +1282,11 @@ async function saveResponseSettings(userId, sign) {
         const payload = {
             user_id: parseInt(userId),
             sign: sign,
-            matching_threshold: thresholdInput ? parseInt(thresholdInput.value) : 50
+            matching_threshold: thresholdInput ? parseInt(thresholdInput.value) : 50,
+            // [NEW] CL Settings
+            cl_use_default: document.getElementById("clUseDefaultCheckbox").checked,
+            cl_header: document.getElementById("clHeaderInput").value.trim(),
+            cl_footer: document.getElementById("clFooterInput").value.trim()
         };
 
         const response = await fetch(`${API_BASE_URL}/api/save_response_settings`, {
@@ -1297,5 +1318,13 @@ async function saveResponseSettings(userId, sign) {
             saveBtn.style.background = "";
             saveBtn.disabled = false;
         }, 3000);
+    }
+}
+
+
+function toggleCLFields(show) {
+    const div = document.getElementById("clCustomFields");
+    if (div) {
+        div.style.display = show ? "block" : "none";
     }
 }
