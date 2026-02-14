@@ -14,6 +14,7 @@ let currentSelectedIds = new Set();
 let currentSelectedAreaIds = new Set(); // [NEW]
 let messageId = null;
 window.BOT_USERNAME = "Aurora_Career_Bot"; // Default
+window.USER_FIRST_NAME = "Кандидат"; // [NEW]
 
 // Loading Flags
 let isIndustriesLoaded = false;
@@ -530,6 +531,9 @@ async function loadSettings(userId, sign) {
         if (data.bot_username) {
             window.BOT_USERNAME = data.bot_username;
         }
+        if (data.first_name) {
+            window.USER_FIRST_NAME = data.first_name;
+        }
 
         const settings = data.settings;
 
@@ -648,10 +652,18 @@ async function loadSettings(userId, sign) {
             clCheckbox.checked = clUseDefault;
             document.getElementById("clHeaderInput").value = clHeader;
             document.getElementById("clFooterInput").value = clFooter;
-            toggleCLFields(!clUseDefault);
 
-            // Add listener (idempotent check)
-            clCheckbox.onchange = (e) => toggleCLFields(!e.target.checked);
+            toggleCLFields(!clUseDefault);
+            updateCLPreview(); // Initial render
+
+            // Add listeners
+            clCheckbox.onchange = (e) => {
+                toggleCLFields(!e.target.checked);
+                updateCLPreview();
+            };
+
+            document.getElementById("clHeaderInput").addEventListener("input", updateCLPreview);
+            document.getElementById("clFooterInput").addEventListener("input", updateCLPreview);
         }
 
         // [NEW] Init Dirty State Tracking after everything is loaded
@@ -1323,8 +1335,66 @@ async function saveResponseSettings(userId, sign) {
 
 
 function toggleCLFields(show) {
-    const div = document.getElementById("clCustomFields");
     if (div) {
         div.style.display = show ? "block" : "none";
+    }
+}
+
+// [NEW] Cover Letter Preview Update
+function updateCLPreview() {
+    const shouldUseDefault = document.getElementById("clUseDefaultCheckbox").checked;
+    const customHeader = document.getElementById("clHeaderInput").value.trim();
+    const customFooter = document.getElementById("clFooterInput").value.trim();
+
+    const headerEl = document.getElementById("clPreviewHeader");
+    const footerEl = document.getElementById("clPreviewFooter");
+    const container = document.getElementById("clPreviewBox");
+
+    if (!headerEl || !footerEl) return;
+
+    if (shouldUseDefault) {
+        // Default Mode
+        headerEl.innerText = `Здравствуйте, меня зовут ${window.USER_FIRST_NAME}.`;
+        headerEl.style.fontStyle = "italic";
+        headerEl.style.color = "#888";
+        headerEl.style.fontWeight = "normal";
+
+        footerEl.innerText = "ТГ: @username\nНомер: +7 (999) 000-00-00";
+        footerEl.style.fontStyle = "italic";
+        footerEl.style.color = "#888";
+        footerEl.style.fontWeight = "normal";
+
+        container.style.borderColor = "#444";
+        container.style.borderStyle = "dashed";
+    } else {
+        // Custom Mode
+        // Header
+        if (customHeader) {
+            headerEl.innerText = customHeader;
+            headerEl.style.color = "#a962ff"; // Highlight
+            headerEl.style.fontWeight = "600";
+            headerEl.style.fontStyle = "normal";
+        } else {
+            headerEl.innerText = "(Здесь будет ваше приветствие...)";
+            headerEl.style.color = "#555";
+            headerEl.style.fontStyle = "italic";
+            headerEl.style.fontWeight = "normal";
+        }
+
+        // Footer
+        if (customFooter) {
+            footerEl.innerText = customFooter;
+            footerEl.style.color = "#a962ff"; // Highlight
+            footerEl.style.fontWeight = "600";
+            footerEl.style.fontStyle = "normal";
+        } else {
+            footerEl.innerText = "(Здесь будет ваша подпись...)";
+            footerEl.style.color = "#555";
+            footerEl.style.fontStyle = "italic";
+            footerEl.style.fontWeight = "normal";
+        }
+
+        container.style.borderColor = "#a962ff"; // Highlight container
+        container.style.borderStyle = "solid";
     }
 }
