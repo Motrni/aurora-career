@@ -390,6 +390,7 @@ function checkVacancies() {
             // 1. Collect Data (Similar to saveSettings)
             const urlParams = new URLSearchParams(window.location.search);
             const userId = urlParams.get('user_id');
+            const sign = urlParams.get('sign');
             const salaryInput = document.getElementById("salaryInput");
             const experienceSelect = document.getElementById("experienceSelect");
 
@@ -447,6 +448,7 @@ function checkVacancies() {
             // 2. Send Request
             const payload = {
                 user_id: userId ? parseInt(userId) : 0,
+                sign: sign,
                 text: text,
                 salary: salary,
                 experience: experience,
