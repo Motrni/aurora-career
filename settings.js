@@ -27,8 +27,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     toggleGlobalLoading(true);
 
     // 0. Initialize UI Components (Tag Inputs)
-    window.tagsInclude = new TagInput("tagsIncludeContainer", "keywordsIncludeInput");
-    window.tagsExclude = new TagInput("tagsExcludeContainer", "keywordsExcludeInput");
+    window.tagsInclude = new TagInput("tagsIncludeContainer", "keywordsIncludeInput", "keywordsIncludeConfirm");
+    window.tagsExclude = new TagInput("tagsExcludeContainer", "keywordsExcludeInput", "keywordsExcludeConfirm");
 
     // 1. URL Params
     const urlParams = new URLSearchParams(window.location.search);
@@ -235,9 +235,10 @@ function initDirtyStateTracking() {
 
 // --- TAG INPUT CLASS ---
 class TagInput {
-    constructor(containerId, inputId) {
+    constructor(containerId, inputId, confirmBtnId) {
         this.container = document.getElementById(containerId);
         this.input = document.getElementById(inputId);
+        this.confirmBtn = confirmBtnId ? document.getElementById(confirmBtnId) : null;
         this.tags = [];
 
         if (!this.container || !this.input) return;
@@ -245,20 +246,49 @@ class TagInput {
         this.input.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
                 e.preventDefault();
-                const val = this.input.value.trim();
-                if (val) {
-                    this.addTag(val);
-                    this.input.value = "";
-                }
+                this._commitInput();
             }
             if (e.key === "Backspace" && this.input.value === "" && this.tags.length > 0) {
                 this.removeTag(this.tags.length - 1);
             }
         });
 
-        this.container.addEventListener("click", () => {
-            this.input.focus();
+        if (this.confirmBtn) {
+            this.confirmBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this._commitInput();
+            });
+        }
+
+        // Show/hide confirm button based on input content
+        this.input.addEventListener("input", () => {
+            if (this.confirmBtn) {
+                if (this.input.value.trim()) {
+                    this.confirmBtn.classList.add("visible");
+                } else {
+                    this.confirmBtn.classList.remove("visible");
+                }
+            }
         });
+
+        this.container.addEventListener("click", (e) => {
+            if (e.target !== this.confirmBtn) {
+                this.input.focus();
+            }
+        });
+    }
+
+    _commitInput() {
+        const val = this.input.value.trim();
+        if (val) {
+            this.addTag(val);
+            this.input.value = "";
+        }
+        if (this.confirmBtn) {
+            this.confirmBtn.classList.remove("visible");
+        }
+        this.input.focus();
     }
 
     addTag(text) {

@@ -653,8 +653,9 @@
                 <!-- Simple Mode Content (Tag Inputs) -->
                 <div id="simpleQueryEditor" class="query-editor-block">
                     <div class="info-text" style="color: rgba(255,255,255,0.9); margin-bottom: 15px; line-height: 1.5;">
-                        Введите ключевые слова и нажмите <b>Enter</b>. <br>
-                        Бот будет искать резюме, содержащие <b>ВСЕ</b> слова из "Включить" и <b>НИ ОДНОГО</b> из
+                        Введите ключевое слово и нажмите <b>Enter</b> или кнопку <b>✓</b>, чтобы добавить его в список.
+                        <br>
+                        Бот будет искать вакансии, содержащие <b>ВСЕ</b> слова из "Включить" и <b>НИ ОДНОГО</b> из
                         "Исключить".
                     </div>
 
@@ -663,6 +664,8 @@
                         <!-- Tags will be rendered here -->
                         <input type="text" id="keywordsIncludeInput" class="tag-input"
                             placeholder="Введите слово и Enter...">
+                        <button type="button" class="tag-confirm-btn" id="keywordsIncludeConfirm"
+                            title="Добавить слово">✓</button>
                     </div>
 
                     <label class="field-label" style="margin-top: 12px;">Исключить (Exclude)</label>
@@ -670,6 +673,8 @@
                         <!-- Tags will be rendered here -->
                         <input type="text" id="keywordsExcludeInput" class="tag-input"
                             placeholder="Введите слово и Enter...">
+                        <button type="button" class="tag-confirm-btn" id="keywordsExcludeConfirm"
+                            title="Добавить слово">✓</button>
                     </div>
                 </div>
 
@@ -722,10 +727,12 @@
                         gap: 6px;
                         background: #1a1a1a;
                         border: 1px solid #333;
-                        padding: 8px;
+                        padding: 8px 40px 8px 8px;
                         border-radius: 8px;
                         min-height: 42px;
                         align-items: center;
+                        position: relative;
+                        box-sizing: border-box;
                     }
 
                     .tags-container:focus-within {
@@ -768,12 +775,43 @@
                         font-size: 0.95rem;
                         outline: none;
                         flex-grow: 1;
-                        min-width: 120px;
+                        min-width: 100px;
                         padding: 4px;
                     }
 
                     .tag-input::placeholder {
                         color: #555;
+                    }
+
+                    .tag-confirm-btn {
+                        background: rgba(169, 98, 255, 0.25);
+                        border: 1px solid rgba(169, 98, 255, 0.5);
+                        color: #a962ff;
+                        font-size: 0.9rem;
+                        font-weight: bold;
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        display: none;
+                        align-items: center;
+                        justify-content: center;
+                        position: absolute;
+                        right: 7px;
+                        top: 0;
+                        bottom: 0;
+                        margin: auto 0;
+                        transition: all 0.2s ease;
+                        padding: 0;
+                    }
+
+                    .tag-confirm-btn.visible {
+                        display: flex;
+                    }
+
+                    .tag-confirm-btn:hover {
+                        background: rgba(169, 98, 255, 0.4);
+                        border-color: #a962ff;
                     }
 
                     .segmented-control {
@@ -969,7 +1007,8 @@
                 ">
                     <!-- HEADER -->
                     <div id="clPreviewHeader"
-                        style="margin-bottom: 12px; white-space: pre-wrap; font-style: italic; color: #888;">...</div>
+                        style="margin-bottom: 12px; white-space: pre-wrap; overflow-wrap: break-word; word-break: break-all; font-style: italic; color: #888;">
+                        ...</div>
 
                     <!-- BODY (STATIC) -->
                     <div style="margin-bottom: 12px; color: #555; filter: blur(0.5px);">
@@ -980,7 +1019,9 @@
                     </div>
 
                     <!-- FOOTER -->
-                    <div id="clPreviewFooter" style="white-space: pre-wrap; font-style: italic; color: #888;">...</div>
+                    <div id="clPreviewFooter"
+                        style="white-space: pre-wrap; overflow-wrap: break-word; word-break: break-all; font-style: italic; color: #888;">
+                        ...</div>
 
                     <div
                         style="position: absolute; top: 5px; right: 8px; font-size: 0.7rem; color: #444; text-transform: uppercase; border: 1px solid #333; padding: 2px 4px; border-radius: 4px;">
