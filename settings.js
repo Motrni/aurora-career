@@ -146,15 +146,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Boolean Input
     document.getElementById("booleanQueryInput").addEventListener("input", () => checkVacancies());
 
-    // [NEW] 9. Matching Threshold Logic
-    const thresholdInput = document.getElementById("matchingThresholdInput");
-    const thresholdDisplay = document.getElementById("matchingThresholdValue");
-    if (thresholdInput && thresholdDisplay) {
-        thresholdInput.addEventListener("input", (e) => {
-            thresholdDisplay.innerText = e.target.value;
-        });
-    }
-
 }); // End of DOMContentLoaded
 
 // --- TAB SWITCHING LOGIC ---
@@ -664,16 +655,6 @@ async function loadSettings(userId, sign) {
 
         currentSelectedIds = new Set(inds.map(String));
 
-        // Matching Threshold
-        const threshold = settings.matching_threshold !== undefined ? settings.matching_threshold : 50;
-        const thresholdInput = document.getElementById("matchingThresholdInput");
-        const thresholdDisplay = document.getElementById("matchingThresholdValue");
-        if (thresholdInput && thresholdDisplay) {
-            thresholdInput.value = threshold;
-            thresholdInput.value = threshold;
-            thresholdDisplay.innerText = threshold;
-        }
-
         // [NEW] Cover Letter
         const clUseDefault = settings.cl_use_default !== false; // Default True if undefined
         const clHeader = settings.cl_header || "";
@@ -1023,12 +1004,9 @@ async function saveSettings(userId, sign) {
     }
 
     // Collect Data (Response settings)
-    const thresholdInput = document.getElementById("matchingThresholdInput");
-
     const payload = {
         user_id: parseInt(userId),
         sign: sign,
-        matching_threshold: thresholdInput ? parseInt(thresholdInput.value) : 50,
         salary: salary,
         experience: experience,
         industry: selectedIndustries,
@@ -1329,11 +1307,9 @@ async function saveResponseSettings(userId, sign) {
         saveBtn.innerText = "Сохраняю...";
 
         // Collect Data (Response settings)
-        const thresholdInput = document.getElementById("matchingThresholdInput");
         const payload = {
             user_id: parseInt(userId),
             sign: sign,
-            matching_threshold: thresholdInput ? parseInt(thresholdInput.value) : 50,
             // [NEW] CL Settings
             cl_use_default: document.getElementById("clUseDefaultCheckbox").checked,
             cl_header: document.getElementById("clHeaderInput").value.trim(),
