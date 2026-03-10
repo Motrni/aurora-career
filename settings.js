@@ -140,7 +140,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Schedule
     document.querySelectorAll("#scheduleContainer input").forEach(cb => {
-        cb.addEventListener("change", () => checkVacancies());
+        cb.addEventListener("change", () => {
+            checkVacancies();
+            updateSaveButtonState();
+        });
     });
 
     // Boolean Input
@@ -184,7 +187,7 @@ function serializeSearchForm() {
         queryMode: document.querySelector('.mode-btn.active') ? document.querySelector('.mode-btn.active').dataset.mode : 'simple',
 
         // Schedule
-        schedule: Array.from(document.querySelectorAll('input[name="schedule"]:checked')).map(el => el.value).sort().join(',')
+        schedule: Array.from(document.querySelectorAll('#scheduleContainer input:checked')).map(el => el.value).sort().join(',')
     };
     return JSON.stringify(data);
 }
@@ -686,8 +689,7 @@ async function loadSettings(userId, sign) {
             document.getElementById("clFooterInput").addEventListener("input", updateCLPreview);
         }
 
-        // [NEW] Init Dirty State Tracking after everything is loaded
-        setTimeout(initDirtyStateTracking, 500); // Slight delay to ensure UI updates finish
+        // Dirty State Tracking moved to tryInitTree() for correct timing
 
     } catch (e) {
         showError("Не удалось загрузить настройки. " + e.message);
@@ -723,12 +725,14 @@ async function loadAreasDict() {
 }
 
 function tryInitTree() {
-    // Render only when ALL sources are ready
     if (isIndustriesLoaded && isSettingsLoaded && isAreasLoaded) {
         initIndustryTree();
-        initAreaTree(); // [NEW]
+        initAreaTree();
         toggleGlobalLoading(false);
-        checkVacancies(); // [NEW] Initial check
+        setTimeout(() => {
+            initDirtyStateTracking();
+            checkVacancies();
+        }, 100);
     }
 }
 
@@ -812,7 +816,7 @@ function initIndustryTree() {
             subLabel.className = "ind-sub-label";
             subLabel.innerText = sub.name;
 
-            subLabel.onclick = () => { subCheckbox.checked = !subCheckbox.checked; updateState(); checkVacancies(); };
+            subLabel.onclick = () => { subCheckbox.checked = !subCheckbox.checked; updateState(true); checkVacancies(); updateSaveButtonState(); };
             subDiv.appendChild(subCheckbox);
             subDiv.appendChild(subLabel);
             childrenContainer.appendChild(subDiv);
@@ -820,6 +824,7 @@ function initIndustryTree() {
             subCheckbox.addEventListener("change", () => {
                 updateState(true);
                 checkVacancies();
+                updateSaveButtonState();
             });
         });
 
@@ -843,6 +848,7 @@ function initIndustryTree() {
             childrenInputs.forEach(ch => ch.checked = catCheckbox.checked);
             updateState(true);
             checkVacancies();
+            updateSaveButtonState();
         });
 
         function updateState(isInteraction = false) {
@@ -1115,13 +1121,11 @@ function renderSelectedRegions() {
         close.onmouseout = () => close.style.color = "#aaa";
 
         close.onclick = () => {
-            // Remove logic
             currentSelectedAreaIds.delete(idStr);
-            // Re-render this list
             renderSelectedRegions();
-            // Update checkbox in tree (if visible)
             const checkbox = document.querySelector(`#regionTree input[value="${idStr}"]`);
             if (checkbox) checkbox.checked = false;
+            updateSaveButtonState();
         };
 
         chip.appendChild(text);
@@ -1133,9 +1137,9 @@ function renderSelectedRegions() {
 function clearAllRegions() {
     currentSelectedAreaIds.clear();
     renderSelectedRegions();
-    // Uncheck visible checkboxes
     const checkboxes = document.querySelectorAll("#regionTree input:checked");
     checkboxes.forEach(cb => cb.checked = false);
+    updateSaveButtonState();
 }
 
 function updateSelectedRegionsSummary() {
@@ -1243,8 +1247,7 @@ function renderRegionList() {
             else currentSelectedAreaIds.delete(String(area.id));
 
             renderSelectedRegions();
-            // We do NOT re-render the list immediately to prevent jumping.
-            // Just ensure the checkbox state is consistent.
+            updateSaveButtonState();
         };
 
         const nameSpan = document.createElement("span");
