@@ -3,7 +3,9 @@
    (c) 2024-2025 Aurora Career. All rights reserved.
 */
 
-const API_BASE_URL = "https://api.aurora-career.ru";
+const API_BASE_URL = window.location.hostname.includes('twc1.net')
+    ? 'https://api.motrni-aurora-career-98ac.twc1.net'
+    : 'https://api.aurora-career.ru';
 
 // State
 let initialSettings = {};
