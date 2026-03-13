@@ -28,7 +28,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Show Skeleton immediately
     toggleGlobalLoading(true);
 
-    // 0. Initialize UI Components (Tag Inputs)
+    // 0. Initialize Theme
+    initializeTheme();
+
+    // 1. Initialize UI Components (Tag Inputs)
     window.tagsInclude = new TagInput("tagsIncludeContainer", "keywordsIncludeInput", "keywordsIncludeConfirm");
     window.tagsExclude = new TagInput("tagsExcludeContainer", "keywordsExcludeInput", "keywordsExcludeConfirm");
 
@@ -1436,5 +1439,55 @@ function updateCLPreview() {
 
         container.style.borderColor = "#a962ff"; // Highlight container
         container.style.borderStyle = "solid";
+    }
+}
+
+// --- THEME TOGGLE LOGIC ---
+function initializeTheme() {
+    const savedTheme = localStorage.getItem("aurora_theme");
+    const prefersDark = savedTheme === "dark" || (!savedTheme && true); // Default: dark
+    
+    if (!prefersDark) {
+        document.body.classList.add("light-theme");
+        updateThemeIcons(false);
+    } else {
+        updateThemeIcons(true);
+    }
+
+    // Attach toggle handler
+    const toggleBtn = document.getElementById("themeToggle");
+    if (toggleBtn) {
+        toggleBtn.addEventListener("click", toggleTheme);
+    }
+}
+
+function toggleTheme() {
+    const isCurrentlyDark = !document.body.classList.contains("light-theme");
+    
+    if (isCurrentlyDark) {
+        // Switch to light
+        document.body.classList.add("light-theme");
+        localStorage.setItem("aurora_theme", "light");
+        updateThemeIcons(false);
+    } else {
+        // Switch to dark
+        document.body.classList.remove("light-theme");
+        localStorage.setItem("aurora_theme", "dark");
+        updateThemeIcons(true);
+    }
+}
+
+function updateThemeIcons(isDark) {
+    const sunIcon = document.getElementById("sunIcon");
+    const moonIcon = document.getElementById("moonIcon");
+    
+    if (isDark) {
+        // In dark mode, show sun icon (to switch to light)
+        if (sunIcon) sunIcon.style.display = "block";
+        if (moonIcon) moonIcon.style.display = "none";
+    } else {
+        // In light mode, show moon icon (to switch to dark)
+        if (sunIcon) sunIcon.style.display = "none";
+        if (moonIcon) moonIcon.style.display = "block";
     }
 }
