@@ -10,19 +10,24 @@ const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.lo
 // State
 let initialSettings = {};
 let allIndustries = [];
-let allAreas = []; // [NEW]
-let flatAreaMap = {}; // [NEW] ID -> Name lookup
+let allAreas = [];
+let flatAreaMap = {};
 let currentSelectedIds = new Set();
-let currentSelectedAreaIds = new Set(); // [NEW]
+let currentSelectedAreaIds = new Set();
 let messageId = null;
-window.BOT_USERNAME = "Aurora_Career_Bot"; // Default
-window.USER_FIRST_NAME = "Кандидат"; // [NEW]
+window.BOT_USERNAME = "Aurora_Career_Bot";
+window.USER_FIRST_NAME = "Кандидат";
+
+// Auth State (Hybrid: JWT or Legacy HMAC)
+let authMode = null; // 'jwt' or 'legacy'
+let legacyUserId = null;
+let legacySign = null;
 
 // Loading Flags
 let isIndustriesLoaded = false;
-let isAreasLoaded = false; // [NEW]
+let isAreasLoaded = false;
 let isSettingsLoaded = false;
-let vacancyCheckTimeout = null; // [NEW] Debounce
+let vacancyCheckTimeout = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Show Skeleton immediately
@@ -35,16 +40,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.tagsInclude = new TagInput("tagsIncludeContainer", "keywordsIncludeInput", "keywordsIncludeConfirm");
     window.tagsExclude = new TagInput("tagsExcludeContainer", "keywordsExcludeInput", "keywordsExcludeConfirm");
 
-    // 1. URL Params
+    // 1. URL Params (Legacy auth fallback)
     const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('user_id');
-    const sign = urlParams.get('sign');
+    legacyUserId = urlParams.get('user_id');
+    legacySign = urlParams.get('sign');
     messageId = urlParams.get('message_id'); // Optional
 
-    if (!userId || !sign) {
-        showError("Ошибка доступа. Ссылка не содержит необходимых параметров.");
-        toggleGlobalLoading(false); // Show content (with error)
-        return;
+    // 2. Hybrid Auth: Try JWT first, fallback to legacy
+    try {
+        const meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+            method: "GET",
+            credentials: "include"
+        });
+        
+        if (meResponse.ok) {
+            const meData = await meResponse.json();
+            if (meData.status === "ok") {
+                authMode = 'jwt';
+                console.log("[Auth] JWT session active");
+            }
+        }
+    } catch (e) {
+        console.log("[Auth] JWT check failed, will use legacy");
+    }
+    
+    // Fallback to legacy if JWT not available
+    if (!authMode) {
+        if (!legacyUserId || !legacySign) {
+            showError("Ошибка доступа. Ссылка не содержит необходимых параметров.");
+            toggleGlobalLoading(false);
+            return;
+        }
+        authMode = 'legacy';
+        console.log("[Auth] Using legacy HMAC auth");
     }
 
     // 2. Salary Logic
@@ -92,13 +120,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 5. Load Data (Parallel)
     loadIndustriesDict();
-    loadAreasDict(); // [NEW]
-    loadSettings(userId, sign);
+    loadAreasDict();
+    loadSettings();
 
     // 6. Save Logic (Search)
     document.getElementById("saveBtn").addEventListener("click", async () => {
         try {
-            await saveSettings(userId, sign);
+            await saveSettings();
         } catch (e) {
             showError("Ошибка при сохранении. " + e.message);
         }
@@ -107,7 +135,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 6.1 Save Logic (Response)
     document.getElementById("saveResponseBtn").addEventListener("click", async () => {
         try {
-            await saveResponseSettings(userId, sign);
+            await saveResponseSettings();
         } catch (e) {
             showError("Ошибка при сохранении настроек откликов. " + e.message);
         }
@@ -417,9 +445,6 @@ function checkVacancies() {
     vacancyCheckTimeout = setTimeout(async () => {
         try {
             // 1. Collect Data (Similar to saveSettings)
-            const urlParams = new URLSearchParams(window.location.search);
-            const userId = urlParams.get('user_id');
-            const sign = urlParams.get('sign');
             const salaryInput = document.getElementById("salaryInput");
             const experienceSelect = document.getElementById("experienceSelect");
 
@@ -445,7 +470,6 @@ function checkVacancies() {
                 const inc = window.tagsInclude ? window.tagsInclude.getTags() : [];
                 const exc = window.tagsExclude ? window.tagsExclude.getTags() : [];
                 keywordsData = { included: inc, excluded: exc };
-                // Build text for API locally (just to be safe/consistent)
                 if (inc.length > 0) {
                     const joined = inc.map(w => w.includes(' ') ? `"${w}"` : w).join(' OR ');
                     text = `NAME:(${joined})`;
@@ -474,10 +498,8 @@ function checkVacancies() {
             // Industry
             const industry = finalizeIdsFromSet();
 
-            // 2. Send Request
+            // 2. Build payload — Hybrid auth
             const payload = {
-                user_id: userId ? parseInt(userId) : 0,
-                sign: sign,
                 text: text,
                 salary: salary,
                 experience: experience,
@@ -488,10 +510,17 @@ function checkVacancies() {
                 keywords_data: keywordsData,
                 boolean_draft: booleanDraft
             };
+            
+            // Add legacy auth if needed
+            if (authMode === 'legacy' && legacyUserId && legacySign) {
+                payload.user_id = parseInt(legacyUserId);
+                payload.sign = legacySign;
+            }
 
             const response = await fetch(`${API_BASE_URL}/api/check_vacancies`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",  // Send JWT cookies
                 body: JSON.stringify(payload)
             });
 
@@ -547,11 +576,18 @@ async function loadIndustriesDict() {
     }
 }
 
-async function loadSettings(userId, sign) {
+async function loadSettings() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/settings/get?user_id=${userId}&sign=${sign}`, {
+        // Build URL based on auth mode
+        let url = `${API_BASE_URL}/api/settings/get`;
+        if (authMode === 'legacy' && legacyUserId && legacySign) {
+            url += `?user_id=${legacyUserId}&sign=${legacySign}`;
+        }
+        
+        const response = await fetch(url, {
             method: "GET",
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json" },
+            credentials: "include"  // Send JWT cookies
         });
 
         const data = await response.json();
@@ -961,7 +997,7 @@ function finalizeIdsFromSet() {
     return result;
 }
 
-async function saveSettings(userId, sign) {
+async function saveSettings() {
     const salaryInput = document.getElementById("salaryInput");
     const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
 
@@ -1009,30 +1045,35 @@ async function saveSettings(userId, sign) {
     // Logic: What is the final custom_query?
     let finalQuery = "";
     if (isAdvanced) {
-        finalQuery = booleanDraft; // Whatever is in textarea
+        finalQuery = booleanDraft;
     } else {
         finalQuery = buildBooleanQuery(incStr, excStr);
     }
 
-    // Collect Data (Response settings)
+    // Collect Data — Hybrid auth
     const payload = {
-        user_id: parseInt(userId),
-        sign: sign,
         salary: salary,
         experience: experience,
         industry: selectedIndustries,
-        search_areas: Array.from(currentSelectedAreaIds).map(Number), // [NEW]
-        work_formats: selectedSchedule, // [NEW]
-        query_mode: queryMode,          // [NEW]
-        keywords: keywordsData,         // [NEW]
-        boolean_draft: booleanDraft,    // [NEW]
-        custom_query: finalQuery,       // [NEW]
+        search_areas: Array.from(currentSelectedAreaIds).map(Number),
+        work_formats: selectedSchedule,
+        query_mode: queryMode,
+        keywords: keywordsData,
+        boolean_draft: booleanDraft,
+        custom_query: finalQuery,
         message_id: messageId ? parseInt(messageId) : null
     };
+    
+    // Add legacy auth if needed
+    if (authMode === 'legacy' && legacyUserId && legacySign) {
+        payload.user_id = parseInt(legacyUserId);
+        payload.sign = legacySign;
+    }
 
     const response = await fetch(`${API_BASE_URL}/api/settings/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",  // Send JWT cookies
         body: JSON.stringify(payload)
     });
 
@@ -1306,7 +1347,7 @@ function updateFlatListCheckbox(id, checked) {
 
 
 // --- SAVE RESPONSE SETTINGS ---
-async function saveResponseSettings(userId, sign) {
+async function saveResponseSettings() {
     const saveBtn = document.getElementById("saveResponseBtn");
     const originalText = saveBtn.innerText;
 
@@ -1314,20 +1355,24 @@ async function saveResponseSettings(userId, sign) {
         saveBtn.disabled = true;
         saveBtn.innerText = "Сохраняю...";
 
-        // Collect Data (Response settings)
+        // Collect Data — Hybrid auth
         const payload = {
-            user_id: parseInt(userId),
-            sign: sign,
-            // [NEW] CL Settings
             cl_use_default: document.getElementById("clUseDefaultCheckbox").checked,
             cl_header: document.getElementById("clHeaderInput").value.trim(),
             cl_footer: document.getElementById("clFooterInput").value.trim(),
             cl_style: document.getElementById("clStyleSelect").value
         };
+        
+        // Add legacy auth if needed
+        if (authMode === 'legacy' && legacyUserId && legacySign) {
+            payload.user_id = parseInt(legacyUserId);
+            payload.sign = legacySign;
+        }
 
         const response = await fetch(`${API_BASE_URL}/api/save_response_settings`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",  // Send JWT cookies
             body: JSON.stringify(payload)
         });
 
