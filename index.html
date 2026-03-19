@@ -2,7 +2,7 @@
 <html class="dark" lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
 <meta name="yandex-verification" content="6bf79d6d3fa4dfd5" />
 
 <title>Автоотклик на вакансии и поиск работы | Aurora Career</title>
@@ -22,9 +22,9 @@
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
-<meta name="version" content="2.0.0">
+<meta name="version" content="2.1.0">
 
-<link rel="icon" type="image/png" href="favicon.png?v=2">
+<link rel="icon" type="image/png" href="favicon.png?v=3">
 
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -96,7 +96,7 @@
 </script>
 <style>
     html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', sans-serif; background-color: #15121c; }
+    body { font-family: 'Inter', sans-serif; background-color: #15121c; min-width: 320px; }
     .glass-card {
         background: rgba(55, 51, 62, 0.4);
         backdrop-filter: blur(40px);
@@ -135,7 +135,7 @@
         z-index: 100;
         align-items: center;
         justify-content: center;
-        padding: 24px;
+        padding: 16px;
     }
     .modal-overlay.active { display: flex; }
     body.modal-open { overflow: hidden; }
@@ -145,6 +145,29 @@
         font-weight: 900;
         letter-spacing: -0.05em;
         text-transform: uppercase;
+    }
+
+    .burger-btn span {
+        display: block;
+        width: 24px;
+        height: 2px;
+        background: #e7e0ef;
+        transition: all 0.3s ease;
+    }
+    .burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .burger-btn.active span:nth-child(2) { opacity: 0; }
+    .burger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .mobile-menu {
+        transform: translateX(100%);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .mobile-menu.open { transform: translateX(0); }
+
+    .comparison-card { display: none; }
+    @media (max-width: 767px) {
+        .comparison-table { display: none; }
+        .comparison-card { display: block; }
     }
 </style>
 
@@ -168,10 +191,10 @@
 <body class="text-on-surface selection:bg-primary/30 selection:text-primary overflow-x-hidden">
 
 <!-- Navigation -->
-<nav class="fixed top-0 w-full z-50 bg-[#000000]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased flex justify-between items-center px-8 h-20 max-w-none shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
-    <div class="flex items-center gap-3">
-        <img alt="Aurora Logo" class="w-8 h-8 invert brightness-200" src="https://lh3.googleusercontent.com/aida/ADBb0uiRV09rtA_1AmoDsYEsg4kaeYz0pxwxV79ZJkx030BwyjiE6c4B-osPJsjUTPCTB4ItbFPm-wdHsjnXkMhxn5EolzIAqJdCX4rdNb4mwvi9cFEoc7pg6if-z4fx1Zc2gWIOqUzlohvTFhh0vLBUo5FVypIfGYwAe0huSCJh1FOaMf5cgGXebNeFESxP7yNDwyx0ANOKhkZOEkEYPiun_b_UWFNKGb2bo0yOH3Pxxh3diAL1vBrTn_3ill67DwLOWv0VWWu25Ox2Eg"/>
-        <div class="brand-logo-font text-2xl text-[#e7e0ef]">Aurora Career</div>
+<nav class="fixed top-0 w-full z-50 bg-[#000000]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased flex justify-between items-center px-5 md:px-16 lg:px-24 h-16 md:h-20 max-w-none shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
+    <div class="flex items-center gap-2 md:gap-3">
+        <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="https://lh3.googleusercontent.com/aida/ADBb0uiRV09rtA_1AmoDsYEsg4kaeYz0pxwxV79ZJkx030BwyjiE6c4B-osPJsjUTPCTB4ItbFPm-wdHsjnXkMhxn5EolzIAqJdCX4rdNb4mwvi9cFEoc7pg6if-z4fx1Zc2gWIOqUzlohvTFhh0vLBUo5FVypIfGYwAe0huSCJh1FOaMf5cgGXebNeFESxP7yNDwyx0ANOKhkZOEkEYPiun_b_UWFNKGb2bo0yOH3Pxxh3diAL1vBrTn_3ill67DwLOWv0VWWu25Ox2Eg"/>
+        <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Aurora Career</div>
     </div>
     <div id="nav-links" class="hidden md:flex gap-8 items-center font-['Inter'] tracking-tight text-sm font-medium">
         <a class="nav-link text-[#ccbeff] border-b-2 border-[#5a30d0] pb-1 transition-colors duration-300" href="#opportunities" data-section="opportunities">Возможности</a>
@@ -179,42 +202,51 @@
         <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#network" data-section="network">Сеть</a>
         <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#archive" data-section="archive">Архив</a>
     </div>
-    <div class="flex gap-6 items-center">
+    <div class="hidden md:flex gap-6 items-center">
         <button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-[#ccbeff]/10 transition-all duration-300 active:scale-95 ease-out" onclick="toggleModal('join-modal')">Присоединиться</button>
     </div>
+    <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
+        <span></span><span></span><span></span>
+    </button>
 </nav>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
+    <button onclick="toggleModal('join-modal'); toggleMobileMenu();" class="w-full bg-gradient-to-tr from-primary-container to-secondary-container text-white py-4 rounded-xl text-base font-bold mt-4 mb-2">Присоединиться</button>
+    <a href="#opportunities" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Возможности</a>
+    <a href="#insights" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Аналитика</a>
+    <a href="#network" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Сеть</a>
+    <a href="#archive" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Архив</a>
+</div>
 
 <main class="relative">
 
 <!-- Hero Section -->
-<section class="min-h-screen flex flex-col items-center justify-center pt-32 pb-20 px-6 md:px-16 lg:px-24 relative overflow-hidden bg-[#000000]" id="opportunities">
+<section class="min-h-screen flex flex-col items-center justify-center pt-24 md:pt-32 pb-12 md:pb-20 px-5 md:px-16 lg:px-24 relative overflow-hidden bg-[#000000]" id="opportunities">
     <div class="hero-glow-left"></div>
-    <div class="max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-10 gap-12 items-center relative z-10">
-        <div class="md:col-span-6 lg:col-span-7 space-y-12 text-left">
-            <div class="inline-block px-6 py-2 rounded-full border border-white/10 bg-white/5 text-primary font-medium tracking-wide text-sm">
+    <div class="max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-10 gap-8 md:gap-12 items-center relative z-10">
+        <div class="md:col-span-6 lg:col-span-7 space-y-6 md:space-y-12 text-left">
+            <div class="inline-block px-4 md:px-6 py-1.5 md:py-2 rounded-full border border-white/10 bg-white/5 text-primary font-medium tracking-wide text-xs md:text-sm">
                 ИНТЕЛЛЕКТУАЛЬНЫЙ ПОИСК РАБОТЫ
             </div>
-            <h1 class="text-6xl md:text-8xl font-black tracking-tighter text-on-surface leading-[0.95] md:leading-[0.9]">
+            <h1 class="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-on-surface leading-[0.95]">
                 Ваша карьера <br/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">на автопилоте.</span>
             </h1>
-            <p class="text-xl md:text-2xl text-on-surface-variant max-w-2xl font-light leading-relaxed">
+            <p class="text-base sm:text-lg md:text-2xl text-on-surface-variant max-w-2xl font-light leading-relaxed">
                 Система, которая сама ищет вакансии, адаптирует резюме и отправляет отклики, пока вы отдыхаете.
             </p>
-            <div class="flex flex-col md:flex-row gap-6 pt-8">
-                <button onclick="toggleModal('join-modal')" class="bg-gradient-to-tr from-primary-container to-secondary-container text-white px-12 py-5 rounded-xl text-lg font-bold shadow-[0_30px_60px_rgba(90,48,208,0.2)] hover:scale-[1.02] transition-transform duration-300">
+            <div class="flex flex-col sm:flex-row gap-4 md:gap-6 pt-4 md:pt-8">
+                <button onclick="toggleModal('join-modal')" class="bg-gradient-to-tr from-primary-container to-secondary-container text-white px-8 md:px-12 py-4 md:py-5 rounded-xl text-base md:text-lg font-bold shadow-[0_30px_60px_rgba(90,48,208,0.2)] hover:scale-[1.02] transition-transform duration-300">
                     Попробовать бесплатно
                 </button>
-                <a href="#insights" class="glass-card text-on-surface px-12 py-5 rounded-xl text-lg font-semibold border border-white/10 hover:bg-white/10 transition-colors text-center">
+                <a href="#insights" class="glass-card text-on-surface px-8 md:px-12 py-4 md:py-5 rounded-xl text-base md:text-lg font-semibold border border-white/10 hover:bg-white/10 transition-colors text-center">
                     Как это работает
                 </a>
             </div>
         </div>
         <div class="hidden md:flex md:col-span-4 lg:col-span-3 items-stretch justify-center">
             <div class="relative w-full overflow-hidden bg-black">
-                <video autoplay muted loop playsinline class="w-full h-full object-cover">
-                    <source src="Transformacija_Aurore_u_Video.mov?v=2" type="video/quicktime">
-                    <img src="Transformacija_Aurore_u_Video.gif?v=2" alt="Aurora AI Character Animation" class="w-full h-full object-cover" />
-                </video>
+                <video autoplay muted loop playsinline class="w-full h-full object-cover" src="aurora-hero.mp4?v=3"></video>
                 <div class="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-black pointer-events-none"></div>
             </div>
         </div>
@@ -222,69 +254,69 @@
 </section>
 
 <!-- Problem Statement Section -->
-<section class="py-32 px-6 md:px-16 lg:px-24 bg-surface-container-low" id="insights">
+<section class="py-16 md:py-32 px-5 md:px-16 lg:px-24 bg-surface-container-low" id="insights">
     <div class="max-w-7xl mx-auto">
-        <div class="mb-20">
-            <h2 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">Поиск работы — это вторая работа.<br/><span class="text-on-surface-variant">Скучная и бесплатная.</span></h2>
+        <div class="mb-10 md:mb-20">
+            <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4 md:mb-6">Поиск работы — это вторая работа.<br/><span class="text-on-surface-variant">Скучная и бесплатная.</span></h2>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-surface-container-lowest p-10 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
-                <span class="material-symbols-outlined text-5xl mb-6 text-primary">groups</span>
-                <h3 class="text-2xl font-bold mb-4">Бешеная конкуренция</h3>
-                <p class="text-on-surface-variant leading-relaxed">Сотни кандидатов на одну позицию. Ваше резюме просто теряется в общем потоке.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+            <div class="bg-surface-container-lowest p-6 md:p-10 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
+                <span class="material-symbols-outlined text-4xl md:text-5xl mb-4 md:mb-6 text-primary">groups</span>
+                <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Бешеная конкуренция</h3>
+                <p class="text-on-surface-variant text-sm md:text-base leading-relaxed">Сотни кандидатов на одну позицию. Ваше резюме просто теряется в общем потоке.</p>
             </div>
-            <div class="bg-surface-container-lowest p-10 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
-                <span class="material-symbols-outlined text-5xl mb-6 text-primary">local_fire_department</span>
-                <h3 class="text-2xl font-bold mb-4">Рутина выжигает</h3>
-                <p class="text-on-surface-variant leading-relaxed">Бесконечное заполнение анкет и корректировка Cover Letter убивают мотивацию.</p>
+            <div class="bg-surface-container-lowest p-6 md:p-10 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
+                <span class="material-symbols-outlined text-4xl md:text-5xl mb-4 md:mb-6 text-primary">local_fire_department</span>
+                <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Рутина выжигает</h3>
+                <p class="text-on-surface-variant text-sm md:text-base leading-relaxed">Бесконечное заполнение анкет и корректировка Cover Letter убивают мотивацию.</p>
             </div>
-            <div class="bg-surface-container-lowest p-10 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
-                <span class="material-symbols-outlined text-5xl mb-6 text-primary">notifications_off</span>
-                <h3 class="text-2xl font-bold mb-4">Тишина в ответ</h3>
-                <p class="text-on-surface-variant leading-relaxed">Месяцы ожиданий без обратной связи. Вы даже не знаете, прочитали ли ваше письмо.</p>
+            <div class="bg-surface-container-lowest p-6 md:p-10 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
+                <span class="material-symbols-outlined text-4xl md:text-5xl mb-4 md:mb-6 text-primary">notifications_off</span>
+                <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Тишина в ответ</h3>
+                <p class="text-on-surface-variant text-sm md:text-base leading-relaxed">Месяцы ожиданий без обратной связи. Вы даже не знаете, прочитали ли ваше письмо.</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Solution Section -->
-<section class="py-32 px-6 md:px-16 lg:px-24" id="network">
+<section class="py-16 md:py-32 px-5 md:px-16 lg:px-24" id="network">
     <div class="max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
-            <h2 class="text-5xl md:text-7xl font-black tracking-tighter">Аврора меняет <br/>правила игры.</h2>
-            <p class="text-xl text-on-surface-variant max-w-md font-light">Мы автоматизировали каждый этап, чтобы вы сосредоточились только на интервью.</p>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-24 gap-4 md:gap-8">
+            <h2 class="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter">Аврора меняет <br/>правила игры.</h2>
+            <p class="text-base md:text-xl text-on-surface-variant max-w-md font-light">Мы автоматизировали каждый этап, чтобы вы сосредоточились только на интервью.</p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="col-span-1 lg:col-span-2 bg-surface-container-low rounded-xl p-10 flex flex-col md:flex-row gap-12 items-center overflow-hidden relative">
-                <div class="flex-1 space-y-6 z-10">
-                    <h3 class="text-3xl font-bold">Апгрейд вашего резюме</h3>
-                    <p class="text-on-surface-variant text-lg">AI анализирует описание вакансии и точечно адаптирует ваш опыт, чтобы пройти фильтры ATS на 100%.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div class="col-span-1 lg:col-span-2 bg-surface-container-low rounded-xl p-6 md:p-10 flex flex-col md:flex-row gap-6 md:gap-12 items-center overflow-hidden relative">
+                <div class="flex-1 space-y-4 md:space-y-6 z-10">
+                    <h3 class="text-2xl md:text-3xl font-bold">Апгрейд вашего резюме</h3>
+                    <p class="text-on-surface-variant text-sm md:text-lg">AI анализирует описание вакансии и точечно адаптирует ваш опыт, чтобы пройти фильтры ATS на 100%.</p>
                 </div>
-                <div class="flex-1 w-full h-64 bg-surface-variant rounded-lg border border-white/5 relative overflow-hidden">
+                <div class="w-full md:flex-1 h-48 md:h-64 bg-surface-variant rounded-lg border border-white/5 relative overflow-hidden">
                     <img alt="Minimalist clean resume layout on screen" class="w-full h-full object-cover opacity-60" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5rZkY7NLWNpN-jFMtEBfgSvWr25R2RI4WqevXDAwDVOdRs-X5emymvoDeILmmCC-QIEZseziPLE8SJAAiU5KhQUpMjZ3fWKkKkNtccxXa7OzvQaORpctJfQ78_hSOwChvuqaZbrxpyXr8jekIvvwIidefprMUVk8yWlFGw1pqf8OyZxyh3xkF8QPJPuwNh7iRuUSiOHX-XNEt64i13d1w2xEKnkfvbbwN54U6c8X18pGZNtskGfsLOh_-a27iQi7B-N1b0CYirYg"/>
                 </div>
             </div>
-            <div class="bg-primary-container/20 rounded-xl p-10 flex flex-col justify-between border border-primary/10">
-                <span class="material-symbols-outlined text-4xl text-primary" data-weight="fill">bolt</span>
+            <div class="bg-primary-container/20 rounded-xl p-6 md:p-10 flex flex-col justify-between gap-6 border border-primary/10">
+                <span class="material-symbols-outlined text-3xl md:text-4xl text-primary" data-weight="fill">bolt</span>
                 <div>
-                    <h3 class="text-2xl font-bold mb-4">Мгновенный поиск</h3>
-                    <p class="text-on-surface-variant">Мониторинг 50+ площадок одновременно. Система находит вакансию раньше, чем вы успеете обновить ленту.</p>
+                    <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Мгновенный поиск</h3>
+                    <p class="text-on-surface-variant text-sm md:text-base">Мониторинг 50+ площадок одновременно. Система находит вакансию раньше, чем вы успеете обновить ленту.</p>
                 </div>
             </div>
-            <div class="bg-surface-container-high rounded-xl p-10 flex flex-col justify-between">
-                <span class="material-symbols-outlined text-4xl text-secondary">mail</span>
+            <div class="bg-surface-container-high rounded-xl p-6 md:p-10 flex flex-col justify-between gap-6">
+                <span class="material-symbols-outlined text-3xl md:text-4xl text-secondary">mail</span>
                 <div>
-                    <h3 class="text-2xl font-bold mb-4">Письма, которые работают</h3>
-                    <p class="text-on-surface-variant">Создание персонализированных сопроводительных писем, на которые рекрутеры отвечают «Да».</p>
+                    <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Письма, которые работают</h3>
+                    <p class="text-on-surface-variant text-sm md:text-base">Создание персонализированных сопроводительных писем, на которые рекрутеры отвечают «Да».</p>
                 </div>
             </div>
-            <div class="col-span-1 lg:col-span-2 bg-surface-container-lowest border border-white/5 rounded-xl p-10 flex flex-col justify-center">
-                <h3 class="text-3xl font-bold mb-6">Бесшовная интеграция</h3>
-                <p class="text-on-surface-variant text-lg mb-8">Подключите свои профили и позвольте системе управлять потоком откликов. Полный контроль в одном окне.</p>
-                <div class="flex gap-4">
-                    <div class="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined">link</span></div>
-                    <div class="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined">sync</span></div>
-                    <div class="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined">verified</span></div>
+            <div class="col-span-1 lg:col-span-2 bg-surface-container-lowest border border-white/5 rounded-xl p-6 md:p-10 flex flex-col justify-center">
+                <h3 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Бесшовная интеграция</h3>
+                <p class="text-on-surface-variant text-sm md:text-lg mb-6 md:mb-8">Подключите свои профили и позвольте системе управлять потоком откликов. Полный контроль в одном окне.</p>
+                <div class="flex gap-3 md:gap-4">
+                    <div class="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined text-xl md:text-2xl">link</span></div>
+                    <div class="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined text-xl md:text-2xl">sync</span></div>
+                    <div class="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined text-xl md:text-2xl">verified</span></div>
                 </div>
             </div>
         </div>
@@ -292,10 +324,12 @@
 </section>
 
 <!-- Comparison Section -->
-<section class="py-32 px-6 md:px-16 lg:px-24 bg-surface-container-lowest" id="archive">
+<section class="py-16 md:py-32 px-5 md:px-16 lg:px-24 bg-surface-container-lowest" id="archive">
     <div class="max-w-5xl mx-auto">
-        <h2 class="text-4xl md:text-5xl font-extrabold text-center mb-20">Математика вашей карьеры</h2>
-        <div class="overflow-x-auto">
+        <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-center mb-10 md:mb-20">Математика вашей карьеры</h2>
+
+        <!-- Desktop table -->
+        <div class="comparison-table overflow-x-auto">
             <table class="w-full text-left border-separate border-spacing-y-4">
                 <thead>
                     <tr class="text-on-surface-variant uppercase text-xs tracking-widest">
@@ -327,42 +361,64 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Mobile cards -->
+        <div class="comparison-card space-y-4">
+            <div class="bg-surface-container-low rounded-xl p-5 space-y-3">
+                <div class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Цена / мес</div>
+                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Консультант</span><span>от 50 000 ₽</span></div>
+                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Самостоятельно</span><span>0 ₽</span></div>
+                <div class="flex justify-between items-center border-t border-white/5 pt-3"><span class="text-primary text-sm font-semibold">Система Aurora</span><span class="text-primary font-bold">от 2 900 ₽</span></div>
+            </div>
+            <div class="bg-surface-container-low rounded-xl p-5 space-y-3">
+                <div class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Скорость поиска</div>
+                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Консультант</span><span>Низкая</span></div>
+                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Самостоятельно</span><span>Зависит от вас</span></div>
+                <div class="flex justify-between items-center border-t border-white/5 pt-3"><span class="text-primary text-sm font-semibold">Система Aurora</span><span class="text-primary font-bold">Максимальная</span></div>
+            </div>
+            <div class="bg-surface-container-low rounded-xl p-5 space-y-3">
+                <div class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Объем откликов</div>
+                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Консультант</span><span>Ограничен</span></div>
+                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Самостоятельно</span><span>Мало</span></div>
+                <div class="flex justify-between items-center border-t border-white/5 pt-3"><span class="text-primary text-sm font-semibold">Система Aurora</span><span class="text-primary font-bold">Неограничен</span></div>
+            </div>
+        </div>
     </div>
 </section>
 
 <!-- Security Section -->
-<section class="py-32 px-6 md:px-16 lg:px-24 relative overflow-hidden">
+<section class="py-16 md:py-32 px-5 md:px-16 lg:px-24 relative overflow-hidden">
     <div class="light-leak top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30"></div>
-    <div class="max-w-4xl mx-auto text-center space-y-12">
-        <h2 class="text-5xl font-black">Работает безопасно</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <div class="space-y-4">
-                <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto text-primary">
-                    <span class="material-symbols-outlined text-3xl">fingerprint</span>
+    <div class="max-w-4xl mx-auto text-center space-y-8 md:space-y-12">
+        <h2 class="text-3xl md:text-5xl font-black">Работает безопасно</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            <div class="space-y-3 md:space-y-4">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto text-primary">
+                    <span class="material-symbols-outlined text-2xl md:text-3xl">fingerprint</span>
                 </div>
-                <h3 class="text-2xl font-bold">Как обычный пользователь</h3>
-                <p class="text-on-surface-variant">Алгоритмы имитируют поведение человека, чтобы площадки не блокировали ваш аккаунт.</p>
+                <h3 class="text-xl md:text-2xl font-bold">Как обычный пользователь</h3>
+                <p class="text-on-surface-variant text-sm md:text-base">Алгоритмы имитируют поведение человека, чтобы площадки не блокировали ваш аккаунт.</p>
             </div>
-            <div class="space-y-4">
-                <div class="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto text-secondary">
-                    <span class="material-symbols-outlined text-3xl">key_off</span>
+            <div class="space-y-3 md:space-y-4">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto text-secondary">
+                    <span class="material-symbols-outlined text-2xl md:text-3xl">key_off</span>
                 </div>
-                <h3 class="text-2xl font-bold">Без передачи паролей</h3>
-                <p class="text-on-surface-variant">Мы используем безопасные методы авторизации и никогда не храним ваши конфиденциальные данные.</p>
+                <h3 class="text-xl md:text-2xl font-bold">Без передачи паролей</h3>
+                <p class="text-on-surface-variant text-sm md:text-base">Мы используем безопасные методы авторизации и никогда не храним ваши конфиденциальные данные.</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Final CTA Section -->
-<section class="py-40 px-6 md:px-16 lg:px-24">
-    <div class="max-w-6xl mx-auto glass-card rounded-xl p-20 relative overflow-hidden text-center">
+<section class="py-16 md:py-40 px-5 md:px-16 lg:px-24">
+    <div class="max-w-6xl mx-auto glass-card rounded-xl p-8 sm:p-12 md:p-20 relative overflow-hidden text-center">
         <div class="absolute inset-0 bg-gradient-to-br from-primary-container/20 to-transparent pointer-events-none"></div>
-        <div class="relative z-10 space-y-8">
-            <h2 class="text-5xl md:text-7xl font-black tracking-tighter">Доверьте рутину системе.</h2>
-            <p class="text-2xl text-on-surface-variant font-light max-w-2xl mx-auto">Начните получать приглашения на работу мечты уже на этой неделе.</p>
-            <div class="pt-8">
-                <button onclick="toggleModal('join-modal')" class="bg-on-surface text-background px-16 py-6 rounded-xl text-xl font-bold hover:scale-105 transition-transform duration-300">
+        <div class="relative z-10 space-y-5 md:space-y-8">
+            <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter">Доверьте рутину системе.</h2>
+            <p class="text-base sm:text-lg md:text-2xl text-on-surface-variant font-light max-w-2xl mx-auto">Начните получать приглашения на работу мечты уже на этой неделе.</p>
+            <div class="pt-4 md:pt-8">
+                <button onclick="toggleModal('join-modal')" class="bg-on-surface text-background px-10 md:px-16 py-4 md:py-6 rounded-xl text-base md:text-xl font-bold hover:scale-105 transition-transform duration-300">
                     Получить доступ
                 </button>
             </div>
@@ -373,18 +429,18 @@
 </main>
 
 <!-- Footer -->
-<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-12 px-6 md:px-16 lg:px-24">
+<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-8 md:py-12 px-5 md:px-16 lg:px-24">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 w-full">
         <div class="flex flex-col items-center md:items-start gap-2">
-            <div class="flex items-center gap-3">
-                <img alt="Aurora Logo" class="w-6 h-6 invert brightness-150" src="https://lh3.googleusercontent.com/aida/ADBb0uiRV09rtA_1AmoDsYEsg4kaeYz0pxwxV79ZJkx030BwyjiE6c4B-osPJsjUTPCTB4ItbFPm-wdHsjnXkMhxn5EolzIAqJdCX4rdNb4mwvi9cFEoc7pg6if-z4fx1Zc2gWIOqUzlohvTFhh0vLBUo5FVypIfGYwAe0huSCJh1FOaMf5cgGXebNeFESxP7yNDwyx0ANOKhkZOEkEYPiun_b_UWFNKGb2bo0yOH3Pxxh3diAL1vBrTn_3ill67DwLOWv0VWWu25Ox2Eg"/>
-                <div class="brand-logo-font text-lg text-[#ccbeff]">Aurora Career</div>
+            <div class="flex items-center gap-2 md:gap-3">
+                <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="https://lh3.googleusercontent.com/aida/ADBb0uiRV09rtA_1AmoDsYEsg4kaeYz0pxwxV79ZJkx030BwyjiE6c4B-osPJsjUTPCTB4ItbFPm-wdHsjnXkMhxn5EolzIAqJdCX4rdNb4mwvi9cFEoc7pg6if-z4fx1Zc2gWIOqUzlohvTFhh0vLBUo5FVypIfGYwAe0huSCJh1FOaMf5cgGXebNeFESxP7yNDwyx0ANOKhkZOEkEYPiun_b_UWFNKGb2bo0yOH3Pxxh3diAL1vBrTn_3ill67DwLOWv0VWWu25Ox2Eg"/>
+                <div class="brand-logo-font text-base md:text-lg text-[#ccbeff]">Aurora Career</div>
             </div>
-            <div class="text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Aurora Career. The Luminescent Archive.</div>
+            <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Aurora Career. The Luminescent Archive.</div>
         </div>
-        <div class="flex gap-8 font-['Inter'] text-xs uppercase tracking-[0.2em]">
+        <div class="grid grid-cols-2 md:flex gap-x-6 gap-y-3 md:gap-8 font-['Inter'] text-[10px] md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em] text-center md:text-left">
             <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('terms')">Условия</a>
-            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('privacy')">Конфиденциальность</a>
+            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('privacy')">Конфиденц.</a>
             <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('editorial')">Редакция</a>
             <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('support')">Поддержка</a>
         </div>
@@ -393,20 +449,20 @@
 
 <!-- Join / Telegram Modal -->
 <div class="modal-overlay" id="join-modal" onclick="if(event.target === this) toggleModal('join-modal')">
-    <div class="glass-card max-w-lg w-full p-10 rounded-3xl border border-white/10 relative shadow-2xl">
-        <button class="absolute top-6 right-6 text-on-surface-variant hover:text-white transition-colors" onclick="toggleModal('join-modal')">
+    <div class="glass-card max-w-lg w-full p-6 md:p-10 rounded-2xl md:rounded-3xl border border-white/10 relative shadow-2xl">
+        <button class="absolute top-4 right-4 md:top-6 md:right-6 text-on-surface-variant hover:text-white transition-colors" onclick="toggleModal('join-modal')">
             <span class="material-symbols-outlined">close</span>
         </button>
-        <div class="text-center space-y-6">
-            <div class="w-16 h-16 bg-primary-container/20 rounded-2xl flex items-center justify-center mx-auto text-primary">
-                <span class="material-symbols-outlined text-3xl">rocket_launch</span>
+        <div class="text-center space-y-4 md:space-y-6">
+            <div class="w-14 h-14 md:w-16 md:h-16 bg-primary-container/20 rounded-2xl flex items-center justify-center mx-auto text-primary">
+                <span class="material-symbols-outlined text-2xl md:text-3xl">rocket_launch</span>
             </div>
-            <h3 class="text-2xl font-bold">Готовы взлетать?</h3>
-            <p class="text-on-surface-variant leading-relaxed text-lg">
+            <h3 class="text-xl md:text-2xl font-bold">Готовы взлетать?</h3>
+            <p class="text-on-surface-variant leading-relaxed text-sm md:text-lg">
                 Попробуйте возможности Aurora прямо в Telegram. Наш бот поможет автоматизировать ваш поиск работы без лишнего шума.
             </p>
-            <div class="pt-4">
-                <a class="inline-block bg-primary text-on-primary px-8 py-4 rounded-xl font-bold hover:scale-105 transition-transform" href="https://t.me/my_hh_job_bot?start=from_website" target="_blank">
+            <div class="pt-2 md:pt-4">
+                <a class="inline-block bg-primary text-on-primary px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base hover:scale-105 transition-transform" href="https://t.me/my_hh_job_bot?start=from_website" target="_blank">
                     Запустить в Telegram
                 </a>
             </div>
@@ -416,15 +472,15 @@
 
 <!-- Info Modal (Dynamic Content) -->
 <div class="modal-overlay" id="info-modal" onclick="if(event.target === this) toggleModal('info-modal')">
-    <div class="glass-card max-w-xl w-full p-10 rounded-3xl border border-white/10 relative shadow-2xl max-h-[85vh] overflow-y-auto">
-        <button class="absolute top-6 right-6 text-on-surface-variant hover:text-white transition-colors" onclick="toggleModal('info-modal')">
+    <div class="glass-card max-w-xl w-full p-6 md:p-10 rounded-2xl md:rounded-3xl border border-white/10 relative shadow-2xl max-h-[85vh] overflow-y-auto">
+        <button class="absolute top-4 right-4 md:top-6 md:right-6 text-on-surface-variant hover:text-white transition-colors" onclick="toggleModal('info-modal')">
             <span class="material-symbols-outlined">close</span>
         </button>
-        <div class="space-y-6">
-            <h3 class="text-3xl font-black tracking-tight" id="info-modal-title"></h3>
-            <div class="text-on-surface-variant space-y-4 leading-relaxed" id="info-modal-body"></div>
-            <div class="pt-4 flex justify-end">
-                <button class="px-6 py-2 border border-white/10 rounded-lg hover:bg-white/5 transition-colors" onclick="toggleModal('info-modal')">Понятно</button>
+        <div class="space-y-4 md:space-y-6">
+            <h3 class="text-2xl md:text-3xl font-black tracking-tight" id="info-modal-title"></h3>
+            <div class="text-on-surface-variant space-y-3 md:space-y-4 leading-relaxed text-sm md:text-base" id="info-modal-body"></div>
+            <div class="pt-2 md:pt-4 flex justify-end">
+                <button class="px-5 md:px-6 py-2 border border-white/10 rounded-lg hover:bg-white/5 transition-colors text-sm md:text-base" onclick="toggleModal('info-modal')">Понятно</button>
             </div>
         </div>
     </div>
@@ -434,6 +490,12 @@
     function toggleModal(id) {
         const modal = document.getElementById(id);
         modal.classList.toggle('active');
+        document.body.classList.toggle('modal-open');
+    }
+
+    function toggleMobileMenu() {
+        document.getElementById('burger-btn').classList.toggle('active');
+        document.getElementById('mobile-menu').classList.toggle('open');
         document.body.classList.toggle('modal-open');
     }
 
@@ -487,7 +549,7 @@
                 <p><strong>Как с нами связаться</strong></p>
                 <p>Самый быстрый способ получить помощь — написать нам в Telegram. Мы отвечаем в течение нескольких часов в рабочее время.</p>
                 <p class="pt-2">
-                    <a href="https://t.me/auroracareer" target="_blank" class="inline-block bg-primary/10 text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/20 transition-colors">
+                    <a href="https://t.me/auroracareer" target="_blank" class="inline-block bg-primary/10 text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/20 transition-colors text-sm">
                         Написать в поддержку
                     </a>
                 </p>
