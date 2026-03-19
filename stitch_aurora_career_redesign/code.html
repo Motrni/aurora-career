@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aurora Career | Ваша карьера на автопилоте</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "outline": "#938ea0",
+                        "on-secondary-container": "#c7aaff",
+                        "on-secondary": "#3e0c85",
+                        "primary-container": "#5a30d0",
+                        "on-secondary-fixed": "#250059",
+                        "tertiary": "#ccbeff",
+                        "tertiary-fixed": "#e7deff",
+                        "on-surface": "#e7e0ef",
+                        "surface-container-low": "#1d1a24",
+                        "on-primary-container": "#cec0ff",
+                        "surface-bright": "#3b3743",
+                        "surface-variant": "#37333e",
+                        "background": "#15121c",
+                        "on-error": "#690005",
+                        "on-background": "#e7e0ef",
+                        "inverse-primary": "#653edb",
+                        "on-tertiary-container": "#cec0ff",
+                        "tertiary-container": "#5a30d0",
+                        "on-tertiary-fixed": "#1e0060",
+                        "on-tertiary": "#350097",
+                        "on-tertiary-fixed-variant": "#4c1bc3",
+                        "on-secondary-fixed-variant": "#552d9c",
+                        "primary-fixed": "#e7deff",
+                        "surface-dim": "#15121c",
+                        "on-primary-fixed": "#1e0060",
+                        "surface-container-lowest": "#100d17",
+                        "secondary-fixed": "#ebddff",
+                        "primary-fixed-dim": "#ccbeff",
+                        "on-surface-variant": "#cac3d7",
+                        "surface": "#15121c",
+                        "secondary-fixed-dim": "#d3bbff",
+                        "secondary-container": "#58309f",
+                        "on-primary-fixed-variant": "#4c1bc3",
+                        "primary": "#ccbeff",
+                        "inverse-on-surface": "#322f3a",
+                        "error-container": "#93000a",
+                        "tertiary-fixed-dim": "#ccbeff",
+                        "surface-container-highest": "#37333e",
+                        "error": "#ffb4ab",
+                        "surface-container": "#211e29",
+                        "on-primary": "#350097",
+                        "surface-tint": "#ccbeff",
+                        "surface-container-high": "#2c2833",
+                        "outline-variant": "#484455",
+                        "inverse-surface": "#e7e0ef",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#d3bbff"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #15121c; }
+        .glass-card {
+            background: rgba(55, 51, 62, 0.4);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+        }
+        .light-leak {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(90, 48, 208, 0.15) 0%, rgba(21, 18, 28, 0) 70%);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(60px);
+        }
+        .hero-glow-left {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            left: -200px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: radial-gradient(circle, rgba(90, 48, 208, 0.12) 0%, rgba(204, 190, 255, 0.05) 30%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(16, 13, 23, 0.8);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .modal-overlay.active { display: flex; }
+        body.modal-open { overflow: hidden; }
+        
+        /* Custom geometric font style for logo matching IMAGE_2 */
+        .brand-logo-font {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="text-on-surface selection:bg-primary/30 selection:text-primary overflow-x-hidden">
+<!-- Navigation Shell -->
+<nav class="fixed top-0 w-full z-50 bg-[#000000]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased flex justify-between items-center px-8 h-20 max-w-none shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
+<div class="flex items-center gap-3">
+<img alt="Aurora Logo" class="w-8 h-8 invert brightness-200" src="https://lh3.googleusercontent.com/aida/ADBb0uiRV09rtA_1AmoDsYEsg4kaeYz0pxwxV79ZJkx030BwyjiE6c4B-osPJsjUTPCTB4ItbFPm-wdHsjnXkMhxn5EolzIAqJdCX4rdNb4mwvi9cFEoc7pg6if-z4fx1Zc2gWIOqUzlohvTFhh0vLBUo5FVypIfGYwAe0huSCJh1FOaMf5cgGXebNeFESxP7yNDwyx0ANOKhkZOEkEYPiun_b_UWFNKGb2bo0yOH3Pxxh3diAL1vBrTn_3ill67DwLOWv0VWWu25Ox2Eg"/>
+<div class="brand-logo-font text-2xl text-[#e7e0ef]">Aurora Career</div>
+</div>
+<div class="hidden md:flex gap-8 items-center font-['Inter'] tracking-tight text-sm font-medium">
+<a class="text-[#ccbeff] border-b-2 border-[#5a30d0] pb-1" href="#opportunities">Возможности</a>
+<a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#insights">Аналитика</a>
+<a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#network">Сеть</a>
+<a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#archive">Архив</a>
+</div>
+<div class="flex gap-6 items-center">
+<button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-[#ccbeff]/10 transition-all duration-300 active:scale-95 ease-out" onclick="toggleModal('join-modal')">Присоединиться</button>
+</div>
+</nav>
+<main class="relative">
+<!-- Hero Section -->
+<section class="min-h-screen flex flex-col items-center justify-center pt-32 pb-20 px-6 relative overflow-hidden bg-[#000000]" id="opportunities">
+<div class="hero-glow-left"></div>
+<div class="max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-10 gap-12 items-center relative z-10">
+<!-- Text Content (70% on desktop) -->
+<div class="md:col-span-6 lg:col-span-7 space-y-12 text-left">
+<div class="inline-block px-6 py-2 rounded-full border border-white/10 bg-white/5 text-primary font-medium tracking-wide text-sm">
+                ИНТЕЛЛЕКТУАЛЬНЫЙ ПОИСК РАБОТЫ
+            </div>
+<h1 class="text-6xl md:text-8xl font-black tracking-tighter text-on-surface leading-[0.95] md:leading-[0.9]">
+                Ваша карьера <br/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">на автопилоте.</span>
+</h1>
+<p class="text-xl md:text-2xl text-on-surface-variant max-w-2xl font-light leading-relaxed">
+                Система, которая сама ищет вакансии, адаптирует резюме и отправляет отклики, пока вы отдыхаете.
+            </p>
+<div class="flex flex-col md:flex-row gap-6 pt-8">
+<button class="bg-gradient-to-tr from-primary-container to-secondary-container text-white px-12 py-5 rounded-xl text-lg font-bold shadow-[0_30px_60px_rgba(90,48,208,0.2)] hover:scale-[1.02] transition-transform duration-300">
+                    Попробовать бесплатно
+                </button>
+<button class="glass-card text-on-surface px-12 py-5 rounded-xl text-lg font-semibold border border-white/10 hover:bg-white/10 transition-colors">
+                    Как это работает
+                </button>
+</div>
+</div>
+<!-- Video Placeholder (30-40% on desktop, hidden on mobile) -->
+<div class="hidden md:flex md:col-span-4 lg:col-span-3 items-center justify-center">
+<div class="relative w-full aspect-[9/16] md:aspect-[3/4] lg:aspect-square overflow-hidden bg-black">
+<video autoplay="" class="w-full h-full object-cover" loop="" muted="" playsinline="" poster="{{DATA:IMAGE:IMAGE_2}}">
+<source src="#" type="video/mp4"/>
+<img alt="Aurora Character" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ADBb0uhbn8fK06DOzhL77SZAHkc5OtvRpSaedaF8Oa4YNX1L7kfLaFsdt7vwstUh04ESKLIsqsVKq-zViJN-8NNFCKX8-MgA8aiHoQh9ASvalBb1F6O-3nUBSpMIPZN6K9ILaMr7sOTd0NP6AfjDtDEpd11JrA7ulRcPUi47ISP0jVb5_R5xeiB2fObZ_s2y_wCjREeldjZ5bZlEDBYUtwP1AaomMJAoNYQqy6lt6pgpYF17idGj7kxyz4l3344SaDr9gPbbjoFCXFEU"/>
+</video>
+<!-- Black fade to ensure blending -->
+<div class="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-black pointer-events-none"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Problem Statement Section -->
+<section class="py-32 px-12 bg-surface-container-low" id="insights">
+<div class="max-w-7xl mx-auto">
+<div class="mb-20">
+<h2 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">Поиск работы — это вторая работа.<br/><span class="text-on-surface-variant">Скучная и бесплатная.</span></h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-surface-container-lowest p-10 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
+<span class="material-symbols-outlined text-5xl mb-6 text-primary">groups</span>
+<h3 class="text-2xl font-bold mb-4">Бешеная конкуренция</h3>
+<p class="text-on-surface-variant leading-relaxed">Сотни кандидатов на одну позицию. Ваше резюме просто теряется в общем потоке.</p>
+</div>
+<div class="bg-surface-container-lowest p-10 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
+<span class="material-symbols-outlined text-5xl mb-6 text-primary">local_fire_department</span>
+<h3 class="text-2xl font-bold mb-4">Рутина выжигает</h3>
+<p class="text-on-surface-variant leading-relaxed">Бесконечное заполнение анкет и корректировка Cover Letter убивают мотивацию.</p>
+</div>
+<div class="bg-surface-container-lowest p-10 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
+<span class="material-symbols-outlined text-5xl mb-6 text-primary">notifications_off</span>
+<h3 class="text-2xl font-bold mb-4">Тишина в ответ</h3>
+<p class="text-on-surface-variant leading-relaxed">Месяцы ожиданий без обратной связи. Вы даже не знаете, прочитали ли ваше письмо.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Solution Section -->
+<section class="py-32 px-12" id="network">
+<div class="max-w-7xl mx-auto">
+<div class="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
+<h2 class="text-5xl md:text-7xl font-black tracking-tighter">Аврора меняет <br/>правила игры.</h2>
+<p class="text-xl text-on-surface-variant max-w-md font-light">Мы автоматизировали каждый этап, чтобы вы сосредоточились только на интервью.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="col-span-1 lg:col-span-2 bg-surface-container-low rounded-xl p-10 flex flex-col md:flex-row gap-12 items-center overflow-hidden relative">
+<div class="flex-1 space-y-6 z-10">
+<h3 class="text-3xl font-bold">Апгрейд вашего резюме</h3>
+<p class="text-on-surface-variant text-lg">AI анализирует описание вакансии и точечно адаптирует ваш опыт, чтобы пройти фильтры ATS на 100%.</p>
+</div>
+<div class="flex-1 w-full h-64 bg-surface-variant rounded-lg border border-white/5 relative overflow-hidden">
+<img alt="Minimalist clean resume layout on screen" class="w-full h-full object-cover opacity-60" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5rZkY7NLWNpN-jFMtEBfgSvWr25R2RI4WqevXDAwDVOdRs-X5emymvoDeILmmCC-QIEZseziPLE8SJAAiU5KhQUpMjZ3fWKkKkNtccxXa7OzvQaORpctJfQ78_hSOwChvuqaZbrxpyXr8jekIvvwIidefprMUVk8yWlFGw1pqf8OyZxyh3xkF8QPJPuwNh7iRuUSiOHX-XNEt64i13d1w2xEKnkfvbbwN54U6c8X18pGZNtskGfsLOh_-a27iQi7B-N1b0CYirYg"/>
+</div>
+</div>
+<div class="bg-primary-container/20 rounded-xl p-10 flex flex-col justify-between border border-primary/10">
+<span class="material-symbols-outlined text-4xl text-primary" data-weight="fill">bolt</span>
+<div>
+<h3 class="text-2xl font-bold mb-4">Мгновенный поиск</h3>
+<p class="text-on-surface-variant">Мониторинг 50+ площадок одновременно. Система находит вакансию раньше, чем вы успеете обновить ленту.</p>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-xl p-10 flex flex-col justify-between">
+<span class="material-symbols-outlined text-4xl text-secondary">mail</span>
+<div>
+<h3 class="text-2xl font-bold mb-4">Письма, которые работают</h3>
+<p class="text-on-surface-variant">Создание персонализированных сопроводительных писем, на которые рекрутеры отвечают "Да".</p>
+</div>
+</div>
+<div class="col-span-1 lg:col-span-2 bg-surface-container-lowest border border-white/5 rounded-xl p-10 flex flex-col justify-center">
+<h3 class="text-3xl font-bold mb-6">Бесшовная интеграция</h3>
+<p class="text-on-surface-variant text-lg mb-8">Подключите свои профили и позвольте системе управлять потоком откликов. Полный контроль в одном окне.</p>
+<div class="flex gap-4">
+<div class="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined">link</span></div>
+<div class="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined">sync</span></div>
+<div class="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined">verified</span></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Comparison Section -->
+<section class="py-32 px-12 bg-surface-container-lowest" id="archive">
+<div class="max-w-5xl mx-auto">
+<h2 class="text-4xl md:text-5xl font-extrabold text-center mb-20">Математика вашей карьеры</h2>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-separate border-spacing-y-4">
+<thead>
+<tr class="text-on-surface-variant uppercase text-xs tracking-widest">
+<th class="px-8 py-4 font-medium">Параметр</th>
+<th class="px-8 py-4 font-medium">Консультант</th>
+<th class="px-8 py-4 font-medium">Самостоятельно</th>
+<th class="px-8 py-4 font-medium text-primary">Система Aurora</th>
+</tr>
+</thead>
+<tbody class="text-lg">
+<tr class="bg-surface-container-low rounded-xl group transition-all">
+<td class="px-8 py-10 rounded-l-xl font-semibold">Цена / мес</td>
+<td class="px-8 py-10">от 50 000 ₽</td>
+<td class="px-8 py-10">0 ₽</td>
+<td class="px-8 py-10 rounded-r-xl text-primary font-bold">от 2 900 ₽</td>
+</tr>
+<tr class="bg-surface-container-low rounded-xl">
+<td class="px-8 py-10 rounded-l-xl font-semibold">Скорость поиска</td>
+<td class="px-8 py-10">Низкая</td>
+<td class="px-8 py-10">Зависит от вас</td>
+<td class="px-8 py-10 rounded-r-xl text-primary font-bold">Максимальная</td>
+</tr>
+<tr class="bg-surface-container-low rounded-xl">
+<td class="px-8 py-10 rounded-l-xl font-semibold">Объем откликов</td>
+<td class="px-8 py-10">Ограничен</td>
+<td class="px-8 py-10">Мало</td>
+<td class="px-8 py-10 rounded-r-xl text-primary font-bold">Неограничен</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Security Section -->
+<section class="py-32 px-12 relative overflow-hidden">
+<div class="light-leak top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30"></div>
+<div class="max-w-4xl mx-auto text-center space-y-12">
+<h2 class="text-5xl font-black">Работает безопасно</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+<div class="space-y-4">
+<div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto text-primary">
+<span class="material-symbols-outlined text-3xl">fingerprint</span>
+</div>
+<h3 class="text-2xl font-bold">Как обычный пользователь</h3>
+<p class="text-on-surface-variant">Алгоритмы имитируют поведение человека, чтобы площадки не блокировали ваш аккаунт.</p>
+</div>
+<div class="space-y-4">
+<div class="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto text-secondary">
+<span class="material-symbols-outlined text-3xl">key_off</span>
+</div>
+<h3 class="text-2xl font-bold">Без передачи паролей</h3>
+<p class="text-on-surface-variant">Мы используем безопасные методы авторизации и никогда не храним ваши конфиденциальные данные.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA Section -->
+<section class="py-40 px-6">
+<div class="max-w-6xl mx-auto glass-card rounded-xl p-20 relative overflow-hidden text-center">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container/20 to-transparent pointer-events-none"></div>
+<div class="relative z-10 space-y-8">
+<h2 class="text-5xl md:text-7xl font-black tracking-tighter">Доверьте рутину системе.</h2>
+<p class="text-2xl text-on-surface-variant font-light max-w-2xl mx-auto">Начните получать приглашения на работу мечты уже на этой неделе.</p>
+<div class="pt-8">
+<button class="bg-on-surface text-background px-16 py-6 rounded-xl text-xl font-bold hover:scale-105 transition-transform duration-300">
+                            Получить доступ
+                        </button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Shell -->
+<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-12 px-8">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 w-full">
+<div class="flex flex-col items-center md:items-start gap-2">
+<div class="flex items-center gap-3">
+<img alt="Aurora Logo" class="w-6 h-6 invert brightness-150" src="https://lh3.googleusercontent.com/aida/ADBb0uiRV09rtA_1AmoDsYEsg4kaeYz0pxwxV79ZJkx030BwyjiE6c4B-osPJsjUTPCTB4ItbFPm-wdHsjnXkMhxn5EolzIAqJdCX4rdNb4mwvi9cFEoc7pg6if-z4fx1Zc2gWIOqUzlohvTFhh0vLBUo5FVypIfGYwAe0huSCJh1FOaMf5cgGXebNeFESxP7yNDwyx0ANOKhkZOEkEYPiun_b_UWFNKGb2bo0yOH3Pxxh3diAL1vBrTn_3ill67DwLOWv0VWWu25Ox2Eg"/>
+<div class="brand-logo-font text-lg text-[#ccbeff]">Aurora Career</div>
+</div>
+<div class="text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">© 2024 Aurora Career. The Luminescent Archive.</div>
+</div>
+<div class="flex gap-8 font-['Inter'] text-xs uppercase tracking-[0.2em]">
+<a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('Условия')">Условия</a>
+<a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('Конфиденциальность')">Конфиденциальность</a>
+<a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('Редакция')">Редакция</a>
+<a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('Поддержка')">Поддержка</a>
+</div>
+</div>
+</footer>
+<!-- Join Modal -->
+<div class="modal-overlay" id="join-modal" onclick="if(event.target === this) toggleModal('join-modal')">
+<div class="glass-card max-w-lg w-full p-10 rounded-3xl border border-white/10 relative shadow-2xl">
+<button class="absolute top-6 right-6 text-on-surface-variant hover:text-white transition-colors" onclick="toggleModal('join-modal')">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="text-center space-y-6">
+<div class="w-16 h-16 bg-primary-container/20 rounded-2xl flex items-center justify-center mx-auto text-primary">
+<span class="material-symbols-outlined text-3xl">rocket_launch</span>
+</div>
+<h3 class="text-2xl font-bold">Готовы взлетать?</h3>
+<p class="text-on-surface-variant leading-relaxed text-lg">
+                    Попробуйте возможности Aurora прямо в Telegram. Наш бот поможет автоматизировать ваш поиск работы без лишнего шума.
+                </p>
+<div class="pt-4">
+<a class="inline-block bg-primary text-on-primary px-8 py-4 rounded-xl font-bold hover:scale-105 transition-transform" href="https://t.me/my_hh_job_bot?start=from_website" target="_blank">
+                        Запустить в Telegram
+                    </a>
+</div>
+</div>
+</div>
+</div>
+<!-- Info Modal (Dynamic Content) -->
+<div class="modal-overlay" id="info-modal" onclick="if(event.target === this) toggleModal('info-modal')">
+<div class="glass-card max-w-xl w-full p-10 rounded-3xl border border-white/10 relative shadow-2xl">
+<button class="absolute top-6 right-6 text-on-surface-variant hover:text-white transition-colors" onclick="toggleModal('info-modal')">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="space-y-6">
+<h3 class="text-3xl font-black tracking-tight" id="info-modal-title"></h3>
+<div class="text-on-surface-variant space-y-4 leading-relaxed">
+<p>Sample text for demonstration purposes. This content is a placeholder for the actual legal documents of Aurora Career. Our platform ensures the highest standards of transparency and user protection in the career automation space.</p>
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+</div>
+<div class="pt-4 flex justify-end">
+<button class="px-6 py-2 border border-white/10 rounded-lg hover:bg-white/5 transition-colors" onclick="toggleModal('info-modal')">Понятно</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.toggle('active');
+            document.body.classList.toggle('modal-open');
+        }
+
+        function openInfoModal(title) {
+            document.getElementById('info-modal-title').innerText = title;
+            toggleModal('info-modal');
+        }
+    </script>
+</body></html>
