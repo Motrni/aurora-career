@@ -19,8 +19,12 @@
 <meta name="twitter:title" content="Ваша карьера на автопилоте | Aurora Career">
 <meta name="twitter:description" content="IT-система, которая ищет работу за вас. Заменяет карьерного консультанта.">
 <meta name="twitter:image" content="https://aurora-career.ru/og-image.jpg">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
+<meta name="version" content="2.0.0">
 
-<link rel="icon" type="image/png" href="favicon.png">
+<link rel="icon" type="image/png" href="favicon.png?v=2">
 
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -169,11 +173,11 @@
         <img alt="Aurora Logo" class="w-8 h-8 invert brightness-200" src="https://lh3.googleusercontent.com/aida/ADBb0uiRV09rtA_1AmoDsYEsg4kaeYz0pxwxV79ZJkx030BwyjiE6c4B-osPJsjUTPCTB4ItbFPm-wdHsjnXkMhxn5EolzIAqJdCX4rdNb4mwvi9cFEoc7pg6if-z4fx1Zc2gWIOqUzlohvTFhh0vLBUo5FVypIfGYwAe0huSCJh1FOaMf5cgGXebNeFESxP7yNDwyx0ANOKhkZOEkEYPiun_b_UWFNKGb2bo0yOH3Pxxh3diAL1vBrTn_3ill67DwLOWv0VWWu25Ox2Eg"/>
         <div class="brand-logo-font text-2xl text-[#e7e0ef]">Aurora Career</div>
     </div>
-    <div class="hidden md:flex gap-8 items-center font-['Inter'] tracking-tight text-sm font-medium">
-        <a class="text-[#ccbeff] border-b-2 border-[#5a30d0] pb-1" href="#opportunities">Возможности</a>
-        <a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#insights">Аналитика</a>
-        <a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#network">Сеть</a>
-        <a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#archive">Архив</a>
+    <div id="nav-links" class="hidden md:flex gap-8 items-center font-['Inter'] tracking-tight text-sm font-medium">
+        <a class="nav-link text-[#ccbeff] border-b-2 border-[#5a30d0] pb-1 transition-colors duration-300" href="#opportunities" data-section="opportunities">Возможности</a>
+        <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#insights" data-section="insights">Аналитика</a>
+        <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#network" data-section="network">Сеть</a>
+        <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#archive" data-section="archive">Архив</a>
     </div>
     <div class="flex gap-6 items-center">
         <button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-[#ccbeff]/10 transition-all duration-300 active:scale-95 ease-out" onclick="toggleModal('join-modal')">Присоединиться</button>
@@ -183,7 +187,7 @@
 <main class="relative">
 
 <!-- Hero Section -->
-<section class="min-h-screen flex flex-col items-center justify-center pt-32 pb-20 px-6 relative overflow-hidden bg-[#000000]" id="opportunities">
+<section class="min-h-screen flex flex-col items-center justify-center pt-32 pb-20 px-6 md:px-16 lg:px-24 relative overflow-hidden bg-[#000000]" id="opportunities">
     <div class="hero-glow-left"></div>
     <div class="max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-10 gap-12 items-center relative z-10">
         <div class="md:col-span-6 lg:col-span-7 space-y-12 text-left">
@@ -206,8 +210,11 @@
             </div>
         </div>
         <div class="hidden md:flex md:col-span-4 lg:col-span-3 items-center justify-center">
-            <div class="relative w-full aspect-[9/16] overflow-hidden bg-black">
-                <img src="Transformacija_Aurore_u_Video.gif" alt="Aurora AI Character Animation" class="w-full h-full object-contain" />
+            <div class="relative w-full aspect-[9/16] overflow-hidden bg-black flex items-center justify-center">
+                <div id="gif-placeholder" class="absolute inset-0 flex items-center justify-center z-10">
+                    <div class="w-12 h-12 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                </div>
+                <img src="Transformacija_Aurore_u_Video.gif?v=2" alt="Aurora AI Character Animation" class="w-full h-full object-contain" decoding="async" onload="document.getElementById('gif-placeholder').style.display='none'" />
                 <div class="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-black pointer-events-none"></div>
             </div>
         </div>
@@ -215,7 +222,7 @@
 </section>
 
 <!-- Problem Statement Section -->
-<section class="py-32 px-12 bg-surface-container-low" id="insights">
+<section class="py-32 px-6 md:px-16 lg:px-24 bg-surface-container-low" id="insights">
     <div class="max-w-7xl mx-auto">
         <div class="mb-20">
             <h2 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">Поиск работы — это вторая работа.<br/><span class="text-on-surface-variant">Скучная и бесплатная.</span></h2>
@@ -241,7 +248,7 @@
 </section>
 
 <!-- Solution Section -->
-<section class="py-32 px-12" id="network">
+<section class="py-32 px-6 md:px-16 lg:px-24" id="network">
     <div class="max-w-7xl mx-auto">
         <div class="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
             <h2 class="text-5xl md:text-7xl font-black tracking-tighter">Аврора меняет <br/>правила игры.</h2>
@@ -285,7 +292,7 @@
 </section>
 
 <!-- Comparison Section -->
-<section class="py-32 px-12 bg-surface-container-lowest" id="archive">
+<section class="py-32 px-6 md:px-16 lg:px-24 bg-surface-container-lowest" id="archive">
     <div class="max-w-5xl mx-auto">
         <h2 class="text-4xl md:text-5xl font-extrabold text-center mb-20">Математика вашей карьеры</h2>
         <div class="overflow-x-auto">
@@ -324,7 +331,7 @@
 </section>
 
 <!-- Security Section -->
-<section class="py-32 px-12 relative overflow-hidden">
+<section class="py-32 px-6 md:px-16 lg:px-24 relative overflow-hidden">
     <div class="light-leak top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30"></div>
     <div class="max-w-4xl mx-auto text-center space-y-12">
         <h2 class="text-5xl font-black">Работает безопасно</h2>
@@ -348,7 +355,7 @@
 </section>
 
 <!-- Final CTA Section -->
-<section class="py-40 px-6">
+<section class="py-40 px-6 md:px-16 lg:px-24">
     <div class="max-w-6xl mx-auto glass-card rounded-xl p-20 relative overflow-hidden text-center">
         <div class="absolute inset-0 bg-gradient-to-br from-primary-container/20 to-transparent pointer-events-none"></div>
         <div class="relative z-10 space-y-8">
@@ -366,7 +373,7 @@
 </main>
 
 <!-- Footer -->
-<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-12 px-8">
+<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-12 px-6 md:px-16 lg:px-24">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 w-full">
         <div class="flex flex-col items-center md:items-start gap-2">
             <div class="flex items-center gap-3">
@@ -500,6 +507,33 @@
         document.getElementById('info-modal-body').innerHTML = data.body;
         toggleModal('info-modal');
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section[id]');
+
+        function setActiveLink(sectionId) {
+            navLinks.forEach(function(link) {
+                if (link.dataset.section === sectionId) {
+                    link.classList.remove('text-[#cac3d7]', 'border-transparent');
+                    link.classList.add('text-[#ccbeff]', 'border-[#5a30d0]');
+                } else {
+                    link.classList.remove('text-[#ccbeff]', 'border-[#5a30d0]');
+                    link.classList.add('text-[#cac3d7]', 'border-transparent');
+                }
+            });
+        }
+
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    setActiveLink(entry.target.id);
+                }
+            });
+        }, { rootMargin: '-40% 0px -55% 0px' });
+
+        sections.forEach(function(section) { observer.observe(section); });
+    });
 </script>
 </body>
 </html>
