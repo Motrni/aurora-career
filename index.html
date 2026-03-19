@@ -209,12 +209,12 @@
                 </a>
             </div>
         </div>
-        <div class="hidden md:flex md:col-span-4 lg:col-span-3 items-center justify-center">
-            <div class="relative w-full aspect-[9/16] overflow-hidden bg-black flex items-center justify-center">
-                <div id="gif-placeholder" class="absolute inset-0 flex items-center justify-center z-10">
-                    <div class="w-12 h-12 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                </div>
-                <img src="Transformacija_Aurore_u_Video.gif?v=2" alt="Aurora AI Character Animation" class="w-full h-full object-contain" decoding="async" onload="document.getElementById('gif-placeholder').style.display='none'" />
+        <div class="hidden md:flex md:col-span-4 lg:col-span-3 items-stretch justify-center">
+            <div class="relative w-full overflow-hidden bg-black">
+                <video autoplay muted loop playsinline class="w-full h-full object-cover">
+                    <source src="Transformacija_Aurore_u_Video.mov?v=2" type="video/quicktime">
+                    <img src="Transformacija_Aurore_u_Video.gif?v=2" alt="Aurora AI Character Animation" class="w-full h-full object-cover" />
+                </video>
                 <div class="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-black pointer-events-none"></div>
             </div>
         </div>
