@@ -1,1324 +1,297 @@
 <!DOCTYPE html>
-<html lang="ru">
-
+<html class="dark" lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Настройки Aurora Career</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* ========================================
-           AURORA SETTINGS — REDESIGN v3.0
-           Card-based dark UI
-           ======================================== */
-
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html, body {
-            overflow-x: hidden;
-            width: 100%;
-            max-width: 100%;
-        }
-
-        body {
-            background-color: #0a0a0f;
-            color: #f5f5f7;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-            padding: 16px;
-
-            /* Aurora ambient glow */
-            background-image:
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.15) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 40% at 80% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse 60% 40% at 20% 0%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
-            background-attachment: fixed;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        /* ── LIGHT THEME ── */
-        body.light-theme {
-            background-color: #ffffff;
-            color: #0a0a0f;
-            background-image:
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.08) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 40% at 80% 0%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
-                radial-gradient(ellipse 60% 40% at 20% 0%, rgba(168, 85, 247, 0.04) 0%, transparent 50%);
-        }
-
-        body.light-theme .site-header {
-            background: rgba(255, 255, 255, 0.95);
-            border-bottom-color: rgba(0, 0, 0, 0.08);
-        }
-
-        body.light-theme .site-logo-text {
-            background: linear-gradient(135deg, #7c3aed, #5b21b6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        body.light-theme .site-nav-link {
-            color: #0a0a0f;
-            background: rgba(139, 92, 246, 0.05);
-            border-color: rgba(139, 92, 246, 0.15);
-        }
-
-        body.light-theme .site-nav-link:hover {
-            background: rgba(139, 92, 246, 0.1);
-        }
-
-        body.light-theme .card {
-            background: #ffffff;
-            border-color: rgba(0, 0, 0, 0.08);
-        }
-
-        body.light-theme .card-title {
-            color: #0a0a0f;
-        }
-
-        body.light-theme input[type="number"],
-        body.light-theme select,
-        body.light-theme textarea {
-            background: #f3f3f5;
-            color: #0a0a0f;
-            border-color: rgba(0, 0, 0, 0.08);
-        }
-
-        body.light-theme #industryContainer,
-        body.light-theme #regionContainer {
-            background: #f8f8f9;
-            border-color: rgba(0, 0, 0, 0.08);
-        }
-
-        body.light-theme .industry-search-input,
-        body.light-theme .custom-checkbox {
-            background: #ffffff;
-            color: #0a0a0f;
-            border-color: rgba(0, 0, 0, 0.15);
-        }
-
-        body.light-theme .ind-label,
-        body.light-theme label {
-            color: #3f3f46;
-        }
-
-        body.light-theme .ind-sub-label {
-            color: #52525b;
-        }
-
-        body.light-theme .switch-label {
-            color: #18181b;
-        }
-
-        body.light-theme .vacancy-link {
-            background: #7c3aed;
-        }
-
-        body.light-theme .btn-primary {
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-        }
-
-        body.light-theme .info-hint {
-            color: #71717a;
-        }
-
-        body.light-theme .page-header h1 {
-            background: linear-gradient(135deg, #7c3aed, #5b21b6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        body.light-theme .segment-control {
-            background: rgba(0, 0, 0, 0.03);
-            border-color: rgba(0, 0, 0, 0.06);
-        }
-
-        body.light-theme .segment-option {
-            color: #71717a;
-        }
-
-        body.light-theme .segment-option.active {
-            background: rgba(139, 92, 246, 0.1);
-            color: #7c3aed;
-        }
-
-        body.light-theme .aurora-switch .slider {
-            background: #cbced4;
-        }
-
-        body.light-theme .aurora-switch input:checked + .slider {
-            background: #7c3aed;
-        }
-
-        body.light-theme .tag {
-            background: rgba(124, 58, 237, 0.1);
-            color: #5b21b6;
-            border-color: rgba(124, 58, 237, 0.25);
-        }
-
-        body.light-theme .tags-container {
-            background: #f3f3f5;
-            border-color: rgba(0, 0, 0, 0.08);
-        }
-
-        body.light-theme .tag-input {
-            color: #0a0a0f;
-        }
-
-        body.light-theme .tag-input::placeholder {
-            color: #a1a1aa;
-        }
-
-        body.light-theme .cl-preview-box {
-            background: #f8f8f9;
-            border-color: rgba(0, 0, 0, 0.15);
-            color: #52525b;
-        }
-
-        body.light-theme .error {
-            background: rgba(248, 113, 113, 0.1);
-            border-color: rgba(248, 113, 113, 0.3);
-        }
-
-        body.light-theme .card-vacancy {
-            background: rgba(139, 92, 246, 0.05);
-            border-color: rgba(139, 92, 246, 0.2);
-        }
-
-        body.light-theme .vacancy-label {
-            color: #52525b;
-        }
-
-        body.light-theme .vacancy-label span {
-            color: #0a0a0f;
-        }
-
-        body.light-theme .theme-toggle {
-            background: rgba(0, 0, 0, 0.03);
-            border-color: rgba(0, 0, 0, 0.08);
-        }
-
-        body.light-theme .theme-toggle:hover {
-            background: rgba(0, 0, 0, 0.05);
-            border-color: rgba(124, 58, 237, 0.3);
-        }
-
-        body.light-theme .ind-header:hover {
-            background: rgba(0, 0, 0, 0.02);
-        }
-
-        body.light-theme .toggle-icon {
-            color: #a1a1aa;
-        }
-
-        body.light-theme .toggle-icon.expanded {
-            color: #7c3aed;
-        }
-
-        body.light-theme .ind-children {
-            border-left-color: rgba(0, 0, 0, 0.1);
-        }
-
-        body.light-theme .ind-count {
-            color: #a1a1aa;
-        }
-
-        body.light-theme #industryTree::-webkit-scrollbar-track,
-        body.light-theme #regionTree::-webkit-scrollbar-track {
-            background: #f8f8f9;
-        }
-
-        body.light-theme #industryTree::-webkit-scrollbar-thumb,
-        body.light-theme #regionTree::-webkit-scrollbar-thumb {
-            background-color: #d4d4d8;
-        }
-
-        body.light-theme .region-header-bar {
-            background: #f8f8f9;
-            border-bottom-color: rgba(0, 0, 0, 0.06);
-        }
-
-        body.light-theme .region-search-bar {
-            background: #f8f8f9;
-            border-bottom-color: rgba(0, 0, 0, 0.06);
-        }
-
-        body.light-theme .region-chip {
-            background: rgba(124, 58, 237, 0.1) !important;
-            color: #5b21b6 !important;
-            border-color: rgba(124, 58, 237, 0.25) !important;
-        }
-
-        body.light-theme .region-clear-btn {
-            color: #a1a1aa;
-        }
-
-        body.light-theme .region-clear-btn:hover {
-            color: #7c3aed;
-        }
-
-        body.light-theme .btn-secondary {
-            background: rgba(0, 0, 0, 0.03);
-            border-color: rgba(0, 0, 0, 0.08);
-            color: #52525b;
-        }
-
-        body.light-theme .btn-secondary:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: #0a0a0f;
-        }
-
-        body.light-theme .info-text {
-            background: rgba(139, 92, 246, 0.05);
-            color: #52525b;
-            border-color: rgba(139, 92, 246, 0.15);
-        }
-
-        body.light-theme .cl-warning {
-            background: rgba(245, 158, 11, 0.1);
-            border-color: rgba(245, 158, 11, 0.3);
-            color: #d97706;
-        }
-
-        body.light-theme .segmented-control,
-        body.light-theme .query-editor-block {
-            background: rgba(0, 0, 0, 0.02);
-            border-color: rgba(0, 0, 0, 0.05);
-        }
-
-        body.light-theme .mode-btn {
-            color: #71717a;
-        }
-
-        body.light-theme .mode-btn.active {
-            background: rgba(139, 92, 246, 0.1);
-            color: #7c3aed;
-        }
-
-        body.light-theme .advanced-textarea {
-            background: #f3f3f5;
-            color: #0a0a0f;
-            border-color: rgba(0, 0, 0, 0.08);
-        }
-
-        body.light-theme .tag-confirm-btn {
-            background: rgba(124, 58, 237, 0.15);
-            border-color: rgba(124, 58, 237, 0.35);
-            color: #7c3aed;
-        }
-
-        body.light-theme .tag-confirm-btn:hover {
-            background: rgba(124, 58, 237, 0.25);
-        }
-
-        /* Subtle dot grid overlay */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 32px 32px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        body.light-theme::before {
-            background-image: radial-gradient(rgba(0,0,0,0.03) 1px, transparent 1px);
-        }
-
-        /* ── LAYOUT ── */
-        .page-wrapper {
-            position: relative;
-            z-index: 1;
-            max-width: 720px;
-            width: 100%;
-            margin: 0 auto;
-            padding-bottom: 40px;
-            padding-top: 80px; /* Space for fixed header */
-        }
-
-        /* ── SITE HEADER (Fixed Top Bar) ── */
-        .site-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            background: rgba(19, 19, 24, 0.95);
-            backdrop-filter: blur(15px);
-            border-bottom: 1.5px solid rgba(255,255,255,0.08);
-            padding: 12px 0;
-        }
-
-        .site-header-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .site-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-
-        .site-logo img {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-        }
-
-        .site-logo-text {
-            font-size: 1.25rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #a78bfa, #7c3aed);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .site-nav {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .site-nav-link {
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: #f5f5f7;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            background: rgba(167, 139, 250, 0.1);
-            border: 1px solid rgba(167, 139, 250, 0.2);
-        }
-
-        .site-nav-link:hover {
-            background: rgba(167, 139, 250, 0.2);
-        }
-
-        .theme-toggle {
-            background: rgba(255,255,255,0.05);
-            border: 1.5px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            padding: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .theme-toggle:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(167, 139, 250, 0.4);
-        }
-
-        .theme-toggle svg {
-            width: 20px;
-            height: 20px;
-            color: #fbbf24;
-        }
-
-        /* Light theme icon */
-        body.light-theme .theme-toggle svg {
-            color: #7c3aed;
-        }
-
-        /* ── PAGE HEADER ── */
-        .page-header {
-            text-align: center;
-            padding: 24px 0 8px;
-        }
-
-        .page-header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #a78bfa, #7c3aed);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* ── CARDS ── */
-        .card {
-            background: #131318;
-            border: 1.5px solid rgba(255,255,255,0.08);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 16px;
-            backdrop-filter: blur(8px);
-            transition: border-color 0.2s;
-        }
-
-        .card:hover {
-            border-color: rgba(255,255,255,0.12);
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #f5f5f7;
-            margin-bottom: 16px;
-        }
-
-        /* ── VACANCY COUNTER (special card) ── */
-        .card-vacancy {
-            background: rgba(139, 92, 246, 0.08);
-            border: 1.5px solid rgba(139, 92, 246, 0.25);
-            text-align: center;
-            padding: 16px 24px;
-        }
-
-        .card-vacancy .vacancy-label {
-            font-size: 0.9rem;
-            color: #a1a1aa;
-            margin-bottom: 10px;
-        }
-
-        .card-vacancy .vacancy-label span {
-            color: #f5f5f7;
-            font-weight: 700;
-        }
-
-        .vacancy-link {
-            display: inline-block;
-            background: #7c3aed;
-            color: #fff;
-            text-decoration: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-
-        .vacancy-link:hover {
-            background: #6d28d9;
-        }
-
-        /* ── SEGMENT CONTROL (Tabs) ── */
-        .segment-control {
-            display: flex;
-            background: #1e1e28;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 20px;
-            width: 100%;
-            border: 1.5px solid rgba(255,255,255,0.06);
-        }
-
-        .segment-option {
-            flex: 1;
-            text-align: center;
-            padding: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #a1a1aa;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-
-        .segment-option.active {
-            background: rgba(139, 92, 246, 0.15);
-            color: #a78bfa;
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ── INPUTS ── */
-        input[type="number"],
-        select {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: 1.5px solid rgba(255,255,255,0.08);
-            background: #1e1e28;
-            color: #f5f5f7;
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            appearance: none;
-            -webkit-appearance: none;
-        }
-
-        select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            padding-right: 40px;
-        }
-
-        input:focus,
-        select:focus {
-            border-color: #a78bfa;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-        }
-
-        input::placeholder {
-            color: #555;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
-            color: #a1a1aa;
-            font-weight: 500;
-        }
-
-        /* ── SWITCH (replaces checkbox for on/off) ── */
-        .switch-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .switch-row .salary-input {
-            flex: 1;
-        }
-
-        .aurora-switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
-            flex-shrink: 0;
-        }
-
-        .aurora-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-            position: absolute;
-        }
-
-        .aurora-switch .slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background: #333;
-            border-radius: 24px;
-            transition: background 0.3s;
-        }
-
-        .aurora-switch .slider::before {
-            content: '';
-            position: absolute;
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background: #fff;
-            border-radius: 50%;
-            transition: transform 0.3s;
-        }
-
-        .aurora-switch input:checked + .slider {
-            background: #7c3aed;
-        }
-
-        .aurora-switch input:checked + .slider::before {
-            transform: translateX(20px);
-        }
-
-        .switch-label {
-            font-size: 0.95rem;
-            color: #e4e4e7;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        /* ── SCHEDULE (work format) ── */
-        .schedule-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .schedule-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* ── CUSTOM CHECKBOX (for trees) ── */
-        .custom-checkbox {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid #444;
-            border-radius: 4px;
-            margin-right: 10px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #1e1e28;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .custom-checkbox:checked {
-            background: #7c3aed;
-            border-color: #7c3aed;
-        }
-
-        .custom-checkbox:checked::after {
-            content: '';
-            width: 5px;
-            height: 9px;
-            border: solid #fff;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-            margin-bottom: 2px;
-        }
-
-        .custom-checkbox:indeterminate {
-            background: #7c3aed;
-            border-color: #7c3aed;
-        }
-
-        .custom-checkbox:indeterminate::after {
-            content: '';
-            width: 10px;
-            height: 2px;
-            background: #fff;
-            transform: none;
-        }
-
-        .custom-checkbox:hover {
-            border-color: #666;
-        }
-
-        /* Keep .checkbox-wrapper for backward compat with JS that may reference it */
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        /* ── INDUSTRY TREE ── */
-        #industryContainer {
-            border: 1.5px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            background: #1e1e28;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 400px;
-        }
-
-        .industry-search-wrapper {
-            background: #1e1e28;
-            padding: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            display: flex;
-            align-items: center;
-        }
-
-        .industry-search-input {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1.5px solid rgba(255,255,255,0.08);
-            background: #131318;
-            color: #f5f5f7;
-            font-size: 0.9rem;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-
-        .industry-search-input:focus {
-            border-color: #a78bfa;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-        }
-
-        .industry-search-input::placeholder {
-            color: #555;
-        }
-
-        #industryTree {
-            overflow-y: auto;
-            padding: 8px;
-            flex-grow: 1;
-            overflow-anchor: none;
-            scrollbar-width: thin;
-            scrollbar-color: #333 #1e1e28;
-        }
-
-        #industryTree::-webkit-scrollbar { width: 6px; }
-        #industryTree::-webkit-scrollbar-track { background: #1e1e28; }
-        #industryTree::-webkit-scrollbar-thumb { background-color: #333; border-radius: 3px; }
-
-        .ind-category { margin-bottom: 4px; }
-
-        .ind-header {
-            display: flex;
-            align-items: center;
-            padding: 6px 4px;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-
-        .ind-header:hover { background: rgba(255,255,255,0.03); }
-
-        .toggle-icon {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 4px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            color: #666;
-        }
-
-        .toggle-icon.expanded {
-            transform: rotate(180deg);
-            color: #a78bfa;
-        }
-
-        .ind-label {
-            cursor: pointer;
-            font-size: 0.95rem;
-            color: #e4e4e7;
-            line-height: 1.3;
-            flex: 1;
-            user-select: none;
-        }
-
-        .ind-label.highlight {
-            color: #a78bfa;
-            font-weight: 600;
-        }
-
-        .ind-children {
-            margin-left: 32px;
-            display: none;
-            border-left: 1px solid #333;
-            padding-left: 10px;
-            margin-top: 4px;
-        }
-
-        .ind-children.open { display: block; }
-
-        .ind-sub {
-            display: flex;
-            align-items: center;
-            margin-bottom: 4px;
-            padding: 4px 0;
-        }
-
-        .ind-sub-label {
-            font-size: 0.9rem;
-            color: #a1a1aa;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .ind-sub-label:hover { color: #f5f5f7; }
-
-        .ind-count {
-            font-size: 0.75rem;
-            color: #555;
-            margin-left: auto;
-            padding-left: 8px;
-        }
-
-        /* ── REGION TREE ── */
-        #regionContainer {
-            display: flex;
-            flex-direction: column;
-            height: 420px;
-            background: #1e1e28;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1.5px solid rgba(255,255,255,0.08);
-            position: relative;
-        }
-
-        .region-header-bar {
-            background: #131318;
-            padding: 10px 14px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .region-header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .region-header-top span:first-child {
-            color: #f5f5f7;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .region-clear-btn {
-            font-size: 12px;
-            color: #666;
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            font-family: inherit;
-            transition: color 0.2s;
-        }
-
-        .region-clear-btn:hover { color: #a78bfa; }
-
-        #selectedRegionsList {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            max-height: 80px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .region-search-bar {
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            padding: 10px 14px;
-            background: #131318;
-            flex-shrink: 0;
-        }
-
-        #regionTree {
-            overflow-y: auto;
-            flex-grow: 1;
-            padding: 8px;
-            scrollbar-width: thin;
-            scrollbar-color: #333 #1e1e28;
-        }
-
-        #regionTree::-webkit-scrollbar { width: 6px; }
-        #regionTree::-webkit-scrollbar-track { background: #1e1e28; }
-        #regionTree::-webkit-scrollbar-thumb { background-color: #333; border-radius: 3px; }
-
-        /* ── QUERY EDITOR ── */
-        .segmented-control {
-            display: flex;
-            background: #1e1e28;
-            padding: 4px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            border: 1.5px solid rgba(255,255,255,0.06);
-        }
-
-        .mode-btn {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-            color: #a1a1aa;
-            font-weight: 500;
-            background: transparent;
-            border: none;
-            font-family: inherit;
-        }
-
-        .mode-btn.active {
-            background: rgba(139, 92, 246, 0.15);
-            color: #a78bfa;
-        }
-
-        .query-editor-block {
-            background: #1e1e28;
-            padding: 16px;
-            border-radius: 12px;
-            border: 1.5px solid rgba(255,255,255,0.06);
-        }
-
-        .info-text {
-            background: rgba(255,255,255,0.03);
-            padding: 12px;
-            border-radius: 8px;
-            color: #a1a1aa;
-            font-size: 0.85rem;
-            border: 1px solid rgba(255,255,255,0.06);
-            line-height: 1.5;
-        }
-
-        .advanced-textarea {
-            width: 100%;
-            background: #131318;
-            border: 1.5px solid rgba(255,255,255,0.08);
-            color: #f5f5f7;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
-            line-height: 1.5;
-            resize: vertical;
-            transition: all 0.2s;
-            outline: none;
-            min-height: 120px;
-        }
-
-        .advanced-textarea:focus {
-            border-color: #a78bfa;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-        }
-
-        .advanced-textarea::placeholder { color: #555; }
-
-        /* ── TAGS ── */
-        .tags-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            background: #131318;
-            border: 1.5px solid rgba(255,255,255,0.08);
-            padding: 8px 40px 8px 8px;
-            border-radius: 10px;
-            min-height: 44px;
-            align-items: center;
-            position: relative;
-        }
-
-        .tags-container:focus-within {
-            border-color: #a78bfa;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-        }
-
-        .tag {
-            background: rgba(139, 92, 246, 0.15);
-            color: #c4b5fd;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-        }
-
-        .tag-remove {
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 16px;
-            height: 16px;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-
-        .tag-remove:hover { opacity: 1; color: #f87171; }
-
-        .tag-input {
-            background: transparent;
-            border: none;
-            color: #f5f5f7;
-            font-size: 0.9rem;
-            font-family: inherit;
-            outline: none;
-            flex-grow: 1;
-            min-width: 100px;
-            padding: 4px;
-        }
-
-        .tag-input::placeholder { color: #555; }
-
-        .tag-confirm-btn {
-            background: rgba(139, 92, 246, 0.2);
-            border: 1px solid rgba(139, 92, 246, 0.4);
-            color: #a78bfa;
-            font-size: 0.9rem;
-            font-weight: bold;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            right: 7px;
-            top: 0;
-            bottom: 0;
-            margin: auto 0;
-            transition: all 0.2s;
-            padding: 0;
-        }
-
-        .tag-confirm-btn.visible { display: flex; }
-        .tag-confirm-btn:hover { background: rgba(139, 92, 246, 0.35); }
-
-        .field-label {
-            display: block;
-            font-size: 0.85rem;
-            color: #a1a1aa;
-            margin-bottom: 6px;
-            margin-left: 2px;
-        }
-
-        /* ── BUTTONS ── */
-        .btn-primary {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            border: none;
-            border-radius: 12px;
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 8px;
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
-        }
-
-        .btn-primary:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 24px rgba(124, 58, 237, 0.35);
-        }
-
-        .btn-primary:disabled,
-        .btn-primary.disabled {
-            background: #333;
-            color: #666;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-            opacity: 0.7;
-        }
-
-        .btn-secondary {
-            width: 100%;
-            padding: 14px;
-            background: rgba(255,255,255,0.04);
-            border: 1.5px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            color: #a1a1aa;
-            font-size: 1rem;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 12px;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.08);
-            color: #f5f5f7;
-        }
-
-        /* ── MISC ── */
-        .info-hint {
-            font-size: 0.8rem;
-            color: #555;
-            text-align: center;
-            margin-top: 8px;
-        }
-
-        .error {
-            color: #f87171;
-            font-size: 0.9rem;
-            display: none;
-            text-align: center;
-            background: rgba(248, 113, 113, 0.08);
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid rgba(248, 113, 113, 0.2);
-            margin-bottom: 16px;
-        }
-
-        .divider {
-            height: 1px;
-            background: rgba(255,255,255,0.06);
-            margin: 8px 0;
-        }
-
-        /* ── SKELETON ── */
-        .skeleton {
-            background-color: #1e1e28;
-            background-image: linear-gradient(90deg, #1e1e28 0px, #2a2a35 40px, #1e1e28 80px);
-            background-size: 200px 100%;
-            background-repeat: no-repeat;
-            display: inline-block;
-            border-radius: 8px;
-            animation: skeleton-shimmer 1.5s infinite linear;
-        }
-
-        body.light-theme .skeleton {
-            background-color: #e4e4e7;
-            background-image: linear-gradient(90deg, #e4e4e7 0px, #f4f4f5 40px, #e4e4e7 80px);
-        }
-
-        .skeleton-block {
-            width: 100%;
-            display: block;
-        }
-
-        @keyframes skeleton-shimmer {
-            0% { background-position: -200px 0; }
-            100% { background-position: calc(100% + 200px) 0; }
-        }
-
-        /* ── RESPONSE TAB STYLES ── */
-        .cl-warning {
-            background: rgba(245, 158, 11, 0.08);
-            border: 1px solid rgba(245, 158, 11, 0.25);
-            color: #f59e0b;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            text-align: center;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 16px;
-        }
-
-        .cl-preview-box {
-            background: #1e1e28;
-            border: 1.5px dashed rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 16px;
-            font-size: 0.9rem;
-            color: #a1a1aa;
-            line-height: 1.6;
-            position: relative;
-        }
-
-        .cl-preview-badge {
-            position: absolute;
-            top: 6px;
-            right: 10px;
-            font-size: 0.65rem;
-            color: #444;
-            text-transform: uppercase;
-            border: 1px solid rgba(255,255,255,0.08);
-            padding: 2px 6px;
-            border-radius: 4px;
-            letter-spacing: 0.5px;
-        }
-
-        textarea {
-            width: 100%;
-            background: #1e1e28;
-            border: 1.5px solid rgba(255,255,255,0.08);
-            color: #f5f5f7;
-            padding: 12px;
-            border-radius: 10px;
-            resize: vertical;
-            font-family: inherit;
-            font-size: 0.9rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        textarea:focus {
-            border-color: #a78bfa;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-        }
-
-        textarea::placeholder { color: #555; }
-
-        /* ── RESPONSIVE ── */
-        @media (max-width: 480px) {
-            .page-wrapper {
-                max-width: 100%;
-            }
-            .card {
-                padding: 16px;
-                border-radius: 12px;
-            }
-            .switch-row {
-                flex-wrap: wrap;
-            }
-            
-            /* Header adaptivity */
-            .site-header-container {
-                padding: 0 12px;
-            }
-            
-            .site-logo img {
-                width: 28px;
-                height: 28px;
-            }
-            
-            .site-logo-text {
-                font-size: 1.1rem;
-            }
-            
-            .site-nav {
-                display: none; /* Hide nav on mobile, keep only logo and theme toggle */
-            }
-        }
-    </style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Настройки | Аврора</title>
+<link rel="icon" type="image/png" href="favicon.png?v=3">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "outline": "#938ea0",
+                "on-secondary-container": "#c7aaff",
+                "on-secondary": "#3e0c85",
+                "primary-container": "#5a30d0",
+                "on-secondary-fixed": "#250059",
+                "tertiary": "#ccbeff",
+                "tertiary-fixed": "#e7deff",
+                "on-surface": "#e7e0ef",
+                "surface-container-low": "#1d1a24",
+                "on-primary-container": "#cec0ff",
+                "surface-bright": "#3b3743",
+                "surface-variant": "#37333e",
+                "background": "#15121c",
+                "on-error": "#690005",
+                "on-background": "#e7e0ef",
+                "inverse-primary": "#653edb",
+                "on-tertiary-container": "#cec0ff",
+                "tertiary-container": "#5a30d0",
+                "on-tertiary-fixed": "#1e0060",
+                "on-tertiary": "#350097",
+                "on-tertiary-fixed-variant": "#4c1bc3",
+                "on-secondary-fixed-variant": "#552d9c",
+                "primary-fixed": "#e7deff",
+                "surface-dim": "#15121c",
+                "on-primary-fixed": "#1e0060",
+                "surface-container-lowest": "#100d17",
+                "secondary-fixed": "#ebddff",
+                "primary-fixed-dim": "#ccbeff",
+                "on-surface-variant": "#cac3d7",
+                "surface": "#15121c",
+                "secondary-fixed-dim": "#d3bbff",
+                "secondary-container": "#58309f",
+                "on-primary-fixed-variant": "#4c1bc3",
+                "primary": "#ccbeff",
+                "inverse-on-surface": "#322f3a",
+                "error-container": "#93000a",
+                "tertiary-fixed-dim": "#ccbeff",
+                "surface-container-highest": "#37333e",
+                "error": "#ffb4ab",
+                "surface-container": "#211e29",
+                "on-primary": "#350097",
+                "surface-tint": "#ccbeff",
+                "surface-container-high": "#2c2833",
+                "outline-variant": "#484455",
+                "inverse-surface": "#e7e0ef",
+                "on-error-container": "#ffdad6",
+                "secondary": "#d3bbff"
+            },
+            fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+        },
+    },
+}
+</script>
+<style>
+html { scroll-behavior: smooth; color-scheme: dark; }
+body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0ef; min-width: 320px; overflow-x: hidden; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+
+.glass-panel {
+    background: rgba(55, 51, 62, 0.4);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+}
+
+.brand-logo-font {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #5a30d0; border-radius: 10px; }
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: #5a30d0 rgba(255,255,255,0.05); }
+
+/* Indeterminate checkbox */
+input:indeterminate {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 16'%3E%3Cpath stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8h8'/%3E%3C/svg%3E");
+    background-color: #5a30d0;
+    border-color: #5a30d0;
+}
+
+/* Tab content */
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Skeleton */
+.skeleton {
+    background-color: #1e1e28;
+    background-image: linear-gradient(90deg, #1e1e28 0px, #2a2a35 40px, #1e1e28 80px);
+    background-size: 200px 100%;
+    background-repeat: no-repeat;
+    display: inline-block;
+    border-radius: 8px;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}
+.skeleton-block { width: 100%; display: block; }
+@keyframes skeleton-shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(100% + 200px) 0; } }
+
+/* Custom checkbox for trees */
+.custom-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #484455;
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #2c2833;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.custom-checkbox:checked { background: #5a30d0; border-color: #5a30d0; }
+.custom-checkbox:checked::after {
+    content: '';
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin-bottom: 2px;
+}
+.custom-checkbox:indeterminate { background: #5a30d0; border-color: #5a30d0; }
+.custom-checkbox:indeterminate::after {
+    content: '';
+    width: 10px;
+    height: 2px;
+    background: #fff;
+    transform: none;
+}
+.custom-checkbox:hover { border-color: #938ea0; }
+.checkbox-wrapper { display: flex; align-items: center; cursor: pointer; }
+
+/* Industry tree */
+.ind-category { margin-bottom: 4px; }
+.ind-header { display: flex; align-items: center; padding: 6px 4px; border-radius: 8px; transition: background 0.2s; }
+.ind-header:hover { background: rgba(255,255,255,0.03); }
+.toggle-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 4px; cursor: pointer; transition: transform 0.2s; color: #666; }
+.toggle-icon.expanded { transform: rotate(180deg); color: #ccbeff; }
+.ind-label { cursor: pointer; font-size: 0.95rem; color: #e4e4e7; line-height: 1.3; flex: 1; user-select: none; }
+.ind-label.highlight { color: #ccbeff; font-weight: 600; }
+.ind-children { margin-left: 32px; display: none; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 10px; margin-top: 4px; }
+.ind-children.open { display: block; }
+.ind-sub { display: flex; align-items: center; margin-bottom: 4px; padding: 4px 0; }
+.ind-sub-label { font-size: 0.9rem; color: #a1a1aa; cursor: pointer; user-select: none; }
+.ind-sub-label:hover { color: #f5f5f7; }
+.ind-count { font-size: 0.75rem; color: #555; margin-left: auto; padding-left: 8px; }
+
+/* Tags */
+.tags-container {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    background: rgba(44, 40, 51, 0.6);
+    border: 1.5px solid rgba(255,255,255,0.06);
+    padding: 8px 40px 8px 8px;
+    border-radius: 12px; min-height: 44px;
+    align-items: center; position: relative;
+}
+.tags-container:focus-within { border-color: #ccbeff; box-shadow: 0 0 0 3px rgba(90,48,208,0.15); }
+.tag {
+    background: rgba(90,48,208,0.15); color: #ccbeff;
+    padding: 4px 10px; border-radius: 6px; font-size: 0.85rem;
+    display: flex; align-items: center; gap: 6px;
+    border: 1px solid rgba(90,48,208,0.3);
+}
+.tag-remove { cursor: pointer; display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; opacity: 0.6; transition: opacity 0.2s; }
+.tag-remove:hover { opacity: 1; color: #f87171; }
+.tag-input { background: transparent; border: none; color: #e7e0ef; font-size: 0.9rem; font-family: inherit; outline: none; flex-grow: 1; min-width: 100px; padding: 4px; }
+.tag-input::placeholder { color: #555; }
+.tag-confirm-btn {
+    background: rgba(90,48,208,0.2); border: 1px solid rgba(90,48,208,0.4); color: #ccbeff;
+    font-size: 0.9rem; font-weight: bold; width: 28px; height: 28px; border-radius: 6px;
+    cursor: pointer; display: none; align-items: center; justify-content: center;
+    position: absolute; right: 7px; top: 0; bottom: 0; margin: auto 0; transition: all 0.2s; padding: 0;
+}
+.tag-confirm-btn.visible { display: flex; }
+.tag-confirm-btn:hover { background: rgba(90,48,208,0.35); }
+
+/* Error */
+.error {
+    color: #f87171; font-size: 0.9rem; display: none; text-align: center;
+    background: rgba(248,113,113,0.08); padding: 10px; border-radius: 10px;
+    border: 1px solid rgba(248,113,113,0.2); margin-bottom: 16px;
+}
+
+/* CL Preview */
+.cl-preview-box {
+    background: rgba(44,40,51,0.4); backdrop-filter: blur(40px);
+    border: 1.5px solid rgba(255,255,255,0.05); border-radius: 16px;
+    padding: 20px; font-size: 0.9rem; color: #cac3d7; line-height: 1.6; position: relative;
+}
+.cl-preview-badge {
+    position: absolute; top: 8px; right: 12px; font-size: 0.65rem; color: #484455;
+    text-transform: uppercase; border: 1px solid rgba(255,255,255,0.08);
+    padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;
+}
+.cl-warning {
+    background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25);
+    color: #f59e0b; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;
+    text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 16px;
+}
+
+/* Light leaks */
+.light-leak-tl { position: fixed; top: -10%; left: -5%; width: 40%; height: 40%; border-radius: 50%; background: rgba(204,190,255,0.05); filter: blur(120px); pointer-events: none; z-index: 0; }
+.light-leak-br { position: fixed; bottom: -10%; right: -5%; width: 30%; height: 30%; border-radius: 50%; background: rgba(211,187,255,0.05); filter: blur(100px); pointer-events: none; z-index: 0; }
+
+/* Mobile menu */
+.burger-btn span { display: block; width: 24px; height: 2px; background: #e7e0ef; transition: all 0.3s ease; }
+.burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.burger-btn.active span:nth-child(2) { opacity: 0; }
+.burger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+.mobile-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+.mobile-menu.open { transform: translateX(0); }
+
+/* Advanced textarea */
+.advanced-textarea {
+    width: 100%; background: rgba(44,40,51,0.5);
+    border: 1.5px solid rgba(255,255,255,0.06); color: #e7e0ef;
+    padding: 16px; border-radius: 12px; font-size: 0.9rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    line-height: 1.5; resize: vertical; transition: all 0.2s; outline: none; min-height: 120px;
+}
+.advanced-textarea:focus { border-color: #ccbeff; box-shadow: 0 0 0 3px rgba(90,48,208,0.15); }
+.advanced-textarea::placeholder { color: #555; }
+
+/* Region chip inline style override handled by JS, keeping class for light-theme compat */
+.region-chip { border-radius: 12px; }
+
+@media (max-width: 767px) {
+    .desktop-grid { grid-template-columns: 1fr !important; }
+    .zone1-grid { grid-template-columns: 1fr !important; }
+}
+</style>
 </head>
 
-<body>
+<body class="min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary">
 
-<!-- SITE HEADER -->
-<header class="site-header">
-    <div class="site-header-container">
-        <!-- Левая часть: Логотип + Навигация -->
-        <div style="display: flex; align-items: center; gap: 32px;">
-            <a href="/" class="site-logo">
-                <img src="favicon.png" alt="Aurora Career">
-                <span class="site-logo-text">Аврора</span>
-            </a>
-            <nav class="site-nav">
-                <span class="site-nav-link">Настройки</span>
-            </nav>
-        </div>
-        
-        <!-- Правая часть: Переключатель темы -->
-        <button id="themeToggle" class="theme-toggle" aria-label="Переключить тему">
-            <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-            </svg>
-            <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="display: none;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-            </svg>
-        </button>
+<!-- Light leaks -->
+<div class="light-leak-tl"></div>
+<div class="light-leak-br"></div>
+
+<!-- Navigation (matching index.html) -->
+<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased flex justify-between items-center px-5 md:px-12 lg:px-16 h-16 md:h-20 max-w-none shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+    <div class="flex items-center gap-2 md:gap-3">
+        <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
+            <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
+            <div class="flex flex-col leading-tight">
+                <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
+                <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+            </div>
+        </a>
     </div>
-</header>
+    <div class="hidden md:flex items-center gap-8">
+        <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Настройки</span>
+    </div>
+    <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
+        <span></span><span></span><span></span>
+    </button>
+</nav>
 
-<div class="page-wrapper">
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
+    <span class="text-on-surface text-base font-bold py-3.5 border-b border-white/5">Настройки</span>
+    <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">Вернуться на главную</a>
+</div>
+
+<main class="flex-grow pt-28 md:pt-32 pb-16 md:pb-24 px-4 md:px-12 lg:px-16 max-w-[1400px] mx-auto w-full relative z-10">
 
     <!-- Error -->
     <div id="errorMsg" class="error"></div>
@@ -1337,10 +310,15 @@
     <!-- MAIN CONTENT -->
     <div id="mainContent" style="display: none; animation: fadeIn 0.3s ease-in-out;">
 
-        <!-- TABS -->
-        <div class="segment-control">
-            <div class="segment-option active" id="tab-btn-search" onclick="switchMainTab('search')">Настройки поиска</div>
-            <div class="segment-option" id="tab-btn-response" onclick="switchMainTab('response')">Настройки откликов</div>
+        <!-- Page Header + Tabs -->
+        <div class="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface" id="pageTitle">Настройки поиска</h1>
+            </div>
+            <div class="p-1.5 bg-surface-container-low rounded-full flex self-start">
+                <div class="px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-sm" id="tab-btn-search" onclick="switchMainTab('search')">Настройки поиска</div>
+                <div class="px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-sm" id="tab-btn-response" onclick="switchMainTab('response')">Настройки откликов</div>
+            </div>
         </div>
 
         <!-- ═══════════════════════════════════════ -->
@@ -1348,163 +326,198 @@
         <!-- ═══════════════════════════════════════ -->
         <div id="searchSettingsTab" class="tab-content active">
 
-            <!-- Header -->
-            <div class="page-header">
-                <h1>Настройки поиска</h1>
-            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start desktop-grid">
 
-            <!-- Vacancy Counter -->
-            <div id="vacancyCounterPanel" class="card card-vacancy" style="display: none;">
-                <div class="vacancy-label">
-                    Найдено вакансий: <span id="vacancyCountValue">...</span>
-                </div>
-                <a id="vacancyLink" href="#" target="_blank" class="vacancy-link">
-                    Посмотреть на hh.ru
-                </a>
-            </div>
+                <!-- Left Column -->
+                <div class="lg:col-span-8 space-y-8 md:space-y-12">
 
-            <!-- Salary -->
-            <div class="card">
-                <div class="card-title">Желаемая зарплата (₽)</div>
-                <div class="switch-row">
-                    <input type="number" id="salaryInput" class="salary-input" placeholder="Например: 100000" min="0">
-                    <label class="aurora-switch">
-                        <input type="checkbox" id="noSalaryCheckbox">
-                        <span class="slider"></span>
-                    </label>
-                    <span class="switch-label" onclick="document.getElementById('noSalaryCheckbox').click()">Не указана</span>
-                </div>
-            </div>
+                    <!-- Zone 1: Experience / Salary / Schedule -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 zone1-grid">
 
-            <!-- Experience -->
-            <div class="card">
-                <div class="card-title">Опыт работы</div>
-                <select id="experienceSelect">
-                    <option value="noExperience">Нет опыта</option>
-                    <option value="between1And3">От 1 года до 3 лет</option>
-                    <option value="between3And6">От 3 до 6 лет</option>
-                    <option value="moreThan6">Более 6 лет</option>
-                    <option value="doesNotMatter">Не важно</option>
-                </select>
-            </div>
+                        <!-- Experience -->
+                        <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
+                            <h2 class="text-[11px] font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
+                                Опыт работы
+                            </h2>
+                            <div class="flex flex-col gap-1">
+                                <select id="experienceSelect" class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23cac3d7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px;">
+                                    <option value="noExperience">Нет опыта</option>
+                                    <option value="between1And3">От 1 года до 3 лет</option>
+                                    <option value="between3And6">От 3 до 6 лет</option>
+                                    <option value="moreThan6">Более 6 лет</option>
+                                    <option value="doesNotMatter">Не важно</option>
+                                </select>
+                            </div>
+                        </section>
 
-            <!-- Work Format -->
-            <div class="card">
-                <div class="card-title">График работы</div>
-                <div class="schedule-list" id="scheduleContainer">
-                    <div class="schedule-item">
-                        <label class="aurora-switch">
-                            <input type="checkbox" id="sch_remote" value="REMOTE">
-                            <span class="slider"></span>
-                        </label>
-                        <span class="switch-label" onclick="document.getElementById('sch_remote').click()">Удаленная работа</span>
+                        <!-- Salary -->
+                        <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/60 border border-outline-variant/10 backdrop-blur-md space-y-4">
+                            <h2 class="text-[11px] font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
+                                Желаемая зарплата
+                            </h2>
+                            <div class="space-y-4">
+                                <label class="flex items-center justify-between p-3 rounded-xl bg-surface-container-high/40 cursor-pointer group">
+                                    <span class="text-on-surface/80 text-xs font-semibold">Не указана</span>
+                                    <div class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="noSalaryCheckbox" class="sr-only peer"/>
+                                        <div class="w-10 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-outline after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container peer-checked:after:bg-white"></div>
+                                    </div>
+                                </label>
+                                <div>
+                                    <input type="number" id="salaryInput" class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-lg font-bold focus:ring-2 focus:ring-primary-container transition-all text-on-surface placeholder:text-outline-variant" placeholder="120 000" min="0"/>
+                                    <span class="block mt-2 text-[9px] uppercase tracking-widest text-on-surface-variant font-bold text-right">₽ / месяц</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Schedule -->
+                        <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
+                            <h2 class="text-[11px] font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
+                                График работы
+                            </h2>
+                            <div class="grid grid-cols-2 gap-2" id="scheduleContainer">
+                                <label class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40 border border-outline-variant/5 text-on-surface-variant hover:text-on-surface transition-all hover:bg-surface-container-highest cursor-pointer">
+                                    <input type="checkbox" id="sch_remote" value="REMOTE" class="sr-only"/>
+                                    <span class="material-symbols-outlined text-xl mb-1">home_work</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider">Удалённо</span>
+                                </label>
+                                <label class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40 border border-outline-variant/5 text-on-surface-variant hover:text-on-surface transition-all hover:bg-surface-container-highest cursor-pointer">
+                                    <input type="checkbox" id="sch_office" value="ON_SITE" class="sr-only"/>
+                                    <span class="material-symbols-outlined text-xl mb-1">apartment</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider">Офис</span>
+                                </label>
+                                <label class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40 border border-outline-variant/5 text-on-surface-variant hover:text-on-surface transition-all hover:bg-surface-container-highest cursor-pointer">
+                                    <input type="checkbox" id="sch_hybrid" value="HYBRID" class="sr-only"/>
+                                    <span class="material-symbols-outlined text-xl mb-1">diversity_3</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider">Гибрид</span>
+                                </label>
+                                <label class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40 border border-outline-variant/5 text-on-surface-variant hover:text-on-surface transition-all hover:bg-surface-container-highest cursor-pointer">
+                                    <input type="checkbox" id="sch_field" value="FIELD_WORK" class="sr-only"/>
+                                    <span class="material-symbols-outlined text-xl mb-1">flight_takeoff</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider">Разъезды</span>
+                                </label>
+                            </div>
+                        </section>
                     </div>
-                    <div class="schedule-item">
-                        <label class="aurora-switch">
-                            <input type="checkbox" id="sch_office" value="ON_SITE">
-                            <span class="slider"></span>
-                        </label>
-                        <span class="switch-label" onclick="document.getElementById('sch_office').click()">В офисе / На территории</span>
-                    </div>
-                    <div class="schedule-item">
-                        <label class="aurora-switch">
-                            <input type="checkbox" id="sch_hybrid" value="HYBRID">
-                            <span class="slider"></span>
-                        </label>
-                        <span class="switch-label" onclick="document.getElementById('sch_hybrid').click()">Гибридный график</span>
-                    </div>
-                    <div class="schedule-item">
-                        <label class="aurora-switch">
-                            <input type="checkbox" id="sch_field" value="FIELD_WORK">
-                            <span class="slider"></span>
-                        </label>
-                        <span class="switch-label" onclick="document.getElementById('sch_field').click()">Разъездная работа</span>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Region -->
-            <div class="card">
-                <div class="card-title">Регион поиска</div>
-                <div id="regionContainer">
-                    <div class="region-header-bar">
-                        <div class="region-header-top">
-                            <span id="selectedRegionsSummary">Выбрано: 0</span>
-                            <button class="region-clear-btn" onclick="clearAllRegions()">Очистить</button>
+                    <!-- Advanced Search -->
+                    <section class="space-y-4 p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Настройка поиска</h2>
+                            <div class="flex bg-surface-container-high p-1 rounded-lg">
+                                <button class="px-4 py-1.5 text-xs font-bold rounded-md bg-surface-container-highest text-primary mode-btn active" id="modeSimpleBtn" onclick="window.switchQueryMode('simple')">Простой</button>
+                                <button class="px-4 py-1.5 text-xs font-bold rounded-md text-on-surface-variant hover:text-on-surface mode-btn" id="modeAdvancedBtn" onclick="window.switchQueryMode('advanced')">Boolean</button>
+                            </div>
                         </div>
-                        <div id="selectedRegionsList"></div>
+
+                        <!-- Simple -->
+                        <div id="simpleQueryEditor">
+                            <div class="text-xs text-on-surface-variant/60 flex items-center gap-1.5 mb-4">
+                                <span class="material-symbols-outlined text-[14px]">info</span>
+                                Введите ключевое слово и нажмите Enter или кнопку ✓
+                            </div>
+                            <label class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase mb-2 block">Искать (Include)</label>
+                            <div class="tags-container" id="tagsIncludeContainer">
+                                <input type="text" id="keywordsIncludeInput" class="tag-input" placeholder="Введите слово и Enter...">
+                                <button type="button" class="tag-confirm-btn" id="keywordsIncludeConfirm" title="Добавить слово">✓</button>
+                            </div>
+                            <label class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase mt-4 mb-2 block">Исключить (Exclude)</label>
+                            <div class="tags-container" id="tagsExcludeContainer">
+                                <input type="text" id="keywordsExcludeInput" class="tag-input" placeholder="Введите слово и Enter...">
+                                <button type="button" class="tag-confirm-btn" id="keywordsExcludeConfirm" title="Добавить слово">✓</button>
+                            </div>
+                        </div>
+
+                        <!-- Advanced -->
+                        <div id="advancedQueryEditor" style="display: none;">
+                            <div class="text-xs text-on-surface-variant/60 flex items-center gap-1.5 mb-4">
+                                <span class="material-symbols-outlined text-[14px]">info</span>
+                                Полный контроль через Boolean Search (AND, OR, NOT)
+                            </div>
+                            <textarea id="booleanQueryInput" class="advanced-textarea" rows="4" placeholder="NAME:(Python OR Django) AND NOT NAME:(Senior)"></textarea>
+                        </div>
+                    </section>
+
+                </div><!-- End left column -->
+
+                <!-- Right Column -->
+                <div class="lg:col-span-4 space-y-6 md:space-y-8">
+
+                    <!-- Vacancy Counter -->
+                    <div id="vacancyCounterPanel" class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-primary-container to-secondary-container text-white shadow-2xl relative overflow-hidden group" style="display: none;">
+                        <div class="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-150 duration-700"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span class="text-xs font-bold tracking-widest uppercase opacity-80">Обновление</span>
+                            </div>
+                            <div class="text-5xl md:text-6xl font-black tracking-tighter mb-1 vacancy-label">
+                                <span id="vacancyCountValue">...</span>
+                            </div>
+                            <div class="text-lg font-medium opacity-90">Найдено вакансий</div>
+                            <div class="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-white/10 flex justify-end">
+                                <a id="vacancyLink" href="#" target="_blank" class="text-sm font-bold flex items-center gap-1 hover:underline text-white/90">
+                                    Посмотреть на hh.ru <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="region-search-bar">
-                        <input type="text" id="regionSearch" class="industry-search-input" placeholder="Поиск региона...">
+
+                    <!-- Region Search -->
+                    <section class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                        <h2 class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase">Регион поиска</h2>
+                        <div id="regionContainer" class="flex flex-col" style="height: 320px;">
+                            <div class="mb-3">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span id="selectedRegionsSummary" class="text-on-surface text-xs font-medium">Выбрано: 0</span>
+                                    <button class="text-[11px] text-outline hover:text-primary cursor-pointer bg-transparent border-none font-inherit transition-colors" onclick="clearAllRegions()">Очистить</button>
+                                </div>
+                                <div id="selectedRegionsList" class="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto custom-scrollbar"></div>
+                            </div>
+                            <div class="relative mb-3">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+                                <input type="text" id="regionSearch" class="w-full bg-surface-container-high border-none rounded-xl py-2.5 pl-10 pr-4 text-on-surface focus:ring-2 focus:ring-primary-container text-sm industry-search-input" placeholder="Поиск региона..."/>
+                            </div>
+                            <div id="regionTree" class="overflow-y-auto flex-grow custom-scrollbar">
+                                <div style="padding: 20px; text-align: center; color: #555;">Загрузка регионов...</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Industry -->
+                    <section class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                        <h2 class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase">Отрасли компаний</h2>
+                        <div id="industryContainer" class="flex flex-col" style="height: 400px;">
+                            <div class="relative mb-3">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+                                <input type="text" id="industrySearch" class="w-full bg-surface-container-high border-none rounded-xl py-2.5 pl-10 pr-4 text-on-surface focus:ring-2 focus:ring-primary-container text-sm industry-search-input" placeholder="Поиск отрасли..."/>
+                            </div>
+                            <div id="industryTree" class="overflow-y-auto flex-grow custom-scrollbar"></div>
+                        </div>
+                    </section>
+
+                </div><!-- End right column -->
+
+            </div><!-- End grid -->
+
+            <!-- Action Bar -->
+            <div class="mt-10 md:mt-16 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 p-6 md:p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                        <span class="material-symbols-outlined">verified</span>
                     </div>
-                    <div id="regionTree">
-                        <div style="padding: 20px; text-align: center; color: #555;">Загрузка регионов...</div>
+                    <div>
+                        <h4 class="font-bold text-sm md:text-base">Настройки</h4>
+                        <p class="text-xs md:text-sm text-on-surface-variant">Изменения применятся в боте мгновенно</p>
                     </div>
+                </div>
+                <div class="flex gap-3 md:gap-4 w-full md:w-auto">
+                    <button id="saveBtn" disabled class="flex-grow md:flex-none px-8 md:px-12 py-3 md:py-4 rounded-xl bg-primary-container text-on-primary-container font-bold shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed text-sm md:text-base">Сохранить изменения</button>
                 </div>
             </div>
-
-            <!-- Industry -->
-            <div class="card">
-                <div class="card-title">Отрасли компаний</div>
-                <div id="industryContainer">
-                    <div class="industry-search-wrapper">
-                        <input type="text" id="industrySearch" class="industry-search-input" placeholder="Поиск отрасли...">
-                    </div>
-                    <div id="industryTree"></div>
-                </div>
-            </div>
-
-            <!-- Query Editor -->
-            <div class="card">
-                <div class="card-title">Настройка поиска</div>
-
-                <div class="segmented-control">
-                    <div class="mode-btn active" id="modeSimpleBtn" onclick="window.switchQueryMode('simple')">
-                        Простой (Keywords)
-                    </div>
-                    <div class="mode-btn" id="modeAdvancedBtn" onclick="window.switchQueryMode('advanced')">
-                        Advanced (AI/Boolean)
-                    </div>
-                </div>
-
-                <!-- Simple -->
-                <div id="simpleQueryEditor" class="query-editor-block">
-                    <div class="info-text" style="margin-bottom: 14px;">
-                        Введите ключевое слово и нажмите <b>Enter</b> или кнопку <b>✓</b>, чтобы добавить его в список.
-                        <br>
-                        Бот будет искать вакансии, содержащие <b>ВСЕ</b> слова из "Включить" и <b>НИ ОДНОГО</b> из "Исключить".
-                    </div>
-
-                    <label class="field-label">Искать (Include)</label>
-                    <div class="tags-container" id="tagsIncludeContainer">
-                        <input type="text" id="keywordsIncludeInput" class="tag-input" placeholder="Введите слово и Enter...">
-                        <button type="button" class="tag-confirm-btn" id="keywordsIncludeConfirm" title="Добавить слово">✓</button>
-                    </div>
-
-                    <label class="field-label" style="margin-top: 14px;">Исключить (Exclude)</label>
-                    <div class="tags-container" id="tagsExcludeContainer">
-                        <input type="text" id="keywordsExcludeInput" class="tag-input" placeholder="Введите слово и Enter...">
-                        <button type="button" class="tag-confirm-btn" id="keywordsExcludeConfirm" title="Добавить слово">✓</button>
-                    </div>
-                </div>
-
-                <!-- Advanced -->
-                <div id="advancedQueryEditor" class="query-editor-block" style="display: none;">
-                    <div class="info-text" style="margin-bottom: 14px;">
-                        Полный контроль над запросом используя язык запросов hh.ru (Boolean Search).
-                        Рекомендуется для сложных выборок.
-                    </div>
-                    <textarea id="booleanQueryInput" class="advanced-textarea" rows="5"
-                        placeholder="NAME:(Python OR Django) AND NOT NAME:(Senior)"></textarea>
-                    <div class="info-hint" style="text-align: left; margin-top: 8px;">
-                        Доступные операторы: <code>OR</code>, <code>AND</code>, <code>NOT</code>, <code>()</code>, <code>NAME:()</code>.
-                    </div>
-                </div>
-            </div>
-
-            <!-- Save Button -->
-            <button id="saveBtn" class="btn-primary" disabled>Сохранить изменения</button>
-            <div class="info-hint" style="margin-bottom: 10px;">Изменения применятся в боте мгновенно</div>
 
         </div><!-- End searchSettingsTab -->
 
@@ -1513,83 +526,185 @@
         <!-- ═══════════════════════════════════════ -->
         <div id="responseSettingsTab" class="tab-content">
 
-            <div class="page-header">
-                <h1>Настройки откликов</h1>
-            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 items-start desktop-grid">
 
-            <div class="card">
-                <div class="card-title">Шаблон Сопроводительного Письма</div>
+                <!-- Left Column: Settings Form -->
+                <div class="lg:col-span-7 space-y-6 md:space-y-8">
 
-                <div class="info-text" style="text-align: center; margin-bottom: 12px;">
-                    Выберите стиль и настройте фиксированные начало/конец.
-                </div>
+                    <!-- Style Select -->
+                    <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
+                        <h2 class="text-[11px] font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
+                            Стиль письма
+                        </h2>
+                        <div class="cl-warning">⚠️ Стиль и настройки привязаны к текущему выбранному резюме</div>
+                        <select id="clStyleSelect" class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23cac3d7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px;">
+                            <option value="classic">Классический (Сдержанный)</option>
+                            <option value="startup">Стартап (Бодрый / Без официоза)</option>
+                            <option value="formal">Официально-деловой (На «Вы»)</option>
+                            <option value="executive">Руководитель (Управление и цифры)</option>
+                            <option value="direct">Только факты (Сухо и кратко)</option>
+                        </select>
+                    </section>
 
-                <div class="cl-warning">
-                    ⚠️ Стиль и настройки привязаны к текущему выбранному резюме
-                </div>
-
-                <!-- Style Select -->
-                <div style="margin-bottom: 20px;">
-                    <label for="clStyleSelect">Стиль письма</label>
-                    <select id="clStyleSelect">
-                        <option value="classic">Классический (Сдержанный)</option>
-                        <option value="startup">Стартап (Бодрый / Без официоза)</option>
-                        <option value="formal">Официально-деловой (На «Вы»)</option>
-                        <option value="executive">Руководитель / Executive (Управление и цифры)</option>
-                        <option value="direct">Только факты (Сухо и кратко)</option>
-                    </select>
-                </div>
-
-                <!-- Use Default Switch -->
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <label class="aurora-switch">
-                        <input type="checkbox" id="clUseDefaultCheckbox" checked>
-                        <span class="slider"></span>
-                    </label>
-                    <span class="switch-label" onclick="document.getElementById('clUseDefaultCheckbox').click()">
-                        Использовать стандартные (AI) начало и конец
-                    </span>
-                </div>
-
-                <!-- Custom Fields -->
-                <div id="clCustomFields" style="display: none;">
-                    <div style="margin-bottom: 16px;">
-                        <label>Приветствие (Header)</label>
-                        <textarea id="clHeaderInput" rows="3" placeholder="Здравствуйте! Меня зовут [Имя], и я..."></textarea>
-                        <div class="info-hint" style="text-align: left; margin-top: 4px;">Будет вставлено в самом начале письма.</div>
+                    <!-- AI Switch Card -->
+                    <div class="glass-panel p-6 md:p-8 rounded-2xl shadow-2xl border border-white/5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <h3 class="text-base md:text-lg font-bold text-on-background">Использовать стандартное (AI) начало и конец</h3>
+                                <p class="text-xs md:text-sm text-on-surface-variant">Нейросеть сама подберёт идеальное приветствие и подпись</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                                <input type="checkbox" id="clUseDefaultCheckbox" checked class="sr-only peer"/>
+                                <div class="w-12 h-6 md:w-14 md:h-7 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-primary-container"></div>
+                            </label>
+                        </div>
                     </div>
-                    <div>
-                        <label>Подпись (Footer)</label>
-                        <textarea id="clFooterInput" rows="3" placeholder="С уважением, [Имя]. Телеграм: @..."></textarea>
-                        <div class="info-hint" style="text-align: left; margin-top: 4px;">Будет вставлено в самом конце письма.</div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Preview -->
-            <div class="card">
-                <div class="card-title">Предпросмотр (Как это видит HR)</div>
-                <div id="clPreviewBox" class="cl-preview-box">
-                    <div id="clPreviewHeader" style="margin-bottom: 12px; white-space: pre-wrap; overflow-wrap: break-word; font-style: italic; color: #666;">...</div>
-                    <div style="margin-bottom: 12px; color: #444; filter: blur(0.5px);">
-                        Увидел вашу вакансию <b>Manual QA Engineer</b>. Мой опыт в финтех-проектах, а также крепкое понимание API-тестирования...
-                        <br><br>(Здесь будет сгенерированный AI текст под вакансию)
+                    <!-- Custom Fields -->
+                    <div id="clCustomFields" style="display: none;" class="space-y-5 md:space-y-6">
+                        <div class="space-y-3">
+                            <label class="text-[11px] font-semibold uppercase tracking-widest text-primary-fixed-dim px-1 block">Приветствие</label>
+                            <textarea id="clHeaderInput" rows="3" class="w-full bg-surface-container-high border-none rounded-xl p-4 md:p-5 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 min-h-[80px] transition-all text-sm" placeholder="Здравствуйте! Меня зовут [Имя], и я..."></textarea>
+                            <p class="text-[10px] text-on-surface-variant/60 px-1">Будет вставлено в самом начале письма.</p>
+                        </div>
+                        <div class="space-y-3">
+                            <label class="text-[11px] font-semibold uppercase tracking-widest text-primary-fixed-dim px-1 block">Подпись</label>
+                            <textarea id="clFooterInput" rows="3" class="w-full bg-surface-container-high border-none rounded-xl p-4 md:p-5 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 min-h-[80px] transition-all text-sm" placeholder="С уважением, [Имя]. Телеграм: @..."></textarea>
+                            <p class="text-[10px] text-on-surface-variant/60 px-1">Будет вставлено в самом конце письма.</p>
+                        </div>
                     </div>
-                    <div id="clPreviewFooter" style="white-space: pre-wrap; overflow-wrap: break-word; font-style: italic; color: #666;">...</div>
-                    <div class="cl-preview-badge">Preview</div>
-                </div>
-            </div>
 
-            <button id="saveResponseBtn" class="btn-primary" style="margin-top: 8px;">Сохранить настройки откликов</button>
-        </div>
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-3 md:gap-4 pt-2">
+                        <button id="saveResponseBtn" class="px-8 md:px-10 py-3 md:py-4 bg-gradient-to-r from-primary-container to-secondary-container text-on-primary-container rounded-full font-bold text-sm md:text-base shadow-[0_10px_30px_rgba(90,48,208,0.3)] hover:scale-[1.02] active:scale-95 transition-all">
+                            Сохранить настройки откликов
+                        </button>
+                    </div>
+
+                </div><!-- End left column -->
+
+                <!-- Right Column: Preview -->
+                <div class="lg:col-span-5">
+                    <div class="sticky top-32">
+                        <div class="flex items-center gap-2 mb-4 px-2">
+                            <span class="material-symbols-outlined text-primary">visibility</span>
+                            <h2 class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Предпросмотр</h2>
+                        </div>
+                        <div class="relative group">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary opacity-10 blur-2xl group-hover:opacity-20 transition duration-1000"></div>
+                            <div id="clPreviewBox" class="relative cl-preview-box">
+                                <div class="flex gap-2 mb-6">
+                                    <div class="w-3 h-3 rounded-full bg-red-500/20"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500/20"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500/20"></div>
+                                </div>
+                                <div class="space-y-4 text-sm leading-relaxed text-on-surface-variant">
+                                    <div class="p-4 rounded-lg bg-primary-container/10">
+                                        <div id="clPreviewHeader" style="white-space: pre-wrap; overflow-wrap: break-word; font-style: italic; color: #888;">...</div>
+                                    </div>
+                                    <div style="color: #cac3d7;">
+                                        Увидел вашу вакансию <b>Manual QA Engineer</b>. Мой опыт в финтех-проектах, а также крепкое понимание API-тестирования...
+                                        <br><br>(Здесь будет сгенерированный ИИ текст под вакансию)
+                                    </div>
+                                    <div class="p-4 rounded-lg bg-primary-container/10">
+                                        <div id="clPreviewFooter" style="white-space: pre-wrap; overflow-wrap: break-word; font-style: italic; color: #888;">...</div>
+                                    </div>
+                                </div>
+                                <div class="cl-preview-badge">Preview</div>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-[10px] text-center text-outline px-4">
+                            Пример того, как ваш отклик будет выглядеть для рекрутера. Текст в рамках генерируется динамически.
+                        </p>
+                    </div>
+                </div><!-- End right column -->
+
+            </div><!-- End grid -->
+
+        </div><!-- End responseSettingsTab -->
 
         <!-- Return Button -->
-        <button id="returnBtn" class="btn-secondary">Вернуться в Аврору</button>
+        <div class="mt-8 md:mt-12">
+            <button id="returnBtn" class="w-full md:w-auto px-8 py-3 md:py-4 rounded-xl text-on-surface-variant font-semibold hover:bg-surface-container-highest transition-all border border-outline-variant/10 text-sm md:text-base">Вернуться в Аврору</button>
+        </div>
 
     </div><!-- End mainContent -->
-</div><!-- End page-wrapper -->
 
-<script src="settings.js?v=3.3"></script>
+</main>
+
+<!-- Footer (matching index.html) -->
+<footer class="mt-auto w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
+    <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+        <div class="flex flex-col items-center md:items-start gap-2">
+            <div class="flex items-center gap-2 md:gap-3">
+                <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-base md:text-lg text-[#ccbeff]">Аврора</div>
+                    <div class="text-[8px] md:text-[9px] text-[#cac3d7]/70 font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </div>
+            <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Аврора</div>
+        </div>
+        <div class="flex gap-6 md:gap-8 font-['Inter'] text-[10px] md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em]">
+            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500" href="https://aurora-career.ru/" target="_blank">Главная</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+function toggleMobileMenu() {
+    document.getElementById('burger-btn').classList.toggle('active');
+    document.getElementById('mobile-menu').classList.toggle('open');
+    document.body.classList.toggle('overflow-hidden');
+}
+</script>
+
+<script src="settings.js?v=3.4"></script>
+
+<script>
+/* Schedule checkbox visual feedback */
+document.querySelectorAll('#scheduleContainer input[type="checkbox"]').forEach(cb => {
+    const update = () => {
+        const label = cb.closest('label');
+        if (!label) return;
+        if (cb.checked) {
+            label.style.background = 'rgba(90,48,208,0.1)';
+            label.style.borderColor = 'rgba(90,48,208,0.3)';
+            label.style.color = '#ccbeff';
+        } else {
+            label.style.background = '';
+            label.style.borderColor = '';
+            label.style.color = '';
+        }
+    };
+    cb.addEventListener('change', update);
+    update();
+});
+
+/* Override switchMainTab for new editorial tab UI */
+window.switchMainTab = function(tabName) {
+    const searchBtn = document.getElementById('tab-btn-search');
+    const responseBtn = document.getElementById('tab-btn-response');
+    const title = document.getElementById('pageTitle');
+
+    if (tabName === 'search') {
+        searchBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-sm';
+        responseBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-sm';
+        if (title) title.textContent = 'Настройки поиска';
+    } else {
+        responseBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-sm';
+        searchBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-sm';
+        if (title) title.textContent = 'Настройки откликов';
+    }
+
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    if (tabName === 'search') {
+        document.getElementById('searchSettingsTab').classList.add('active');
+    } else {
+        document.getElementById('responseSettingsTab').classList.add('active');
+    }
+};
+</script>
 </body>
-
 </html>
