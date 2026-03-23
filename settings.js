@@ -442,6 +442,11 @@ function checkVacancies() {
     const counterPanel = document.getElementById("vacancyCounterPanel");
     if (counterPanel) counterPanel.style.display = "block";
 
+    const statusDot = document.getElementById("vacancyStatusDot");
+    const statusText = document.getElementById("vacancyStatusText");
+    if (statusDot) { statusDot.className = "flex h-2 w-2 rounded-full bg-amber-400 animate-pulse"; }
+    if (statusText) { statusText.innerText = "Обновление"; }
+
     vacancyCheckTimeout = setTimeout(async () => {
         try {
             // 1. Collect Data (Similar to saveSettings)
@@ -527,24 +532,35 @@ function checkVacancies() {
             const data = await response.json();
 
             if (data.status === "ok") {
-                // Update UI
                 if (countSpan) countSpan.innerText = data.found.toLocaleString('ru-RU');
 
                 const linkBtn = document.getElementById("vacancyLink");
                 if (linkBtn) {
                     linkBtn.href = data.url;
-                    // Ensure it is visible
                     linkBtn.style.display = "inline-block";
                 }
+
+                const sDot = document.getElementById("vacancyStatusDot");
+                const sText = document.getElementById("vacancyStatusText");
+                if (sDot) { sDot.className = "flex h-2 w-2 rounded-full bg-emerald-400"; }
+                if (sText) { sText.innerText = "Обновлено"; }
             } else {
                 console.error("Check vacancies error:", data.message);
                 if (countSpan) countSpan.innerText = "?";
+                const sDot = document.getElementById("vacancyStatusDot");
+                const sText = document.getElementById("vacancyStatusText");
+                if (sDot) { sDot.className = "flex h-2 w-2 rounded-full bg-red-400"; }
+                if (sText) { sText.innerText = "Ошибка"; }
             }
 
         } catch (e) {
             console.error(e);
             const countSpan = document.getElementById("vacancyCountValue");
-            if (countSpan) countSpan.innerText = "Error";
+            if (countSpan) countSpan.innerText = "—";
+            const sDot = document.getElementById("vacancyStatusDot");
+            const sText = document.getElementById("vacancyStatusText");
+            if (sDot) { sDot.className = "flex h-2 w-2 rounded-full bg-red-400"; }
+            if (sText) { sText.innerText = "Ошибка"; }
         }
     }, 700); // 700ms debounce
 }

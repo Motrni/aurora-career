@@ -5,6 +5,12 @@
 <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
 <title>Настройки | Аврора</title>
 <link rel="icon" type="image/png" href="favicon.png?v=3">
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.aurora-career.ru" crossorigin>
+<link rel="preload" href="industries.json" as="fetch" crossorigin>
+<link rel="preload" href="areas_tree.json" as="fetch" crossorigin>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -265,6 +271,15 @@ input:indeterminate {
 .advanced-textarea:focus { border-color: #ccbeff; box-shadow: 0 0 0 3px rgba(90,48,208,0.15); }
 .advanced-textarea::placeholder { color: #555; }
 
+/* Cover letter textarea: rectangular, auto-height */
+.cl-autosize-textarea {
+    overflow-y: hidden;
+    resize: none;
+    min-height: 80px;
+    max-height: 300px;
+    field-sizing: content;
+}
+
 /* Fix #6: Hide number input spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -336,8 +351,8 @@ input[type="number"] { -moz-appearance: textfield; }
                 <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface" id="pageTitle">Настройки поиска</h1>
             </div>
             <div class="p-1.5 bg-surface-container-low rounded-full flex self-start">
-                <div class="px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-sm" id="tab-btn-search" onclick="switchMainTab('search')">Настройки поиска</div>
-                <div class="px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-sm" id="tab-btn-response" onclick="switchMainTab('response')">Настройки откликов</div>
+                <div class="px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap" id="tab-btn-search" onclick="switchMainTab('search')">Настройки поиска</div>
+                <div class="px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap" id="tab-btn-response" onclick="switchMainTab('response')">Настройки откликов</div>
             </div>
         </div>
 
@@ -345,6 +360,9 @@ input[type="number"] { -moz-appearance: textfield; }
         <!-- TAB 1: SEARCH SETTINGS                 -->
         <!-- ═══════════════════════════════════════ -->
         <div id="searchSettingsTab" class="tab-content active">
+
+            <!-- Vacancy Counter: mobile-first (above grid on mobile, inside right col on desktop) -->
+            <div id="vacancyCounterMobileSlot" class="mb-6 lg:hidden"></div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start desktop-grid">
 
@@ -457,13 +475,15 @@ input[type="number"] { -moz-appearance: textfield; }
                 <!-- Right Column -->
                 <div class="lg:col-span-4 space-y-6 md:space-y-8">
 
+                    <!-- Desktop slot for vacancy counter -->
+                    <div id="vacancyCounterDesktopSlot">
                     <!-- Vacancy Counter -->
                     <div id="vacancyCounterPanel" class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-primary-container to-secondary-container text-white shadow-2xl relative overflow-hidden group" style="display: none;">
                         <div class="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-150 duration-700"></div>
                         <div class="relative z-10">
                             <div class="flex items-center gap-2 mb-2">
-                                <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                                <span class="text-xs font-bold tracking-widest uppercase opacity-80">Обновление</span>
+                                <span id="vacancyStatusDot" class="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                <span id="vacancyStatusText" class="text-xs font-bold tracking-widest uppercase opacity-80">Обновление</span>
                             </div>
                             <div class="text-5xl md:text-6xl font-black tracking-tighter mb-1 vacancy-label">
                                 <span id="vacancyCountValue">...</span>
@@ -476,6 +496,7 @@ input[type="number"] { -moz-appearance: textfield; }
                             </div>
                         </div>
                     </div>
+                    </div><!-- End vacancyCounterDesktopSlot -->
 
                     <!-- Region Search -->
                     <section class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
@@ -572,13 +593,13 @@ input[type="number"] { -moz-appearance: textfield; }
                     <!-- Custom Fields -->
                     <div id="clCustomFields" style="display: none;" class="space-y-5 md:space-y-6">
                         <div class="space-y-3">
-                            <label class="text-[11px] font-semibold uppercase tracking-widest text-primary-fixed-dim px-1 block">Приветствие</label>
-                            <textarea id="clHeaderInput" rows="3" class="w-full bg-surface-container-high border-none rounded-xl p-4 md:p-5 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 min-h-[80px] transition-all text-sm" placeholder="Здравствуйте! Меня зовут [Имя], и я..."></textarea>
+                            <label class="text-lg font-bold tracking-tight text-on-surface/80 block">Приветствие (Header)</label>
+                            <textarea id="clHeaderInput" rows="2" class="cl-autosize-textarea w-full bg-surface-container-high border border-outline-variant/10 rounded-lg p-4 md:p-5 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 transition-all text-sm" placeholder="Здравствуйте! Меня зовут [Имя], и я..."></textarea>
                             <p class="text-[10px] text-on-surface-variant/60 px-1">Будет вставлено в самом начале письма.</p>
                         </div>
                         <div class="space-y-3">
-                            <label class="text-[11px] font-semibold uppercase tracking-widest text-primary-fixed-dim px-1 block">Подпись</label>
-                            <textarea id="clFooterInput" rows="3" class="w-full bg-surface-container-high border-none rounded-xl p-4 md:p-5 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 min-h-[80px] transition-all text-sm" placeholder="С уважением, [Имя]. Телеграм: @..."></textarea>
+                            <label class="text-lg font-bold tracking-tight text-on-surface/80 block">Подпись (Footer)</label>
+                            <textarea id="clFooterInput" rows="2" class="cl-autosize-textarea w-full bg-surface-container-high border border-outline-variant/10 rounded-lg p-4 md:p-5 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 transition-all text-sm" placeholder="С уважением, [Имя]. Телеграм: @..."></textarea>
                             <p class="text-[10px] text-on-surface-variant/60 px-1">Будет вставлено в самом конце письма.</p>
                         </div>
                     </div>
@@ -655,7 +676,7 @@ function toggleMobileMenu() {
 }
 </script>
 
-<script src="settings.js?v=3.5"></script>
+<script src="settings.js?v=3.6"></script>
 
 <script>
 /* Schedule checkbox visual feedback */
@@ -677,19 +698,47 @@ document.querySelectorAll('#scheduleContainer input[type="checkbox"]').forEach(c
     update();
 });
 
+/* Auto-resize textareas fallback */
+document.querySelectorAll('.cl-autosize-textarea').forEach(ta => {
+    const autoResize = () => {
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 300) + 'px';
+    };
+    ta.addEventListener('input', autoResize);
+    setTimeout(autoResize, 50);
+});
+
+/* Vacancy counter: move to mobile slot on small screens */
+function repositionVacancyCounter() {
+    const panel = document.getElementById('vacancyCounterPanel');
+    const mobileSlot = document.getElementById('vacancyCounterMobileSlot');
+    const desktopSlot = document.getElementById('vacancyCounterDesktopSlot');
+    if (!panel || !mobileSlot || !desktopSlot) return;
+    if (window.innerWidth < 1024) {
+        if (panel.parentElement !== mobileSlot) mobileSlot.appendChild(panel);
+    } else {
+        if (panel.parentElement !== desktopSlot) desktopSlot.prepend(panel);
+    }
+}
+repositionVacancyCounter();
+window.addEventListener('resize', repositionVacancyCounter);
+
 /* Override switchMainTab for new editorial tab UI */
 window.switchMainTab = function(tabName) {
     const searchBtn = document.getElementById('tab-btn-search');
     const responseBtn = document.getElementById('tab-btn-response');
     const title = document.getElementById('pageTitle');
 
+    const activeClass = 'px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap';
+    const inactiveClass = 'px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap';
+
     if (tabName === 'search') {
-        searchBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-sm';
-        responseBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-sm';
+        searchBtn.className = activeClass;
+        responseBtn.className = inactiveClass;
         if (title) title.textContent = 'Настройки поиска';
     } else {
-        responseBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-sm';
-        searchBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-sm';
+        responseBtn.className = activeClass;
+        searchBtn.className = inactiveClass;
         if (title) title.textContent = 'Настройки откликов';
     }
 
