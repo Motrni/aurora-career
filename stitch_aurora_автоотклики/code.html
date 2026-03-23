@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #15121c;
+            color: #e7e0ef;
+        }
+        .glass-panel {
+            background: rgba(55, 51, 62, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .terminal-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #37333e;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "surface": "#15121c",
+                "primary-container": "#5a30d0",
+                "on-primary-fixed": "#1e0060",
+                "on-background": "#e7e0ef",
+                "surface-container-high": "#2c2833",
+                "on-surface": "#e7e0ef",
+                "on-tertiary-container": "#cec0ff",
+                "error": "#ffb4ab",
+                "on-tertiary-fixed": "#1e0060",
+                "on-primary": "#350097",
+                "surface-container-highest": "#37333e",
+                "on-tertiary-fixed-variant": "#4c1bc3",
+                "primary-fixed-dim": "#ccbeff",
+                "inverse-surface": "#e7e0ef",
+                "surface-container": "#211e29",
+                "inverse-primary": "#653edb",
+                "on-tertiary": "#350097",
+                "surface-bright": "#3b3743",
+                "on-error": "#690005",
+                "surface-dim": "#15121c",
+                "on-secondary-fixed-variant": "#552d9c",
+                "outline-variant": "#484455",
+                "on-primary-container": "#cec0ff",
+                "secondary": "#d3bbff",
+                "inverse-on-surface": "#322f3a",
+                "tertiary-fixed-dim": "#ccbeff",
+                "secondary-fixed-dim": "#d3bbff",
+                "outline": "#938ea0",
+                "primary-fixed": "#e7deff",
+                "primary": "#ccbeff",
+                "secondary-container": "#58309f",
+                "on-primary-fixed-variant": "#4c1bc3",
+                "background": "#15121c",
+                "on-surface-variant": "#cac3d7",
+                "surface-container-low": "#1d1a24",
+                "surface-variant": "#37333e",
+                "surface-tint": "#ccbeff",
+                "secondary-fixed": "#ebddff",
+                "on-error-container": "#ffdad6",
+                "on-secondary-fixed": "#250059",
+                "tertiary-fixed": "#e7deff",
+                "error-container": "#93000a",
+                "tertiary-container": "#5a30d0",
+                "on-secondary-container": "#c7aaff",
+                "on-secondary": "#3e0c85",
+                "tertiary": "#ccbeff",
+                "surface-container-lowest": "#100d17"
+              },
+              fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+            },
+          },
+        }
+      </script>
+</head>
+<body class="min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Shell -->
+<nav class="fixed top-0 w-full z-50 bg-slate-50/40 backdrop-blur-xl dark:bg-[#15121c]/40 transition-colors duration-500">
+<div class="flex justify-between items-center px-8 h-16 w-full max-w-[1920px] mx-auto">
+<div class="flex items-center gap-12">
+<span class="text-2xl font-bold tracking-tighter text-[#5a30d0] dark:text-[#ccbeff] font-['Inter']">Aurora</span>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-slate-500 dark:text-[#cac3d7] hover:text-[#5a30d0] font-['Inter'] tracking-tight" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-[#cac3d7] hover:text-[#5a30d0] font-['Inter'] tracking-tight" href="#">Job Board</a>
+<a class="text-[#5a30d0] dark:text-[#ccbeff] border-b-2 border-[#5a30d0] dark:border-[#ccbeff] pb-1 font-semibold font-['Inter'] tracking-tight" href="#">Responses</a>
+<a class="text-slate-500 dark:text-[#cac3d7] hover:text-[#5a30d0] font-['Inter'] tracking-tight" href="#">Settings</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#37333e] transition-all duration-300 text-slate-500 dark:text-[#cac3d7]">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-outline-variant/20">
+<span class="material-symbols-outlined text-3xl text-primary" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</div>
+</nav>
+<main class="pt-32 pb-24 px-8 max-w-[1920px] mx-auto space-y-12">
+<!-- Sub-header & Mode Toggle -->
+<section class="flex flex-col md:flex-row justify-between items-end gap-8">
+<div class="space-y-2">
+<h1 class="text-5xl font-extrabold tracking-tighter text-on-background">Управление откликами</h1>
+<p class="text-on-surface-variant text-lg max-w-xl">Интеллектуальная автоматизация поиска и взаимодействия с работодателями.</p>
+</div>
+<div class="bg-surface-container-low p-1.5 rounded-full flex items-center shadow-inner">
+<button class="px-8 py-3 rounded-full bg-primary-container text-white font-semibold transition-all shadow-lg shadow-primary-container/20">
+                    Автопилот
+                </button>
+<button class="px-8 py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all">
+                    Ручной режим
+                </button>
+</div>
+</section>
+<!-- Top Section: Updated Stats -->
+<section class="grid grid-cols-1">
+<div class="glass-panel p-10 rounded-xl flex flex-col md:flex-row items-center justify-between group overflow-hidden relative">
+<!-- Abstract Glow Background -->
+<div class="absolute -right-20 -top-20 w-64 h-64 bg-primary-container/10 rounded-full blur-[100px] group-hover:bg-primary-container/20 transition-all duration-700"></div>
+<div class="flex flex-col md:flex-row items-center gap-10 relative z-10 w-full md:w-auto">
+<div class="relative w-32 h-32 flex items-center justify-center shrink-0">
+<svg class="w-full h-full -rotate-90 block">
+<circle class="text-surface-container-highest" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="145.7" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-3xl font-bold text-on-surface">12</span>
+<span class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Из 20</span>
+</div>
+</div>
+<div class="text-center md:text-left">
+<h3 class="text-2xl font-bold text-on-surface mb-1">Сделано откликов</h3>
+<p class="text-on-surface-variant">Цель на сегодня выполнена на 60%</p>
+</div>
+</div>
+<button class="mt-8 md:mt-0 relative group px-10 py-5 rounded-xl bg-primary-container overflow-hidden transition-all duration-300 active:scale-95 shadow-[0_0_40px_rgba(90,48,208,0.3)] hover:shadow-[0_0_60px_rgba(90,48,208,0.5)]">
+<div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<span class="relative z-10 font-bold text-lg text-white flex items-center gap-3">
+                        Запустить автопилот
+                        <span class="material-symbols-outlined text-2xl" data-icon="bolt" data-weight="fill" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</span>
+</button>
+</div>
+</section>
+<!-- Main Content Area: 60/40 Split -->
+<div class="grid grid-cols-1 lg:grid-cols-10 gap-8">
+<!-- Left: Terminal Log (60%) -->
+<section class="lg:col-span-6 flex flex-col gap-6">
+<div class="flex items-center justify-between px-4">
+<h2 class="text-2xl font-bold flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="terminal">terminal</span>
+                        Отчет автопилота
+                    </h2>
+<div class="flex gap-2">
+<div class="h-2 w-2 rounded-full bg-error animate-pulse"></div>
+<span class="text-xs font-medium text-on-surface-variant">LIVE MONITORING</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-8 min-h-[500px] flex flex-col border border-outline-variant/10 shadow-2xl">
+<div class="terminal-scroll flex-1 overflow-y-auto space-y-4 pr-4">
+<div class="flex gap-4 items-start">
+<span class="text-primary-fixed-dim font-mono text-sm opacity-50 shrink-0">14:22:01</span>
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle">check_circle</span>
+<p class="text-on-surface-variant font-mono text-sm">Успешный отклик: <span class="text-on-surface">Senior Product Designer @ Fintech Flow</span></p>
+</div>
+<div class="flex gap-4 items-start">
+<span class="text-primary-fixed-dim font-mono text-sm opacity-50 shrink-0">14:21:45</span>
+<span class="material-symbols-outlined text-on-tertiary-container text-lg" data-icon="info">info</span>
+<p class="text-on-surface-variant font-mono text-sm">Анализ вакансии: <span class="text-on-surface">Lead UX Architect @ Global Bank</span> - 94% совпадение стека.</p>
+</div>
+<div class="flex gap-4 items-start">
+<span class="text-primary-fixed-dim font-mono text-sm opacity-50 shrink-0">14:20:12</span>
+<span class="material-symbols-outlined text-error text-lg" data-icon="warning">warning</span>
+<p class="text-on-surface-variant font-mono text-sm">Вакансия пропущена: <span class="text-on-surface">UI Designer @ CryptoStartup</span>. Причина: <span class="text-error italic">Несоответствие з/п ожиданий</span>.</p>
+</div>
+<div class="flex gap-4 items-start">
+<span class="text-primary-fixed-dim font-mono text-sm opacity-50 shrink-0">14:18:30</span>
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle">check_circle</span>
+<p class="text-on-surface-variant font-mono text-sm">Успешный отклик: <span class="text-on-surface">Middle+ Designer @ E-commerce Giant</span></p>
+</div>
+<div class="flex gap-4 items-start">
+<span class="text-primary-fixed-dim font-mono text-sm opacity-50 shrink-0">14:15:55</span>
+<span class="material-symbols-outlined text-primary text-lg" data-icon="verified_user">verified_user</span>
+<p class="text-on-surface-variant font-mono text-sm">Система готова. Начинаю сканирование новых лотов на LinkedIn и HH.ru...</p>
+</div>
+<div class="flex gap-4 items-start pt-4 border-t border-outline-variant/10">
+<span class="text-primary-fixed-dim font-mono text-sm opacity-50 shrink-0">&gt;</span>
+<div class="flex gap-1">
+<div class="w-2 h-4 bg-primary animate-pulse"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right: Rejection List (40%) -->
+<section class="lg:col-span-4 flex flex-col gap-6">
+<div class="flex items-center justify-between px-4">
+<h2 class="text-2xl font-bold">Отбракованные</h2>
+<span class="bg-surface-container-highest px-3 py-1 rounded-full text-xs font-bold text-on-surface-variant">21 ЗА СЕГОДНЯ</span>
+</div>
+<!-- Tabs Section with segment pill style -->
+<div class="bg-surface-container-low p-1 rounded-full flex items-center shadow-inner mx-4">
+<button class="flex-1 text-[10px] font-bold py-2 px-2 rounded-full bg-surface-container-highest text-on-surface shadow-sm transition-all whitespace-nowrap">Уже есть отклик</button>
+<button class="flex-1 text-[10px] font-bold py-2 px-2 rounded-full text-on-surface-variant hover:text-on-surface transition-all whitespace-nowrap">Не прошел ИИ</button>
+<button class="flex-1 text-[10px] font-bold py-2 px-2 rounded-full text-on-surface-variant hover:text-on-surface transition-all whitespace-nowrap">Есть тест</button>
+</div>
+<div class="space-y-4">
+<!-- Item 1 -->
+<div class="glass-panel p-6 rounded-xl group hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center overflow-hidden shrink-0">
+<img alt="Corporate abstract technology logo blue" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChi7di9r3x6EuqD4yzKzk9rvA1XNqZON0AA2mAuEdsxdzbjYXHs79dzP23s2jBNaJuZySpfSsdseFTm38DXJXmyoca-YVmFaf2BRDeIK7qmfjg6xAlKFjSdXA3DAlhop3--BC6pt6GQGjQcPjeGHgACVq3-qSE5nzuzq8o3ey78qVctD6rgd_IpjT1NhIs25JxCL6u7WhYDIwMXPYc5ge_Pwg03cO4eSo0Lqs3Ljqp0pn36jJCM6hAzPEmSCpAxtO3Wo4o-zp-WHs"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-bold text-on-surface group-hover:text-primary transition-colors">TechNova Solutions</h4>
+<span class="text-xs text-on-surface-variant">15 мин назад</span>
+</div>
+<p class="text-sm text-on-surface-variant mb-3">Senior Digital Architect</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-error/10 text-error text-[10px] font-bold uppercase tracking-wider rounded-full">Низкая зарплата</span>
+<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold uppercase tracking-wider rounded-full">Офис</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="glass-panel p-6 rounded-xl group hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center overflow-hidden shrink-0">
+<img alt="Abstract geometric colorful logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDniybp38RwDqa-QcoTVw0DE9D2Pe279Khufu-vQ9vcgeiKKEkjfNt3h0md8KeHTpR6cVqgZENFBDpPYY3XngFDkVrh_2UbO76HQpcfz2E5meWzJctBmrTRbbFo9EABkTPNWxqlUcNNkhmiG3bLhqJ3UfYSdbGKmqWoPeo67N7fWuJXsBBAa0o0DF1Y3Lz6vDw6o2xb-3SDR3YSDvrAFoaeUGrvks8_drbASt2q2Gq2Fq4yJbVPqefh64MUD7o3qq3T-gNuYmwFb8s"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-bold text-on-surface group-hover:text-primary transition-colors">Pixel Perfect Studio</h4>
+<span class="text-xs text-on-surface-variant">1 час назад</span>
+</div>
+<p class="text-sm text-on-surface-variant mb-3">UI Specialist (Web3)</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-error/10 text-error text-[10px] font-bold uppercase tracking-wider rounded-full">Стек: No React</span>
+<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold uppercase tracking-wider rounded-full">Аутсорс</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="glass-panel p-6 rounded-xl group hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center overflow-hidden shrink-0">
+<img alt="Minimalist bold corporate logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_kBrvbZDgDwIqYUfAInlIfg6oG8MEXzr3bBeBbKpKs8EvEUJd-uJ1KLHmM7AchFwzsDwUL331J0O1GBYyvrezmRFDqOFl_9SIIrkonslpxEQdL-jzBoPsxpeqa-J0P-hliy9UqnFl0CVNMeVVCM70mTZu2Pq6lji7ym8NP9Fxo1b44up7ZPe1ECdIHpo6phqCUzTZU7l0V98G_V5p74Dg7SyDLm059Ioy3AQrwqchAcdJNx2L6sTGfy-a_s8H71gQw-vovR9Vi_4"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-bold text-on-surface group-hover:text-primary transition-colors">DataCore Systems</h4>
+<span class="text-xs text-on-surface-variant">3 часа назад</span>
+</div>
+<p class="text-sm text-on-surface-variant mb-3">Product Lead</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-error/10 text-error text-[10px] font-bold uppercase tracking-wider rounded-full">Удалено по фильтру</span>
+<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold uppercase tracking-wider rounded-full">Gamble</span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full py-4 text-sm font-bold tracking-widest text-primary uppercase border border-primary/20 rounded-xl hover:bg-primary/5 transition-colors">
+                        Посмотреть весь архив
+                    </button>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer Shell -->
+<footer class="w-full py-12 border-t border-slate-100 dark:border-none bg-slate-50 dark:bg-[#100d17]">
+<div class="flex flex-col md:flex-row justify-between items-center px-12 gap-4 max-w-[1920px] mx-auto">
+<span class="text-xs font-['Inter'] uppercase tracking-widest text-slate-400 dark:text-[#37333e]">© 2024 Aurora Automation</span>
+<div class="flex gap-8">
+<a class="text-xs font-['Inter'] uppercase tracking-widest text-slate-400 dark:text-[#cac3d7] hover:text-[#5a30d0] dark:hover:text-[#ccbeff] transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="text-xs font-['Inter'] uppercase tracking-widest text-slate-400 dark:text-[#cac3d7] hover:text-[#5a30d0] dark:hover:text-[#ccbeff] transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+<a class="text-xs font-['Inter'] uppercase tracking-widest text-slate-400 dark:text-[#cac3d7] hover:text-[#5a30d0] dark:hover:text-[#ccbeff] transition-colors opacity-80 hover:opacity-100" href="#">API Docs</a>
+<a class="text-xs font-['Inter'] uppercase tracking-widest text-slate-400 dark:text-[#cac3d7] hover:text-[#5a30d0] dark:hover:text-[#ccbeff] transition-colors opacity-80 hover:opacity-100" href="#">Support</a>
+</div>
+</div>
+</footer>
+<!-- Ambient Cursor Glow Effect -->
+<div class="fixed pointer-events-none inset-0 z-[-1] overflow-hidden">
+<div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-secondary-container/5 rounded-full blur-[150px]"></div>
+</div>
+</body></html>

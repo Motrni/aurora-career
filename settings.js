@@ -182,6 +182,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Boolean Input
     document.getElementById("booleanQueryInput").addEventListener("input", () => checkVacancies());
 
+    // 9. Propagate auth params to Responses nav links
+    if (authMode === 'legacy' && legacyUserId && legacySign) {
+        const suffix = `?user_id=${legacyUserId}&sign=${legacySign}`;
+        const navResp = document.getElementById('nav-responses');
+        const navRespMob = document.getElementById('nav-responses-mobile');
+        if (navResp) navResp.href = `responses.html${suffix}`;
+        if (navRespMob) navRespMob.href = `responses.html${suffix}`;
+    }
+
 }); // End of DOMContentLoaded
 
 // --- TAB SWITCHING LOGIC ---

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Отклики | Аврора</title>
+<link rel="icon" type="image/png" href="favicon.png?v=3">
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.aurora-career.ru" crossorigin>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "outline": "#938ea0",
+                "on-secondary-container": "#c7aaff",
+                "on-secondary": "#3e0c85",
+                "primary-container": "#5a30d0",
+                "on-secondary-fixed": "#250059",
+                "tertiary": "#ccbeff",
+                "tertiary-fixed": "#e7deff",
+                "on-surface": "#e7e0ef",
+                "surface-container-low": "#1d1a24",
+                "on-primary-container": "#cec0ff",
+                "surface-bright": "#3b3743",
+                "surface-variant": "#37333e",
+                "background": "#15121c",
+                "on-error": "#690005",
+                "on-background": "#e7e0ef",
+                "inverse-primary": "#653edb",
+                "on-tertiary-container": "#cec0ff",
+                "tertiary-container": "#5a30d0",
+                "on-tertiary-fixed": "#1e0060",
+                "on-tertiary": "#350097",
+                "on-tertiary-fixed-variant": "#4c1bc3",
+                "on-secondary-fixed-variant": "#552d9c",
+                "primary-fixed": "#e7deff",
+                "surface-dim": "#15121c",
+                "on-primary-fixed": "#1e0060",
+                "surface-container-lowest": "#100d17",
+                "secondary-fixed": "#ebddff",
+                "primary-fixed-dim": "#ccbeff",
+                "on-surface-variant": "#cac3d7",
+                "surface": "#15121c",
+                "secondary-fixed-dim": "#d3bbff",
+                "secondary-container": "#58309f",
+                "on-primary-fixed-variant": "#4c1bc3",
+                "primary": "#ccbeff",
+                "inverse-on-surface": "#322f3a",
+                "error-container": "#93000a",
+                "tertiary-fixed-dim": "#ccbeff",
+                "surface-container-highest": "#37333e",
+                "error": "#ffb4ab",
+                "surface-container": "#211e29",
+                "on-primary": "#350097",
+                "surface-tint": "#ccbeff",
+                "surface-container-high": "#2c2833",
+                "outline-variant": "#484455",
+                "inverse-surface": "#e7e0ef",
+                "on-error-container": "#ffdad6",
+                "secondary": "#d3bbff"
+            },
+            fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+        },
+    },
+}
+</script>
+<style>
+html { scroll-behavior: smooth; color-scheme: dark; }
+body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0ef; min-width: 320px; overflow-x: hidden; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+
+.glass-panel {
+    background: rgba(55, 51, 62, 0.4);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+}
+
+.brand-logo-font {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+}
+
+.light-leak-tl { position: fixed; top: -10%; left: -5%; width: 40%; height: 40%; border-radius: 50%; background: rgba(204,190,255,0.05); filter: blur(120px); pointer-events: none; z-index: 0; }
+.light-leak-br { position: fixed; bottom: -10%; right: -5%; width: 30%; height: 30%; border-radius: 50%; background: rgba(211,187,255,0.05); filter: blur(100px); pointer-events: none; z-index: 0; }
+
+.terminal-scroll::-webkit-scrollbar { width: 4px; }
+.terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+.terminal-scroll::-webkit-scrollbar-thumb { background: #37333e; border-radius: 10px; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.live-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
+
+.burger-btn span { display: block; width: 24px; height: 2px; background: #e7e0ef; transition: all 0.3s ease; }
+.burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.burger-btn.active span:nth-child(2) { opacity: 0; }
+.burger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+.mobile-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+.mobile-menu.open { transform: translateX(0); }
+
+.rej-tab { transition: all 0.2s; }
+.rej-tab.active { background: #37333e; color: #e7e0ef; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.rej-tab:not(.active) { color: #cac3d7; }
+
+.skeleton {
+    background-color: #1e1e28;
+    background-image: linear-gradient(90deg, #1e1e28 0px, #2a2a35 40px, #1e1e28 80px);
+    background-size: 200px 100%;
+    background-repeat: no-repeat;
+    display: inline-block;
+    border-radius: 8px;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}
+.skeleton-block { width: 100%; display: block; }
+@keyframes skeleton-shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(100% + 200px) 0; } }
+
+.error-banner {
+    color: #f87171; font-size: 0.9rem; display: none; text-align: center;
+    background: rgba(248,113,113,0.08); padding: 10px; border-radius: 10px;
+    border: 1px solid rgba(248,113,113,0.2); margin-bottom: 16px;
+}
+</style>
+</head>
+
+<body class="min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary">
+
+<div class="light-leak-tl"></div>
+<div class="light-leak-br"></div>
+
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased flex justify-between items-center px-5 md:px-12 lg:px-16 h-16 md:h-20 max-w-none shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+    <div class="flex items-center gap-2 md:gap-3">
+        <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
+            <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
+            <div class="flex flex-col leading-tight">
+                <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
+                <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+            </div>
+        </a>
+    </div>
+    <div class="hidden md:flex items-center gap-8">
+        <a id="nav-settings" href="settings.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors">Настройки</a>
+        <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Отклики</span>
+    </div>
+    <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
+        <span></span><span></span><span></span>
+    </button>
+</nav>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
+    <a id="nav-settings-mobile" href="settings.html" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">Настройки</a>
+    <span class="text-on-surface text-base font-bold py-3.5 border-b border-white/5">Отклики</span>
+    <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">Вернуться на главную</a>
+</div>
+
+<main class="flex-grow pt-28 md:pt-32 pb-16 md:pb-24 px-4 md:px-8 lg:px-16 max-w-[1920px] mx-auto w-full relative z-10">
+
+    <div id="errorMsg" class="error-banner"></div>
+
+    <!-- Skeleton -->
+    <div id="globalSkeleton">
+        <div class="skeleton skeleton-block" style="height: 64px; margin-bottom: 20px; border-radius: 12px;"></div>
+        <div class="skeleton skeleton-block" style="height: 160px; margin-bottom: 20px; border-radius: 16px;"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6">
+            <div class="lg:col-span-6"><div class="skeleton skeleton-block" style="height: 500px; border-radius: 16px;"></div></div>
+            <div class="lg:col-span-4"><div class="skeleton skeleton-block" style="height: 500px; border-radius: 16px;"></div></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" style="display: none; animation: fadeIn 0.3s ease-in-out;" class="space-y-8 md:space-y-12">
+
+        <!-- Page Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div class="space-y-2">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tighter text-on-background">Управление откликами</h1>
+                <p class="text-on-surface-variant text-base md:text-lg max-w-xl">Интеллектуальная автоматизация поиска и взаимодействия с работодателями.</p>
+            </div>
+        </div>
+
+        <!-- Status Panel + Toggle -->
+        <section class="glass-panel p-6 md:p-10 rounded-xl flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative">
+            <div class="absolute -right-20 -top-20 w-64 h-64 bg-primary-container/10 rounded-full blur-[100px] transition-all duration-700"></div>
+            <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10 relative z-10 w-full md:w-auto">
+                <!-- Circle Progress -->
+                <div class="relative w-28 h-28 md:w-32 md:h-32 flex items-center justify-center shrink-0">
+                    <svg class="w-full h-full -rotate-90 block" viewBox="0 0 128 128">
+                        <circle class="text-surface-container-highest" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                        <circle id="progressCircle" class="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-width="8" style="transition: stroke-dashoffset 0.6s ease;"></circle>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span id="appliedCount" class="text-2xl md:text-3xl font-bold text-on-surface">0</span>
+                        <span class="text-[9px] md:text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Из <span id="dailyLimit">20</span></span>
+                    </div>
+                </div>
+                <div class="text-center md:text-left">
+                    <h3 class="text-xl md:text-2xl font-bold text-on-surface mb-1">Сделано откликов</h3>
+                    <p id="progressText" class="text-on-surface-variant">Автопилот неактивен</p>
+                </div>
+            </div>
+            <button id="toggleBtn" onclick="window.toggleAutopilot()" class="relative group px-8 md:px-10 py-4 md:py-5 rounded-xl bg-primary-container overflow-hidden transition-all duration-300 active:scale-95 shadow-[0_0_40px_rgba(90,48,208,0.3)] hover:shadow-[0_0_60px_rgba(90,48,208,0.5)] shrink-0">
+                <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span class="relative z-10 font-bold text-base md:text-lg text-white flex items-center gap-3">
+                    <span id="toggleBtnText">Запустить автопилот</span>
+                    <span id="toggleBtnIcon" class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                </span>
+            </button>
+        </section>
+
+        <!-- Main Grid: Log + Rejected -->
+        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 md:gap-8">
+
+            <!-- Left: Live Log (60%) -->
+            <section class="lg:col-span-6 flex flex-col gap-4 md:gap-6">
+                <div class="flex items-center justify-between px-1 md:px-4">
+                    <h2 class="text-xl md:text-2xl font-bold flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary">terminal</span>
+                        Отчет автопилота
+                    </h2>
+                    <div id="liveIndicator" class="flex gap-2 items-center" style="display: none;">
+                        <div class="h-2 w-2 rounded-full bg-error live-dot"></div>
+                        <span class="text-xs font-medium text-on-surface-variant">LIVE</span>
+                    </div>
+                </div>
+                <div class="bg-surface-container-lowest rounded-xl p-4 md:p-8 min-h-[400px] md:min-h-[500px] flex flex-col border border-outline-variant/10 shadow-2xl">
+                    <div id="logContainer" class="terminal-scroll flex-1 overflow-y-auto space-y-3 md:space-y-4 pr-2 md:pr-4 max-h-[500px]">
+                        <div id="logEmpty" class="flex items-center justify-center h-full text-on-surface-variant/50 text-sm">
+                            <div class="text-center space-y-2">
+                                <span class="material-symbols-outlined text-4xl">rocket_launch</span>
+                                <p>Запустите автопилот, чтобы увидеть отчет</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right: Rejected (40%) -->
+            <section class="lg:col-span-4 flex flex-col gap-4 md:gap-6">
+                <div class="flex items-center justify-between px-1 md:px-4">
+                    <h2 class="text-xl md:text-2xl font-bold">Отбракованные</h2>
+                    <span id="rejectedBadge" class="bg-surface-container-highest px-3 py-1 rounded-full text-xs font-bold text-on-surface-variant">0</span>
+                </div>
+                <!-- Category Tabs -->
+                <div class="bg-surface-container-low p-1 rounded-full flex items-center shadow-inner mx-1 md:mx-4">
+                    <button class="rej-tab active flex-1 text-[10px] font-bold py-2 px-2 rounded-full transition-all whitespace-nowrap" data-cat="already_applied" onclick="switchRejTab(this)">Уже есть отклик</button>
+                    <button class="rej-tab flex-1 text-[10px] font-bold py-2 px-2 rounded-full transition-all whitespace-nowrap" data-cat="ai_low" onclick="switchRejTab(this)">Не прошел ИИ</button>
+                    <button class="rej-tab flex-1 text-[10px] font-bold py-2 px-2 rounded-full transition-all whitespace-nowrap" data-cat="has_test" onclick="switchRejTab(this)">Есть тест</button>
+                </div>
+                <div id="rejectedList" class="space-y-3 md:space-y-4 px-1 md:px-0">
+                    <div id="rejectedEmpty" class="glass-panel p-8 rounded-xl text-center text-on-surface-variant/50 text-sm">
+                        <span class="material-symbols-outlined text-3xl mb-2 block">filter_alt</span>
+                        Здесь появятся вакансии, не прошедшие фильтры
+                    </div>
+                </div>
+                <button id="loadMoreBtn" style="display: none;" onclick="loadMoreRejected()" class="w-full py-3 md:py-4 text-sm font-bold tracking-widest text-primary uppercase border border-primary/20 rounded-xl hover:bg-primary/5 transition-colors">
+                    Загрузить ещё
+                </button>
+            </section>
+
+        </div><!-- end grid -->
+
+        <!-- Return Button -->
+        <div class="mt-4 md:mt-8">
+            <button id="returnBtn" class="w-full md:w-auto px-8 py-3 md:py-4 rounded-xl text-on-surface-variant font-semibold hover:bg-surface-container-highest transition-all border border-outline-variant/10 text-sm md:text-base">Вернуться в Аврору</button>
+        </div>
+
+    </div><!-- end mainContent -->
+
+</main>
+
+<!-- Footer -->
+<footer class="mt-auto w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
+    <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+        <div class="flex flex-col items-center md:items-start gap-2">
+            <div class="flex items-center gap-2 md:gap-3">
+                <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-base md:text-lg text-[#ccbeff]">Аврора</div>
+                    <div class="text-[8px] md:text-[9px] text-[#cac3d7]/70 font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </div>
+            <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Аврора</div>
+        </div>
+        <div class="flex gap-6 md:gap-8 font-['Inter'] text-[10px] md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em]">
+            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500" href="https://aurora-career.ru/" target="_blank">Главная</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+function toggleMobileMenu() {
+    document.getElementById('burger-btn').classList.toggle('active');
+    document.getElementById('mobile-menu').classList.toggle('open');
+    document.body.classList.toggle('overflow-hidden');
+}
+</script>
+
+<script src="responses.js?v=1.0"></script>
+
+</body>
+</html>
