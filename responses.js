@@ -553,7 +553,7 @@ function prependRejectedCard(evt) {
 
 function createRejectedCard(item) {
     const card = document.createElement("div");
-    card.className = "glass-panel p-4 md:p-6 rounded-xl group hover:bg-surface-container-highest transition-all cursor-pointer";
+    card.className = "glass-panel p-3 md:p-4 rounded-xl group hover:bg-surface-container-highest transition-all cursor-pointer";
 
     const vacId = item.vacancy_id;
     const hhUrl = vacId ? `https://hh.ru/vacancy/${vacId}` : '#';
@@ -562,28 +562,28 @@ function createRejectedCard(item) {
     const reasoning = item.details?.reasoning;
     const time = item.created_at ? timeAgo(new Date(item.created_at)) : '';
 
-    let tagsHtml = `<span class="px-3 py-1 bg-error/10 text-error text-[10px] font-bold uppercase tracking-wider rounded-full">${esc(reason)}</span>`;
+    let tagsHtml = `<span class="px-2 py-0.5 bg-error/10 text-error text-[9px] font-bold uppercase tracking-wider rounded-full">${esc(reason)}</span>`;
     if (score !== undefined && score !== null) {
-        tagsHtml += `<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold uppercase tracking-wider rounded-full">Score: ${score}%</span>`;
+        tagsHtml += `<span class="px-2 py-0.5 bg-surface-container-highest text-on-surface-variant text-[9px] font-bold uppercase tracking-wider rounded-full">${score}%</span>`;
     }
 
     let reasoningHtml = '';
     if (reasoning) {
-        reasoningHtml = `<p class="text-[11px] text-on-surface-variant/60 mt-2 line-clamp-2 italic">${esc(reasoning)}</p>`;
+        reasoningHtml = `<p class="text-[10px] text-on-surface-variant/60 mt-1.5 line-clamp-2 italic">${esc(reasoning)}</p>`;
     }
 
     card.innerHTML = `
-        <a href="${hhUrl}" target="_blank" rel="noopener" class="flex items-start gap-3 md:gap-4 no-underline">
-            <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-on-surface-variant text-xl md:text-2xl">work_outline</span>
+        <a href="${hhUrl}" target="_blank" rel="noopener" class="flex items-center gap-3 no-underline">
+            <div class="w-8 h-8 rounded-md bg-surface-container-highest flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-on-surface-variant text-base">work_outline</span>
             </div>
             <div class="flex-1 min-w-0">
-                <div class="flex justify-between items-start mb-1 gap-2">
-                    <h4 class="font-bold text-on-surface group-hover:text-primary transition-colors text-sm md:text-base truncate">${esc(item.employer_name || 'Компания')}</h4>
-                    <span class="text-[10px] md:text-xs text-on-surface-variant shrink-0">${time}</span>
+                <div class="flex justify-between items-center gap-2">
+                    <h4 class="font-semibold text-on-surface group-hover:text-primary transition-colors text-xs md:text-sm truncate">${esc(item.employer_name || 'Компания')}</h4>
+                    <span class="text-[9px] text-on-surface-variant shrink-0">${time}</span>
                 </div>
-                <p class="text-xs md:text-sm text-on-surface-variant mb-2 md:mb-3 truncate">${esc(item.vacancy_name || 'Вакансия')}</p>
-                <div class="flex flex-wrap gap-1.5 md:gap-2">${tagsHtml}</div>
+                <p class="text-[11px] md:text-xs text-on-surface-variant truncate">${esc(item.vacancy_name || 'Вакансия')}</p>
+                <div class="flex flex-wrap gap-1 mt-1">${tagsHtml}</div>
                 ${reasoningHtml}
             </div>
         </a>

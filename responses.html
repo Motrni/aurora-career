@@ -105,6 +105,12 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 .live-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
 
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+
 .burger-btn span { display: block; width: 24px; height: 2px; background: #e7e0ef; transition: all 0.3s ease; }
 .burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
 .burger-btn.active span:nth-child(2) { opacity: 0; }
@@ -261,7 +267,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                     <button class="rej-tab flex-1 text-[10px] font-bold py-2 px-2 rounded-full transition-all whitespace-nowrap" data-cat="ai_low" onclick="switchRejTab(this)">Не прошел ИИ</button>
                     <button class="rej-tab flex-1 text-[10px] font-bold py-2 px-2 rounded-full transition-all whitespace-nowrap" data-cat="has_test" onclick="switchRejTab(this)">Есть тест</button>
                 </div>
-                <div id="rejectedList" class="space-y-3 md:space-y-4 px-1 md:px-0">
+                <div id="rejectedList" class="space-y-2 md:space-y-3 px-1 md:px-0 max-h-[420px] overflow-y-auto scrollbar-thin">
                     <div id="rejectedEmpty" class="glass-panel p-8 rounded-xl text-center text-on-surface-variant/50 text-sm">
                         <span class="material-symbols-outlined text-3xl mb-2 block">filter_alt</span>
                         Здесь появятся вакансии, не прошедшие фильтры
@@ -310,7 +316,7 @@ function toggleMobileMenu() {
 }
 </script>
 
-<script src="responses.js?v=2.0"></script>
+<script src="responses.js?v=3.0"></script>
 
 </body>
 </html>
