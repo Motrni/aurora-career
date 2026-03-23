@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-primary-container": "#cec0ff",
+            "primary-fixed": "#e7deff",
+            "inverse-surface": "#e7e0ef",
+            "inverse-primary": "#653edb",
+            "outline": "#938ea0",
+            "tertiary-fixed": "#e7deff",
+            "on-surface-variant": "#cac3d7",
+            "on-secondary-fixed": "#250059",
+            "background": "#15121c",
+            "on-error": "#690005",
+            "on-primary-fixed-variant": "#4c1bc3",
+            "secondary-fixed": "#ebddff",
+            "secondary": "#d3bbff",
+            "outline-variant": "#484455",
+            "on-primary-fixed": "#1e0060",
+            "on-secondary-container": "#c7aaff",
+            "surface-container-highest": "#37333e",
+            "on-tertiary-container": "#cec0ff",
+            "on-secondary": "#3e0c85",
+            "tertiary-fixed-dim": "#ccbeff",
+            "on-primary": "#350097",
+            "surface-container-lowest": "#100d17",
+            "surface-container": "#211e29",
+            "on-tertiary": "#350097",
+            "secondary-container": "#58309f",
+            "tertiary": "#ccbeff",
+            "primary-fixed-dim": "#ccbeff",
+            "on-tertiary-fixed": "#1e0060",
+            "surface": "#15121c",
+            "on-error-container": "#ffdad6",
+            "inverse-on-surface": "#322f3a",
+            "tertiary-container": "#5a30d0",
+            "error": "#ffb4ab",
+            "surface-dim": "#15121c",
+            "primary-container": "#5a30d0",
+            "surface-tint": "#ccbeff",
+            "secondary-fixed-dim": "#d3bbff",
+            "surface-container-high": "#2c2833",
+            "surface-container-low": "#1d1a24",
+            "primary": "#ccbeff",
+            "on-surface": "#e7e0ef",
+            "on-background": "#e7e0ef",
+            "on-secondary-fixed-variant": "#552d9c",
+            "surface-variant": "#37333e",
+            "surface-bright": "#3b3743",
+            "error-container": "#93000a",
+            "on-tertiary-fixed-variant": "#4c1bc3"
+          },
+          fontFamily: {
+            "headline": ["Inter"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #15121c;
+      font-family: 'Inter', sans-serif;
+      color: #e7e0ef;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-effect {
+      background: rgba(55, 51, 62, 0.4);
+      backdrop-filter: blur(40px);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #5a30d0;
+      border-radius: 10px;
+    }
+    /* Indeterminate state simulation for custom styling */
+    input:indeterminate {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 16'%3E%3Cpath stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8h8'/%3E%3C/svg%3E");
+      background-color: #5a30d0;
+      border-color: #5a30d0;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-primary-container selection:text-white">
+<!-- Shared Component: TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+<div class="flex justify-between items-center px-12 h-20 w-full max-w-screen-2xl mx-auto font-['Inter'] tracking-tight antialiased">
+<div class="flex items-center gap-3">
+<img alt="Aurora Logo" class="w-8 h-8 invert" src="https://lh3.googleusercontent.com/aida/ADBb0uiRV09rtA_1AmoDsYEsg4kaeYz0pxwxV79ZJkx030BwyjiE6c4B-osPJsjUTPCTB4ItbFPm-wdHsjnXkMhxn5EolzIAqJdCX4rdNb4mwvi9cFEoc7pg6if-z4fx1Zc2gWIOqUzlohvTFhh0vLBUo5FVypIfGYwAe0huSCJh1FOaMf5cgGXebNeFESxP7yNDwyx0ANOKhkZOEkEYPiun_b_UWFNKGb2bo0yOH3Pxxh3diAL1vBrTn_3ill67DwLOWv0VWWu25Ox2Eg"/>
+<div class="text-2xl font-bold tracking-tighter text-[#e7e0ef] uppercase">AURORA</div>
+</div>
+<nav class="hidden md:flex items-center gap-10">
+<a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#">Opportunities</a>
+<a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#">Insights</a>
+<a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#">Network</a>
+<a class="text-[#cac3d7] hover:text-[#e7e0ef] transition-colors" href="#">Archive</a>
+</nav>
+<div class="flex items-center gap-6">
+<button class="p-2 hover:bg-[#37333e]/30 rounded-full transition-all duration-300 active:scale-95">
+<span class="material-symbols-outlined text-[#ccbeff]">light_mode</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/30">
+<img alt="User profile avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBa05bkEb--INA6Nb5UVzjTbI-53yW3vcf87jJ7K8Cll2Cs3HB4MsNLXfOK-4ZYUh2i8YlCq3PpLI9EQwK87ylNqXm9K3RQHLtGWuIUB02hvBB2LXERy6e4x0gPDKmmDwt5wGiFnaf9H2vOe_b4BgxZyUuI4HzeiDlmalHGIvFtNTCVP81D5r3rIFtAl5fzHjrdexGVju1EgUBpM7UKQfP6J3z-2_U_SFhlhWiLkGkJOAW0fL_ScnFL2BtusTrMqVVjDg6zK0KuPw"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow pt-32 pb-24 px-6 md:px-12 max-w-screen-2xl mx-auto w-full">
+<!-- Header Section -->
+<div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-8">
+<div>
+<a class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors mb-4 group" href="#">
+<span class="material-symbols-outlined text-sm transition-transform group-hover:-translate-x-1">arrow_back</span>
+          Return to Aurora
+        </a>
+<h1 class="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface">Настройки поиска</h1>
+</div>
+<div class="p-1.5 bg-surface-container-low rounded-full flex self-start">
+<button class="px-8 py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg">Search Settings</button>
+<button class="px-8 py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all">Response Settings</button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Zone 1 & Advanced Search -->
+<div class="lg:col-span-8 space-y-12">
+<!-- Zone 1: Top Section with 3 Distinct Vertical Columns -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Column 1: Experience -->
+<section class="p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
+<h2 class="text-sm font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
+              Опыт работы
+            </h2>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<input checked="" class="w-5 h-5 text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0" name="exp" type="radio"/>
+<span class="text-on-surface/80 group-hover:text-on-surface text-sm">Без опыта</span>
+</label>
+<label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<input class="w-5 h-5 text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0" name="exp" type="radio"/>
+<span class="text-on-surface/80 group-hover:text-on-surface text-sm">От 1 до 3 лет</span>
+</label>
+<label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<input class="w-5 h-5 text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0" name="exp" type="radio"/>
+<span class="text-on-surface/80 group-hover:text-on-surface text-sm">От 3 до 6 лет</span>
+</label>
+<label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<input class="w-5 h-5 text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0" name="exp" type="radio"/>
+<span class="text-on-surface/80 group-hover:text-on-surface text-sm">Более 6 лет</span>
+</label>
+</div>
+</section>
+<!-- Column 2: Desired Salary -->
+<section class="p-6 rounded-2xl bg-surface-container-low/60 border border-outline-variant/10 backdrop-blur-md space-y-4">
+<h2 class="text-sm font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
+              Желаемая зарплата
+            </h2>
+<div class="space-y-6">
+<label class="flex items-center justify-between p-3 rounded-xl bg-surface-container-high/40 cursor-pointer group">
+<span class="text-on-surface/80 text-xs font-semibold">Не указана</span>
+<div class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" onchange="const input = document.getElementById('salaryInput'); if(this.checked){ input.classList.add('opacity-40', 'pointer-events-none'); input.disabled=true; } else { input.classList.remove('opacity-40', 'pointer-events-none'); input.disabled=false; }" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-outline after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container peer-checked:after:bg-white"></div>
+</div>
+</label>
+<div class="relative" id="salaryInputContainer">
+<input class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-lg font-bold focus:ring-2 focus:ring-primary-container transition-all text-on-surface placeholder:text-outline-variant" id="salaryInput" placeholder="120 000" type="text"/>
+<span class="block mt-2 text-[9px] uppercase tracking-widest text-on-surface-variant font-bold text-right">RUB / month</span>
+</div>
+</div>
+</section>
+<!-- Column 3: Work Schedule -->
+<section class="p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
+<h2 class="text-sm font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
+              График работы
+            </h2>
+<div class="grid grid-cols-2 gap-2">
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-primary-container/10 border border-primary-container/30 text-primary transition-all hover:bg-primary-container/20">
+<span class="material-symbols-outlined text-xl mb-1">home_work</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Remote</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40 border border-outline-variant/5 text-on-surface-variant hover:text-on-surface transition-all hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-xl mb-1">apartment</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Office</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40 border border-outline-variant/5 text-on-surface-variant hover:text-on-surface transition-all hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-xl mb-1">diversity_3</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Hybrid</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40 border border-outline-variant/5 text-on-surface-variant hover:text-on-surface transition-all hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-xl mb-1">flight_takeoff</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Trips</span>
+</button>
+</div>
+</section>
+</div>
+<!-- Advanced Search -->
+<section class="space-y-4 p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+<div class="flex justify-between items-center mb-2">
+<h2 class="text-lg font-bold tracking-tight text-on-surface/80">Advanced Search</h2>
+<div class="flex bg-surface-container-high p-1 rounded-lg">
+<button class="px-4 py-1.5 text-xs font-bold rounded-md bg-surface-container-highest text-primary">Simple</button>
+<button class="px-4 py-1.5 text-xs font-bold rounded-md text-on-surface-variant hover:text-on-surface">Boolean</button>
+</div>
+</div>
+<textarea class="w-full bg-surface-container-high border-none rounded-xl p-6 text-on-surface focus:ring-2 focus:ring-primary-container resize-none placeholder:text-outline-variant transition-all" placeholder="Enter keywords, skills, or boolean operators..." rows="4"></textarea>
+<p class="text-xs text-on-surface-variant/60 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">info</span>
+            Use 'AND', 'OR', 'NOT' for precise results in boolean mode.
+          </p>
+</section>
+</div>
+<!-- Right Column: Analytics & Multi-select Filters (Zone 2 & 3) -->
+<div class="lg:col-span-4 space-y-8">
+<!-- Found Vacancies Card (Prominent Summary) -->
+<div class="p-8 rounded-2xl bg-gradient-to-br from-primary-container to-secondary-container text-white shadow-2xl relative overflow-hidden group">
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-150 duration-700"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-2">
+<span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+<span class="text-xs font-bold tracking-widest uppercase opacity-80">Live Update</span>
+</div>
+<div class="text-6xl font-black tracking-tighter mb-1">142</div>
+<div class="text-lg font-medium opacity-90">Найдено вакансий</div>
+<div class="mt-6 pt-6 border-t border-white/10 flex justify-between items-center">
+<span class="text-sm opacity-70">Updated 2 min ago</span>
+<button class="text-sm font-bold flex items-center gap-1 hover:underline">View all <span class="material-symbols-outlined text-sm">arrow_forward</span></button>
+</div>
+</div>
+</div>
+<!-- Zone 2: Region Search -->
+<section class="space-y-4 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+<h2 class="text-sm font-bold tracking-widest text-on-surface-variant uppercase">Регион поиска</h2>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">search</span>
+<input class="w-full bg-surface-container-high border-none rounded-xl py-3 pl-12 pr-4 text-on-surface focus:ring-2 focus:ring-primary-container text-sm" placeholder="Search city or country..." type="text"/>
+</div>
+<!-- Scrollable Container for Regions -->
+<div class="space-y-1 mt-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface/80 group-hover:text-primary transition-colors text-sm">Russia</span>
+<input checked="" class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface/80 group-hover:text-primary transition-colors text-sm">Kazakhstan</span>
+<input class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface/80 group-hover:text-primary transition-colors text-sm">Belarus</span>
+<input class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface/80 group-hover:text-primary transition-colors text-sm">Georgia</span>
+<input class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface/80 group-hover:text-primary transition-colors text-sm">Armenia</span>
+<input class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface/80 group-hover:text-primary transition-colors text-sm">Uzbekistan</span>
+<input class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+</div>
+</section>
+<!-- Zone 3: Company Industries -->
+<section class="space-y-4 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+<h2 class="text-sm font-bold tracking-widest text-on-surface-variant uppercase">Отрасли компаний</h2>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">search</span>
+<input class="w-full bg-surface-container-high border-none rounded-xl py-3 pl-12 pr-4 text-on-surface focus:ring-2 focus:ring-primary-container text-sm" placeholder="Filter industries..." type="text"/>
+</div>
+<div class="space-y-2 mt-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+<!-- IT & Technologies with Subcategories -->
+<div class="space-y-1">
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface text-sm font-bold">IT &amp; Technologies</span>
+<input class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" id="parent-it" type="checkbox"/>
+</label>
+<div class="pl-6 space-y-1 border-l border-outline-variant/20 ml-4 mt-1">
+<label class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface-variant group-hover:text-on-surface text-xs">Software Development</span>
+<input checked="" class="it-sub w-3.5 h-3.5 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface-variant group-hover:text-on-surface text-xs">Cybersecurity</span>
+<input class="it-sub w-3.5 h-3.5 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface-variant group-hover:text-on-surface text-xs">Cloud Computing</span>
+<input class="it-sub w-3.5 h-3.5 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Finance with Subcategories -->
+<div class="space-y-1">
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface/80 text-sm font-bold">Finance</span>
+<input class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+</div>
+<!-- Design & Art -->
+<div class="space-y-1">
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface/80 text-sm font-bold">Design &amp; Art</span>
+<input class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+</div>
+<!-- Marketing -->
+<div class="space-y-1">
+<label class="flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="text-on-surface/80 text-sm font-bold">Marketing</span>
+<input class="w-4 h-4 rounded-sm text-primary-container bg-surface-container-highest border-none focus:ring-0 focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="mt-16 flex flex-col md:flex-row items-center justify-between gap-6 p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+<span class="material-symbols-outlined">verified</span>
+</div>
+<div>
+<h4 class="font-bold">Настройки актуальны</h4>
+<p class="text-sm text-on-surface-variant">Last saved Oct 24, 2024</p>
+</div>
+</div>
+<div class="flex gap-4 w-full md:w-auto">
+<button class="flex-grow md:flex-none px-8 py-4 rounded-xl text-on-surface-variant font-bold hover:bg-surface-container-highest transition-all">Без изменений</button>
+<button class="flex-grow md:flex-none px-12 py-4 rounded-xl bg-primary-container text-on-primary-container font-bold shadow-xl shadow-primary-container/20 hover:scale-105 transition-all">Сохранить изменения</button>
+</div>
+</div>
+</main>
+<!-- Shared Component: Footer -->
+<footer class="w-full py-12 px-12 mt-auto bg-[#100d17] bg-gradient-to-t from-[#100d17] to-[#15121c]">
+<div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<p class="text-sm font-medium tracking-wide text-[#cac3d7]">© 2024 Aurora Career. All rights reserved.</p>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-sm font-medium tracking-wide text-[#cac3d7] hover:text-[#e7e0ef] underline-offset-4 hover:underline transition-opacity duration-200" href="#">Privacy Policy</a>
+<a class="text-sm font-medium tracking-wide text-[#cac3d7] hover:text-[#e7e0ef] underline-offset-4 hover:underline transition-opacity duration-200" href="#">Terms of Service</a>
+<a class="text-sm font-medium tracking-wide text-[#cac3d7] hover:text-[#e7e0ef] underline-offset-4 hover:underline transition-opacity duration-200" href="#">Cookie Settings</a>
+</div>
+</div>
+</footer>
+<script>
+  // Simple logic to handle indeterminate state for IT & Tech category visually
+  const parentCheck = document.getElementById('parent-it');
+  const childChecks = document.querySelectorAll('.it-sub');
+  
+  function updateParent() {
+    const checkedCount = Array.from(childChecks).filter(c => c.checked).length;
+    if (checkedCount === 0) {
+      parentCheck.checked = false;
+      parentCheck.indeterminate = false;
+    } else if (checkedCount === childChecks.length) {
+      parentCheck.checked = true;
+      parentCheck.indeterminate = false;
+    } else {
+      parentCheck.checked = false;
+      parentCheck.indeterminate = true;
+    }
+  }
+
+  childChecks.forEach(child => {
+    child.addEventListener('change', updateParent);
+  });
+  
+  // Initial run
+  updateParent();
+</script>
+</body></html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "outline": "#938ea0",
+                        "on-surface-variant": "#cac3d7",
+                        "on-secondary-fixed-variant": "#552d9c",
+                        "on-background": "#e7e0ef",
+                        "tertiary-fixed": "#e7deff",
+                        "surface-variant": "#37333e",
+                        "on-tertiary-container": "#cec0ff",
+                        "on-primary-fixed": "#1e0060",
+                        "surface-container-highest": "#37333e",
+                        "on-primary": "#350097",
+                        "tertiary-fixed-dim": "#ccbeff",
+                        "primary": "#ccbeff",
+                        "tertiary-container": "#5a30d0",
+                        "on-primary-fixed-variant": "#4c1bc3",
+                        "on-tertiary-fixed": "#1e0060",
+                        "secondary": "#d3bbff",
+                        "primary-container": "#5a30d0",
+                        "on-secondary-fixed": "#250059",
+                        "outline-variant": "#484455",
+                        "secondary-fixed-dim": "#d3bbff",
+                        "on-error-container": "#ffdad6",
+                        "inverse-primary": "#653edb",
+                        "primary-fixed-dim": "#ccbeff",
+                        "on-tertiary-fixed-variant": "#4c1bc3",
+                        "on-secondary": "#3e0c85",
+                        "surface-container-lowest": "#100d17",
+                        "tertiary": "#ccbeff",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#cec0ff",
+                        "inverse-surface": "#e7e0ef",
+                        "surface-tint": "#ccbeff",
+                        "secondary-fixed": "#ebddff",
+                        "surface-bright": "#3b3743",
+                        "background": "#15121c",
+                        "surface-container-low": "#1d1a24",
+                        "secondary-container": "#58309f",
+                        "primary-fixed": "#e7deff",
+                        "surface-dim": "#15121c",
+                        "surface-container": "#211e29",
+                        "on-tertiary": "#350097",
+                        "on-surface": "#e7e0ef",
+                        "on-secondary-container": "#c7aaff",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "inverse-on-surface": "#322f3a",
+                        "surface-container-high": "#2c2833",
+                        "surface": "#15121c"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #15121c;
+            color: #e7e0ef;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(55, 51, 62, 0.4);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+<div class="flex justify-between items-center px-8 py-4 w-full max-w-[1440px] mx-auto">
+<div class="text-2xl font-black tracking-tighter text-[#ccbeff]">Aurora Career</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-8">
+<a class="text-[#cac3d7] hover:bg-[#37333e] hover:text-white transition-all duration-300 px-3 py-1 rounded-full text-sm font-medium" href="#">Возможности</a>
+<a class="text-[#cac3d7] hover:bg-[#37333e] hover:text-white transition-all duration-300 px-3 py-1 rounded-full text-sm font-medium" href="#">Аналитика</a>
+<a class="text-[#cac3d7] hover:bg-[#37333e] hover:text-white transition-all duration-300 px-3 py-1 rounded-full text-sm font-medium" href="#">Сеть</a>
+<a class="text-[#ccbeff] font-bold px-3 py-1 rounded-full text-sm" href="#">Настройки</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-[#37333e] transition-all text-[#ccbeff]">
+<span class="material-symbols-outlined">light_mode</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-[#5a30d0]/30">
+<img alt="User Profile" data-alt="Close up of a professional user profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAutf5U9-FCKEnW41nFZsswJUdHsry_WbrZRmAxTBX_FnkeRlg_EygGI68D6t2AHsWlSx1MD9rd_mw1Nypj4bq6ev1xYSGcGLyLQDsTHBdrz02k4nJn8P1ck10g_s7F0aQdxnx9x6S1Nrf5pB2KWmq2coirBk01pVyrMTt61Wcq_PT778uukv8it_1zLhtT6Q3K5DUUySL9N4xUKw-4vhEN9b3GCeXaYiSf57fEUJDiBT1hUEFLWmsy2U9F4tc4XZzPj7DcOw7mZkg"/>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow pt-32 pb-20 px-6 max-w-5xl mx-auto w-full">
+<!-- Breadcrumbs / Section Title -->
+<div class="mb-12">
+<h1 class="text-5xl font-extrabold tracking-tighter text-on-background mb-4">Настройки откликов</h1>
+<p class="text-on-surface-variant text-lg max-w-2xl">Персонализируйте ваши автоматические сопроводительные письма для достижения максимального эффекта.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+<!-- Settings Form -->
+<div class="lg:col-span-7 space-y-8">
+<!-- AI Switch Card -->
+<div class="glass-panel p-8 rounded-xl shadow-2xl">
+<div class="flex items-center justify-between">
+<div class="space-y-1">
+<h3 class="text-xl font-bold text-on-background">Использовать стандартное (AI) начало и конец</h3>
+<p class="text-sm text-on-surface-variant">Нейросеть сама подберет идеальное приветствие и подпись</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-14 h-7 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+<!-- Custom Fields (Hidden when AI is ON) -->
+<!-- For demo purposes, we will show them with an opacity/focus shift to represent the logic request -->
+<div class="space-y-6 opacity-40 grayscale pointer-events-none transition-all duration-500" id="custom-fields">
+<div class="space-y-3">
+<label class="text-sm font-semibold uppercase tracking-widest text-primary-fixed-dim px-1">Приветствие</label>
+<textarea class="w-full bg-surface-container-high border-none rounded-lg p-5 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 min-h-[100px] transition-all" placeholder="Например: Здравствуйте, уважаемый менеджер по найму! Меня очень заинтересовала ваша вакансия..."></textarea>
+</div>
+<div class="space-y-3">
+<label class="text-sm font-semibold uppercase tracking-widest text-primary-fixed-dim px-1">Подпись</label>
+<textarea class="w-full bg-surface-container-high border-none rounded-lg p-5 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 min-h-[100px] transition-all" placeholder="Например: С уважением, Алексей. Буду рад обсудить мой опыт на собеседовании."></textarea>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="flex items-center gap-4 pt-4">
+<button class="px-8 py-4 bg-gradient-to-r from-primary-container to-secondary-container text-on-primary-container rounded-full font-bold text-lg shadow-[0_10px_30px_rgba(90,48,208,0.3)] hover:scale-[1.02] active:scale-95 transition-all">
+                        Сохранить изменения
+                    </button>
+<button class="px-8 py-4 bg-transparent border border-outline-variant text-on-surface-variant rounded-full font-medium hover:bg-surface-variant transition-all">
+                        Сбросить
+                    </button>
+</div>
+</div>
+<!-- Preview Block -->
+<div class="lg:col-span-5">
+<div class="sticky top-32">
+<div class="flex items-center gap-2 mb-4 px-2">
+<span class="material-symbols-outlined text-primary">visibility</span>
+<h2 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">Предпросмотр</h2>
+</div>
+<div class="relative group">
+<!-- Decorative glow -->
+<div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary opacity-10 blur-2xl group-hover:opacity-20 transition duration-1000"></div>
+<div class="relative glass-panel rounded-xl p-8 border border-white/5 shadow-inner">
+<div class="flex gap-2 mb-6">
+<div class="w-3 h-3 rounded-full bg-red-500/20"></div>
+<div class="w-3 h-3 rounded-full bg-yellow-500/20"></div>
+<div class="w-3 h-3 rounded-full bg-green-500/20"></div>
+</div>
+<div class="space-y-6 text-sm leading-relaxed text-on-surface-variant">
+<!-- AI Content (Highlighted/Dynamic) -->
+<div class="p-4 rounded-lg bg-primary-container/10">
+<p class="italic text-primary-fixed-dim">
+                                        [AI Приветствие]: Здравствуйте! Анализ вакансии "Frontend Developer" показывает, что мой стек идеально подходит под ваши требования...
+                                    </p>
+</div>
+<p>Я внимательно изучил описание позиции в Aurora Tech. Мой 5-летний опыт работы с React и Node.js позволит мне эффективно решать задачи вашей команды. Особенно меня впечатлили ваши недавние кейсы в области Web3.</p>
+<div class="p-4 rounded-lg bg-primary-container/10">
+<p class="italic text-primary-fixed-dim">
+                                        [AI Подпись]: С наилучшими пожеланиями, ваш будущий коллега. Готов к техническому интервью в любое удобное время.
+                                    </p>
+</div>
+</div>
+<!-- Image Context Placeholder -->
+<div class="mt-8 pt-8 border-t border-white/5 flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">description</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-background">CV_Frontend_Lead.pdf</p>
+<p class="text-[10px] text-outline uppercase tracking-tight">Прикреплено к отклику</p>
+</div>
+</div>
+</div>
+</div>
+<p class="mt-6 text-xs text-center text-outline px-4">
+                        Это пример того, как ваш отклик будет выглядеть для рекрутера. Текст в рамках генерируется динамически.
+                    </p>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="mt-auto w-full py-12 px-8 bg-[#15121c] border-t border-[#37333e]/10">
+<div class="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="text-xs uppercase tracking-widest Inter text-[#cac3d7] opacity-80">
+                © 2024 Aurora Career. Все права защищены.
+            </div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-xs uppercase tracking-widest Inter text-[#cac3d7] hover:text-white underline-offset-4 hover:underline transition-all" href="#">Политика конфиденциальности</a>
+<a class="text-xs uppercase tracking-widest Inter text-[#cac3d7] hover:text-white underline-offset-4 hover:underline transition-all" href="#">Условия использования</a>
+<a class="text-xs uppercase tracking-widest Inter text-[#cac3d7] hover:text-white underline-offset-4 hover:underline transition-all" href="#">Настройки Cookie</a>
+</div>
+</div>
+</footer>
+<!-- Visual Light Leaks -->
+<div class="fixed top-[-10%] left-[-5%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px] pointer-events-none z-0"></div>
+<div class="fixed bottom-[-10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-secondary/5 blur-[100px] pointer-events-none z-0"></div>
+</body></html>
