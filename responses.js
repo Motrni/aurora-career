@@ -17,6 +17,10 @@ let rejectedPage = 0;
 let rejectedCategory = 'already_applied';
 let rejectedTotal = 0;
 
+let currentApplied = 0;
+let currentDailyLimit = 20;
+let statusPollTimer = null;
+
 window.BOT_USERNAME = "Aurora_Career_Bot";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -120,6 +124,7 @@ async function initPage() {
 
         if (data.is_active) {
             connectSSE();
+            startStatusPolling();
         }
 
         await loadRejected(rejectedCategory);
@@ -138,16 +143,21 @@ async function initPage() {
 
 function updateStatusPanel(data) {
     isAutopilotActive = data.is_active;
+    currentApplied = data.applications_today || 0;
+    currentDailyLimit = data.daily_limit || 20;
 
-    const applied = data.applications_today || 0;
-    const limit = data.daily_limit || 20;
+    renderProgress(currentApplied, currentDailyLimit);
+    updateToggleButton();
+}
+
+function renderProgress(applied, limit) {
     const pct = limit > 0 ? applied / limit : 0;
 
     document.getElementById("appliedCount").innerText = applied;
     document.getElementById("dailyLimit").innerText = limit;
 
     const circumference = 364.4;
-    const offset = circumference * (1 - pct);
+    const offset = circumference * (1 - Math.min(pct, 1));
     document.getElementById("progressCircle").style.strokeDashoffset = offset;
 
     const pctRound = Math.round(pct * 100);
@@ -160,8 +170,6 @@ function updateStatusPanel(data) {
     } else {
         progressText.innerText = "Автопилот неактивен";
     }
-
-    updateToggleButton();
 }
 
 function updateToggleButton() {
@@ -185,6 +193,45 @@ function updateToggleButton() {
 }
 
 // ============================================================================
+// STATUS POLLING (real-time counter updates)
+// ============================================================================
+
+function startStatusPolling() {
+    stopStatusPolling();
+    statusPollTimer = setInterval(async () => {
+        try {
+            const authQ = buildAuthParams();
+            const url = `/api/campaign/status${authQ ? '?' + authQ : ''}`;
+            const resp = await apiFetch(url);
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (data.status !== "ok") return;
+
+            currentApplied = data.applications_today || 0;
+            currentDailyLimit = data.daily_limit || 20;
+            renderProgress(currentApplied, currentDailyLimit);
+
+            if (!data.is_active && isAutopilotActive) {
+                isAutopilotActive = false;
+                updateToggleButton();
+                disconnectSSE();
+                stopStatusPolling();
+                renderProgress(currentApplied, currentDailyLimit);
+            }
+        } catch (e) {
+            console.warn("[StatusPoll]", e);
+        }
+    }, 5000);
+}
+
+function stopStatusPolling() {
+    if (statusPollTimer) {
+        clearInterval(statusPollTimer);
+        statusPollTimer = null;
+    }
+}
+
+// ============================================================================
 // TOGGLE AUTOPILOT
 // ============================================================================
 
@@ -193,7 +240,9 @@ window.toggleAutopilot = async function () {
     btn.disabled = true;
 
     try {
-        const resp = await apiFetch("/api/campaign/toggle", {
+        const authQ = buildAuthParams();
+        const toggleUrl = `/api/campaign/toggle${authQ ? '?' + authQ : ''}`;
+        const resp = await apiFetch(toggleUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
         });
@@ -211,9 +260,12 @@ window.toggleAutopilot = async function () {
         if (isAutopilotActive) {
             progressText.innerText = "Автопилот запускается...";
             connectSSE();
+            startStatusPolling();
         } else {
             progressText.innerText = "Автопилот остановлен";
             disconnectSSE();
+            stopStatusPolling();
+            renderProgress(currentApplied, currentDailyLimit);
         }
 
     } catch (e) {
@@ -242,7 +294,7 @@ function connectSSE() {
         try {
             const evt = JSON.parse(e.data);
             lastEventId = evt.id || lastEventId;
-            appendLogEntry(evt);
+            handleSSEEvent(evt);
         } catch (err) {
             console.warn("[SSE] parse error", err);
         }
@@ -266,6 +318,47 @@ function disconnectSSE() {
     }
     document.getElementById("liveIndicator").style.display = "none";
 }
+
+function handleSSEEvent(evt) {
+    appendLogEntry(evt);
+
+    if (evt.type === 'vacancy_applied') {
+        currentApplied++;
+        renderProgress(currentApplied, currentDailyLimit);
+    }
+
+    if (evt.type === 'vacancy_rejected') {
+        const reason = evt.details?.reason || '';
+        const cat = REASON_TO_CATEGORY[reason];
+        if (cat) {
+            rejectedTotal++;
+            document.getElementById("rejectedBadge").innerText = `${rejectedTotal} всего`;
+
+            if (cat === rejectedCategory) {
+                prependRejectedCard(evt);
+            }
+        }
+    }
+
+    if (evt.type === 'search_complete') {
+        isAutopilotActive = false;
+        updateToggleButton();
+        stopStatusPolling();
+        renderProgress(currentApplied, currentDailyLimit);
+    }
+}
+
+const REASON_TO_CATEGORY = {
+    'filter_already_applied': 'already_applied',
+    'filter_test_required': 'has_test',
+    'filter_ai_match_low': 'ai_low',
+    'filter_archived': 'already_applied',
+    'filter_duplicate_title': 'already_applied',
+    'filter_in_queue': 'already_applied',
+    'filter_employer_blacklist': 'already_applied',
+    'filter_rpc_check_failed': 'already_applied',
+    'filter_manual_declined': 'already_applied',
+};
 
 // ============================================================================
 // LOG RENDERING
@@ -293,35 +386,7 @@ function appendLogEntry(evt) {
     row.className = "flex gap-3 md:gap-4 items-start";
     row.style.animation = "fadeIn 0.3s ease";
 
-    let description = '';
-
-    if (evt.type === 'vacancy_applied') {
-        description = `Успешный отклик: <span class="text-on-surface">${esc(evt.vacancy_name || '')} @ ${esc(evt.employer || '')}</span>`;
-    } else if (evt.type === 'vacancy_analyzed') {
-        const score = evt.details?.score || '?';
-        description = `Анализ: <span class="text-on-surface">${esc(evt.vacancy_name || '')}</span> — ${score}% совпадение`;
-    } else if (evt.type === 'vacancy_rejected') {
-        const reason = formatRejectionReason(evt.details?.reason);
-        const score = evt.details?.score;
-        let extra = '';
-        if (score !== undefined) extra = ` (${score}%)`;
-        description = `Пропущено: <span class="text-on-surface">${esc(evt.vacancy_name || '')}</span>. Причина: <span class="text-error italic">${reason}${extra}</span>`;
-    } else if (evt.type === 'search_started') {
-        const found = evt.details?.found_total || 0;
-        description = `Поиск запущен. Найдено ${found} вакансий.`;
-    } else if (evt.type === 'search_complete') {
-        const stats = evt.details?.filter_stats;
-        if (stats) {
-            const added = stats.added_to_queue || 0;
-            description = `Поиск завершен. В очередь: ${added}`;
-        } else {
-            description = 'Поиск завершен.';
-        }
-    } else if (evt.type === 'error') {
-        description = `Ошибка: ${esc(evt.details?.message || '')}`;
-    } else {
-        description = esc(JSON.stringify(evt.details || {}));
-    }
+    let description = buildLogDescription(evt);
 
     row.innerHTML = `
         <span class="text-primary-fixed-dim font-mono text-xs md:text-sm opacity-50 shrink-0 pt-0.5">${ts}</span>
@@ -334,6 +399,44 @@ function appendLogEntry(evt) {
     requestAnimationFrame(() => {
         container.scrollTop = container.scrollHeight;
     });
+}
+
+function buildLogDescription(evt) {
+    if (evt.type === 'vacancy_applied') {
+        return `Успешный отклик: <span class="text-on-surface">${esc(evt.vacancy_name || '')} @ ${esc(evt.employer || '')}</span>`;
+    }
+    if (evt.type === 'vacancy_analyzed') {
+        const score = evt.details?.score;
+        const scoreStr = (score !== undefined && score !== null) ? `${score}%` : '';
+        return `Анализ: <span class="text-on-surface">${esc(evt.vacancy_name || '')}</span>${scoreStr ? ` — ${scoreStr} совпадение` : ''}`;
+    }
+    if (evt.type === 'vacancy_rejected') {
+        const reason = formatRejectionReason(evt.details?.reason);
+        const score = evt.details?.score;
+        const reasoning = evt.details?.reasoning;
+        let parts = [];
+        parts.push(`Пропущено: <span class="text-on-surface">${esc(evt.vacancy_name || '')}</span>`);
+        parts.push(`Причина: <span class="text-error italic">${reason}</span>`);
+        if (score !== undefined) parts.push(`Score: ${score}%`);
+        if (reasoning) parts.push(`<span class="text-on-surface-variant/60 italic text-[11px]">${esc(reasoning.substring(0, 120))}</span>`);
+        return parts.join('. ');
+    }
+    if (evt.type === 'search_started') {
+        const found = evt.details?.found_total || 0;
+        return `Поиск запущен. Найдено <span class="text-on-surface font-bold">${found}</span> вакансий.`;
+    }
+    if (evt.type === 'search_complete') {
+        const stats = evt.details?.filter_stats;
+        if (stats) {
+            const added = stats.added_to_queue || 0;
+            return `Поиск завершен. В очередь добавлено: <span class="text-on-surface font-bold">${added}</span>`;
+        }
+        return 'Поиск завершен.';
+    }
+    if (evt.type === 'error') {
+        return `Ошибка: ${esc(evt.details?.message || '')}`;
+    }
+    return esc(JSON.stringify(evt.details || {}));
 }
 
 function formatRejectionReason(reason) {
@@ -423,9 +526,34 @@ function loadMoreRejected() {
     loadRejected(rejectedCategory);
 }
 
+function prependRejectedCard(evt) {
+    const list = document.getElementById("rejectedList");
+    const emptyEl = document.getElementById("rejectedEmpty");
+    if (emptyEl) emptyEl.remove();
+
+    const item = {
+        id: evt.id,
+        vacancy_id: evt.vacancy_id,
+        vacancy_name: evt.vacancy_name,
+        employer_name: evt.employer,
+        details: evt.details || {},
+        created_at: evt.ts,
+    };
+
+    const card = createRejectedCard(item);
+    card.style.animation = "fadeIn 0.4s ease";
+    card.style.opacity = "0";
+
+    list.prepend(card);
+
+    requestAnimationFrame(() => {
+        card.style.opacity = "1";
+    });
+}
+
 function createRejectedCard(item) {
     const card = document.createElement("div");
-    card.className = "glass-panel p-4 md:p-6 rounded-xl group hover:bg-surface-container-highest transition-colors cursor-pointer";
+    card.className = "glass-panel p-4 md:p-6 rounded-xl group hover:bg-surface-container-highest transition-all cursor-pointer";
 
     const vacId = item.vacancy_id;
     const hhUrl = vacId ? `https://hh.ru/vacancy/${vacId}` : '#';
@@ -435,13 +563,13 @@ function createRejectedCard(item) {
     const time = item.created_at ? timeAgo(new Date(item.created_at)) : '';
 
     let tagsHtml = `<span class="px-3 py-1 bg-error/10 text-error text-[10px] font-bold uppercase tracking-wider rounded-full">${esc(reason)}</span>`;
-    if (score !== undefined) {
+    if (score !== undefined && score !== null) {
         tagsHtml += `<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold uppercase tracking-wider rounded-full">Score: ${score}%</span>`;
     }
 
     let reasoningHtml = '';
     if (reasoning) {
-        reasoningHtml = `<p class="text-[11px] text-on-surface-variant/60 mt-2 line-clamp-2">${esc(reasoning)}</p>`;
+        reasoningHtml = `<p class="text-[11px] text-on-surface-variant/60 mt-2 line-clamp-2 italic">${esc(reasoning)}</p>`;
     }
 
     card.innerHTML = `
