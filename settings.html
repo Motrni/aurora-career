@@ -90,11 +90,12 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     text-transform: uppercase;
 }
 
-/* Custom scrollbar */
-.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #5a30d0; border-radius: 10px; }
-.custom-scrollbar { scrollbar-width: thin; scrollbar-color: #5a30d0 rgba(255,255,255,0.05); }
+/* Custom scrollbar — fix #5: rounded top/bottom */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 10px; margin: 8px 0; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(90,48,208,0.7), rgba(204,190,255,0.35)); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, rgba(90,48,208,0.9), rgba(204,190,255,0.5)); }
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(90,48,208,0.55) rgba(255,255,255,0.04); }
 
 /* Indeterminate checkbox */
 input:indeterminate {
@@ -121,12 +122,13 @@ input:indeterminate {
 .skeleton-block { width: 100%; display: block; }
 @keyframes skeleton-shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(100% + 200px) 0; } }
 
-/* Custom checkbox for trees */
+/* Custom checkbox for trees — fix #1: no left border artifact, proper spacing */
 .custom-checkbox {
     appearance: none;
     -webkit-appearance: none;
     width: 18px;
     height: 18px;
+    min-width: 18px;
     border: 2px solid #484455;
     border-radius: 4px;
     position: relative;
@@ -134,43 +136,48 @@ input:indeterminate {
     transition: all 0.2s;
     background: #2c2833;
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
 }
 .custom-checkbox:checked { background: #5a30d0; border-color: #5a30d0; }
 .custom-checkbox:checked::after {
     content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
     width: 5px;
     height: 9px;
     border: solid #fff;
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
-    margin-bottom: 2px;
 }
 .custom-checkbox:indeterminate { background: #5a30d0; border-color: #5a30d0; }
 .custom-checkbox:indeterminate::after {
     content: '';
+    position: absolute;
+    left: 2px;
+    top: 6px;
     width: 10px;
     height: 2px;
     background: #fff;
-    transform: none;
 }
 .custom-checkbox:hover { border-color: #938ea0; }
+.custom-checkbox:focus { outline: none !important; box-shadow: none !important; ring: 0 !important; --tw-ring-shadow: none !important; }
 .checkbox-wrapper { display: flex; align-items: center; cursor: pointer; }
 
 /* Industry tree */
 .ind-category { margin-bottom: 4px; }
-.ind-header { display: flex; align-items: center; padding: 6px 4px; border-radius: 8px; transition: background 0.2s; }
+.ind-header { display: flex; align-items: center; padding: 6px 4px; border-radius: 8px; transition: background 0.2s; gap: 8px; }
 .ind-header:hover { background: rgba(255,255,255,0.03); }
 .toggle-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 4px; cursor: pointer; transition: transform 0.2s; color: #666; }
 .toggle-icon.expanded { transform: rotate(180deg); color: #ccbeff; }
 .ind-label { cursor: pointer; font-size: 0.95rem; color: #e4e4e7; line-height: 1.3; flex: 1; user-select: none; }
 .ind-label.highlight { color: #ccbeff; font-weight: 600; }
-.ind-children { margin-left: 32px; display: none; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 10px; margin-top: 4px; }
+.ind-children { margin-left: 32px; display: none; border-left: none; padding-left: 10px; margin-top: 4px; }
 .ind-children.open { display: block; }
-.ind-sub { display: flex; align-items: center; margin-bottom: 4px; padding: 4px 0; }
-.ind-sub-label { font-size: 0.9rem; color: #a1a1aa; cursor: pointer; user-select: none; }
+.ind-sub { display: flex; align-items: center; margin-bottom: 4px; padding: 4px 0; gap: 10px; }
+.ind-sub-label { font-size: 0.9rem; color: #a1a1aa; cursor: pointer; user-select: none; line-height: 1.4; }
 .ind-sub-label:hover { color: #f5f5f7; }
 .ind-count { font-size: 0.75rem; color: #555; margin-left: auto; padding-left: 8px; }
 
@@ -192,7 +199,8 @@ input:indeterminate {
 }
 .tag-remove { cursor: pointer; display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; opacity: 0.6; transition: opacity 0.2s; }
 .tag-remove:hover { opacity: 1; color: #f87171; }
-.tag-input { background: transparent; border: none; color: #e7e0ef; font-size: 0.9rem; font-family: inherit; outline: none; flex-grow: 1; min-width: 100px; padding: 4px; }
+.tag-input { background: transparent !important; border: none !important; color: #e7e0ef; font-size: 0.9rem; font-family: inherit; outline: none !important; box-shadow: none !important; flex-grow: 1; min-width: 100px; padding: 4px; }
+.tag-input:focus { background: transparent !important; border: none !important; box-shadow: none !important; outline: none !important; ring: none; }
 .tag-input::placeholder { color: #555; }
 .tag-confirm-btn {
     background: rgba(90,48,208,0.2); border: 1px solid rgba(90,48,208,0.4); color: #ccbeff;
@@ -239,6 +247,11 @@ input:indeterminate {
 .mobile-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
 .mobile-menu.open { transform: translateX(0); }
 
+/* Mode buttons (Simple / Boolean) — fix #3 */
+.mode-btn { transition: all 0.2s; }
+.mode-btn.active { background: #37333e; color: #ccbeff; }
+.mode-btn:not(.active) { background: transparent; color: #cac3d7; }
+
 /* Advanced textarea */
 .advanced-textarea {
     width: 100%; background: rgba(44,40,51,0.5);
@@ -246,9 +259,15 @@ input:indeterminate {
     padding: 16px; border-radius: 12px; font-size: 0.9rem;
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     line-height: 1.5; resize: vertical; transition: all 0.2s; outline: none; min-height: 120px;
+    overflow-y: hidden; field-sizing: content;
 }
 .advanced-textarea:focus { border-color: #ccbeff; box-shadow: 0 0 0 3px rgba(90,48,208,0.15); }
 .advanced-textarea::placeholder { color: #555; }
+
+/* Fix #6: Hide number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
 
 /* Region chip inline style override handled by JS, keeping class for light-theme compat */
 .region-chip { border-radius: 12px; }
@@ -336,10 +355,7 @@ input:indeterminate {
 
                         <!-- Experience -->
                         <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
-                            <h2 class="text-[11px] font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
-                                Опыт работы
-                            </h2>
+                            <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Опыт работы</h2>
                             <div class="flex flex-col gap-1">
                                 <select id="experienceSelect" class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23cac3d7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px;">
                                     <option value="noExperience">Нет опыта</option>
@@ -353,10 +369,7 @@ input:indeterminate {
 
                         <!-- Salary -->
                         <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/60 border border-outline-variant/10 backdrop-blur-md space-y-4">
-                            <h2 class="text-[11px] font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
-                                Желаемая зарплата
-                            </h2>
+                            <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Желаемая зарплата</h2>
                             <div class="space-y-4">
                                 <label class="flex items-center justify-between p-3 rounded-xl bg-surface-container-high/40 cursor-pointer group">
                                     <span class="text-on-surface/80 text-xs font-semibold">Не указана</span>
@@ -366,7 +379,7 @@ input:indeterminate {
                                     </div>
                                 </label>
                                 <div>
-                                    <input type="number" id="salaryInput" class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-lg font-bold focus:ring-2 focus:ring-primary-container transition-all text-on-surface placeholder:text-outline-variant" placeholder="120 000" min="0"/>
+                                    <input type="number" id="salaryInput" class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-base font-bold focus:ring-2 focus:ring-primary-container transition-all text-on-surface placeholder:text-outline-variant" placeholder="Например: 100000" min="0"/>
                                     <span class="block mt-2 text-[9px] uppercase tracking-widest text-on-surface-variant font-bold text-right">₽ / месяц</span>
                                 </div>
                             </div>
@@ -374,10 +387,7 @@ input:indeterminate {
 
                         <!-- Schedule -->
                         <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
-                            <h2 class="text-[11px] font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
-                                График работы
-                            </h2>
+                            <h2 class="text-lg font-bold tracking-tight text-on-surface/80">График работы</h2>
                             <div class="grid grid-cols-2 gap-2" id="scheduleContainer">
                                 <label class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40 border border-outline-variant/5 text-on-surface-variant hover:text-on-surface transition-all hover:bg-surface-container-highest cursor-pointer">
                                     <input type="checkbox" id="sch_remote" value="REMOTE" class="sr-only"/>
@@ -468,7 +478,7 @@ input:indeterminate {
 
                     <!-- Region Search -->
                     <section class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
-                        <h2 class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase">Регион поиска</h2>
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Регион поиска</h2>
                         <div id="regionContainer" class="flex flex-col" style="height: 320px;">
                             <div class="mb-3">
                                 <div class="flex justify-between items-center mb-2">
@@ -489,7 +499,7 @@ input:indeterminate {
 
                     <!-- Industry -->
                     <section class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
-                        <h2 class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase">Отрасли компаний</h2>
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Отрасли компаний</h2>
                         <div id="industryContainer" class="flex flex-col" style="height: 400px;">
                             <div class="relative mb-3">
                                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
@@ -533,10 +543,7 @@ input:indeterminate {
 
                     <!-- Style Select -->
                     <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
-                        <h2 class="text-[11px] font-bold tracking-widest text-primary-container uppercase flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 bg-primary-container rounded-full"></span>
-                            Стиль письма
-                        </h2>
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Стиль письма</h2>
                         <div class="cl-warning">⚠️ Стиль и настройки привязаны к текущему выбранному резюме</div>
                         <select id="clStyleSelect" class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23cac3d7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px;">
                             <option value="classic">Классический (Сдержанный)</option>
