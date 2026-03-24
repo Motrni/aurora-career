@@ -192,6 +192,22 @@ function updateToggleButton() {
     }
 }
 
+async function refreshStatusFromServer() {
+    try {
+        const authQ = buildAuthParams();
+        const url = `/api/campaign/status${authQ ? '?' + authQ : ''}`;
+        const resp = await apiFetch(url);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data.status !== "ok") return;
+        currentApplied = data.applications_today || 0;
+        currentDailyLimit = data.daily_limit || 20;
+        renderProgress(currentApplied, currentDailyLimit);
+    } catch (e) {
+        console.warn("[refreshStatus]", e);
+    }
+}
+
 // ============================================================================
 // STATUS POLLING (real-time counter updates)
 // ============================================================================
@@ -349,8 +365,7 @@ function handleSSEEvent(evt) {
     }
 
     if (evt.type === 'vacancy_applied') {
-        currentApplied++;
-        renderProgress(currentApplied, currentDailyLimit);
+        refreshStatusFromServer();
     }
 
     if (evt.type === 'search_complete') {
@@ -420,8 +435,11 @@ function buildLogDescription(evt) {
     }
     if (evt.type === 'vacancy_analyzed') {
         const score = evt.details?.score;
+        const reasoning = evt.details?.reasoning;
         const scoreStr = (score !== undefined && score !== null) ? `${score}%` : '';
-        return `Анализ: <span class="text-on-surface">${esc(evt.vacancy_name || '')}</span>${scoreStr ? ` — ${scoreStr} совпадение` : ''}`;
+        let text = `Анализ: <span class="text-on-surface">${esc(evt.vacancy_name || '')}</span>${scoreStr ? ` — ${scoreStr} совпадение` : ''}`;
+        if (reasoning) text += `. <span class="text-on-surface-variant/60 italic text-[11px]">${esc(reasoning)}</span>`;
+        return text;
     }
     if (evt.type === 'vacancy_rejected') {
         const reason = formatRejectionReason(evt.details?.reason);
