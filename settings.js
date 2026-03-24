@@ -1591,8 +1591,8 @@ async function initAccountSection() {
                 btn.addEventListener('click', handleLinkTelegram);
             }
 
-            if (!data.has_password) {
-                showRegModal();
+            if (!data.has_password || !data.email_verified) {
+                showRegModal(data.has_password, data.email_verified, data.email);
             }
         }
     } catch (_) {}
@@ -1719,11 +1719,20 @@ function togglePwdVisibility(inputId, btn) {
     }
 }
 
-function showRegModal() {
+function showRegModal(hasPassword, emailVerified, email) {
     const modal = document.getElementById('regModal');
     if (!modal) return;
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    if (hasPassword && !emailVerified && email) {
+        _regModalEmail = email;
+        document.getElementById('regStep1').classList.add('hidden');
+        document.getElementById('regStep2').classList.remove('hidden');
+        document.getElementById('regModalOtpEmail').textContent = email;
+        startRegModalResendTimer();
+        return;
+    }
 
     const pwdInput = document.getElementById('regModalPassword');
     const confirmInput = document.getElementById('regModalPasswordConfirm');
