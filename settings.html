@@ -788,6 +788,7 @@ input[type="number"] { -moz-appearance: textfield; }
                 <input type="text" id="regModalOtpCode" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code"
                        class="w-full bg-[#211e29] border border-[#484455] rounded-xl px-4 py-4 text-[#ccbeff] text-center text-2xl font-semibold tracking-[0.5em] placeholder:text-[#938ea0] focus:border-[#ccbeff] focus:ring-1 focus:ring-[#ccbeff]/20 outline-none transition-colors"
                        placeholder="000000">
+                <div id="regModalOtpStatus" class="text-center text-xs mt-1"></div>
                 <div id="regModalOtpError" class="hidden rounded-lg px-4 py-2.5 text-sm bg-[#93000a]/30 text-[#ffb4ab] border border-[#ffb4ab]/20"></div>
                 <button id="regModalOtpBtn" onclick="handleRegModalVerify()"
                         class="w-full text-white font-medium py-3 rounded-xl text-sm transition-all"
@@ -832,7 +833,7 @@ function toggleMobileMenu() {
 }
 </script>
 
-<script src="settings.js?v=4.1"></script>
+<script src="settings.js?v=4.2"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

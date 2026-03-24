@@ -67,8 +67,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Fallback to legacy if JWT not available
     if (!authMode) {
         if (!legacyUserId || !legacySign) {
-            showError("Ошибка доступа. Ссылка не содержит необходимых параметров.");
-            toggleGlobalLoading(false);
+            window.location.href = 'auth.html';
             return;
         }
         authMode = 'legacy';
@@ -1730,7 +1729,7 @@ function showRegModal(hasPassword, emailVerified, email) {
         document.getElementById('regStep1').classList.add('hidden');
         document.getElementById('regStep2').classList.remove('hidden');
         document.getElementById('regModalOtpEmail').textContent = email;
-        startRegModalResendTimer();
+        sendOtpSilent(email);
         return;
     }
 
@@ -1867,32 +1866,85 @@ async function handleRegModalVerify() {
     }
 }
 
-async function handleRegModalResend() {
-    const btn = document.getElementById('regModalResendBtn');
-    btn.disabled = true;
+async function sendOtpSilent(email) {
+    const statusEl = document.getElementById('regModalOtpStatus');
 
     try {
-        await fetch(`${API_BASE_URL}/api/auth/resend-otp`, {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/resend-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email: email, purpose: 'email_verify' }),
+        });
+
+        if (resp.ok) {
+            if (statusEl) { statusEl.textContent = 'Код отправлен на почту'; statusEl.className = 'text-center text-xs text-green-400 mt-1'; }
+            startRegModalResendTimer();
+        } else if (resp.status === 429) {
+            const data = await resp.json();
+            const match = data.detail?.match(/(\d+)/);
+            const sec = match ? parseInt(match[1]) : 60;
+            startRegModalResendTimer(sec);
+        } else {
+            if (statusEl) { statusEl.textContent = 'Ошибка отправки. Нажмите "Отправить повторно"'; statusEl.className = 'text-center text-xs text-[#ffb4ab] mt-1'; }
+            document.getElementById('regModalResendBtn').disabled = false;
+            document.getElementById('regModalResendBtn').innerHTML = 'Отправить повторно';
+        }
+    } catch (_) {
+        if (statusEl) { statusEl.textContent = 'Ошибка сети'; statusEl.className = 'text-center text-xs text-[#ffb4ab] mt-1'; }
+    }
+}
+
+async function handleRegModalResend() {
+    const btn = document.getElementById('regModalResendBtn');
+    const statusEl = document.getElementById('regModalOtpStatus');
+    btn.disabled = true;
+    btn.innerHTML = 'Отправка...';
+    if (statusEl) { statusEl.textContent = ''; statusEl.className = ''; }
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/resend-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({ email: _regModalEmail, purpose: 'email_verify' }),
         });
-        startRegModalResendTimer();
-    } catch (_) {}
+
+        if (resp.ok) {
+            if (statusEl) { statusEl.textContent = 'Код отправлен'; statusEl.className = 'text-center text-xs text-green-400 mt-1'; }
+            startRegModalResendTimer();
+        } else {
+            const data = await resp.json().catch(() => ({}));
+            if (resp.status === 429) {
+                const match = data.detail?.match(/(\d+)/);
+                const sec = match ? parseInt(match[1]) : 60;
+                startRegModalResendTimer(sec);
+            } else {
+                if (statusEl) { statusEl.textContent = data.detail || 'Ошибка отправки'; statusEl.className = 'text-center text-xs text-[#ffb4ab] mt-1'; }
+                btn.disabled = false;
+                btn.innerHTML = 'Отправить повторно';
+            }
+        }
+    } catch (_) {
+        if (statusEl) { statusEl.textContent = 'Ошибка сети'; statusEl.className = 'text-center text-xs text-[#ffb4ab] mt-1'; }
+        btn.disabled = false;
+        btn.innerHTML = 'Отправить повторно';
+    }
 }
 
-function startRegModalResendTimer() {
+function startRegModalResendTimer(startSec) {
     const btn = document.getElementById('regModalResendBtn');
     const timerEl = document.getElementById('regModalResendTimer');
-    let sec = 60;
+    let sec = startSec || 60;
     btn.disabled = true;
     timerEl.textContent = sec;
+    btn.innerHTML = 'Отправить повторно (<span id="regModalResendTimer">' + sec + '</span>с)';
 
     if (_regModalResendInterval) clearInterval(_regModalResendInterval);
     _regModalResendInterval = setInterval(() => {
         sec--;
-        timerEl.textContent = sec;
+        const innerTimer = document.getElementById('regModalResendTimer');
+        if (innerTimer) innerTimer.textContent = sec;
         if (sec <= 0) {
             clearInterval(_regModalResendInterval);
             btn.disabled = false;
