@@ -22,6 +22,7 @@ let rejectedTotal = 0;
 let currentApplied = 0;
 let currentDailyLimit = 20;
 let statusPollTimer = null;
+let sseConnectedAt = null; // Момент подключения SSE — события ДО него исторические
 
 window.BOT_USERNAME = "Aurora_Career_Bot";
 
@@ -140,6 +141,15 @@ async function initPage() {
 
         updateStatusPanel(data);
 
+        // Стартуем SSE с последнего известного event_id,
+        // чтобы избежать реплицирования истории через SSE
+        if (data.last_event_id) {
+            lastEventId = data.last_event_id;
+        }
+
+        // Грузим историю лога отдельно (без влияния на UI-состояние)
+        await loadLogHistory();
+
         if (data.is_active) {
             connectSSE();
             startStatusPolling();
@@ -152,6 +162,38 @@ async function initPage() {
         showError("Не удалось загрузить данные. " + e.message);
     } finally {
         toggleGlobalLoading(false);
+    }
+}
+
+async function loadLogHistory() {
+    try {
+        const authQ = buildAuthParams();
+        let url = `/api/campaign/history${authQ ? '?' + authQ : ''}`;
+        const resp = await apiFetch(url);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data.status !== "ok" || !data.events) return;
+
+        const container = document.getElementById("logContainer");
+        const emptyMsg = document.getElementById("logEmpty");
+        if (emptyMsg && data.events.length > 0) emptyMsg.remove();
+
+        for (const evt of data.events) {
+            // Рендерим только значимые события истории
+            if (evt.type === 'vacancy_rejected') {
+                if (!LOG_SILENT_REASONS.has(evt.details?.reason || '')) {
+                    appendLogEntry(evt);
+                }
+            } else {
+                appendLogEntry(evt);
+            }
+        }
+
+        requestAnimationFrame(() => {
+            container.scrollTop = container.scrollHeight;
+        });
+    } catch (e) {
+        console.warn("[loadLogHistory]", e);
     }
 }
 
@@ -316,6 +358,7 @@ window.toggleAutopilot = async function () {
 
 function connectSSE() {
     disconnectSSE();
+    sseConnectedAt = Date.now();
 
     const authQ = buildAuthParams();
     let url = `${API_BASE_URL}/api/campaign/events?after_id=${lastEventId}`;
@@ -345,6 +388,12 @@ function connectSSE() {
     document.getElementById("liveIndicator").style.display = "flex";
 }
 
+function isLiveEvent(evt) {
+    if (!evt.ts || !sseConnectedAt) return true;
+    // Историческое если событие старше момента подключения минус 10 секунд буфера
+    return new Date(evt.ts).getTime() >= (sseConnectedAt - 10000);
+}
+
 function disconnectSSE() {
     if (eventSource) {
         eventSource.close();
@@ -364,33 +413,42 @@ const LOG_SILENT_REASONS = new Set([
 ]);
 
 function handleSSEEvent(evt) {
+    const live = isLiveEvent(evt);
+
     if (evt.type === 'vacancy_rejected') {
         const reason = evt.details?.reason || '';
-        const cat = REASON_TO_CATEGORY[reason];
-        if (cat) {
-            rejectedTotal++;
-            document.getElementById("rejectedBadge").innerText = `${rejectedTotal} всего`;
 
-            if (cat === rejectedCategory) {
-                prependRejectedCard(evt);
+        // Панель отбракованных обновляем только от живых событий
+        // (история уже загружена через loadRejected REST)
+        if (live) {
+            const cat = REASON_TO_CATEGORY[reason];
+            if (cat) {
+                rejectedTotal++;
+                document.getElementById("rejectedBadge").innerText = `${rejectedTotal} всего`;
+                if (cat === rejectedCategory) prependRejectedCard(evt);
             }
         }
+
+        // Лог: значимые причины показываем всегда (история + живые)
         if (!LOG_SILENT_REASONS.has(reason)) {
             appendLogEntry(evt);
         }
+
     } else {
         appendLogEntry(evt);
     }
 
-    if (evt.type === 'vacancy_applied') {
-        refreshStatusFromServer();
-    }
+    if (live) {
+        // Счётчик откликов — только от живых событий, данные из БД
+        if (evt.type === 'vacancy_applied') {
+            refreshStatusFromServer();
+        }
 
-    if (evt.type === 'search_complete') {
-        isAutopilotActive = false;
-        updateToggleButton();
-        stopStatusPolling();
-        renderProgress(currentApplied, currentDailyLimit);
+        // Завершение поиска — только живые события, обновляем прогресс из БД
+        // is_campaign_active остаётся true (автопилот включён для ежедневного запуска)
+        if (evt.type === 'search_complete') {
+            refreshStatusFromServer();
+        }
     }
 }
 
