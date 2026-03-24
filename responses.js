@@ -3,9 +3,11 @@
    (c) 2024-2026 Aurora Career. All rights reserved.
 */
 
-const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.location.hostname.includes('aurora-develop'))
-    ? 'https://api.aurora-develop.ru'
-    : 'https://api.aurora-career.ru';
+const API_BASE_URL = window.AuroraSession
+    ? window.AuroraSession.getApiBase()
+    : ((window.location.hostname.includes('twc1.net') || window.location.hostname.includes('aurora-develop'))
+        ? 'https://api.aurora-develop.ru'
+        : 'https://api.aurora-career.ru');
 
 let authMode = null;
 let legacyUserId = null;
@@ -31,10 +33,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     legacySign = urlParams.get('sign');
 
     try {
-        const meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        let meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
             method: "GET",
             credentials: "include"
         });
+        if (meResponse.status === 401) {
+            const refreshResp = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                method: "POST",
+                credentials: "include"
+            });
+            if (refreshResp.ok) {
+                meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    method: "GET",
+                    credentials: "include"
+                });
+            }
+        }
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
@@ -52,6 +66,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
         authMode = 'legacy';
+    }
+
+    if (authMode === 'jwt' && window.AuroraSession) {
+        window.AuroraSession.startPing();
     }
 
     propagateAuthToNavLinks();
