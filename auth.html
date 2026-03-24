@@ -103,9 +103,14 @@ tailwind.config = {
         </div>
         <div>
             <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Пароль</label>
-            <input type="password" id="loginPassword" required autocomplete="current-password"
-                   class="w-full bg-surface-container border border-surface-variant rounded-xl px-4 py-3 text-on-surface text-sm"
-                   placeholder="Введите пароль">
+            <div class="relative">
+                <input type="password" id="loginPassword" required autocomplete="current-password"
+                       class="w-full bg-surface-container border border-surface-variant rounded-xl px-4 py-3 pr-11 text-on-surface text-sm"
+                       placeholder="Введите пароль">
+                <button type="button" onclick="togglePwdVis('loginPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-secondary-container transition-colors">
+                    <span class="material-symbols-outlined text-xl">visibility_off</span>
+                </button>
+            </div>
         </div>
         <button type="submit" id="loginBtn" class="btn-primary w-full text-white font-medium py-3 rounded-xl text-sm">
             <span id="loginBtnText">Войти</span>
@@ -125,9 +130,14 @@ tailwind.config = {
         </div>
         <div>
             <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Пароль</label>
-            <input type="password" id="regPassword" required autocomplete="new-password" minlength="8"
-                   class="w-full bg-surface-container border border-surface-variant rounded-xl px-4 py-3 text-on-surface text-sm"
-                   placeholder="Введите пароль" oninput="updateRegPasswordChecks()">
+            <div class="relative">
+                <input type="password" id="regPassword" required autocomplete="new-password" minlength="8"
+                       class="w-full bg-surface-container border border-surface-variant rounded-xl px-4 py-3 pr-11 text-on-surface text-sm"
+                       placeholder="Введите пароль" oninput="updateRegPasswordChecks()">
+                <button type="button" onclick="togglePwdVis('regPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-secondary-container transition-colors">
+                    <span class="material-symbols-outlined text-xl">visibility_off</span>
+                </button>
+            </div>
             <div class="mt-2.5 space-y-1" id="regPwdChecks">
                 <div class="flex items-center gap-2 text-xs" id="regChkLength">
                     <span class="material-symbols-outlined text-sm text-outline" id="regChkLengthIcon">radio_button_unchecked</span>
@@ -149,9 +159,14 @@ tailwind.config = {
         </div>
         <div>
             <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Подтвердите пароль</label>
-            <input type="password" id="regPasswordConfirm" required autocomplete="new-password"
-                   class="w-full bg-surface-container border border-surface-variant rounded-xl px-4 py-3 text-on-surface text-sm"
-                   placeholder="Повторите пароль" oninput="updateRegPasswordChecks()">
+            <div class="relative">
+                <input type="password" id="regPasswordConfirm" required autocomplete="new-password"
+                       class="w-full bg-surface-container border border-surface-variant rounded-xl px-4 py-3 pr-11 text-on-surface text-sm"
+                       placeholder="Повторите пароль" oninput="updateRegPasswordChecks()">
+                <button type="button" onclick="togglePwdVis('regPasswordConfirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-secondary-container transition-colors">
+                    <span class="material-symbols-outlined text-xl">visibility_off</span>
+                </button>
+            </div>
         </div>
         <button type="submit" id="regBtn" class="btn-primary w-full text-white font-medium py-3 rounded-xl text-sm" disabled>
             <span id="regBtnText">Зарегистрироваться</span>

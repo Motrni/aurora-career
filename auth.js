@@ -8,6 +8,19 @@ const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.lo
     : 'https://api.aurora-career.ru';
 
 let currentOtpEmail = '';
+
+function togglePwdVis(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.textContent = 'visibility';
+    } else {
+        input.type = 'password';
+        if (icon) icon.textContent = 'visibility_off';
+    }
+}
 let currentOtpPurpose = 'email_verify';
 let resendTimerInterval = null;
 

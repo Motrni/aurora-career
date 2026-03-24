@@ -1706,6 +1706,19 @@ async function handleLogout() {
 let _regModalEmail = '';
 let _regModalResendInterval = null;
 
+function togglePwdVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.textContent = 'visibility';
+    } else {
+        input.type = 'password';
+        if (icon) icon.textContent = 'visibility_off';
+    }
+}
+
 function showRegModal() {
     const modal = document.getElementById('regModal');
     if (!modal) return;

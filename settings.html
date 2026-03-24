@@ -729,9 +729,14 @@ input[type="number"] { -moz-appearance: textfield; }
                 </div>
                 <div>
                     <label class="block text-[#cac3d7] text-xs font-medium mb-1.5">Пароль</label>
-                    <input type="password" id="regModalPassword" required autocomplete="new-password"
-                           class="w-full bg-[#211e29] border border-[#484455] rounded-xl px-4 py-3 text-[#e7e0ef] text-sm placeholder:text-[#938ea0] focus:border-[#ccbeff] focus:ring-1 focus:ring-[#ccbeff]/20 outline-none transition-colors"
-                           placeholder="Введите пароль" oninput="updatePasswordChecks()">
+                    <div class="relative">
+                        <input type="password" id="regModalPassword" required autocomplete="new-password"
+                               class="w-full bg-[#211e29] border border-[#484455] rounded-xl px-4 py-3 pr-11 text-[#e7e0ef] text-sm placeholder:text-[#938ea0] focus:border-[#ccbeff] focus:ring-1 focus:ring-[#ccbeff]/20 outline-none transition-colors"
+                               placeholder="Введите пароль" oninput="updatePasswordChecks()">
+                        <button type="button" onclick="togglePwdVisibility('regModalPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#938ea0] hover:text-[#ccbeff] transition-colors">
+                            <span class="material-symbols-outlined text-xl">visibility_off</span>
+                        </button>
+                    </div>
                     <!-- Password strength indicators -->
                     <div class="mt-3 space-y-1.5" id="pwdChecks">
                         <div class="flex items-center gap-2 text-xs" id="chkLength">
@@ -754,9 +759,14 @@ input[type="number"] { -moz-appearance: textfield; }
                 </div>
                 <div>
                     <label class="block text-[#cac3d7] text-xs font-medium mb-1.5">Подтвердите пароль</label>
-                    <input type="password" id="regModalPasswordConfirm" required autocomplete="new-password"
-                           class="w-full bg-[#211e29] border border-[#484455] rounded-xl px-4 py-3 text-[#e7e0ef] text-sm placeholder:text-[#938ea0] focus:border-[#ccbeff] focus:ring-1 focus:ring-[#ccbeff]/20 outline-none transition-colors"
-                           placeholder="Повторите пароль">
+                    <div class="relative">
+                        <input type="password" id="regModalPasswordConfirm" required autocomplete="new-password"
+                               class="w-full bg-[#211e29] border border-[#484455] rounded-xl px-4 py-3 pr-11 text-[#e7e0ef] text-sm placeholder:text-[#938ea0] focus:border-[#ccbeff] focus:ring-1 focus:ring-[#ccbeff]/20 outline-none transition-colors"
+                               placeholder="Повторите пароль">
+                        <button type="button" onclick="togglePwdVisibility('regModalPasswordConfirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#938ea0] hover:text-[#ccbeff] transition-colors">
+                            <span class="material-symbols-outlined text-xl">visibility_off</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div id="regModalError" class="hidden rounded-lg px-4 py-2.5 text-sm bg-[#93000a]/30 text-[#ffb4ab] border border-[#ffb4ab]/20"></div>
