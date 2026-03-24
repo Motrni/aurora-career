@@ -459,6 +459,14 @@ function handleSSEEvent(evt) {
                 progressText.innerText = `Поиск завершён — ${pct}%`;
             }
         }
+
+        if (evt.type === 'search_exhausted') {
+            refreshStatusFromServer();
+            const progressText = document.getElementById("progressText");
+            if (progressText) {
+                progressText.innerText = `Все вакансии обработаны. Автопилот остановлен.`;
+            }
+        }
     }
 }
 
@@ -485,6 +493,7 @@ const EVENT_CONFIG = {
     'vacancy_rejected':  { icon: 'warning',        color: 'text-error',    label: 'Пропущено' },
     'vacancy_test':      { icon: 'quiz',           color: 'text-[#fbbf24]', label: 'Тест' },
     'search_complete':   { icon: 'flag',           color: 'text-primary',  label: 'Поиск завершен' },
+    'search_exhausted':  { icon: 'inventory_2',    color: 'text-[#fbbf24]', label: 'Вакансии исчерпаны' },
     'error':             { icon: 'error',          color: 'text-error',    label: 'Ошибка' },
 };
 
@@ -558,6 +567,9 @@ function buildLogDescription(evt) {
             return `Поиск завершен. В очередь добавлено: <span class="text-on-surface font-bold">${added}</span>`;
         }
         return 'Поиск завершен.';
+    }
+    if (evt.type === 'search_exhausted') {
+        return `Все найденные вакансии уже обработаны. Новых подходящих вакансий не найдено. Автопилот остановлен.`;
     }
     if (evt.type === 'error') {
         return `Ошибка: ${esc(evt.details?.message || '')}`;
