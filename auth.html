@@ -127,15 +127,33 @@ tailwind.config = {
             <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Пароль</label>
             <input type="password" id="regPassword" required autocomplete="new-password" minlength="8"
                    class="w-full bg-surface-container border border-surface-variant rounded-xl px-4 py-3 text-on-surface text-sm"
-                   placeholder="Минимум 8 символов, буквы + цифры">
+                   placeholder="Введите пароль" oninput="updateRegPasswordChecks()">
+            <div class="mt-2.5 space-y-1" id="regPwdChecks">
+                <div class="flex items-center gap-2 text-xs" id="regChkLength">
+                    <span class="material-symbols-outlined text-sm text-outline" id="regChkLengthIcon">radio_button_unchecked</span>
+                    <span class="text-outline">Минимум 8 символов</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs" id="regChkUpper">
+                    <span class="material-symbols-outlined text-sm text-outline" id="regChkUpperIcon">radio_button_unchecked</span>
+                    <span class="text-outline">Одна заглавная буква</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs" id="regChkDigit">
+                    <span class="material-symbols-outlined text-sm text-outline" id="regChkDigitIcon">radio_button_unchecked</span>
+                    <span class="text-outline">Одна цифра</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs" id="regChkLower">
+                    <span class="material-symbols-outlined text-sm text-outline" id="regChkLowerIcon">radio_button_unchecked</span>
+                    <span class="text-outline">Одна строчная буква или символ</span>
+                </div>
+            </div>
         </div>
         <div>
             <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Подтвердите пароль</label>
             <input type="password" id="regPasswordConfirm" required autocomplete="new-password"
                    class="w-full bg-surface-container border border-surface-variant rounded-xl px-4 py-3 text-on-surface text-sm"
-                   placeholder="Повторите пароль">
+                   placeholder="Повторите пароль" oninput="updateRegPasswordChecks()">
         </div>
-        <button type="submit" id="regBtn" class="btn-primary w-full text-white font-medium py-3 rounded-xl text-sm">
+        <button type="submit" id="regBtn" class="btn-primary w-full text-white font-medium py-3 rounded-xl text-sm" disabled>
             <span id="regBtnText">Зарегистрироваться</span>
         </button>
     </form>

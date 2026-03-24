@@ -150,6 +150,35 @@ async function handleLogin(e) {
     }
 }
 
+function updateRegPasswordChecks() {
+    const pwd = (document.getElementById('regPassword')?.value) || '';
+    const checks = [
+        { id: 'regChkLength', icon: 'regChkLengthIcon', pass: pwd.length >= 8 },
+        { id: 'regChkUpper',  icon: 'regChkUpperIcon',  pass: /[A-ZА-ЯЁ]/.test(pwd) },
+        { id: 'regChkDigit',  icon: 'regChkDigitIcon',  pass: /[0-9]/.test(pwd) },
+        { id: 'regChkLower',  icon: 'regChkLowerIcon',  pass: /[a-zа-яё!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd) },
+    ];
+    let allPassed = true;
+    checks.forEach(c => {
+        const icon = document.getElementById(c.icon);
+        const row = document.getElementById(c.id);
+        if (!icon || !row) return;
+        const textSpan = row.querySelector('span:last-child');
+        if (c.pass) {
+            icon.textContent = 'check_circle'; icon.style.color = '#4ade80';
+            if (textSpan) textSpan.style.color = '#4ade80';
+        } else {
+            icon.textContent = 'radio_button_unchecked'; icon.style.color = '#938ea0';
+            if (textSpan) textSpan.style.color = '#938ea0';
+            allPassed = false;
+        }
+    });
+    const confirm = document.getElementById('regPasswordConfirm')?.value;
+    const email = document.getElementById('regEmail')?.value?.trim();
+    const btn = document.getElementById('regBtn');
+    if (btn) btn.disabled = !(allPassed && email && pwd === confirm);
+}
+
 async function handleRegister(e) {
     e.preventDefault();
     hideMessage();
@@ -165,8 +194,8 @@ async function handleRegister(e) {
         return;
     }
 
-    if (password.length < 8) {
-        showMessage('Пароль должен быть не менее 8 символов');
+    if (password.length < 8 || !/[A-ZА-ЯЁ]/.test(password) || !/[0-9]/.test(password)) {
+        showMessage('Пароль не соответствует требованиям');
         return;
     }
 
@@ -351,6 +380,9 @@ function startResendTimer() {
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const regEmail = document.getElementById('regEmail');
+    if (regEmail) regEmail.addEventListener('input', updateRegPasswordChecks);
+
     try {
         const resp = await fetch(`${API_BASE_URL}/api/auth/me`, {
             method: 'GET',

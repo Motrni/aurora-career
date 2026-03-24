@@ -1590,6 +1590,10 @@ async function initAccountSection() {
                 btn.classList.remove('hidden');
                 btn.addEventListener('click', handleLinkTelegram);
             }
+
+            if (!data.has_password) {
+                showRegModal();
+            }
         }
     } catch (_) {}
 
@@ -1692,4 +1696,185 @@ async function handleLogout() {
         });
     } catch (_) {}
     window.location.href = 'auth.html';
+}
+
+
+// ============================================================================
+// MANDATORY REGISTRATION MODAL
+// ============================================================================
+
+let _regModalEmail = '';
+let _regModalResendInterval = null;
+
+function showRegModal() {
+    const modal = document.getElementById('regModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    const pwdInput = document.getElementById('regModalPassword');
+    const confirmInput = document.getElementById('regModalPasswordConfirm');
+    if (pwdInput) pwdInput.addEventListener('input', updatePasswordChecks);
+    if (confirmInput) confirmInput.addEventListener('input', updatePasswordChecks);
+}
+
+function updatePasswordChecks() {
+    const pwd = (document.getElementById('regModalPassword')?.value) || '';
+
+    const checks = [
+        { id: 'chkLength', icon: 'chkLengthIcon', pass: pwd.length >= 8 },
+        { id: 'chkUpper',  icon: 'chkUpperIcon',  pass: /[A-ZА-ЯЁ]/.test(pwd) },
+        { id: 'chkDigit',  icon: 'chkDigitIcon',  pass: /[0-9]/.test(pwd) },
+        { id: 'chkLower',  icon: 'chkLowerIcon',  pass: /[a-zа-яё!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd) },
+    ];
+
+    let allPassed = true;
+    checks.forEach(c => {
+        const icon = document.getElementById(c.icon);
+        const row = document.getElementById(c.id);
+        if (!icon || !row) return;
+
+        if (c.pass) {
+            icon.textContent = 'check_circle';
+            icon.style.color = '#4ade80';
+            row.querySelector('span:last-child').style.color = '#4ade80';
+        } else {
+            icon.textContent = 'radio_button_unchecked';
+            icon.style.color = '#938ea0';
+            row.querySelector('span:last-child').style.color = '#938ea0';
+            allPassed = false;
+        }
+    });
+
+    const btn = document.getElementById('regModalBtn');
+    const email = document.getElementById('regModalEmail')?.value?.trim();
+    const confirm = document.getElementById('regModalPasswordConfirm')?.value;
+    const passwordsMatch = pwd && confirm && pwd === confirm;
+
+    if (btn) btn.disabled = !(allPassed && email && passwordsMatch);
+}
+
+document.getElementById('regModalEmail')?.addEventListener('input', updatePasswordChecks);
+
+async function handleRegModalSubmit() {
+    const email = document.getElementById('regModalEmail').value.trim();
+    const password = document.getElementById('regModalPassword').value;
+    const confirm = document.getElementById('regModalPasswordConfirm').value;
+    const errEl = document.getElementById('regModalError');
+    const btn = document.getElementById('regModalBtn');
+    const btnText = document.getElementById('regModalBtnText');
+
+    errEl.classList.add('hidden');
+
+    if (password !== confirm) {
+        errEl.textContent = 'Пароли не совпадают';
+        errEl.classList.remove('hidden');
+        return;
+    }
+
+    btn.disabled = true;
+    btnText.innerHTML = '<span style="border:2px solid rgba(204,190,255,0.2);border-top-color:#ccbeff;border-radius:50%;width:18px;height:18px;animation:spin 0.6s linear infinite;display:inline-block;"></span>';
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/set-credentials`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email, password }),
+        });
+        const data = await resp.json();
+
+        if (resp.ok) {
+            _regModalEmail = email;
+            document.getElementById('regStep1').classList.add('hidden');
+            document.getElementById('regStep2').classList.remove('hidden');
+            document.getElementById('regModalOtpEmail').textContent = email;
+            startRegModalResendTimer();
+        } else {
+            errEl.textContent = data.detail || 'Ошибка';
+            errEl.classList.remove('hidden');
+        }
+    } catch (_) {
+        errEl.textContent = 'Ошибка сети';
+        errEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Продолжить';
+    }
+}
+
+async function handleRegModalVerify() {
+    const code = document.getElementById('regModalOtpCode').value.trim();
+    const errEl = document.getElementById('regModalOtpError');
+    const btn = document.getElementById('regModalOtpBtn');
+    const btnText = document.getElementById('regModalOtpBtnText');
+
+    errEl.classList.add('hidden');
+
+    if (!code || code.length !== 6) {
+        errEl.textContent = 'Введите 6-значный код';
+        errEl.classList.remove('hidden');
+        return;
+    }
+
+    btn.disabled = true;
+    btnText.innerHTML = '<span style="border:2px solid rgba(204,190,255,0.2);border-top-color:#ccbeff;border-radius:50%;width:18px;height:18px;animation:spin 0.6s linear infinite;display:inline-block;"></span>';
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/verify-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email: _regModalEmail, code }),
+        });
+        const data = await resp.json();
+
+        if (resp.ok) {
+            document.getElementById('regModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        } else {
+            errEl.textContent = data.detail || 'Неверный код';
+            errEl.classList.remove('hidden');
+        }
+    } catch (_) {
+        errEl.textContent = 'Ошибка сети';
+        errEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Подтвердить';
+    }
+}
+
+async function handleRegModalResend() {
+    const btn = document.getElementById('regModalResendBtn');
+    btn.disabled = true;
+
+    try {
+        await fetch(`${API_BASE_URL}/api/auth/resend-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email: _regModalEmail, purpose: 'email_verify' }),
+        });
+        startRegModalResendTimer();
+    } catch (_) {}
+}
+
+function startRegModalResendTimer() {
+    const btn = document.getElementById('regModalResendBtn');
+    const timerEl = document.getElementById('regModalResendTimer');
+    let sec = 60;
+    btn.disabled = true;
+    timerEl.textContent = sec;
+
+    if (_regModalResendInterval) clearInterval(_regModalResendInterval);
+    _regModalResendInterval = setInterval(() => {
+        sec--;
+        timerEl.textContent = sec;
+        if (sec <= 0) {
+            clearInterval(_regModalResendInterval);
+            btn.disabled = false;
+            btn.innerHTML = 'Отправить повторно';
+        }
+    }, 1000);
 }
