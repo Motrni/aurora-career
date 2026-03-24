@@ -23,6 +23,35 @@ let authMode = null; // 'jwt' or 'legacy'
 let legacyUserId = null;
 let legacySign = null;
 
+let _isRefreshing = false;
+let _refreshPromise = null;
+
+async function authFetch(url, options = {}) {
+    options.credentials = 'include';
+    let resp = await fetch(url, options);
+
+    if (resp.status === 401 && authMode === 'jwt') {
+        if (!_isRefreshing) {
+            _isRefreshing = true;
+            _refreshPromise = fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                method: 'POST', credentials: 'include',
+            }).then(r => {
+                _isRefreshing = false;
+                return r.ok;
+            }).catch(() => { _isRefreshing = false; return false; });
+        }
+
+        const refreshed = await _refreshPromise;
+        if (refreshed) {
+            resp = await fetch(url, options);
+        } else {
+            window.location.href = 'auth.html';
+            return resp;
+        }
+    }
+    return resp;
+}
+
 // Loading Flags
 let isIndustriesLoaded = false;
 let isAreasLoaded = false;
@@ -46,13 +75,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     legacySign = urlParams.get('sign');
     messageId = urlParams.get('message_id'); // Optional
 
-    // 2. Hybrid Auth: Try JWT first, fallback to legacy
+    // 2. Hybrid Auth: Try JWT first, auto-refresh, fallback to legacy
     try {
-        const meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            method: "GET",
-            credentials: "include"
+        let meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+            method: "GET", credentials: "include",
         });
-        
+
+        if (meResponse.status === 401) {
+            const refreshResp = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                method: "POST", credentials: "include",
+            });
+            if (refreshResp.ok) {
+                meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    method: "GET", credentials: "include",
+                });
+            }
+        }
+
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
@@ -63,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (e) {
         console.log("[Auth] JWT check failed, will use legacy");
     }
-    
+
     // Fallback to legacy if JWT not available
     if (!authMode) {
         if (!legacyUserId || !legacySign) {
@@ -530,10 +569,9 @@ function checkVacancies() {
                 payload.sign = legacySign;
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/check_vacancies`, {
+            const response = await authFetch(`${API_BASE_URL}/api/check_vacancies`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include",  // Send JWT cookies
                 body: JSON.stringify(payload)
             });
 
@@ -608,10 +646,9 @@ async function loadSettings() {
             url += `?user_id=${legacyUserId}&sign=${legacySign}`;
         }
         
-        const response = await fetch(url, {
+        const response = await authFetch(url, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
-            credentials: "include"  // Send JWT cookies
         });
 
         const data = await response.json();
@@ -1095,10 +1132,9 @@ async function saveSettings() {
         payload.sign = legacySign;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/settings/update`, {
+    const response = await authFetch(`${API_BASE_URL}/api/settings/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",  // Send JWT cookies
         body: JSON.stringify(payload)
     });
 
@@ -1394,10 +1430,9 @@ async function saveResponseSettings() {
             payload.sign = legacySign;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/save_response_settings`, {
+        const response = await authFetch(`${API_BASE_URL}/api/save_response_settings`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            credentials: "include",  // Send JWT cookies
             body: JSON.stringify(payload)
         });
 
@@ -1573,8 +1608,8 @@ async function initAccountSection() {
     }
 
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            method: 'GET', credentials: 'include'
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/me`, {
+            method: 'GET',
         });
         if (resp.ok) {
             const data = await resp.json();
@@ -1605,8 +1640,8 @@ async function handleLinkTelegram() {
     btn.textContent = 'Генерация...';
 
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/auth/link-telegram`, {
-            method: 'POST', credentials: 'include'
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/link-telegram`, {
+            method: 'POST',
         });
         const data = await resp.json();
 
@@ -1632,8 +1667,8 @@ async function loadSessions() {
     const revokeAllBtn = document.getElementById('revokeAllBtn');
 
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/auth/sessions`, {
-            method: 'GET', credentials: 'include'
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/sessions`, {
+            method: 'GET',
         });
         if (!resp.ok) { container.innerHTML = '<p class="text-on-surface-variant text-xs">Не удалось загрузить</p>'; return; }
         const data = await resp.json();
@@ -1672,8 +1707,8 @@ async function loadSessions() {
 
 async function revokeSession(sessionId) {
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/auth/sessions/${sessionId}`, {
-            method: 'DELETE', credentials: 'include'
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/sessions/${sessionId}`, {
+            method: 'DELETE',
         });
         if (resp.ok) loadSessions();
     } catch (_) {}
@@ -1681,8 +1716,8 @@ async function revokeSession(sessionId) {
 
 async function revokeAllSessions() {
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/auth/sessions`, {
-            method: 'DELETE', credentials: 'include'
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/sessions`, {
+            method: 'DELETE',
         });
         if (resp.ok) loadSessions();
     } catch (_) {}

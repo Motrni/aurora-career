@@ -397,10 +397,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (regEmail) regEmail.addEventListener('input', updateRegPasswordChecks);
 
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            method: 'GET',
-            credentials: 'include',
+        let resp = await fetch(`${API_BASE_URL}/api/auth/me`, {
+            method: 'GET', credentials: 'include',
         });
+        if (resp.status === 401) {
+            const refreshResp = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                method: 'POST', credentials: 'include',
+            });
+            if (refreshResp.ok) {
+                resp = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    method: 'GET', credentials: 'include',
+                });
+            }
+        }
         if (resp.ok) {
             const data = await resp.json();
             if (data.status === 'ok') {
