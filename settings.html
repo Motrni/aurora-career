@@ -642,6 +642,60 @@ input[type="number"] { -moz-appearance: textfield; }
 
         </div><!-- End responseSettingsTab -->
 
+        <!-- ============ ACCOUNT SECTION ============ -->
+        <div id="accountSection" class="mt-8 md:mt-12 space-y-6">
+            <h2 class="text-on-surface font-bold text-lg flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">account_circle</span>
+                Аккаунт
+            </h2>
+
+            <!-- Telegram Link -->
+            <div id="tgLinkBlock" class="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/10">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-2xl">send</span>
+                        <div>
+                            <p class="text-on-surface text-sm font-medium">Telegram</p>
+                            <p id="tgLinkStatus" class="text-on-surface-variant text-xs">Проверка...</p>
+                        </div>
+                    </div>
+                    <button id="tgLinkBtn" class="hidden px-4 py-2 bg-primary-container text-on-primary-container text-xs font-medium rounded-xl hover:brightness-110 transition-all">
+                        Привязать
+                    </button>
+                </div>
+                <div id="tgDeepLink" class="hidden mt-4 p-3 bg-surface-container rounded-xl border border-outline-variant/10">
+                    <p class="text-on-surface-variant text-xs mb-2">Нажмите на ссылку или отсканируйте QR:</p>
+                    <a id="tgDeepLinkUrl" href="#" target="_blank" class="text-primary text-sm font-medium break-all hover:underline"></a>
+                    <p class="text-outline text-[10px] mt-2">Ссылка действует 10 минут</p>
+                </div>
+            </div>
+
+            <!-- Active Sessions -->
+            <div class="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/10">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-2xl">devices</span>
+                        <p class="text-on-surface text-sm font-medium">Активные сессии</p>
+                    </div>
+                    <button id="revokeAllBtn" onclick="revokeAllSessions()" class="text-error text-xs hover:underline hidden">
+                        Завершить все
+                    </button>
+                </div>
+                <div id="sessionsList" class="space-y-2">
+                    <p class="text-on-surface-variant text-xs">Загрузка...</p>
+                </div>
+            </div>
+
+            <!-- Logout -->
+            <div class="flex justify-center">
+                <button id="logoutBtn" onclick="handleLogout()" class="text-error text-sm hover:underline flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">logout</span>
+                    Выйти из аккаунта
+                </button>
+            </div>
+        </div>
+        <!-- ============ END ACCOUNT SECTION ============ -->
+
         <!-- Return Button -->
         <div class="mt-8 md:mt-12">
             <button id="returnBtn" class="w-full md:w-auto px-8 py-3 md:py-4 rounded-xl text-on-surface-variant font-semibold hover:bg-surface-container-highest transition-all border border-outline-variant/10 text-sm md:text-base">Вернуться в Аврору</button>
@@ -678,7 +732,7 @@ function toggleMobileMenu() {
 }
 </script>
 
-<script src="settings.js?v=3.6"></script>
+<script src="settings.js?v=4.0"></script>
 
 <script>
 /* Schedule checkbox visual feedback */

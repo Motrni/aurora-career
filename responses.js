@@ -319,14 +319,17 @@ function disconnectSSE() {
     document.getElementById("liveIndicator").style.display = "none";
 }
 
+const LOG_SILENT_REASONS = new Set([
+    'filter_already_applied',
+    'filter_duplicate_title',
+    'filter_in_queue',
+    'filter_archived',
+    'filter_manual_declined',
+    'filter_employer_blacklist',
+    'filter_rpc_check_failed',
+]);
+
 function handleSSEEvent(evt) {
-    appendLogEntry(evt);
-
-    if (evt.type === 'vacancy_applied') {
-        currentApplied++;
-        renderProgress(currentApplied, currentDailyLimit);
-    }
-
     if (evt.type === 'vacancy_rejected') {
         const reason = evt.details?.reason || '';
         const cat = REASON_TO_CATEGORY[reason];
@@ -338,6 +341,16 @@ function handleSSEEvent(evt) {
                 prependRejectedCard(evt);
             }
         }
+        if (!LOG_SILENT_REASONS.has(reason)) {
+            appendLogEntry(evt);
+        }
+    } else {
+        appendLogEntry(evt);
+    }
+
+    if (evt.type === 'vacancy_applied') {
+        currentApplied++;
+        renderProgress(currentApplied, currentDailyLimit);
     }
 
     if (evt.type === 'search_complete') {
@@ -418,7 +431,7 @@ function buildLogDescription(evt) {
         parts.push(`Пропущено: <span class="text-on-surface">${esc(evt.vacancy_name || '')}</span>`);
         parts.push(`Причина: <span class="text-error italic">${reason}</span>`);
         if (score !== undefined) parts.push(`Score: ${score}%`);
-        if (reasoning) parts.push(`<span class="text-on-surface-variant/60 italic text-[11px]">${esc(reasoning.substring(0, 120))}</span>`);
+        if (reasoning) parts.push(`<span class="text-on-surface-variant/60 italic text-[11px]">${esc(reasoning)}</span>`);
         return parts.join('. ');
     }
     if (evt.type === 'search_started') {

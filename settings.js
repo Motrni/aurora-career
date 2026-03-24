@@ -799,6 +799,7 @@ function tryInitTree() {
             initDirtyStateTracking();
             checkVacancies();
         }, 100);
+        initAccountSection();
     }
 }
 
@@ -1552,12 +1553,143 @@ function updateThemeIcons(isDark) {
     const moonIcon = document.getElementById("moonIcon");
     
     if (isDark) {
-        // In dark mode, show sun icon (to switch to light)
         if (sunIcon) sunIcon.style.display = "block";
         if (moonIcon) moonIcon.style.display = "none";
     } else {
-        // In light mode, show moon icon (to switch to dark)
         if (sunIcon) sunIcon.style.display = "none";
         if (moonIcon) moonIcon.style.display = "block";
     }
+}
+
+
+// ============================================================================
+// ACCOUNT: TELEGRAM LINK + SESSIONS
+// ============================================================================
+
+async function initAccountSection() {
+    if (authMode !== 'jwt') {
+        const section = document.getElementById('accountSection');
+        if (section) section.classList.add('hidden');
+        return;
+    }
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/me`, {
+            method: 'GET', credentials: 'include'
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            const statusEl = document.getElementById('tgLinkStatus');
+            const btn = document.getElementById('tgLinkBtn');
+
+            if (data.has_telegram) {
+                statusEl.textContent = 'Привязан';
+                statusEl.classList.add('text-green-400');
+            } else {
+                statusEl.textContent = 'Не привязан';
+                btn.classList.remove('hidden');
+                btn.addEventListener('click', handleLinkTelegram);
+            }
+        }
+    } catch (_) {}
+
+    loadSessions();
+}
+
+async function handleLinkTelegram() {
+    const btn = document.getElementById('tgLinkBtn');
+    btn.disabled = true;
+    btn.textContent = 'Генерация...';
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/link-telegram`, {
+            method: 'POST', credentials: 'include'
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.link) {
+            const container = document.getElementById('tgDeepLink');
+            const linkEl = document.getElementById('tgDeepLinkUrl');
+            linkEl.href = data.link;
+            linkEl.textContent = data.link;
+            container.classList.remove('hidden');
+            btn.classList.add('hidden');
+        } else {
+            btn.textContent = data.detail || 'Ошибка';
+            setTimeout(() => { btn.textContent = 'Привязать'; btn.disabled = false; }, 3000);
+        }
+    } catch (_) {
+        btn.textContent = 'Ошибка сети';
+        setTimeout(() => { btn.textContent = 'Привязать'; btn.disabled = false; }, 3000);
+    }
+}
+
+async function loadSessions() {
+    const container = document.getElementById('sessionsList');
+    const revokeAllBtn = document.getElementById('revokeAllBtn');
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/sessions`, {
+            method: 'GET', credentials: 'include'
+        });
+        if (!resp.ok) { container.innerHTML = '<p class="text-on-surface-variant text-xs">Не удалось загрузить</p>'; return; }
+        const data = await resp.json();
+        const sessions = data.sessions || [];
+
+        if (sessions.length === 0) {
+            container.innerHTML = '<p class="text-on-surface-variant text-xs">Нет активных сессий</p>';
+            return;
+        }
+
+        if (sessions.length > 1) revokeAllBtn.classList.remove('hidden');
+
+        container.innerHTML = sessions.map(s => {
+            const lastUsed = s.last_used_at ? new Date(s.last_used_at).toLocaleString('ru-RU') : 'Недавно';
+            const currentBadge = s.is_current
+                ? '<span class="text-[10px] bg-primary-container/30 text-primary px-2 py-0.5 rounded-full">Текущая</span>'
+                : `<button onclick="revokeSession(${s.id})" class="text-error text-[10px] hover:underline">Завершить</button>`;
+
+            return `
+                <div class="flex items-center justify-between py-2.5 border-b border-outline-variant/10 last:border-0">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-on-surface-variant text-lg">devices</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium">${s.device_name || 'Устройство'}</p>
+                            <p class="text-outline text-[10px]">${s.ip_address || ''} &middot; ${lastUsed}</p>
+                        </div>
+                    </div>
+                    ${currentBadge}
+                </div>`;
+        }).join('');
+
+    } catch (_) {
+        container.innerHTML = '<p class="text-on-surface-variant text-xs">Ошибка загрузки</p>';
+    }
+}
+
+async function revokeSession(sessionId) {
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/sessions/${sessionId}`, {
+            method: 'DELETE', credentials: 'include'
+        });
+        if (resp.ok) loadSessions();
+    } catch (_) {}
+}
+
+async function revokeAllSessions() {
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/sessions`, {
+            method: 'DELETE', credentials: 'include'
+        });
+        if (resp.ok) loadSessions();
+    } catch (_) {}
+}
+
+async function handleLogout() {
+    try {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: 'POST', credentials: 'include'
+        });
+    } catch (_) {}
+    window.location.href = 'auth.html';
 }
