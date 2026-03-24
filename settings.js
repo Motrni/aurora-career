@@ -52,6 +52,47 @@ async function authFetch(url, options = {}) {
     return resp;
 }
 
+// Проактивное обновление JWT (access ~15 мин): пока вкладка открыта — refresh до истечения.
+const SESSION_PING_MS = 2.5 * 60 * 1000;
+let _sessionPingInterval = null;
+
+function stopSessionPing() {
+    if (_sessionPingInterval) {
+        clearInterval(_sessionPingInterval);
+        _sessionPingInterval = null;
+    }
+    document.removeEventListener('visibilitychange', onSessionPingVisibility);
+}
+
+function onSessionPingVisibility() {
+    if (!document.hidden && authMode === 'jwt') {
+        runSessionPing();
+    }
+}
+
+async function runSessionPing() {
+    if (authMode !== 'jwt') return;
+    if (document.hidden) return;
+    try {
+        const r = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+        });
+        if (!r.ok) {
+            console.warn('[Auth] Session ping: refresh failed', r.status);
+        }
+    } catch (e) {
+        console.warn('[Auth] Session ping error', e);
+    }
+}
+
+function startSessionPing() {
+    if (authMode !== 'jwt') return;
+    stopSessionPing();
+    _sessionPingInterval = setInterval(runSessionPing, SESSION_PING_MS);
+    document.addEventListener('visibilitychange', onSessionPingVisibility);
+}
+
 // Loading Flags
 let isIndustriesLoaded = false;
 let isAreasLoaded = false;
@@ -112,6 +153,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         authMode = 'legacy';
         console.log("[Auth] Using legacy HMAC auth");
     }
+
+    if (authMode === 'jwt') {
+        startSessionPing();
+    }
+    window.addEventListener('beforeunload', stopSessionPing);
 
     // 2. Salary Logic
     const salaryInput = document.getElementById("salaryInput");
