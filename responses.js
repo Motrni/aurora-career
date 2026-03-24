@@ -21,6 +21,8 @@ let rejectedTotal = 0;
 
 let currentApplied = 0;
 let currentDailyLimit = 20;
+let isDailyPaused = false;
+let nextMorningMsk = "08:00";
 let statusPollTimer = null;
 let sseConnectedAt = null; // Момент подключения SSE — события ДО него исторические
 
@@ -203,6 +205,10 @@ async function loadLogHistory() {
 
 function updateStatusPanel(data) {
     isAutopilotActive = data.is_active;
+    isDailyPaused = !!data.autopilot_paused_daily_limit;
+    if (data.next_morning_autopilot_msk) {
+        nextMorningMsk = data.next_morning_autopilot_msk;
+    }
     currentApplied = data.applications_today || 0;
     currentDailyLimit = data.daily_limit || 20;
 
@@ -223,6 +229,12 @@ function renderProgress(applied, limit) {
     const pctRound = Math.round(pct * 100);
     const progressText = document.getElementById("progressText");
 
+    if (isDailyPaused) {
+        progressText.innerText =
+            `На сегодня лимит откликов исчерпан. Следующий автозапуск — завтра в ${nextMorningMsk} (МСК).`;
+        return;
+    }
+
     if (isAutopilotActive) {
         progressText.innerText = `Автопилот работает — ${pctRound}%`;
     } else if (applied > 0) {
@@ -236,6 +248,16 @@ function updateToggleButton() {
     const btn = document.getElementById("toggleBtn");
     const text = document.getElementById("toggleBtnText");
     const icon = document.getElementById("toggleBtnIcon");
+
+    if (isDailyPaused) {
+        btn.classList.remove("bg-red-600/80");
+        btn.classList.add("bg-primary-container");
+        btn.style.boxShadow = "0 0 40px rgba(90,48,208,0.3)";
+        text.innerText = "Запустить автопилот";
+        icon.innerText = "bolt";
+        btn.disabled = false;
+        return;
+    }
 
     if (isAutopilotActive) {
         btn.classList.remove("bg-primary-container");
@@ -260,9 +282,7 @@ async function refreshStatusFromServer() {
         if (!resp.ok) return;
         const data = await resp.json();
         if (data.status !== "ok") return;
-        currentApplied = data.applications_today || 0;
-        currentDailyLimit = data.daily_limit || 20;
-        renderProgress(currentApplied, currentDailyLimit);
+        updateStatusPanel(data);
     } catch (e) {
         console.warn("[refreshStatus]", e);
     }
@@ -283,16 +303,20 @@ function startStatusPolling() {
             const data = await resp.json();
             if (data.status !== "ok") return;
 
-            currentApplied = data.applications_today || 0;
-            currentDailyLimit = data.daily_limit || 20;
-            renderProgress(currentApplied, currentDailyLimit);
+            const wasActive = isAutopilotActive;
 
-            if (!data.is_active && isAutopilotActive) {
-                isAutopilotActive = false;
-                updateToggleButton();
+            if (data.autopilot_paused_daily_limit) {
+                updateStatusPanel(data);
                 disconnectSSE();
                 stopStatusPolling();
-                renderProgress(currentApplied, currentDailyLimit);
+                return;
+            }
+
+            updateStatusPanel(data);
+
+            if (!data.is_active && wasActive) {
+                disconnectSSE();
+                stopStatusPolling();
             }
         } catch (e) {
             console.warn("[StatusPoll]", e);
@@ -330,7 +354,7 @@ window.toggleAutopilot = async function () {
 
         const data = await resp.json();
         isAutopilotActive = data.is_active;
-        updateToggleButton();
+        await refreshStatusFromServer();
 
         const progressText = document.getElementById("progressText");
         if (isAutopilotActive) {
@@ -467,6 +491,13 @@ function handleSSEEvent(evt) {
                 progressText.innerText = `Все вакансии обработаны. Автопилот остановлен.`;
             }
         }
+
+        if (evt.type === 'autopilot_daily_sleep') {
+            isAutopilotActive = false;
+            disconnectSSE();
+            stopStatusPolling();
+            refreshStatusFromServer();
+        }
     }
 }
 
@@ -494,6 +525,7 @@ const EVENT_CONFIG = {
     'vacancy_test':      { icon: 'quiz',           color: 'text-[#fbbf24]', label: 'Тест' },
     'search_complete':   { icon: 'flag',           color: 'text-primary',  label: 'Поиск завершен' },
     'search_exhausted':  { icon: 'inventory_2',    color: 'text-[#fbbf24]', label: 'Вакансии исчерпаны' },
+    'autopilot_daily_sleep': { icon: 'bedtime', color: 'text-[#fbbf24]', label: 'Лимит на сегодня' },
     'error':             { icon: 'error',          color: 'text-error',    label: 'Ошибка' },
 };
 
@@ -570,6 +602,9 @@ function buildLogDescription(evt) {
     }
     if (evt.type === 'search_exhausted') {
         return `Все найденные вакансии уже обработаны. Новых подходящих вакансий не найдено. Автопилот остановлен.`;
+    }
+    if (evt.type === 'autopilot_daily_sleep') {
+        return `Дневной лимит откликов исчерпан. Автопилот на паузе до следующего дня.`;
     }
     if (evt.type === 'error') {
         return `Ошибка: ${esc(evt.details?.message || '')}`;
