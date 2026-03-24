@@ -297,7 +297,7 @@ function startStatusPolling() {
         } catch (e) {
             console.warn("[StatusPoll]", e);
         }
-    }, 5000);
+    }, 15000);
 }
 
 function stopStatusPolling() {
@@ -334,7 +334,7 @@ window.toggleAutopilot = async function () {
 
         const progressText = document.getElementById("progressText");
         if (isAutopilotActive) {
-            progressText.innerText = "Автопилот запускается...";
+            progressText.innerText = "Автопилот запускается — ожидание бота (~10 сек)...";
             connectSSE();
             startStatusPolling();
         } else {
@@ -439,15 +439,25 @@ function handleSSEEvent(evt) {
     }
 
     if (live) {
-        // Счётчик откликов — только от живых событий, данные из БД
         if (evt.type === 'vacancy_applied') {
             refreshStatusFromServer();
         }
 
-        // Завершение поиска — только живые события, обновляем прогресс из БД
-        // is_campaign_active остаётся true (автопилот включён для ежедневного запуска)
+        if (evt.type === 'search_started') {
+            const progressText = document.getElementById("progressText");
+            const found = evt.details?.found_total || 0;
+            if (progressText && found > 0) {
+                progressText.innerText = `Автопилот работает — обработка ${found} вакансий...`;
+            }
+        }
+
         if (evt.type === 'search_complete') {
             refreshStatusFromServer();
+            const progressText = document.getElementById("progressText");
+            if (progressText) {
+                const pct = currentDailyLimit > 0 ? Math.round(currentApplied / currentDailyLimit * 100) : 0;
+                progressText.innerText = `Поиск завершён — ${pct}%`;
+            }
         }
     }
 }
@@ -533,6 +543,15 @@ function buildLogDescription(evt) {
         return `Поиск запущен. Найдено <span class="text-on-surface font-bold">${found}</span> вакансий.`;
     }
     if (evt.type === 'search_complete') {
+        if (evt.details?.daily_limit_reached) {
+            return '🛑 Достигнут дневной лимит откликов.';
+        }
+        if (evt.details?.stopped_by_user) {
+            return 'Поиск остановлен пользователем.';
+        }
+        if (evt.details?.error) {
+            return `Поиск завершен с ошибкой: ${esc(evt.details.error)}`;
+        }
         const stats = evt.details?.filter_stats;
         if (stats) {
             const added = stats.added_to_queue || 0;
