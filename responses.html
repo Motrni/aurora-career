@@ -315,9 +315,9 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 </main>
 
 <!-- Модалка покупки буста (поверх всей страницы) -->
-<div id="boostModal" class="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 opacity-0 transition-opacity duration-300 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="boostModalTitle">
+<div id="boostModal" class="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain p-4 md:p-6 opacity-0 transition-opacity duration-300 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="boostModalTitle">
     <div class="absolute inset-0 z-0 bg-[#100d17]/80 backdrop-blur-md" id="boostModalBackdrop" tabindex="-1"></div>
-    <div id="boostModalCard" class="relative z-10 w-full max-w-xl glass-panel rounded-xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 max-h-[min(90vh,720px)] overflow-y-auto scale-95 opacity-0 transition-all duration-300 ease-out">
+    <div id="boostModalCard" class="relative z-10 my-auto w-full max-w-xl shrink-0 glass-panel rounded-xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 scale-95 opacity-0 transition-all duration-300 ease-out">
         <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-container/20 rounded-full blur-[80px] pointer-events-none"></div>
         <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-secondary-container/10 rounded-full blur-[80px] pointer-events-none"></div>
 
@@ -422,7 +422,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="responses.js?v=8.0"></script>
+<script src="responses.js?v=8.1"></script>
 
 </body>
 </html>
