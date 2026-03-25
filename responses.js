@@ -78,6 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     propagateAuthToNavLinks();
     await initPage();
+    initBoostModal();
 
     document.getElementById("returnBtn").addEventListener("click", () => {
         if (window.Telegram && window.Telegram.WebApp) {
@@ -226,6 +227,7 @@ function updateStatusPanel(data) {
 
     renderProgress(currentApplied, currentDailyLimit);
     updateToggleButton();
+    updateBoostUpsellVisibility();
 }
 
 function renderProgress(applied, limit) {
@@ -259,6 +261,57 @@ function renderProgress(applied, limit) {
     } else {
         progressText.innerText = "Автопилот неактивен";
     }
+}
+
+function updateBoostUpsellVisibility() {
+    const block = document.getElementById("boostUpsellBlock");
+    if (!block) return;
+    const show = isDailyPaused && dailyQuotaFull;
+    block.classList.toggle("hidden", !show);
+}
+
+function openBoostModal() {
+    const modal = document.getElementById("boostModal");
+    if (!modal) return;
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("overflow-hidden");
+}
+
+function closeBoostModal() {
+    const modal = document.getElementById("boostModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("overflow-hidden");
+}
+
+function openTelegramBotForBoost() {
+    closeBoostModal();
+    const url = `https://t.me/${window.BOT_USERNAME}`;
+    if (window.Telegram?.WebApp?.openTelegramLink) {
+        window.Telegram.WebApp.openTelegramLink(url);
+    } else {
+        window.open(url, "_blank", "noopener,noreferrer");
+    }
+}
+
+function initBoostModal() {
+    const modal = document.getElementById("boostModal");
+    const backdrop = document.getElementById("boostModalBackdrop");
+    const closeBtn = document.getElementById("boostModalClose");
+    const openBtn = document.getElementById("openBoostModalBtn");
+    const tierBtns = document.querySelectorAll(".boost-tier-btn");
+
+    openBtn?.addEventListener("click", openBoostModal);
+    closeBtn?.addEventListener("click", closeBoostModal);
+    backdrop?.addEventListener("click", closeBoostModal);
+    tierBtns.forEach((b) => b.addEventListener("click", openTelegramBotForBoost));
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape" || !modal || modal.classList.contains("hidden")) return;
+        closeBoostModal();
+    });
 }
 
 function updateToggleButton() {
@@ -525,6 +578,7 @@ function handleSSEEvent(evt) {
             currentApplied = 0;
             dailyQuotaFull = false;
             renderProgress(0, currentDailyLimit);
+            updateBoostUpsellVisibility();
             void refreshStatusFromServer();
             appendLogEntry(evt);
         }
@@ -560,11 +614,14 @@ function handleSSEEvent(evt) {
         }
 
         if (evt.type === 'search_started') {
-            const progressText = document.getElementById("progressText");
             const found = evt.details?.found_total || 0;
-            if (progressText && found > 0) {
-                progressText.innerText = `Автопилот работает — обработка ${found} вакансий...`;
-            }
+            void refreshStatusFromServer().then(() => {
+                if (found <= 0) return;
+                const progressText = document.getElementById("progressText");
+                if (progressText) {
+                    progressText.innerText = `Автопилот работает — обработка ${found} вакансий...`;
+                }
+            });
         }
 
         if (evt.type === 'search_complete') {
