@@ -23,6 +23,7 @@ let currentApplied = 0;
 let currentDailyLimit = 20;
 let isDailyPaused = false;
 let dailyQuotaFull = true;
+let hasActiveBoost = false;
 let nextMorningMsk = "08:00";
 let statusPollTimer = null;
 let sseConnectedAt = null; // Момент подключения SSE — события ДО него исторические
@@ -219,6 +220,7 @@ function updateStatusPanel(data) {
     isAutopilotActive = data.is_active;
     isDailyPaused = !!data.autopilot_paused_daily_limit;
     dailyQuotaFull = !!data.daily_quota_full;
+    hasActiveBoost = !!data.has_active_boost;
     if (data.next_morning_autopilot_msk) {
         nextMorningMsk = data.next_morning_autopilot_msk;
     }
@@ -266,7 +268,7 @@ function renderProgress(applied, limit) {
 function updateBoostUpsellVisibility() {
     const block = document.getElementById("boostUpsellBlock");
     if (!block) return;
-    const show = isDailyPaused && dailyQuotaFull;
+    const show = isDailyPaused && dailyQuotaFull && !hasActiveBoost;
     block.classList.toggle("hidden", !show);
 }
 
