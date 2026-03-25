@@ -191,12 +191,20 @@ async function loadLogHistory() {
             }
         }
 
-        requestAnimationFrame(() => {
-            container.scrollTop = container.scrollHeight;
-        });
+        scrollLogToBottom();
     } catch (e) {
         console.warn("[loadLogHistory]", e);
     }
+}
+
+function scrollLogToBottom() {
+    const container = document.getElementById("logContainer");
+    if (!container) return;
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            container.scrollTop = container.scrollHeight;
+        });
+    });
 }
 
 // ============================================================================
@@ -248,13 +256,19 @@ function updateToggleButton() {
     const btn = document.getElementById("toggleBtn");
     const text = document.getElementById("toggleBtnText");
     const icon = document.getElementById("toggleBtnIcon");
+    const resumeBtn = document.getElementById("resumeNowBtn");
+
+    if (resumeBtn) {
+        if (isDailyPaused) resumeBtn.classList.remove("hidden");
+        else resumeBtn.classList.add("hidden");
+    }
 
     if (isDailyPaused) {
-        btn.classList.remove("bg-red-600/80");
-        btn.classList.add("bg-primary-container");
-        btn.style.boxShadow = "0 0 40px rgba(90,48,208,0.3)";
-        text.innerText = "Запустить автопилот";
-        icon.innerText = "bolt";
+        btn.classList.remove("bg-primary-container");
+        btn.classList.add("bg-red-600/80");
+        btn.style.boxShadow = "0 0 40px rgba(220,38,38,0.35)";
+        text.innerText = "Отключить автозапуск";
+        icon.innerText = "event_busy";
         btn.disabled = false;
         return;
     }
@@ -341,6 +355,23 @@ window.toggleAutopilot = async function () {
 
     try {
         const authQ = buildAuthParams();
+
+        if (isDailyPaused) {
+            const url = `/api/campaign/cancel-scheduled${authQ ? '?' + authQ : ''}`;
+            const resp = await apiFetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error(err.detail || `HTTP ${resp.status}`);
+            }
+            await refreshStatusFromServer();
+            disconnectSSE();
+            stopStatusPolling();
+            return;
+        }
+
         const toggleUrl = `/api/campaign/toggle${authQ ? '?' + authQ : ''}`;
         const resp = await apiFetch(toggleUrl, {
             method: "POST",
@@ -373,6 +404,39 @@ window.toggleAutopilot = async function () {
         showError("Ошибка переключения: " + e.message);
     } finally {
         btn.disabled = false;
+    }
+};
+
+window.resumeAutopilotNow = async function () {
+    const btn = document.getElementById("resumeNowBtn");
+    if (btn) btn.disabled = true;
+
+    try {
+        const authQ = buildAuthParams();
+        const toggleUrl = `/api/campaign/toggle${authQ ? '?' + authQ : ''}`;
+        const resp = await apiFetch(toggleUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+        });
+
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+
+        await refreshStatusFromServer();
+
+        const progressText = document.getElementById("progressText");
+        if (isAutopilotActive) {
+            if (progressText) progressText.innerText = "Автопилот запускается — ожидание бота (~10 сек)...";
+            connectSSE();
+            startStatusPolling();
+        }
+    } catch (e) {
+        console.error("[resumeAutopilotNow]", e);
+        showError("Не удалось запустить: " + e.message);
+    } finally {
+        if (btn) btn.disabled = false;
     }
 };
 
@@ -551,9 +615,7 @@ function appendLogEntry(evt) {
 
     container.appendChild(row);
 
-    requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight;
-    });
+    scrollLogToBottom();
 }
 
 function buildLogDescription(evt) {

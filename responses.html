@@ -219,13 +219,18 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                     <p id="progressText" class="text-on-surface-variant">Автопилот неактивен</p>
                 </div>
             </div>
-            <button id="toggleBtn" onclick="window.toggleAutopilot()" class="relative group px-8 md:px-10 py-4 md:py-5 rounded-xl bg-primary-container overflow-hidden transition-all duration-300 active:scale-95 shadow-[0_0_40px_rgba(90,48,208,0.3)] hover:shadow-[0_0_60px_rgba(90,48,208,0.5)] shrink-0">
-                <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <span class="relative z-10 font-bold text-base md:text-lg text-white flex items-center gap-3">
-                    <span id="toggleBtnText">Запустить автопилот</span>
-                    <span id="toggleBtnIcon" class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">bolt</span>
-                </span>
-            </button>
+            <div class="flex flex-col items-center md:items-end gap-2 shrink-0">
+                <button id="toggleBtn" onclick="window.toggleAutopilot()" class="relative group px-8 md:px-10 py-4 md:py-5 rounded-xl bg-primary-container overflow-hidden transition-all duration-300 active:scale-95 shadow-[0_0_40px_rgba(90,48,208,0.3)] hover:shadow-[0_0_60px_rgba(90,48,208,0.5)]">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <span class="relative z-10 font-bold text-base md:text-lg text-white flex items-center gap-3">
+                        <span id="toggleBtnText">Запустить автопилот</span>
+                        <span id="toggleBtnIcon" class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                    </span>
+                </button>
+                <button type="button" id="resumeNowBtn" onclick="window.resumeAutopilotNow()" class="hidden text-sm font-semibold text-primary hover:underline">
+                    Запустить сейчас
+                </button>
+            </div>
         </section>
 
         <!-- Main Grid: Log + Rejected -->
@@ -234,10 +239,13 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             <!-- Left: Live Log (60%) -->
             <section class="lg:col-span-6 flex flex-col gap-4 md:gap-6">
                 <div class="flex items-center justify-between px-1 md:px-4">
-                    <h2 class="text-xl md:text-2xl font-bold flex items-center gap-3">
-                        <span class="material-symbols-outlined text-primary">terminal</span>
-                        Отчет автопилота
-                    </h2>
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">terminal</span>
+                            Отчет автопилота
+                        </h2>
+                        <p id="logSubtitle" class="text-xs text-on-surface-variant mt-1 pl-1">События за сегодня (МСК)</p>
+                    </div>
                     <div id="liveIndicator" class="flex gap-2 items-center" style="display: none;">
                         <div class="h-2 w-2 rounded-full bg-error live-dot"></div>
                         <span class="text-xs font-medium text-on-surface-variant">LIVE</span>
@@ -317,7 +325,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="responses.js?v=7.1"></script>
+<script src="responses.js?v=7.2"></script>
 
 </body>
 </html>
