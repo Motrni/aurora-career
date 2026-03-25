@@ -315,51 +315,81 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 </main>
 
 <!-- Модалка покупки буста (поверх всей страницы) -->
-<div id="boostModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#100d17]/80 backdrop-blur-md" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="boostModalTitle">
-    <div class="absolute inset-0 z-0" id="boostModalBackdrop" tabindex="-1"></div>
-    <div class="relative z-10 w-full max-w-xl glass-panel rounded-xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 max-h-[min(90vh,720px)] overflow-y-auto">
+<div id="boostModal" class="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 opacity-0 transition-opacity duration-300 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="boostModalTitle">
+    <div class="absolute inset-0 z-0 bg-[#100d17]/80 backdrop-blur-md" id="boostModalBackdrop" tabindex="-1"></div>
+    <div id="boostModalCard" class="relative z-10 w-full max-w-xl glass-panel rounded-xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 max-h-[min(90vh,720px)] overflow-y-auto scale-95 opacity-0 transition-all duration-300 ease-out">
         <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-container/20 rounded-full blur-[80px] pointer-events-none"></div>
         <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-secondary-container/10 rounded-full blur-[80px] pointer-events-none"></div>
-        <div class="relative p-6 md:p-10 flex justify-between items-start gap-4">
-            <h2 id="boostModalTitle" class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-on-surface pr-2">Увеличьте лимит откликов</h2>
-            <button type="button" id="boostModalClose" class="p-2 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant shrink-0" aria-label="Закрыть">
-                <span class="material-symbols-outlined text-3xl">close</span>
-            </button>
+
+        <!-- Шаг 1: выбор тарифа -->
+        <div id="boostStep1">
+            <div class="relative p-6 md:p-10 flex justify-between items-start gap-4">
+                <h2 id="boostModalTitle" class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-on-surface pr-2">Увеличьте лимит откликов</h2>
+                <button type="button" id="boostModalClose" class="p-2 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant shrink-0" aria-label="Закрыть">
+                    <span class="material-symbols-outlined text-3xl">close</span>
+                </button>
+            </div>
+            <div class="relative px-6 md:px-10 pb-2">
+                <p class="text-on-surface-variant text-base md:text-lg leading-relaxed font-light">
+                    Буст действует 30 дней и увеличивает ваш дневной лимит откликов на <strong class="text-on-surface font-medium">+20</strong> или
+                    <strong class="text-on-surface font-medium">+40</strong> сверх базы. Оплата через защищённый шлюз CloudPayments.
+                </p>
+            </div>
+            <div class="relative p-6 md:p-10 space-y-4">
+                <button type="button" class="boost-tier-btn group w-full flex items-center justify-between p-5 md:p-6 rounded-lg bg-surface-container-high hover:bg-surface-variant transition-all duration-300 border border-transparent hover:border-primary/20 text-left active:scale-[0.98]" data-boost-tier="20">
+                    <div class="flex items-center gap-4 md:gap-6 min-w-0">
+                        <div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary-container flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                            <span class="material-symbols-outlined text-on-primary-container text-2xl" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+                        </div>
+                        <div class="min-w-0 text-left">
+                            <div class="text-lg md:text-xl font-bold text-on-surface tracking-tight">Буст +20 откликов</div>
+                            <div class="text-on-surface-variant/80 text-sm">990&nbsp;₽ / 30 дней</div>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform shrink-0">chevron_right</span>
+                </button>
+                <button type="button" class="boost-tier-btn group w-full flex items-center justify-between p-5 md:p-6 rounded-lg luxury-gradient hover:brightness-110 transition-all duration-300 shadow-[0_10px_30px_rgba(90,48,208,0.3)] text-left active:scale-[0.98]" data-boost-tier="40">
+                    <div class="flex items-center gap-4 md:gap-6 min-w-0">
+                        <div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0">
+                            <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                        </div>
+                        <div class="min-w-0 text-left">
+                            <div class="text-lg md:text-xl font-bold text-white tracking-tight">Буст +40 откликов</div>
+                            <div class="text-white/80 text-sm">1490&nbsp;₽ / 30 дней</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="px-2 py-0.5 rounded bg-white text-[#3e0c85] text-[10px] font-black uppercase tracking-tighter">Выгодно</span>
+                        <span class="material-symbols-outlined text-white group-hover:translate-x-1 transition-transform">chevron_right</span>
+                    </div>
+                </button>
+                <div id="boostError" class="hidden text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-3 text-center"></div>
+            </div>
         </div>
-        <div class="relative px-6 md:px-10 pb-2">
-            <p class="text-on-surface-variant text-base md:text-lg leading-relaxed font-light">
-                Буст действует 30 дней и увеличивает ваш дневной лимит откликов на <strong class="text-on-surface font-medium">+20</strong> или
-                <strong class="text-on-surface font-medium">+40</strong> сверх базы. Оформление — в Telegram-боте Авроры после оплаты.
-            </p>
-        </div>
-        <div class="relative p-6 md:p-10 space-y-4">
-            <button type="button" class="boost-tier-btn group w-full flex items-center justify-between p-5 md:p-6 rounded-lg bg-surface-container-high hover:bg-surface-variant transition-all duration-300 border border-transparent hover:border-primary/20 text-left active:scale-[0.98]" data-boost-tier="20">
-                <div class="flex items-center gap-4 md:gap-6 min-w-0">
-                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary-container flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
-                        <span class="material-symbols-outlined text-on-primary-container text-2xl" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
-                    </div>
-                    <div class="min-w-0 text-left">
-                        <div class="text-lg md:text-xl font-bold text-on-surface tracking-tight">Буст +20 откликов</div>
-                        <div class="text-on-surface-variant/80 text-sm">990&nbsp;₽ / 30 дней</div>
-                    </div>
+
+        <!-- Шаг 2: подтверждение и ссылка на оплату -->
+        <div id="boostStep2" class="hidden">
+            <div class="relative p-6 md:p-10 flex justify-between items-start gap-4">
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-on-surface pr-2">Счёт сформирован</h2>
+                <button type="button" class="boost-modal-close-btn p-2 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant shrink-0" aria-label="Закрыть">
+                    <span class="material-symbols-outlined text-3xl">close</span>
+                </button>
+            </div>
+            <div class="relative px-6 md:px-10 pb-4 space-y-3">
+                <p class="text-on-surface-variant text-base md:text-lg leading-relaxed font-light" id="boostStep2Desc"></p>
+                <div class="flex items-baseline gap-2">
+                    <span id="boostStep2Price" class="text-3xl md:text-4xl font-black text-on-surface"></span>
+                    <span class="text-on-surface-variant text-lg">₽</span>
                 </div>
-                <span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform shrink-0">chevron_right</span>
-            </button>
-            <button type="button" class="boost-tier-btn group w-full flex items-center justify-between p-5 md:p-6 rounded-lg luxury-gradient hover:brightness-110 transition-all duration-300 shadow-[0_10px_30px_rgba(90,48,208,0.3)] text-left active:scale-[0.98]" data-boost-tier="40">
-                <div class="flex items-center gap-4 md:gap-6 min-w-0">
-                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0">
-                        <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
-                    </div>
-                    <div class="min-w-0 text-left">
-                        <div class="text-lg md:text-xl font-bold text-white tracking-tight">Буст +40 откликов</div>
-                        <div class="text-white/80 text-sm">1490&nbsp;₽ / 30 дней</div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <span class="px-2 py-0.5 rounded bg-white text-[#3e0c85] text-[10px] font-black uppercase tracking-tighter">Выгодно</span>
-                    <span class="material-symbols-outlined text-white group-hover:translate-x-1 transition-transform">chevron_right</span>
-                </div>
-            </button>
+            </div>
+            <div class="relative p-6 md:p-10 space-y-4">
+                <a id="boostPayLink" href="#" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-8 py-4 rounded-xl luxury-gradient text-white font-bold text-base md:text-lg shadow-[0_10px_30px_rgba(90,48,208,0.3)] hover:brightness-110 active:scale-[0.98] transition-all">
+                    Перейти к оплате
+                </a>
+                <button type="button" id="boostBackBtn" class="w-full text-center px-8 py-3 rounded-xl text-on-surface-variant font-semibold hover:bg-white/5 transition-colors text-sm">
+                    Назад к выбору
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -392,7 +422,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="responses.js?v=7.7"></script>
+<script src="responses.js?v=8.0"></script>
 
 </body>
 </html>

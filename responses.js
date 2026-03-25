@@ -274,44 +274,119 @@ function updateBoostUpsellVisibility() {
 
 function openBoostModal() {
     const modal = document.getElementById("boostModal");
+    const card = document.getElementById("boostModalCard");
     if (!modal) return;
-    modal.classList.remove("hidden");
+
+    boostShowStep1();
+
+    modal.classList.remove("pointer-events-none");
     modal.setAttribute("aria-hidden", "false");
     document.body.classList.add("overflow-hidden");
+
+    requestAnimationFrame(() => {
+        modal.classList.add("opacity-100");
+        modal.classList.remove("opacity-0");
+        card.classList.add("scale-100", "opacity-100");
+        card.classList.remove("scale-95", "opacity-0");
+    });
 }
 
 function closeBoostModal() {
     const modal = document.getElementById("boostModal");
+    const card = document.getElementById("boostModalCard");
     if (!modal) return;
-    modal.classList.add("hidden");
-    modal.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("overflow-hidden");
+
+    modal.classList.remove("opacity-100");
+    modal.classList.add("opacity-0");
+    card.classList.remove("scale-100", "opacity-100");
+    card.classList.add("scale-95", "opacity-0");
+
+    const onDone = () => {
+        modal.classList.add("pointer-events-none");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("overflow-hidden");
+        modal.removeEventListener("transitionend", onDone);
+    };
+    modal.addEventListener("transitionend", onDone, { once: true });
 }
 
-function openTelegramBotForBoost() {
-    closeBoostModal();
-    const url = `https://t.me/${window.BOT_USERNAME}`;
-    if (window.Telegram?.WebApp?.openTelegramLink) {
-        window.Telegram.WebApp.openTelegramLink(url);
-    } else {
-        window.open(url, "_blank", "noopener,noreferrer");
+function boostShowStep1() {
+    const s1 = document.getElementById("boostStep1");
+    const s2 = document.getElementById("boostStep2");
+    const err = document.getElementById("boostError");
+    if (s1) s1.classList.remove("hidden");
+    if (s2) s2.classList.add("hidden");
+    if (err) { err.classList.add("hidden"); err.textContent = ""; }
+    document.querySelectorAll(".boost-tier-btn").forEach((b) => { b.disabled = false; });
+}
+
+function boostShowStep2(paymentUrl, amount, description) {
+    document.getElementById("boostStep1").classList.add("hidden");
+    document.getElementById("boostStep2").classList.remove("hidden");
+    document.getElementById("boostStep2Desc").textContent = description;
+    document.getElementById("boostStep2Price").textContent = Math.round(amount);
+    document.getElementById("boostPayLink").href = paymentUrl;
+}
+
+async function purchaseBoost(tier) {
+    const btn = document.querySelector(`.boost-tier-btn[data-boost-tier="${tier}"]`);
+    const errEl = document.getElementById("boostError");
+
+    document.querySelectorAll(".boost-tier-btn").forEach((b) => { b.disabled = true; });
+    if (errEl) { errEl.classList.add("hidden"); errEl.textContent = ""; }
+
+    try {
+        const authQ = buildAuthParams();
+        const url = `/api/boost/purchase${authQ ? '?' + authQ : ''}`;
+        const resp = await apiFetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tier: String(tier) }),
+        });
+
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        if (!data.payment_url) throw new Error("Не удалось сформировать ссылку на оплату");
+
+        boostShowStep2(data.payment_url, data.amount, data.description);
+
+    } catch (e) {
+        console.error("[purchaseBoost]", e);
+        if (errEl) {
+            errEl.textContent = e.message || "Произошла ошибка";
+            errEl.classList.remove("hidden");
+        }
+        document.querySelectorAll(".boost-tier-btn").forEach((b) => { b.disabled = false; });
     }
 }
 
 function initBoostModal() {
     const modal = document.getElementById("boostModal");
     const backdrop = document.getElementById("boostModalBackdrop");
-    const closeBtn = document.getElementById("boostModalClose");
     const openBtn = document.getElementById("openBoostModalBtn");
-    const tierBtns = document.querySelectorAll(".boost-tier-btn");
 
     openBtn?.addEventListener("click", openBoostModal);
-    closeBtn?.addEventListener("click", closeBoostModal);
-    backdrop?.addEventListener("click", closeBoostModal);
-    tierBtns.forEach((b) => b.addEventListener("click", openTelegramBotForBoost));
+
+    modal?.addEventListener("click", (e) => {
+        if (e.target === backdrop) closeBoostModal();
+    });
+
+    document.querySelectorAll("#boostModalClose, .boost-modal-close-btn").forEach((b) => {
+        b.addEventListener("click", closeBoostModal);
+    });
+
+    document.querySelectorAll(".boost-tier-btn").forEach((b) => {
+        b.addEventListener("click", () => purchaseBoost(b.dataset.boostTier));
+    });
+
+    document.getElementById("boostBackBtn")?.addEventListener("click", boostShowStep1);
 
     document.addEventListener("keydown", (e) => {
-        if (e.key !== "Escape" || !modal || modal.classList.contains("hidden")) return;
+        if (e.key !== "Escape" || !modal || modal.getAttribute("aria-hidden") === "true") return;
         closeBoostModal();
     });
 }
