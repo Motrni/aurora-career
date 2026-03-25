@@ -22,6 +22,7 @@ let rejectedTotal = 0;
 let currentApplied = 0;
 let currentDailyLimit = 20;
 let isDailyPaused = false;
+let dailyQuotaFull = true;
 let nextMorningMsk = "08:00";
 let statusPollTimer = null;
 let sseConnectedAt = null; // Момент подключения SSE — события ДО него исторические
@@ -155,6 +156,8 @@ async function initPage() {
         if (data.is_active) {
             connectSSE();
             startStatusPolling();
+        } else if (data.autopilot_paused_daily_limit) {
+            connectSSE();
         }
 
         await loadRejected(rejectedCategory);
@@ -214,6 +217,7 @@ function scrollLogToBottom() {
 function updateStatusPanel(data) {
     isAutopilotActive = data.is_active;
     isDailyPaused = !!data.autopilot_paused_daily_limit;
+    dailyQuotaFull = !!data.daily_quota_full;
     if (data.next_morning_autopilot_msk) {
         nextMorningMsk = data.next_morning_autopilot_msk;
     }
@@ -238,8 +242,13 @@ function renderProgress(applied, limit) {
     const progressText = document.getElementById("progressText");
 
     if (isDailyPaused) {
-        progressText.innerText =
-            `На сегодня лимит откликов исчерпан. Следующий автозапуск — завтра в ${nextMorningMsk} (МСК).`;
+        if (dailyQuotaFull) {
+            progressText.innerText =
+                `На сегодня лимит откликов исчерпан. Следующий автозапуск — завтра в ${nextMorningMsk} (МСК).`;
+        } else {
+            progressText.innerText =
+                "Лимит откликов на сегодня обновлён. Можно запустить сейчас или дождаться утреннего автозапуска.";
+        }
         return;
     }
 
@@ -259,7 +268,8 @@ function updateToggleButton() {
     const resumeBtn = document.getElementById("resumeNowBtn");
 
     if (resumeBtn) {
-        if (isDailyPaused) resumeBtn.classList.remove("hidden");
+        const showResume = isDailyPaused && !dailyQuotaFull;
+        if (showResume) resumeBtn.classList.remove("hidden");
         else resumeBtn.classList.add("hidden");
     }
 
@@ -469,7 +479,7 @@ function connectSSE() {
         console.warn("[SSE] connection error, reconnecting in 5s...");
         disconnectSSE();
         setTimeout(() => {
-            if (isAutopilotActive) connectSSE();
+            if (isAutopilotActive || isDailyPaused) connectSSE();
         }, 5000);
     };
 
@@ -500,8 +510,26 @@ const LOG_SILENT_REASONS = new Set([
     'filter_rpc_check_failed',
 ]);
 
+function clearAutopilotLog() {
+    const container = document.getElementById("logContainer");
+    if (!container) return;
+    container.innerHTML = "";
+}
+
 function handleSSEEvent(evt) {
     const live = isLiveEvent(evt);
+
+    if (evt.type === "daily_quota_reset") {
+        if (live) {
+            clearAutopilotLog();
+            currentApplied = 0;
+            dailyQuotaFull = false;
+            renderProgress(0, currentDailyLimit);
+            void refreshStatusFromServer();
+            appendLogEntry(evt);
+        }
+        return;
+    }
 
     if (evt.type === 'vacancy_rejected') {
         const reason = evt.details?.reason || '';
@@ -558,9 +586,8 @@ function handleSSEEvent(evt) {
 
         if (evt.type === 'autopilot_daily_sleep') {
             isAutopilotActive = false;
-            disconnectSSE();
             stopStatusPolling();
-            refreshStatusFromServer();
+            void refreshStatusFromServer();
         }
     }
 }
@@ -590,6 +617,7 @@ const EVENT_CONFIG = {
     'search_complete':   { icon: 'flag',           color: 'text-primary',  label: 'Поиск завершен' },
     'search_exhausted':  { icon: 'inventory_2',    color: 'text-[#fbbf24]', label: 'Вакансии исчерпаны' },
     'autopilot_daily_sleep': { icon: 'bedtime', color: 'text-[#fbbf24]', label: 'Лимит на сегодня' },
+    'daily_quota_reset': { icon: 'restart_alt', color: 'text-primary', label: 'Новый день' },
     'error':             { icon: 'error',          color: 'text-error',    label: 'Ошибка' },
 };
 
@@ -667,6 +695,9 @@ function buildLogDescription(evt) {
     }
     if (evt.type === 'autopilot_daily_sleep') {
         return `Дневной лимит откликов исчерпан. Автопилот на паузе до следующего дня.`;
+    }
+    if (evt.type === 'daily_quota_reset') {
+        return 'Новый календарный день: счётчики откликов сброшены. Отчёт очищен.';
     }
     if (evt.type === 'error') {
         return `Ошибка: ${esc(evt.details?.message || '')}`;
