@@ -143,6 +143,50 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 .luxury-gradient {
     background: linear-gradient(135deg, #5a30d0 0%, #3e0c85 100%);
 }
+
+.mode-toggle-btn {
+    color: rgba(202,195,215,0.6);
+    background: transparent;
+}
+.mode-toggle-btn.active {
+    background: rgba(90,48,208,0.25);
+    color: #ccbeff;
+    box-shadow: 0 0 20px rgba(90,48,208,0.15);
+}
+.mode-toggle-btn:not(.active):hover {
+    color: rgba(202,195,215,0.9);
+    background: rgba(255,255,255,0.04);
+}
+
+.vacancy-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.vacancy-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(90,48,208,0.12);
+}
+
+.vacancy-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.05);
+    color: rgba(202,195,215,0.8);
+    border: 1px solid rgba(255,255,255,0.06);
+    white-space: nowrap;
+}
+
+@keyframes card-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.vacancy-card-animate {
+    animation: card-in 0.3s ease-out both;
+}
 </style>
 </head>
 
@@ -201,7 +245,15 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                 <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tighter text-on-background">Управление откликами</h1>
                 <p class="text-on-surface-variant text-base md:text-lg max-w-xl">Интеллектуальная автоматизация поиска и взаимодействия с работодателями.</p>
             </div>
+            <!-- Mode Toggle -->
+            <div class="flex bg-surface-container rounded-xl p-1 shrink-0">
+                <button id="modeAutopilot" onclick="switchMode('autopilot')" class="mode-toggle-btn active px-5 md:px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200">Автопилот</button>
+                <button id="modeManual" onclick="switchMode('manual')" class="mode-toggle-btn px-5 md:px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200">Ручной режим</button>
+            </div>
         </div>
+
+        <!-- ========== AUTOPILOT CONTENT ========== -->
+        <div id="autopilotContent">
 
         <!-- Status Panel + Toggle -->
         <section class="glass-panel p-6 md:p-10 rounded-xl flex flex-col gap-6 md:gap-8 overflow-hidden relative">
@@ -310,10 +362,6 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             <button id="returnBtn" class="w-full md:w-auto px-8 py-3 md:py-4 rounded-xl text-on-surface-variant font-semibold hover:bg-surface-container-highest transition-all border border-outline-variant/10 text-sm md:text-base">Вернуться в Аврору</button>
         </div>
 
-    </div><!-- end mainContent -->
-
-</main>
-
 <!-- Модалка покупки буста (поверх всей страницы) -->
 <div id="boostModal" class="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain p-4 md:p-6 opacity-0 transition-opacity duration-300 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="boostModalTitle">
     <div class="absolute inset-0 z-0 bg-[#100d17]/80 backdrop-blur-md" id="boostModalBackdrop" tabindex="-1"></div>
@@ -394,6 +442,79 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     </div>
 </div>
 
+        </div><!-- /autopilotContent -->
+
+        <!-- ========== MANUAL SEARCH CONTENT ========== -->
+        <div id="manualContent" style="display: none;" class="space-y-6 md:space-y-8">
+
+            <!-- Search Control -->
+            <section class="glass-panel p-6 md:p-10 rounded-xl relative overflow-hidden">
+                <div class="absolute -left-20 -top-20 w-64 h-64 bg-primary-container/10 rounded-full blur-[100px]"></div>
+                <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold text-on-surface flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">search</span>
+                            Ручной поиск вакансий
+                        </h2>
+                        <p class="text-on-surface-variant text-sm mt-1">Вакансии подбираются по вашим настройкам и фильтруются автоматически.</p>
+                    </div>
+                    <button id="startManualSearchBtn" onclick="startManualSearch()" class="shrink-0 px-8 md:px-10 py-4 md:py-5 rounded-xl bg-primary-container overflow-hidden transition-all duration-300 active:scale-95 shadow-[0_0_40px_rgba(90,48,208,0.3)] hover:shadow-[0_0_60px_rgba(90,48,208,0.5)] group relative">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <span class="relative z-10 font-bold text-base md:text-lg text-white flex items-center gap-3">
+                            <span id="manualSearchBtnText">Показать вакансии</span>
+                            <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </span>
+                    </button>
+                </div>
+                <!-- Stats bar -->
+                <div id="manualSearchStats" class="hidden relative z-10 mt-6 pt-6 border-t border-outline-variant/20 flex flex-wrap gap-4 md:gap-8 text-sm text-on-surface-variant">
+                    <div>Найдено: <span id="msStatTotal" class="text-on-surface font-bold">—</span></div>
+                    <div>После фильтров: <span id="msStatFiltered" class="text-on-surface font-bold">—</span></div>
+                    <div>Время: <span id="msStatTime" class="text-on-surface font-bold">—</span></div>
+                </div>
+            </section>
+
+            <!-- Loading Skeleton -->
+            <div id="manualSearchSkeleton" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div class="skeleton skeleton-block" style="height: 200px; border-radius: 16px;"></div>
+                <div class="skeleton skeleton-block" style="height: 200px; border-radius: 16px;"></div>
+                <div class="skeleton skeleton-block" style="height: 200px; border-radius: 16px;"></div>
+                <div class="skeleton skeleton-block" style="height: 200px; border-radius: 16px;"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="manualSearchEmpty" class="hidden glass-panel p-10 md:p-16 rounded-xl text-center">
+                <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4" style="font-variation-settings: 'FILL' 1;">search_off</span>
+                <h3 class="text-xl font-bold text-on-surface mb-2">Вакансии не найдены</h3>
+                <p class="text-on-surface-variant text-sm max-w-md mx-auto">Попробуйте изменить параметры поиска в настройках и запустить поиск снова.</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="manualSearchError" class="hidden glass-panel p-8 md:p-12 rounded-xl text-center border border-error/20">
+                <span class="material-symbols-outlined text-4xl text-error mb-3">error</span>
+                <h3 class="text-lg font-bold text-on-surface mb-2">Ошибка поиска</h3>
+                <p id="manualSearchErrorText" class="text-on-surface-variant text-sm mb-4"></p>
+                <button onclick="startManualSearch()" class="px-6 py-2.5 rounded-lg bg-surface-container text-on-surface font-semibold text-sm hover:bg-surface-container-high transition-colors">Попробовать снова</button>
+            </div>
+
+            <!-- Vacancy Cards Grid -->
+            <div id="manualVacancyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"></div>
+
+            <!-- Load More Sentinel -->
+            <div id="manualLoadMoreSentinel" class="hidden flex justify-center py-8">
+                <div class="flex items-center gap-3 text-on-surface-variant text-sm">
+                    <svg class="animate-spin h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <span>Загрузка вакансий...</span>
+                </div>
+            </div>
+        </div><!-- /manualContent -->
+
+    </div><!-- /mainContent -->
+</main>
+
 <!-- Footer -->
 <footer class="mt-auto w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
     <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
@@ -423,6 +544,7 @@ function toggleMobileMenu() {
 
 <script src="aurora-session.js?v=1"></script>
 <script src="responses.js?v=8.1"></script>
+<script src="manual-search.js?v=1.0"></script>
 
 </body>
 </html>
