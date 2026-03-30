@@ -188,6 +188,18 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     animation: card-in 0.3s ease-out both;
 }
 
+.vm-description p { margin-bottom: 0.75em; }
+.vm-description p:last-child { margin-bottom: 0; }
+.vm-description ul, .vm-description ol { padding-left: 1.25em; margin-bottom: 0.75em; }
+.vm-description li { margin-bottom: 0.25em; }
+.vm-description strong, .vm-description b { font-weight: 600; color: #e7e0ef; }
+.vm-description h1, .vm-description h2, .vm-description h3, .vm-description h4 {
+    font-weight: 700; color: #e7e0ef; margin-top: 1em; margin-bottom: 0.5em; font-size: 0.875rem;
+}
+.vm-description a { color: #ccbeff; }
+.vm-description a:hover { text-decoration: underline; }
+.vm-description br + br { display: none; }
+
 .vm-detail-cell {
     background: rgba(255,255,255,0.03);
     border-radius: 10px;
@@ -579,21 +591,14 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
         <!-- Scrollable Content -->
         <div class="relative flex-1 overflow-y-auto px-5 md:px-8 py-5 space-y-5 scrollbar-thin">
 
-            <!-- Requirement -->
-            <div id="vmRequirementBlock" class="hidden">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 mb-2">Требования</h4>
-                <p id="vmRequirement" class="text-sm text-on-surface/90 leading-relaxed"></p>
-            </div>
+            <!-- Full Description (lazy-loaded) -->
+            <div id="vmDescriptionBlock" class="hidden"></div>
 
-            <!-- Responsibility -->
-            <div id="vmResponsibilityBlock" class="hidden">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 mb-2">Обязанности</h4>
-                <p id="vmResponsibility" class="text-sm text-on-surface/90 leading-relaxed"></p>
-            </div>
+            <!-- Key Skills (lazy-loaded) -->
+            <div id="vmSkillsBlock" class="hidden"></div>
 
             <!-- Details Grid -->
-            <div id="vmDetailsGrid" class="grid grid-cols-2 gap-3">
-            </div>
+            <div id="vmDetailsGrid" class="grid grid-cols-2 gap-3"></div>
         </div>
 
         <!-- Footer Actions -->
@@ -636,7 +641,7 @@ function toggleMobileMenu() {
 
 <script src="aurora-session.js?v=1"></script>
 <script src="responses.js?v=8.1"></script>
-<script src="manual-search.js?v=3.0"></script>
+<script src="manual-search.js?v=3.1"></script>
 
 </body>
 </html>

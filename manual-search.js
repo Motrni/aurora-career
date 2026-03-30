@@ -416,6 +416,7 @@
     // ==================================================================
 
     let _currentModalId = null;
+    const _detailCache = {};
 
     window.openVacancyModal = function openVacancyModal(vacancyId) {
         const v = _vacancyCache[vacancyId];
@@ -455,24 +456,31 @@
             tagsEl.insertAdjacentHTML("beforeend", _tag(t.text, t.icon));
         });
 
-        const reqBlock = $("vmRequirementBlock");
-        const reqText = $("vmRequirement");
-        if (v.requirement) {
-            reqText.innerHTML = v.requirement;
-            reqBlock.classList.remove("hidden");
-        } else {
-            reqBlock.classList.add("hidden");
-        }
+        _populateDetailsGrid(v);
 
-        const respBlock = $("vmResponsibilityBlock");
-        const respText = $("vmResponsibility");
-        if (v.responsibility) {
-            respText.innerHTML = v.responsibility;
-            respBlock.classList.remove("hidden");
-        } else {
-            respBlock.classList.add("hidden");
-        }
+        $("vmOpenHH").href = v.url || "#";
 
+        const applyBtn = $("vmApplyBtn");
+        applyBtn.disabled = false;
+        applyBtn.textContent = "Откликнуться";
+        applyBtn.onclick = () => _modalApply(vacancyId);
+        $("vmSkipBtn").onclick = () => _modalSkip(vacancyId);
+
+        _showDescriptionState("loading");
+
+        modal.classList.remove("pointer-events-none");
+        modal.classList.remove("opacity-0");
+        modal.setAttribute("aria-hidden", "false");
+        requestAnimationFrame(() => {
+            card.style.transform = "scale(1)";
+            card.style.opacity = "1";
+        });
+        document.body.style.overflow = "hidden";
+
+        _loadFullDescription(vacancyId);
+    };
+
+    function _populateDetailsGrid(v) {
         const grid = $("vmDetailsGrid");
         grid.innerHTML = "";
         const details = [];
@@ -493,25 +501,117 @@
                 `<div class="vm-detail-cell"><div class="vm-detail-label">${esc(label)}</div><div class="vm-detail-value">${esc(value)}</div></div>`
             );
         });
+    }
 
-        $("vmOpenHH").href = v.url || "#";
+    function _showDescriptionState(state, data) {
+        const descBlock = $("vmDescriptionBlock");
+        const skillsBlock = $("vmSkillsBlock");
 
-        const applyBtn = $("vmApplyBtn");
-        applyBtn.disabled = false;
-        applyBtn.textContent = "Откликнуться";
-        applyBtn.onclick = () => _modalApply(vacancyId);
+        if (state === "loading") {
+            descBlock.innerHTML =
+                '<div class="space-y-3">' +
+                    '<div class="skeleton skeleton-block" style="height:14px;width:90%"></div>' +
+                    '<div class="skeleton skeleton-block" style="height:14px;width:100%"></div>' +
+                    '<div class="skeleton skeleton-block" style="height:14px;width:75%"></div>' +
+                    '<div class="skeleton skeleton-block" style="height:14px;width:85%"></div>' +
+                    '<div class="skeleton skeleton-block" style="height:14px;width:60%"></div>' +
+                '</div>';
+            descBlock.classList.remove("hidden");
+            skillsBlock.innerHTML = "";
+            skillsBlock.classList.add("hidden");
+        } else if (state === "loaded") {
+            if (data.description) {
+                descBlock.innerHTML =
+                    '<h4 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 mb-3">Описание вакансии</h4>' +
+                    '<div class="vm-description text-sm text-on-surface/90 leading-relaxed">' + _sanitizeHH(data.description) + '</div>';
+                descBlock.classList.remove("hidden");
+            } else {
+                descBlock.classList.add("hidden");
+            }
 
-        $("vmSkipBtn").onclick = () => _modalSkip(vacancyId);
+            if (data.key_skills && data.key_skills.length) {
+                skillsBlock.innerHTML =
+                    '<h4 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 mb-2">Ключевые навыки</h4>' +
+                    '<div class="flex flex-wrap gap-1.5">' +
+                    data.key_skills.map((s) => `<span class="vacancy-tag">${esc(s)}</span>`).join("") +
+                    '</div>';
+                skillsBlock.classList.remove("hidden");
+            } else {
+                skillsBlock.classList.add("hidden");
+            }
+        } else if (state === "error") {
+            const v = _vacancyCache[_currentModalId];
+            let fallback = "";
+            if (v && (v.requirement || v.responsibility)) {
+                if (v.requirement) fallback += '<div class="mb-3"><h4 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 mb-2">Требования</h4><p class="text-sm text-on-surface/90 leading-relaxed">' + v.requirement + '</p></div>';
+                if (v.responsibility) fallback += '<div><h4 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 mb-2">Обязанности</h4><p class="text-sm text-on-surface/90 leading-relaxed">' + v.responsibility + '</p></div>';
+            }
+            descBlock.innerHTML = fallback || '<p class="text-sm text-on-surface-variant/50">Не удалось загрузить описание</p>';
+            descBlock.classList.remove("hidden");
+            skillsBlock.innerHTML = "";
+            skillsBlock.classList.add("hidden");
+        }
+    }
 
-        modal.classList.remove("pointer-events-none");
-        modal.classList.remove("opacity-0");
-        modal.setAttribute("aria-hidden", "false");
-        requestAnimationFrame(() => {
-            card.style.transform = "scale(1)";
-            card.style.opacity = "1";
-        });
-        document.body.style.overflow = "hidden";
-    };
+    async function _loadFullDescription(vacancyId) {
+        if (_detailCache[vacancyId]) {
+            if (_currentModalId === vacancyId) {
+                _showDescriptionState("loaded", _detailCache[vacancyId]);
+            }
+            return;
+        }
+
+        try {
+            const qs = buildAuthParams();
+            const resp = await apiFetch(`/api/manual-search/detail?vacancy_id=${vacancyId}&${qs}`);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            _detailCache[vacancyId] = data;
+
+            if (_currentModalId === vacancyId) {
+                _showDescriptionState("loaded", data);
+            }
+        } catch (e) {
+            console.error("[ManualSearch] detail fetch error:", e);
+            if (_currentModalId === vacancyId) {
+                _showDescriptionState("error");
+            }
+        }
+    }
+
+    function _sanitizeHH(html) {
+        const allowed = ['p','br','ul','ol','li','b','strong','i','em','u','h1','h2','h3','h4','h5','h6','div','span','a'];
+        const tmp = document.createElement("div");
+        tmp.innerHTML = html;
+
+        function walk(node) {
+            const children = Array.from(node.childNodes);
+            children.forEach((child) => {
+                if (child.nodeType === 3) return;
+                if (child.nodeType !== 1) { child.remove(); return; }
+                const tag = child.tagName.toLowerCase();
+                if (!allowed.includes(tag)) {
+                    while (child.firstChild) child.parentNode.insertBefore(child.firstChild, child);
+                    child.remove();
+                    return;
+                }
+                const attrs = Array.from(child.attributes);
+                attrs.forEach((a) => {
+                    if (tag === "a" && (a.name === "href" || a.name === "target" || a.name === "rel")) return;
+                    child.removeAttribute(a.name);
+                });
+                if (tag === "a") {
+                    child.setAttribute("target", "_blank");
+                    child.setAttribute("rel", "noopener");
+                    child.classList.add("text-primary", "hover:underline");
+                }
+                walk(child);
+            });
+        }
+
+        walk(tmp);
+        return tmp.innerHTML;
+    }
 
     window.closeVacancyModal = function closeVacancyModal() {
         const modal = $("vacancyModal");
