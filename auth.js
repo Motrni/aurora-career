@@ -17,7 +17,9 @@ async function redirectBySubscription() {
         if (resp.ok) {
             const data = await resp.json();
             if (data.status === 'ok') {
-                if (data.subscription_status === 'none') {
+                if (data.current_step && data.current_step.startsWith('onboarding_')) {
+                    window.location.href = 'onboarding.html';
+                } else if (data.subscription_status === 'none') {
                     window.location.href = 'cabinet.html';
                 } else {
                     window.location.href = 'settings.html';

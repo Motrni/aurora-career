@@ -97,6 +97,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
+                if (meData.current_step && meData.current_step.startsWith('onboarding_')) {
+                    window.location.href = 'onboarding.html';
+                    return;
+                }
                 if (meData.subscription_status === 'none') {
                     window.location.href = 'cabinet.html';
                     return;

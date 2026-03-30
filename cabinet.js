@@ -67,6 +67,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         currentUser = data;
 
+        if (data.current_step && data.current_step.startsWith('onboarding_')) {
+            window.location.href = 'onboarding.html';
+            return;
+        }
+
         if (window.AuroraSession) {
             window.AuroraSession.startPing();
         }
@@ -264,6 +269,65 @@ async function handleLogout() {
         });
     } catch (_) {}
     window.location.href = 'auth.html';
+}
+
+async function handleActivateTrial() {
+    const btn = document.getElementById('subscribeBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Загрузка...';
+    }
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/init-trial`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (!resp || !resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            if (resp.status === 409) {
+                window.location.href = 'onboarding.html';
+                return;
+            }
+            throw new Error(err.detail || 'Init failed');
+        }
+
+        const data = await resp.json();
+        const widget = new cp.CloudPayments();
+
+        widget.pay('auth', {
+            publicId: data.public_id,
+            description: 'Верификация карты (1 руб. вернётся)',
+            amount: 1,
+            currency: 'RUB',
+            accountId: data.account_id,
+            invoiceId: String(data.payment_id),
+            skin: 'mini',
+            data: {
+                trial: true,
+                source: 'web',
+            },
+        }, {
+            onSuccess: function () {
+                window.location.href = 'onboarding.html';
+            },
+            onFail: function (reason) {
+                console.error('[CP Widget] Fail:', reason);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Активировать подписку';
+                }
+            },
+            onComplete: function () {},
+        });
+
+    } catch (e) {
+        console.error('[Trial] Error:', e);
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Активировать подписку';
+        }
+    }
 }
 
 async function handleLinkTelegram() {

@@ -164,7 +164,7 @@ tailwind.config = {
                     Активируйте подписку, чтобы получить доступ к настройкам поиска, автопилоту откликов и ручному поиску вакансий.
                 </p>
                 <div class="mt-4" id="subActions">
-                    <button class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer" id="subscribeBtn">
+                    <button onclick="handleActivateTrial()" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer" id="subscribeBtn">
                         Активировать подписку
                     </button>
                 </div>
@@ -256,7 +256,8 @@ tailwind.config = {
     </div>
 </div>
 
+<script src="https://widget.cloudpayments.ru/bundles/cloudpayments.js"></script>
 <script src="aurora-session.js?v=1"></script>
-<script src="cabinet.js?v=1.0"></script>
+<script src="cabinet.js?v=2.0"></script>
 </body>
 </html>
