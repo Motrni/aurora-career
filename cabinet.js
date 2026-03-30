@@ -89,12 +89,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 // RENDER
 // ============================================================================
 
-function renderCabinet(user) {
+async function renderCabinet(user) {
     document.getElementById('userEmail').textContent = user.email || 'Без email';
 
     updateSubscriptionCard(user.subscription_status);
     updateNavAccess(user.subscription_status);
     updateTelegramCard(user.has_telegram);
+
+    if (user.subscription_status === 'none' || user.subscription_status === 'ended_trial' || user.subscription_status === 'ended_active') {
+        await loadTariffs();
+    }
 
     document.getElementById('loadingSkeleton').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
@@ -119,13 +123,20 @@ function updateSubscriptionCard(status) {
             desc.textContent = 'Все функции доступны. Настраивайте поиск и запускайте автопилот.';
             actions.innerHTML = '<a href="settings.html" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
             break;
-        case 'expired':
+        case 'ended_trial':
+            icon.textContent = 'timer_off';
+            title.textContent = 'Пробный период закончился';
+            desc.textContent = 'Выберите тариф ниже, чтобы продолжить пользоваться сервисом.';
+            actions.innerHTML = '';
+            break;
+        case 'ended_active':
             icon.textContent = 'event_busy';
             title.textContent = 'Подписка истекла';
             desc.textContent = 'Продлите подписку, чтобы вернуть доступ к настройкам поиска и автопилоту.';
-            actions.innerHTML = '<button class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer" id="subscribeBtn">Продлить подписку</button>';
+            actions.innerHTML = '';
             break;
         default:
+            desc.textContent = 'Выберите тариф, чтобы получить доступ к автопилоту откликов и настройкам поиска.';
             break;
     }
 }
@@ -271,6 +282,92 @@ async function handleLogout() {
     window.location.href = 'auth.html';
 }
 
+async function loadTariffs() {
+    const grid = document.getElementById('tariffGrid');
+    const container = document.getElementById('paidTariffs');
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/tariffs`);
+        if (!resp || !resp.ok) return;
+
+        const data = await resp.json();
+        const tariffs = data.tariffs || [];
+
+        if (tariffs.length === 0) {
+            container.innerHTML = '';
+            grid.classList.remove('hidden');
+            return;
+        }
+
+        const popularIdx = tariffs.length > 1 ? 1 : 0;
+
+        container.innerHTML = tariffs.map((t, i) => {
+            const pricePerDay = (t.price / t.duration_days).toFixed(0);
+            const isPopular = i === popularIdx;
+            const months = Math.round(t.duration_days / 30);
+            const monthLabel = months === 1 ? 'мес' : (months < 5 ? 'мес' : 'мес');
+
+            return `
+            <div class="card rounded-2xl p-5 card-hover cursor-pointer ${isPopular ? 'tariff-popular' : ''}"
+                 onclick="handlePurchase('${escapeHtml(t.plan_code)}')" data-plan="${escapeHtml(t.plan_code)}">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
+                            <span class="material-symbols-outlined text-on-surface-variant">${months <= 1 ? 'bolt' : months <= 2 ? 'speed' : 'workspace_premium'}</span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-semibold text-on-surface">${escapeHtml(t.name)}</span>
+                            <p class="text-on-surface-variant text-xs mt-0.5">${t.duration_days} дней &#8226; ${pricePerDay} ₽/день</p>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0 ml-3">
+                        <div class="text-lg font-bold text-on-surface">${t.price.toLocaleString('ru-RU')} ₽</div>
+                        <div class="price-per-day">${months} ${monthLabel}</div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        grid.classList.remove('hidden');
+
+    } catch (e) {
+        console.error('[Tariffs] Error:', e);
+    }
+}
+
+async function handlePurchase(planCode) {
+    const card = document.querySelector(`[data-plan="${planCode}"]`);
+    if (card) {
+        card.style.opacity = '0.6';
+        card.style.pointerEvents = 'none';
+    }
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/subscribe/purchase`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan_code: planCode }),
+        });
+
+        if (!resp || !resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || 'Purchase failed');
+        }
+
+        const data = await resp.json();
+        if (data.payment_url) {
+            window.location.href = data.payment_url;
+        }
+
+    } catch (e) {
+        console.error('[Purchase] Error:', e);
+        if (card) {
+            card.style.opacity = '1';
+            card.style.pointerEvents = 'auto';
+        }
+    }
+}
+
 async function handleActivateTrial() {
     const btn = document.getElementById('subscribeBtn');
     if (btn) {
@@ -295,7 +392,7 @@ async function handleActivateTrial() {
         const data = await resp.json();
         const widget = new cp.CloudPayments();
 
-        widget.pay('auth', {
+        const widgetOpts = {
             publicId: data.public_id,
             description: 'Верификация карты (1 руб. вернётся)',
             amount: 1,
@@ -307,7 +404,13 @@ async function handleActivateTrial() {
                 trial: true,
                 source: 'web',
             },
-        }, {
+        };
+
+        if (data.email) {
+            widgetOpts.email = data.email;
+        }
+
+        widget.pay('auth', widgetOpts, {
             onSuccess: function () {
                 window.location.href = 'onboarding.html';
             },
