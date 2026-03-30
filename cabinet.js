@@ -67,23 +67,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         currentUser = data;
 
-        if (data.current_step && data.current_step.startsWith('onboarding_')) {
-            window.location.href = 'onboarding.html';
-            return;
-        }
-
         if (window.AuroraSession) {
             window.AuroraSession.startPing();
         }
 
         const urlParams = new URLSearchParams(window.location.search);
         const paymentResult = urlParams.get('payment');
+        const hasOnboarding = data.current_step && data.current_step.startsWith('onboarding_');
 
         if (paymentResult === 'success') {
             window.history.replaceState({}, '', window.location.pathname);
 
             if (data.subscription_status === 'active' || data.subscription_status === 'trial') {
-                showPaymentSuccess(data.subscription_status);
+                showPaymentSuccess(data.subscription_status, hasOnboarding);
                 renderCabinet(data);
             } else {
                 showPaymentPending(data);
@@ -92,6 +88,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.history.replaceState({}, '', window.location.pathname);
             document.getElementById('paymentFailBanner').classList.remove('hidden');
             renderCabinet(data);
+        } else if (hasOnboarding) {
+            window.location.href = 'onboarding.html';
+            return;
         } else {
             renderCabinet(data);
         }
@@ -128,19 +127,30 @@ function updateSubscriptionCard(status) {
     const title = document.getElementById('subTitle');
     const desc = document.getElementById('subDescription');
     const actions = document.getElementById('subActions');
+    const hasOnboarding = currentUser && currentUser.current_step && currentUser.current_step.startsWith('onboarding_');
 
     switch (status) {
         case 'trial':
             icon.textContent = 'hourglass_top';
             title.textContent = 'Пробный период';
-            desc.textContent = 'У вас активен пробный период. Настройки поиска и автопилот откликов доступны.';
-            actions.innerHTML = '<a href="settings.html" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
+            if (hasOnboarding) {
+                desc.textContent = 'У вас активен пробный период. Завершите первую настройку, чтобы начать поиск.';
+                actions.innerHTML = '<a href="onboarding.html" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
+            } else {
+                desc.textContent = 'У вас активен пробный период. Настройки поиска и автопилот откликов доступны.';
+                actions.innerHTML = '<a href="settings.html" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
+            }
             break;
         case 'active':
             icon.textContent = 'verified';
             title.textContent = 'Подписка активна';
-            desc.textContent = 'Все функции доступны. Настраивайте поиск и запускайте автопилот.';
-            actions.innerHTML = '<a href="settings.html" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
+            if (hasOnboarding) {
+                desc.textContent = 'Подписка активна. Завершите первую настройку — привяжите hh.ru и выберите резюме.';
+                actions.innerHTML = '<a href="onboarding.html" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
+            } else {
+                desc.textContent = 'Все функции доступны. Настраивайте поиск и запускайте автопилот.';
+                actions.innerHTML = '<a href="settings.html" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
+            }
             break;
         case 'ended_trial':
             icon.textContent = 'timer_off';
@@ -166,13 +176,20 @@ function updateNavAccess(status) {
     const navResponses = document.getElementById('navResponses');
     const settingsLock = document.getElementById('settingsLock');
     const responsesLock = document.getElementById('responsesLock');
+    const hasOnboarding = currentUser && currentUser.current_step && currentUser.current_step.startsWith('onboarding_');
 
-    if (hasAccess) {
+    if (hasOnboarding) {
+        const navOb = document.getElementById('nav-onboarding');
+        const navObMob = document.getElementById('nav-onboarding-mobile');
+        if (navOb) navOb.classList.remove('hidden');
+        if (navObMob) navObMob.classList.remove('hidden');
+    }
+
+    if (hasAccess && !hasOnboarding) {
         navSettings.classList.remove('nav-locked');
         navResponses.classList.remove('nav-locked');
         settingsLock.classList.add('hidden');
         responsesLock.classList.add('hidden');
-
         document.querySelectorAll('.nav-link-locked').forEach(el => el.classList.remove('nav-link-locked'));
     }
 }
@@ -452,12 +469,19 @@ async function handleActivateTrial() {
     }
 }
 
-function showPaymentSuccess(status) {
+function showPaymentSuccess(status, hasOnboarding) {
     const banner = document.getElementById('paymentSuccessBanner');
     const desc = document.getElementById('paymentSuccessDesc');
+    const link = document.getElementById('paymentSuccessLink');
     banner.classList.remove('hidden');
 
-    if (status === 'trial') {
+    if (hasOnboarding) {
+        desc.textContent = 'Подписка активирована. Осталось привязать аккаунт hh.ru и выбрать резюме.';
+        if (link) {
+            link.href = 'onboarding.html';
+            link.innerHTML = '<span class="material-symbols-outlined text-lg">arrow_forward</span> Начать настройку';
+        }
+    } else if (status === 'trial') {
         desc.textContent = 'Пробный период активирован. Настройте поиск и начните получать отклики.';
     } else {
         desc.textContent = 'Подписка активирована. Все функции доступны.';
@@ -490,7 +514,8 @@ async function showPaymentPending(initialData) {
             if (data.subscription_status === 'active' || data.subscription_status === 'trial') {
                 clearInterval(poll);
                 currentUser = data;
-                desc.textContent = 'Подписка активирована. Все функции доступны.';
+                const hasOb = data.current_step && data.current_step.startsWith('onboarding_');
+                showPaymentSuccess(data.subscription_status, hasOb);
                 renderCabinet(data);
             }
         } catch (_) {}

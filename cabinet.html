@@ -119,6 +119,7 @@ tailwind.config = {
         </div>
         <div class="hidden md:flex items-center gap-8">
             <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Кабинет</span>
+            <a id="nav-onboarding" href="onboarding.html" class="hidden text-[#ccbeff] font-medium text-sm transition-colors border-b border-dashed border-[#653edb]/50 pb-0.5">Первая настройка</a>
             <a id="nav-settings" href="settings.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Настройки</a>
             <a id="nav-responses" href="responses.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Отклики</a>
         </div>
@@ -136,6 +137,7 @@ tailwind.config = {
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
     <span class="text-on-surface text-base font-bold py-3.5 border-b border-white/5">Кабинет</span>
+    <a id="nav-onboarding-mobile" href="onboarding.html" class="hidden text-primary text-base font-semibold py-3.5 border-b border-white/5">Первая настройка</a>
     <a id="nav-settings-mobile" href="settings.html" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Настройки</a>
     <a id="nav-responses-mobile" href="responses.html" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Отклики</a>
     <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">На главную</a>
@@ -163,7 +165,7 @@ tailwind.config = {
                 <div class="flex-1">
                     <h2 class="text-lg font-bold text-on-surface">Оплата прошла успешно!</h2>
                     <p class="text-on-surface-variant text-sm mt-1" id="paymentSuccessDesc">Подписка активирована. Все функции доступны.</p>
-                    <a href="settings.html" class="inline-flex items-center gap-2 mt-4 btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer">
+                    <a href="settings.html" id="paymentSuccessLink" class="inline-flex items-center gap-2 mt-4 btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer">
                         <span class="material-symbols-outlined text-lg">arrow_forward</span>
                         Перейти к настройкам
                     </a>
@@ -325,6 +327,6 @@ tailwind.config = {
 
 <script src="https://widget.cloudpayments.ru/bundles/cloudpayments.js"></script>
 <script src="aurora-session.js?v=1"></script>
-<script src="cabinet.js?v=2.1"></script>
+<script src="cabinet.js?v=2.2"></script>
 </body>
 </html>
