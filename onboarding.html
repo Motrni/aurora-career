@@ -134,14 +134,16 @@ tailwind.config = {
     </div>
 </nav>
 
-<div id="loadingSkeleton" class="relative z-10 flex-1 flex items-center justify-center px-4 pt-24 md:pt-28">
+<main class="relative z-10 flex flex-col flex-grow w-full pt-24 md:pt-28">
+
+<div id="loadingSkeleton" class="flex flex-1 flex-col items-center justify-center px-4 pb-8 min-h-[40vh]">
     <div class="w-full max-w-[480px] space-y-6">
         <div class="skeleton h-10 w-48 mx-auto"></div>
         <div class="skeleton h-64 w-full rounded-xl"></div>
     </div>
 </div>
 
-<div id="mainContent" class="relative z-10 flex-1 flex flex-col items-center px-4 pt-24 md:pt-28 pb-8 hidden fade-in">
+<div id="mainContent" class="hidden w-full flex flex-col items-center px-4 pb-8 fade-in">
     <div id="contentWrapper" class="w-full max-w-[480px] transition-all duration-500">
 
     <!-- Stepper: 3 шага -->
@@ -305,8 +307,25 @@ tailwind.config = {
     </div>
 
     </div>
-    <p class="mt-8 text-center text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold">Aurora Career &copy; 2024-2026</p>
 </div>
+
+<!-- Подвал как на responses.html — без ссылки «Главная» -->
+<footer class="mt-auto w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
+    <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-center md:justify-start items-center gap-4 md:gap-6">
+        <div class="flex flex-col items-center md:items-start gap-2">
+            <div class="flex items-center gap-2 md:gap-3">
+                <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-base md:text-lg text-[#ccbeff]">Аврора</div>
+                    <div class="text-[8px] md:text-[9px] text-[#cac3d7]/70 font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </div>
+            <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Аврора</div>
+        </div>
+    </div>
+</footer>
+
+</main>
 
 <script src="aurora-session.js?v=1"></script>
 <script src="onboarding.js?v=3.1"></script>
