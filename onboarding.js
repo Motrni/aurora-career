@@ -140,6 +140,9 @@ function showStep(stepNum) {
 
     [step1El, step2El, step3El].forEach(el => el.classList.add('hidden'));
 
+    const wrapper = document.getElementById('contentWrapper');
+    if (wrapper && stepNum < 3) wrapper.style.maxWidth = '480px';
+
     if (stepNum === 1) {
         dot1.className = 'stepper-dot active'; dot1.textContent = '1';
         dot2.className = 'stepper-dot pending'; dot2.textContent = '2';
@@ -479,15 +482,15 @@ async function loadResumes() {
         }
 
         container.innerHTML = resumes.map(r => `
-            <div class="resume-card rounded-xl p-5 flex items-start gap-4 bg-surface-container-high/60 border border-outline-variant/10 hover:border-primary/30 transition-all text-left"
+            <div class="resume-card rounded-xl p-5 flex items-center gap-4 bg-surface-container-high/60 border border-outline-variant/10 hover:border-primary/30 transition-all text-left"
                  onclick="selectResume('${escapeAttr(r.resume_id)}', this)" data-resume-id="${escapeAttr(r.resume_id)}">
-                <div class="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center flex-shrink-0">
                     <span class="material-symbols-outlined text-on-surface-variant">description</span>
                 </div>
                 <div class="flex-1 min-w-0">
                     <span class="text-sm font-medium text-on-surface leading-snug">${escapeHtml(r.title || 'Без названия')}</span>
                 </div>
-                <div class="w-5 h-5 rounded-full border-2 border-outline-variant flex items-center justify-center flex-shrink-0 resume-check mt-1"></div>
+                <div class="w-6 h-6 rounded-full border-2 border-outline-variant flex items-center justify-center flex-shrink-0 resume-check transition-colors"></div>
             </div>
         `).join('');
 
@@ -509,7 +512,7 @@ function selectResume(resumeId, el) {
     });
 
     el.classList.add('selected');
-    el.querySelector('.resume-check').innerHTML = '<span class="material-symbols-outlined text-primary text-sm">check</span>';
+    el.querySelector('.resume-check').innerHTML = '<span class="material-symbols-outlined text-primary text-base">check</span>';
 
     document.getElementById('resumeSelectBtn').disabled = false;
 }
@@ -612,6 +615,9 @@ async function loadAnalysisResult() {
 }
 
 function displayAnalysisResult(score, report) {
+    const wrapper = document.getElementById('contentWrapper');
+    if (wrapper) wrapper.style.maxWidth = '640px';
+
     document.getElementById('analysisLoading').classList.add('hidden');
     document.getElementById('analysisResult').classList.remove('hidden');
 
@@ -623,22 +629,22 @@ function displayAnalysisResult(score, report) {
     const scoreEl = document.getElementById('scoreValue');
     const verdictEl = document.getElementById('scoreVerdict');
 
-    let colorClass, verdictText, verdictBg;
+    let colorHex, verdictText, verdictBg;
     if (clampedScore >= 80) {
-        colorClass = '#4ade80';
+        colorHex = '#4ade80';
         verdictText = 'Отличное резюме';
         verdictBg = 'bg-green-500/15 text-green-400';
     } else if (clampedScore >= 60) {
-        colorClass = '#facc15';
+        colorHex = '#facc15';
         verdictText = 'Хорошее резюме, есть что улучшить';
         verdictBg = 'bg-yellow-500/15 text-yellow-400';
     } else {
-        colorClass = '#fb923c';
+        colorHex = '#fb923c';
         verdictText = 'Резюме нуждается в доработке';
         verdictBg = 'bg-orange-500/15 text-orange-400';
     }
 
-    circle.style.stroke = colorClass;
+    circle.style.stroke = colorHex;
 
     requestAnimationFrame(() => {
         circle.style.strokeDashoffset = offset;
@@ -646,12 +652,11 @@ function displayAnalysisResult(score, report) {
 
     animateCounter(scoreEl, 0, clampedScore, 1500);
 
-    verdictEl.className = `text-sm font-medium px-4 py-2 rounded-full ${verdictBg}`;
+    verdictEl.className = `inline-block text-sm font-semibold px-4 py-1.5 rounded-full ${verdictBg}`;
     verdictEl.textContent = verdictText;
 
     const reportClean = (report || '').replace(/\*\*/g, '').replace(/#{1,3}\s*/g, '');
-    const preview = reportClean.length > 600 ? reportClean.slice(0, 600) + '...' : reportClean;
-    document.getElementById('reportText').textContent = preview;
+    document.getElementById('reportText').textContent = reportClean;
 
     const profileBtn = document.getElementById('searchProfileBtn');
     profileBtn.onclick = () => {

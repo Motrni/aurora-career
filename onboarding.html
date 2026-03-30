@@ -99,6 +99,21 @@ tailwind.config = {
     .gauge-circle-bg { stroke: rgba(55,51,62,0.6); }
     .gauge-circle-progress { transition: stroke-dashoffset 1.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.6s ease; }
     .score-counter { font-variant-numeric: tabular-nums; }
+
+    @keyframes analyzeSpinGlow {
+        0%   { stroke-dashoffset: 340; stroke: #5a30d0; filter: drop-shadow(0 0 4px rgba(90,48,208,0.3)); }
+        25%  { stroke-dashoffset: 240; stroke: #7b61ff; filter: drop-shadow(0 0 8px rgba(123,97,255,0.5)); }
+        50%  { stroke-dashoffset: 160; stroke: #ccbeff; filter: drop-shadow(0 0 12px rgba(204,190,255,0.4)); }
+        75%  { stroke-dashoffset: 240; stroke: #7b61ff; filter: drop-shadow(0 0 8px rgba(123,97,255,0.5)); }
+        100% { stroke-dashoffset: 340; stroke: #5a30d0; filter: drop-shadow(0 0 4px rgba(90,48,208,0.3)); }
+    }
+    .analyze-ring { animation: analyzeSpinGlow 2.4s ease-in-out infinite; }
+
+    @keyframes btnPulse {
+        0%, 100% { box-shadow: 0 10px 40px rgba(90,48,208,0.35); }
+        50% { box-shadow: 0 10px 50px rgba(90,48,208,0.6), 0 0 20px rgba(101,62,219,0.25); }
+    }
+    .btn-pulse { animation: btnPulse 2.5s ease-in-out infinite; }
 </style>
 </head>
 <body class="text-on-surface min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary relative overflow-x-hidden">
@@ -119,18 +134,18 @@ tailwind.config = {
     </div>
 </nav>
 
-<div id="loadingSkeleton" class="relative z-10 flex-1 flex items-center justify-center px-4 pt-20">
+<div id="loadingSkeleton" class="relative z-10 flex-1 flex items-center justify-center px-4 pt-24 md:pt-28">
     <div class="w-full max-w-[480px] space-y-6">
         <div class="skeleton h-10 w-48 mx-auto"></div>
         <div class="skeleton h-64 w-full rounded-xl"></div>
     </div>
 </div>
 
-<div id="mainContent" class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pt-20 pb-8 hidden fade-in">
-    <div class="w-full max-w-[480px]">
+<div id="mainContent" class="relative z-10 flex-1 flex flex-col items-center px-4 pt-24 md:pt-28 pb-8 hidden fade-in">
+    <div id="contentWrapper" class="w-full max-w-[480px] transition-all duration-500">
 
     <!-- Stepper: 3 шага -->
-    <div class="flex items-center justify-center gap-2 sm:gap-3 mb-10">
+    <div class="flex items-center justify-center gap-2 sm:gap-3 mb-8">
         <div class="stepper-dot active" id="stepDot1">1</div>
         <div class="stepper-line pending" id="stepLine1"></div>
         <div class="stepper-dot pending" id="stepDot2">2</div>
@@ -222,76 +237,78 @@ tailwind.config = {
 
     <!-- ==================== STEP 3: Analysis ==================== -->
     <div id="step3" class="hidden">
-        <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
 
-            <!-- Analyzing state -->
-            <div id="analysisLoading" class="flex flex-col items-center text-center space-y-6 py-4">
-                <div class="space-y-3">
-                    <h1 class="text-3xl font-bold tracking-tight text-on-surface">Анализируем резюме</h1>
-                    <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
-                        AI оценивает ваше резюме по ключевым критериям рекрутеров
-                    </p>
-                </div>
-                <div class="relative w-28 h-28 flex items-center justify-center">
-                    <svg class="w-full h-full -rotate-90" viewBox="0 0 128 128">
-                        <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
-                        <circle class="text-primary/30 gauge-circle-progress" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="182" stroke-width="8" stroke-linecap="round" style="animation: gaugeIndeterminate 2s ease-in-out infinite"></circle>
-                    </svg>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-primary text-3xl">psychology</span>
+        <!-- Analyzing state -->
+        <div id="analysisLoading">
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 py-4">
+                    <div class="space-y-3">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Анализируем резюме</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            AI оценивает ваше резюме по ключевым критериям рекрутеров
+                        </p>
                     </div>
-                </div>
-                <p class="text-on-surface text-sm font-medium h-5" id="analysisRotatingText">Анализирую опыт работы...</p>
-            </div>
-
-            <!-- Result state -->
-            <div id="analysisResult" class="hidden fade-in">
-                <div class="flex flex-col items-center text-center space-y-6">
-                    <div class="space-y-2">
-                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Анализ готов</h1>
-                    </div>
-
-                    <!-- Gauge -->
-                    <div class="relative w-32 h-32 flex items-center justify-center">
-                        <svg class="w-full h-full -rotate-90" viewBox="0 0 128 128">
+                    <div class="relative w-28 h-28 flex items-center justify-center">
+                        <svg class="w-full h-full" viewBox="0 0 128 128" style="transform: rotate(-90deg)">
                             <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
-                            <circle id="scoreCircle" class="gauge-circle-progress" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-width="8" stroke-linecap="round"></circle>
+                            <circle class="analyze-ring" cx="64" cy="64" fill="transparent" r="58" stroke="#5a30d0" stroke-dasharray="364.4" stroke-width="8" stroke-linecap="round"></circle>
                         </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span id="scoreValue" class="text-3xl font-bold text-on-surface score-counter">0</span>
-                            <span class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">из 100</span>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-3xl">psychology</span>
+                        </div>
+                    </div>
+                    <p class="text-on-surface text-sm font-medium h-5" id="analysisRotatingText">Анализирую опыт работы...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result state -->
+        <div id="analysisResult" class="hidden fade-in">
+            <div class="glass-panel rounded-xl p-6 sm:p-8 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="space-y-6">
+
+                    <!-- Header row: gauge + verdict -->
+                    <div class="flex items-center gap-5 sm:gap-6">
+                        <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
+                            <svg class="w-full h-full" viewBox="0 0 128 128" style="transform: rotate(-90deg)">
+                                <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                                <circle id="scoreCircle" class="gauge-circle-progress" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-width="8" stroke-linecap="round"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span id="scoreValue" class="text-2xl sm:text-3xl font-bold text-on-surface score-counter">0</span>
+                                <span class="text-[9px] sm:text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">из 100</span>
+                            </div>
+                        </div>
+                        <div class="flex-1 text-left space-y-2">
+                            <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-on-surface">Анализ готов</h2>
+                            <div id="scoreVerdict" class="inline-block text-sm font-semibold px-4 py-1.5 rounded-full"></div>
                         </div>
                     </div>
 
-                    <!-- Verdict -->
-                    <div id="scoreVerdict" class="text-sm font-medium px-4 py-2 rounded-full"></div>
-
-                    <!-- Report preview -->
-                    <div id="reportPreview" class="w-full text-left bg-surface-container-high/40 rounded-xl p-5 max-h-48 overflow-y-auto">
-                        <p class="text-on-surface-variant text-xs leading-relaxed whitespace-pre-line" id="reportText"></p>
+                    <!-- Report text -->
+                    <div id="reportPreview" class="w-full text-left bg-surface-container-high/40 rounded-xl p-5 sm:p-6 max-h-[45vh] overflow-y-auto">
+                        <p class="text-on-surface-variant text-sm sm:text-[15px] leading-relaxed whitespace-pre-line" id="reportText"></p>
                     </div>
 
-                    <button id="searchProfileBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer">
-                        Настроить поисковый профиль
-                    </button>
+                    <!-- CTA -->
+                    <div class="space-y-3 pt-2">
+                        <p class="text-on-surface-variant text-sm text-center">Теперь давайте настроим поисковый профиль</p>
+                        <button id="searchProfileBtn" class="btn-primary btn-pulse w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer">
+                            Настроить поисковый профиль
+                        </button>
+                    </div>
+
                 </div>
             </div>
-
         </div>
+
     </div>
 
     </div>
     <p class="mt-8 text-center text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold">Aurora Career &copy; 2024-2026</p>
 </div>
 
-<style>
-@keyframes gaugeIndeterminate {
-    0% { stroke-dashoffset: 300; opacity: 0.4; }
-    50% { stroke-dashoffset: 100; opacity: 1; }
-    100% { stroke-dashoffset: 300; opacity: 0.4; }
-}
-</style>
 <script src="aurora-session.js?v=1"></script>
-<script src="onboarding.js?v=3.0"></script>
+<script src="onboarding.js?v=3.1"></script>
 </body>
 </html>
