@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script>
@@ -17,9 +17,11 @@ tailwind.config = {
     theme: {
         extend: {
             colors: {
+                "surface-container-lowest": "#100d17",
                 "outline": "#938ea0",
                 "on-secondary-container": "#c7aaff",
                 "primary-container": "#5a30d0",
+                "secondary-container": "#58309f",
                 "on-surface": "#e7e0ef",
                 "surface-container-low": "#1d1a24",
                 "surface-variant": "#37333e",
@@ -40,12 +42,20 @@ tailwind.config = {
             fontFamily: {
                 inter: ["Inter", "system-ui", "sans-serif"],
             },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
         },
     },
 };
 </script>
 <style>
     body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; }
+
+    .glass-panel {
+        background: rgba(55, 51, 62, 0.4);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+    }
+
     .aurora-glow {
         position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
         width: 700px; height: 700px;
@@ -54,71 +64,36 @@ tailwind.config = {
         animation: pulse 10s infinite alternate;
     }
     @keyframes pulse { 0%{opacity:.4;transform:translateX(-50%) scale(1)} 100%{opacity:.7;transform:translateX(-50%) scale(1.1)} }
-    .card {
-        background: rgba(33,30,41,0.85);
-        border: 1px solid rgba(147,142,160,0.12);
-        backdrop-filter: blur(12px);
-    }
-    .card-hover { transition: border-color 0.2s, box-shadow 0.2s; }
-    .card-hover:hover { border-color: rgba(204,190,255,0.25); box-shadow: 0 0 20px rgba(101,62,219,0.08); }
-    .btn-primary {
-        background: linear-gradient(135deg, #653edb 0%, #5a30d0 100%);
-        transition: all 0.2s;
-    }
-    .btn-primary:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .fade-in { animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-    .skeleton { background: linear-gradient(90deg, rgba(55,51,62,0.5) 25%, rgba(55,51,62,0.8) 50%, rgba(55,51,62,0.5) 75%);
-        background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
     .brand-logo-font { font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
 
-    .stepper-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; transition: all 0.3s; }
-    .stepper-dot.active { background: linear-gradient(135deg, #653edb, #5a30d0); color: #fff; box-shadow: 0 0 20px rgba(101,62,219,0.35); }
+    .stepper-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+    .stepper-dot.active { background: linear-gradient(135deg, #653edb, #5a30d0); color: #fff; box-shadow: 0 0 24px rgba(101,62,219,0.4); }
     .stepper-dot.completed { background: #653edb; color: #fff; }
     .stepper-dot.pending { background: rgba(55,51,62,0.7); color: #938ea0; }
     .stepper-line { height: 2px; flex: 1; transition: background 0.3s; }
     .stepper-line.active { background: linear-gradient(90deg, #653edb, #5a30d0); }
-    .stepper-line.pending { background: rgba(55,51,62,0.7); }
+    .stepper-line.pending { background: rgba(55,51,62,0.5); }
 
-    .input-field {
-        background: rgba(33,30,41,0.6);
-        border: 1px solid rgba(147,142,160,0.2);
-        border-radius: 12px;
-        padding: 14px 16px;
-        color: #e7e0ef;
-        font-size: 15px;
-        width: 100%;
-        outline: none;
-        transition: border-color 0.2s, box-shadow 0.2s;
+    .btn-primary {
+        background: linear-gradient(to right, #5a30d0, #58309f);
+        transition: all 0.2s;
+        box-shadow: 0 10px 40px rgba(90,48,208,0.35);
     }
-    .input-field:focus {
-        border-color: #653edb;
-        box-shadow: 0 0 0 3px rgba(101,62,219,0.15);
-    }
-    .input-field::placeholder { color: #938ea0; }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+    .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
-    .otp-field {
-        background: rgba(33,30,41,0.6);
-        border: 1px solid rgba(147,142,160,0.2);
-        border-radius: 12px;
-        width: 48px; height: 56px;
-        text-align: center;
-        color: #e7e0ef;
-        font-size: 22px;
-        font-weight: 600;
-        outline: none;
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .otp-field:focus {
-        border-color: #653edb;
-        box-shadow: 0 0 0 3px rgba(101,62,219,0.15);
-    }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+    .skeleton { background: linear-gradient(90deg, rgba(55,51,62,0.5) 25%, rgba(55,51,62,0.8) 50%, rgba(55,51,62,0.5) 75%);
+        background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
     .resume-card { transition: all 0.2s; cursor: pointer; }
-    .resume-card:hover { border-color: rgba(204,190,255,0.3); }
-    .resume-card.selected { border-color: #653edb; box-shadow: 0 0 16px rgba(101,62,219,0.2); }
+    .resume-card:hover { border-color: rgba(204,190,255,0.3) !important; }
+    .resume-card.selected { border-color: #653edb !important; box-shadow: 0 0 16px rgba(101,62,219,0.2); }
 
     .spinner {
         width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
@@ -131,10 +106,14 @@ tailwind.config = {
     @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
 </style>
 </head>
-<body class="min-h-screen flex flex-col text-on-surface selection:bg-primary/30 selection:text-primary">
-<div class="aurora-glow"></div>
+<body class="text-on-surface min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary relative overflow-x-hidden">
 
-<!-- Minimal top bar -->
+<!-- Background blurs -->
+<div class="aurora-glow"></div>
+<div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary-container/20 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="absolute bottom-[-15%] right-[-10%] w-[40%] h-[40%] bg-secondary-container/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+<!-- Top bar -->
 <nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
     <div class="flex items-center justify-between h-full px-5 md:px-12 lg:px-16">
         <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
@@ -150,14 +129,17 @@ tailwind.config = {
 </nav>
 
 <!-- Loading skeleton -->
-<div id="loadingSkeleton" class="relative z-10 max-w-lg mx-auto px-4 pt-28 md:pt-32 pb-8 space-y-6">
-    <div class="skeleton h-8 w-64 mx-auto mb-4"></div>
-    <div class="skeleton h-12 w-full rounded-2xl"></div>
-    <div class="skeleton h-48 w-full rounded-2xl"></div>
+<div id="loadingSkeleton" class="relative z-10 flex-1 flex items-center justify-center px-4 pt-20">
+    <div class="w-full max-w-[480px] space-y-6">
+        <div class="skeleton h-10 w-48 mx-auto"></div>
+        <div class="skeleton h-64 w-full rounded-xl"></div>
+    </div>
 </div>
 
 <!-- Main content -->
-<div id="mainContent" class="relative z-10 max-w-lg mx-auto px-4 pt-28 md:pt-32 pb-8 hidden fade-in">
+<div id="mainContent" class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pt-20 pb-8 hidden fade-in">
+
+    <div class="w-full max-w-[480px]">
 
     <!-- Stepper -->
     <div class="flex items-center justify-center gap-3 mb-10">
@@ -167,84 +149,104 @@ tailwind.config = {
     </div>
 
     <!-- ==================== STEP 1: HH Login ==================== -->
-    <div id="step1" class="space-y-6">
-        <div class="text-center mb-6">
-            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-on-surface">Привяжите аккаунт hh.ru</h1>
-            <p class="text-on-surface-variant text-sm mt-2">
-                Для работы сервиса необходим доступ к вашему аккаунту на HeadHunter
-            </p>
-        </div>
+    <div id="step1">
+        <!-- Auth Card -->
+        <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+            <div class="flex flex-col items-center text-center space-y-8">
+                <div class="space-y-3">
+                    <h1 class="text-3xl font-bold tracking-tight text-on-surface">Привяжите аккаунт hh.ru</h1>
+                    <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                        Для синхронизации вашего резюме и откликов нам необходим доступ к вашему профилю HeadHunter
+                    </p>
+                </div>
 
-        <!-- Login form -->
-        <div id="hhLoginForm" class="card rounded-2xl p-6 space-y-5">
-            <div>
-                <label class="text-on-surface-variant text-xs font-medium mb-2 block">Телефон или Email на hh.ru</label>
-                <input type="text" id="hhLoginInput" class="input-field" placeholder="+7 900 123 45 67 или email@mail.ru" autocomplete="off">
-            </div>
-            <div id="hhLoginError" class="text-error text-xs hidden"></div>
-            <button onclick="handleHhLogin()" id="hhLoginBtn" class="btn-primary w-full text-white font-medium py-3.5 rounded-xl text-sm cursor-pointer">
-                Далее
-            </button>
-        </div>
+                <!-- Login form -->
+                <div id="hhLoginForm" class="w-full space-y-5">
+                    <div class="relative group">
+                        <input
+                            type="text"
+                            id="hhLoginInput"
+                            class="w-full bg-surface-container-high border-none rounded-xl py-5 px-6 text-on-surface focus:ring-0 focus:shadow-[0_0_30px_rgba(90,48,208,0.2)] transition-all placeholder-outline/50 font-medium text-[15px]"
+                            placeholder="+7 900 123 45 67 или email@mail.ru"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <div id="hhLoginError" class="text-error text-xs hidden"></div>
+                    <button onclick="handleHhLogin()" id="hhLoginBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer">
+                        Далее
+                    </button>
+                </div>
 
-        <!-- OTP form (hidden) -->
-        <div id="hhOtpForm" class="card rounded-2xl p-6 space-y-5 hidden slide-in">
-            <div class="text-center">
-                <span class="material-symbols-outlined text-primary text-3xl mb-2">sms</span>
-                <p class="text-on-surface text-sm font-medium" id="otpMessage">Введите код из СМС</p>
-            </div>
-            <div class="flex justify-center gap-2" id="otpContainer">
-                <input type="text" maxlength="1" class="otp-field" data-otp-idx="0" inputmode="numeric" autocomplete="one-time-code">
-                <input type="text" maxlength="1" class="otp-field" data-otp-idx="1" inputmode="numeric">
-                <input type="text" maxlength="1" class="otp-field" data-otp-idx="2" inputmode="numeric">
-                <input type="text" maxlength="1" class="otp-field" data-otp-idx="3" inputmode="numeric">
-                <input type="text" maxlength="1" class="otp-field" data-otp-idx="4" inputmode="numeric">
-                <input type="text" maxlength="1" class="otp-field" data-otp-idx="5" inputmode="numeric">
-            </div>
-            <div id="otpError" class="text-error text-xs text-center hidden"></div>
-            <button onclick="handleHhCode()" id="otpSubmitBtn" class="btn-primary w-full text-white font-medium py-3.5 rounded-xl text-sm cursor-pointer" disabled>
-                Подтвердить
-            </button>
-            <button onclick="resetHhLogin()" class="w-full text-on-surface-variant text-xs text-center py-2 cursor-pointer hover:text-primary transition-colors">
-                Ввести другой номер / email
-            </button>
-        </div>
+                <!-- OTP form (hidden) -->
+                <div id="hhOtpForm" class="w-full space-y-6 hidden slide-in">
+                    <div class="text-center space-y-2">
+                        <span class="material-symbols-outlined text-primary text-4xl">sms</span>
+                        <p class="text-on-surface text-sm font-medium" id="otpMessage">Введите код из СМС</p>
+                    </div>
+                    <div class="flex justify-center gap-2.5" id="otpContainer">
+                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="0" inputmode="numeric" autocomplete="one-time-code">
+                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="1" inputmode="numeric">
+                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="2" inputmode="numeric">
+                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="3" inputmode="numeric">
+                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="4" inputmode="numeric">
+                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="5" inputmode="numeric">
+                    </div>
+                    <div id="otpError" class="text-error text-xs text-center hidden"></div>
+                    <button onclick="handleHhCode()" id="otpSubmitBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer" disabled>
+                        Подтвердить
+                    </button>
+                    <button onclick="resetHhLogin()" class="w-full text-on-surface-variant text-xs text-center py-2 cursor-pointer hover:text-primary transition-colors">
+                        Ввести другой номер / email
+                    </button>
+                </div>
 
-        <!-- Processing state (hidden) -->
-        <div id="hhProcessing" class="card rounded-2xl p-8 text-center space-y-4 hidden slide-in">
-            <div class="spinner mx-auto" style="width:32px;height:32px;border-width:3px"></div>
-            <p class="text-on-surface text-sm font-medium" id="processingText">Проверяем данные...</p>
-            <p class="text-on-surface-variant text-xs" id="processingSubtext">Это может занять до минуты</p>
+                <!-- Processing state (hidden) -->
+                <div id="hhProcessing" class="w-full py-6 text-center space-y-4 hidden slide-in">
+                    <div class="spinner mx-auto" style="width:36px;height:36px;border-width:3px"></div>
+                    <p class="text-on-surface text-sm font-medium" id="processingText">Проверяем данные...</p>
+                    <p class="text-on-surface-variant text-xs" id="processingSubtext">Это может занять до минуты</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- ==================== STEP 2: Resume Select ==================== -->
-    <div id="step2" class="space-y-6 hidden">
-        <div class="text-center mb-6">
-            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-on-surface">Выберите резюме</h1>
-            <p class="text-on-surface-variant text-sm mt-2">
-                Выберите резюме, по которому мы будем искать вакансии и отправлять отклики
-            </p>
-        </div>
+    <div id="step2" class="hidden">
+        <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+            <div class="flex flex-col items-center text-center space-y-8">
+                <div class="space-y-3">
+                    <h1 class="text-3xl font-bold tracking-tight text-on-surface">Выберите резюме</h1>
+                    <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                        Выберите резюме, по которому мы будем искать вакансии и отправлять отклики
+                    </p>
+                </div>
 
-        <div id="resumesList" class="space-y-3">
-            <div class="skeleton h-20 w-full rounded-2xl"></div>
-            <div class="skeleton h-20 w-full rounded-2xl"></div>
-        </div>
+                <div id="resumesList" class="w-full space-y-3">
+                    <div class="skeleton h-20 w-full rounded-xl"></div>
+                    <div class="skeleton h-20 w-full rounded-xl"></div>
+                </div>
 
-        <div id="resumeEmpty" class="card rounded-2xl p-6 text-center hidden">
-            <span class="material-symbols-outlined text-outline text-3xl mb-2">description_off</span>
-            <p class="text-on-surface-variant text-sm">Резюме не найдены. Создайте резюме на hh.ru и попробуйте снова.</p>
-        </div>
+                <div id="resumeEmpty" class="w-full py-8 text-center hidden">
+                    <span class="material-symbols-outlined text-outline text-4xl mb-3">description_off</span>
+                    <p class="text-on-surface-variant text-sm">Резюме не найдены. Создайте резюме на hh.ru и попробуйте снова.</p>
+                </div>
 
-        <button onclick="handleResumeSelect()" id="resumeSelectBtn" class="btn-primary w-full text-white font-medium py-3.5 rounded-xl text-sm cursor-pointer hidden" disabled>
-            Продолжить
-        </button>
+                <button onclick="handleResumeSelect()" id="resumeSelectBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer hidden" disabled>
+                    Продолжить
+                </button>
+            </div>
+        </div>
     </div>
 
+    </div>
+
+    <!-- Footnote -->
+    <p class="mt-8 text-center text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold">
+        Aurora Career &copy; 2024-2026
+    </p>
 </div>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="onboarding.js?v=1.1"></script>
+<script src="onboarding.js?v=1.2"></script>
 </body>
 </html>

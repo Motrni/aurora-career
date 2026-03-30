@@ -382,8 +382,8 @@ async function loadResumes() {
         }
 
         container.innerHTML = resumes.map(r => `
-            <div class="card resume-card rounded-2xl p-5 flex items-center gap-4" onclick="selectResume('${escapeAttr(r.resume_id)}', this)" data-resume-id="${escapeAttr(r.resume_id)}">
-                <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
+            <div class="resume-card rounded-xl p-5 flex items-center gap-4 bg-surface-container-high/60 border border-outline-variant/10 hover:border-primary/30 transition-all" onclick="selectResume('${escapeAttr(r.resume_id)}', this)" data-resume-id="${escapeAttr(r.resume_id)}">
+                <div class="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center flex-shrink-0">
                     <span class="material-symbols-outlined text-on-surface-variant">description</span>
                 </div>
                 <div class="flex-1 min-w-0">
