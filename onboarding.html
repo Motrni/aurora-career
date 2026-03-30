@@ -116,7 +116,7 @@ tailwind.config = {
     .btn-pulse { animation: btnPulse 2.5s ease-in-out infinite; }
 </style>
 </head>
-<body class="text-on-surface min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary relative overflow-x-hidden">
+<body class="text-on-surface min-h-screen selection:bg-primary/30 selection:text-primary relative overflow-x-hidden">
 
 <div class="aurora-glow"></div>
 <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary-container/20 rounded-full blur-[120px] pointer-events-none"></div>
@@ -134,9 +134,9 @@ tailwind.config = {
     </div>
 </nav>
 
-<main class="relative z-10 flex flex-col flex-grow w-full pt-24 md:pt-28">
+<main class="relative z-10 flex flex-col w-full pt-24 md:pt-28">
 
-<div id="loadingSkeleton" class="flex flex-1 flex-col items-center justify-center px-4 pb-8 min-h-[40vh]">
+<div id="loadingSkeleton" class="flex flex-col items-center justify-center px-4 pb-8 min-h-[50vh]">
     <div class="w-full max-w-[480px] space-y-6">
         <div class="skeleton h-10 w-48 mx-auto"></div>
         <div class="skeleton h-64 w-full rounded-xl"></div>
@@ -310,7 +310,7 @@ tailwind.config = {
 </div>
 
 <!-- Подвал как на responses.html — без ссылки «Главная» -->
-<footer class="mt-auto w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
+<footer class="w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
     <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-center md:justify-start items-center gap-4 md:gap-6">
         <div class="flex flex-col items-center md:items-start gap-2">
             <div class="flex items-center gap-2 md:gap-3">
