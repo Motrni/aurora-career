@@ -299,16 +299,23 @@ async function pollHhStatus() {
             return;
         }
 
-        if (status === 'success' || status === 'sync_complete') {
-            stopPolling();
+        if (status === 'success') {
             document.getElementById('hhOtpForm').classList.add('hidden');
             document.getElementById('hhProcessing').classList.remove('hidden');
             document.getElementById('processingText').textContent = 'Аккаунт привязан!';
-            document.getElementById('processingSubtext').textContent = 'Загружаем резюме...';
+            document.getElementById('processingSubtext').textContent = 'Собираем данные с hh.ru, подождите...';
+            return;
+        }
+
+        if (status === 'sync_complete') {
+            stopPolling();
+            document.getElementById('hhProcessing').classList.remove('hidden');
+            document.getElementById('processingText').textContent = 'Готово!';
+            document.getElementById('processingSubtext').textContent = 'Загружаем ваши резюме...';
 
             setTimeout(() => {
                 showStep(2);
-            }, 1500);
+            }, 1000);
             return;
         }
 
