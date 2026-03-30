@@ -2,6 +2,7 @@
  * onboarding.js — Первая настройка Aurora Career.
  * Шаг 1: Привязка HH.ru аккаунта (табы Телефон/Почта, OTP после NEED_CODE)
  * Шаг 2: Выбор резюме (полное название, без truncate)
+ * Шаг 3: AI-анализ резюме (gauge + отчёт)
  */
 
 const API_BASE_URL = window.AuroraSession
@@ -13,7 +14,18 @@ const API_BASE_URL = window.AuroraSession
 let currentUser = null;
 let selectedResumeId = null;
 let pollInterval = null;
+let analysisInterval = null;
+let textRotateInterval = null;
 let activeTab = 'phone';
+
+const ANALYSIS_PHRASES = [
+    'Анализирую опыт работы...',
+    'Оцениваю ключевые навыки...',
+    'Изучаю структуру резюме...',
+    'Проверяю релевантность...',
+    'Сравниваю с лучшими практиками...',
+    'Формирую рекомендации...',
+];
 
 // ============================================================================
 // API HELPER
@@ -96,7 +108,14 @@ function initOnboarding(step) {
     document.getElementById('loadingSkeleton').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
 
-    if (step === 'onboarding_resume_select') {
+    if (step === 'onboarding_analysis_complete') {
+        showStep(3);
+        loadAnalysisResult();
+    } else if (step === 'onboarding_analysis') {
+        showStep(3);
+        startAnalysisPolling();
+        startTextRotation();
+    } else if (step === 'onboarding_resume_select') {
         showStep(2);
     } else {
         showStep(1);
@@ -104,30 +123,45 @@ function initOnboarding(step) {
 }
 
 // ============================================================================
-// STEPPER
+// STEPPER (3 steps)
 // ============================================================================
 
 function showStep(stepNum) {
     const dot1 = document.getElementById('stepDot1');
     const dot2 = document.getElementById('stepDot2');
+    const dot3 = document.getElementById('stepDot3');
     const line1 = document.getElementById('stepLine1');
+    const line2 = document.getElementById('stepLine2');
     const step1El = document.getElementById('step1');
     const step2El = document.getElementById('step2');
+    const step3El = document.getElementById('step3');
+
+    const checkIcon = '<span class="material-symbols-outlined text-sm">check</span>';
+
+    [step1El, step2El, step3El].forEach(el => el.classList.add('hidden'));
 
     if (stepNum === 1) {
-        dot1.className = 'stepper-dot active';
-        dot2.className = 'stepper-dot pending';
+        dot1.className = 'stepper-dot active'; dot1.textContent = '1';
+        dot2.className = 'stepper-dot pending'; dot2.textContent = '2';
+        dot3.className = 'stepper-dot pending'; dot3.textContent = '3';
         line1.className = 'stepper-line pending';
+        line2.className = 'stepper-line pending';
         step1El.classList.remove('hidden');
-        step2El.classList.add('hidden');
-    } else {
-        dot1.className = 'stepper-dot completed';
-        dot1.innerHTML = '<span class="material-symbols-outlined text-sm">check</span>';
-        dot2.className = 'stepper-dot active';
+    } else if (stepNum === 2) {
+        dot1.className = 'stepper-dot completed'; dot1.innerHTML = checkIcon;
+        dot2.className = 'stepper-dot active'; dot2.textContent = '2';
+        dot3.className = 'stepper-dot pending'; dot3.textContent = '3';
         line1.className = 'stepper-line active';
-        step1El.classList.add('hidden');
+        line2.className = 'stepper-line pending';
         step2El.classList.remove('hidden');
         loadResumes();
+    } else {
+        dot1.className = 'stepper-dot completed'; dot1.innerHTML = checkIcon;
+        dot2.className = 'stepper-dot completed'; dot2.innerHTML = checkIcon;
+        dot3.className = 'stepper-dot active'; dot3.textContent = '3';
+        line1.className = 'stepper-line active';
+        line2.className = 'stepper-line active';
+        step3El.classList.remove('hidden');
     }
 }
 
@@ -144,19 +178,19 @@ function switchTab(tab) {
     const errorEl = document.getElementById('hhLoginError');
 
     errorEl.classList.add('hidden');
+    document.getElementById('hhPhoneInput').blur();
+    document.getElementById('hhEmailInput').blur();
 
     if (tab === 'phone') {
         phoneTab.classList.add('active');
         emailTab.classList.remove('active');
         phoneInput.classList.remove('hidden');
         emailInput.classList.add('hidden');
-        document.getElementById('hhPhoneInput').focus();
     } else {
         emailTab.classList.add('active');
         phoneTab.classList.remove('active');
         emailInput.classList.remove('hidden');
         phoneInput.classList.add('hidden');
-        document.getElementById('hhEmailInput').focus();
     }
 }
 
@@ -227,7 +261,6 @@ async function handleHhLogin() {
 
         document.getElementById('hhLoginForm').classList.add('hidden');
         document.getElementById('hhWaitingCode').classList.remove('hidden');
-
         startPolling();
 
     } catch (e) {
@@ -392,9 +425,7 @@ async function pollHhStatus() {
             document.getElementById('processingText').textContent = 'Готово!';
             document.getElementById('processingSubtext').textContent = 'Загружаем ваши резюме...';
 
-            setTimeout(() => {
-                showStep(2);
-            }, 1000);
+            setTimeout(() => { showStep(2); }, 1000);
             return;
         }
 
@@ -428,21 +459,17 @@ async function loadResumes() {
 
     emptyEl.classList.add('hidden');
     selectBtn.classList.add('hidden');
-    container.innerHTML = '<div class="skeleton h-20 md:h-24 w-full rounded-xl md:rounded-2xl"></div><div class="skeleton h-20 md:h-24 w-full rounded-xl md:rounded-2xl"></div>';
+    container.innerHTML = '<div class="skeleton h-16 w-full rounded-xl"></div><div class="skeleton h-16 w-full rounded-xl"></div>';
 
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/resumes`);
-        console.log('[Resumes] Response status:', resp?.status);
-
         if (!resp || !resp.ok) {
-            console.error('[Resumes] Bad response:', resp?.status);
             container.innerHTML = '';
             emptyEl.classList.remove('hidden');
             return;
         }
 
         const data = await resp.json();
-        console.log('[Resumes] Data:', JSON.stringify(data));
         const resumes = data.resumes || [];
 
         if (resumes.length === 0) {
@@ -452,16 +479,15 @@ async function loadResumes() {
         }
 
         container.innerHTML = resumes.map(r => `
-            <div class="resume-card rounded-xl md:rounded-2xl p-4 sm:p-5 md:p-6 flex items-start sm:items-center gap-4 bg-surface-container-high/60 border border-outline-variant/10 hover:border-primary/30 transition-all text-left"
+            <div class="resume-card rounded-xl p-5 flex items-start gap-4 bg-surface-container-high/60 border border-outline-variant/10 hover:border-primary/30 transition-all text-left"
                  onclick="selectResume('${escapeAttr(r.resume_id)}', this)" data-resume-id="${escapeAttr(r.resume_id)}">
-                <div class="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-surface-container-lowest flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
-                    <span class="material-symbols-outlined text-on-surface-variant text-xl md:text-2xl">description</span>
+                <div class="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span class="material-symbols-outlined text-on-surface-variant">description</span>
                 </div>
-                <div class="flex-1 min-w-0 py-0.5">
-                    <span class="text-base md:text-lg font-medium text-on-surface leading-snug block">${escapeHtml(r.title || 'Без названия')}</span>
+                <div class="flex-1 min-w-0">
+                    <span class="text-sm font-medium text-on-surface leading-snug">${escapeHtml(r.title || 'Без названия')}</span>
                 </div>
-                <div class="w-6 h-6 md:w-7 md:h-7 rounded-full border-2 border-outline-variant flex items-center justify-center flex-shrink-0 resume-check mt-1 sm:mt-0">
-                </div>
+                <div class="w-5 h-5 rounded-full border-2 border-outline-variant flex items-center justify-center flex-shrink-0 resume-check mt-1"></div>
             </div>
         `).join('');
 
@@ -483,7 +509,7 @@ function selectResume(resumeId, el) {
     });
 
     el.classList.add('selected');
-    el.querySelector('.resume-check').innerHTML = '<span class="material-symbols-outlined text-primary text-lg md:text-xl">check</span>';
+    el.querySelector('.resume-check').innerHTML = '<span class="material-symbols-outlined text-primary text-sm">check</span>';
 
     document.getElementById('resumeSelectBtn').disabled = false;
 }
@@ -495,10 +521,157 @@ async function handleResumeSelect() {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></span>';
 
-    btn.textContent = 'Готово!';
-    setTimeout(() => {
-        window.location.href = 'settings.html';
-    }, 800);
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/select-resume`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume_id: selectedResumeId }),
+        });
+
+        if (!resp || !resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || 'Ошибка сохранения');
+        }
+
+        showStep(3);
+        startAnalysisPolling();
+        startTextRotation();
+
+    } catch (e) {
+        console.error('[Select Resume] Error:', e);
+        btn.disabled = false;
+        btn.textContent = 'Продолжить';
+    }
+}
+
+// ============================================================================
+// STEP 3: ANALYSIS POLLING + DISPLAY
+// ============================================================================
+
+function startTextRotation() {
+    let idx = 0;
+    const el = document.getElementById('analysisRotatingText');
+    if (!el) return;
+
+    textRotateInterval = setInterval(() => {
+        idx = (idx + 1) % ANALYSIS_PHRASES.length;
+        el.textContent = ANALYSIS_PHRASES[idx];
+        el.classList.remove('analysis-text-rotate');
+        void el.offsetWidth;
+        el.classList.add('analysis-text-rotate');
+    }, 2500);
+}
+
+function stopTextRotation() {
+    if (textRotateInterval) {
+        clearInterval(textRotateInterval);
+        textRotateInterval = null;
+    }
+}
+
+function startAnalysisPolling() {
+    stopAnalysisPolling();
+    analysisInterval = setInterval(pollAnalysisStatus, 3000);
+}
+
+function stopAnalysisPolling() {
+    if (analysisInterval) {
+        clearInterval(analysisInterval);
+        analysisInterval = null;
+    }
+}
+
+async function pollAnalysisStatus() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/analysis-status`);
+        if (!resp || !resp.ok) return;
+
+        const data = await resp.json();
+
+        if (data.status === 'complete') {
+            stopAnalysisPolling();
+            stopTextRotation();
+            displayAnalysisResult(data.score, data.report);
+        }
+    } catch (e) {
+        console.error('[Analysis Poll] Error:', e);
+    }
+}
+
+async function loadAnalysisResult() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/analysis-status`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+        if (data.status === 'complete') {
+            displayAnalysisResult(data.score, data.report);
+        }
+    } catch (e) {
+        console.error('[Load Analysis] Error:', e);
+    }
+}
+
+function displayAnalysisResult(score, report) {
+    document.getElementById('analysisLoading').classList.add('hidden');
+    document.getElementById('analysisResult').classList.remove('hidden');
+
+    const circumference = 364.4;
+    const clampedScore = Math.max(0, Math.min(score, 100));
+    const offset = circumference * (1 - clampedScore / 100);
+
+    const circle = document.getElementById('scoreCircle');
+    const scoreEl = document.getElementById('scoreValue');
+    const verdictEl = document.getElementById('scoreVerdict');
+
+    let colorClass, verdictText, verdictBg;
+    if (clampedScore >= 80) {
+        colorClass = '#4ade80';
+        verdictText = 'Отличное резюме';
+        verdictBg = 'bg-green-500/15 text-green-400';
+    } else if (clampedScore >= 60) {
+        colorClass = '#facc15';
+        verdictText = 'Хорошее резюме, есть что улучшить';
+        verdictBg = 'bg-yellow-500/15 text-yellow-400';
+    } else {
+        colorClass = '#fb923c';
+        verdictText = 'Резюме нуждается в доработке';
+        verdictBg = 'bg-orange-500/15 text-orange-400';
+    }
+
+    circle.style.stroke = colorClass;
+
+    requestAnimationFrame(() => {
+        circle.style.strokeDashoffset = offset;
+    });
+
+    animateCounter(scoreEl, 0, clampedScore, 1500);
+
+    verdictEl.className = `text-sm font-medium px-4 py-2 rounded-full ${verdictBg}`;
+    verdictEl.textContent = verdictText;
+
+    const reportClean = (report || '').replace(/\*\*/g, '').replace(/#{1,3}\s*/g, '');
+    const preview = reportClean.length > 600 ? reportClean.slice(0, 600) + '...' : reportClean;
+    document.getElementById('reportText').textContent = preview;
+
+    const profileBtn = document.getElementById('searchProfileBtn');
+    profileBtn.onclick = () => {
+        // TODO: переход к настройке поискового профиля
+    };
+}
+
+function animateCounter(el, from, to, duration) {
+    const start = performance.now();
+    const diff = to - from;
+
+    function tick(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(from + diff * eased);
+        if (progress < 1) requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
 }
 
 // ============================================================================
