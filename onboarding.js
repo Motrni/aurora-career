@@ -1,7 +1,7 @@
 /**
- * onboarding.js — Онбординг Aurora Career.
- * Шаг 1: Привязка HH.ru аккаунта
- * Шаг 2: Выбор резюме
+ * onboarding.js — Первая настройка Aurora Career.
+ * Шаг 1: Привязка HH.ru аккаунта (табы Телефон/Почта, OTP после NEED_CODE)
+ * Шаг 2: Выбор резюме (полное название, без truncate)
  */
 
 const API_BASE_URL = window.AuroraSession
@@ -13,6 +13,7 @@ const API_BASE_URL = window.AuroraSession
 let currentUser = null;
 let selectedResumeId = null;
 let pollInterval = null;
+let activeTab = 'phone';
 
 // ============================================================================
 // API HELPER
@@ -131,45 +132,102 @@ function showStep(stepNum) {
 }
 
 // ============================================================================
+// TAB SWITCHING: phone / email
+// ============================================================================
+
+function switchTab(tab) {
+    activeTab = tab;
+    const phoneTab = document.getElementById('tabPhone');
+    const emailTab = document.getElementById('tabEmail');
+    const phoneInput = document.getElementById('inputPhone');
+    const emailInput = document.getElementById('inputEmail');
+    const errorEl = document.getElementById('hhLoginError');
+
+    errorEl.classList.add('hidden');
+
+    if (tab === 'phone') {
+        phoneTab.classList.add('active');
+        emailTab.classList.remove('active');
+        phoneInput.classList.remove('hidden');
+        emailInput.classList.add('hidden');
+        document.getElementById('hhPhoneInput').focus();
+    } else {
+        emailTab.classList.add('active');
+        phoneTab.classList.remove('active');
+        emailInput.classList.remove('hidden');
+        phoneInput.classList.add('hidden');
+        document.getElementById('hhEmailInput').focus();
+    }
+}
+
+// ============================================================================
+// VALIDATION
+// ============================================================================
+
+function validatePhone(raw) {
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length < 10 || digits.length > 11) return null;
+    if (digits.length === 10) return '+7' + digits;
+    if (digits.length === 11 && (digits[0] === '7' || digits[0] === '8')) return '+7' + digits.slice(1);
+    return null;
+}
+
+function validateEmail(raw) {
+    const trimmed = raw.trim();
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    return re.test(trimmed) ? trimmed : null;
+}
+
+function getLoginValue() {
+    if (activeTab === 'phone') {
+        const raw = document.getElementById('hhPhoneInput').value.trim();
+        const phone = validatePhone(raw);
+        if (!phone) return { error: 'Введите корректный номер телефона (например +79131234567)' };
+        return { value: phone, display: phone };
+    } else {
+        const raw = document.getElementById('hhEmailInput').value.trim();
+        const email = validateEmail(raw);
+        if (!email) return { error: 'Введите корректный email (например mail@yandex.ru)' };
+        return { value: email, display: email };
+    }
+}
+
+// ============================================================================
 // STEP 1: HH LOGIN
 // ============================================================================
 
+let loginDisplayValue = '';
+
 async function handleHhLogin() {
-    const input = document.getElementById('hhLoginInput');
     const btn = document.getElementById('hhLoginBtn');
     const errorEl = document.getElementById('hhLoginError');
-    const loginValue = input.value.trim();
 
-    if (!loginValue) {
-        showError(errorEl, 'Введите телефон или email');
+    const result = getLoginValue();
+    if (result.error) {
+        showError(errorEl, result.error);
         return;
     }
 
+    loginDisplayValue = result.display;
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>';
+    btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></span>';
     errorEl.classList.add('hidden');
 
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/hh-login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ login: loginValue }),
+            body: JSON.stringify({ login: result.value }),
         });
 
         if (!resp || !resp.ok) {
             const err = await resp.json().catch(() => ({}));
-            throw new Error(err.detail || 'Login failed');
+            throw new Error(err.detail || 'Ошибка при входе');
         }
 
         document.getElementById('hhLoginForm').classList.add('hidden');
-        document.getElementById('hhOtpForm').classList.remove('hidden');
+        document.getElementById('hhWaitingCode').classList.remove('hidden');
 
-        const isEmail = loginValue.includes('@');
-        document.getElementById('otpMessage').textContent = isEmail
-            ? `Код отправлен на ${loginValue}`
-            : `Код отправлен в СМС на ${loginValue}`;
-
-        initCodeInput();
         startPolling();
 
     } catch (e) {
@@ -180,18 +238,33 @@ async function handleHhLogin() {
     }
 }
 
+function showOtpForm() {
+    document.getElementById('hhWaitingCode').classList.add('hidden');
+    document.getElementById('hhOtpForm').classList.remove('hidden');
+
+    const isEmail = loginDisplayValue.includes('@');
+    document.getElementById('otpMessage').textContent = isEmail
+        ? `Код отправлен на ${loginDisplayValue}`
+        : `Код отправлен в СМС на ${loginDisplayValue}`;
+
+    initCodeInput();
+}
+
 function resetHhLogin() {
     stopPolling();
     document.getElementById('hhOtpForm').classList.add('hidden');
+    document.getElementById('hhWaitingCode').classList.add('hidden');
+    document.getElementById('hhProcessing').classList.add('hidden');
     document.getElementById('hhLoginForm').classList.remove('hidden');
     document.getElementById('hhLoginBtn').disabled = false;
     document.getElementById('hhLoginBtn').textContent = 'Далее';
-    document.getElementById('hhLoginInput').value = '';
+    document.getElementById('hhPhoneInput').value = '';
+    document.getElementById('hhEmailInput').value = '';
     clearOtp();
 }
 
 // ============================================================================
-// CODE INPUT (4-6 digits, single field)
+// CODE INPUT
 // ============================================================================
 
 function initCodeInput() {
@@ -218,7 +291,8 @@ function getOtpValue() {
 function clearOtp() {
     const input = document.getElementById('otpCodeInput');
     if (input) input.value = '';
-    document.getElementById('otpSubmitBtn').disabled = true;
+    const btn = document.getElementById('otpSubmitBtn');
+    if (btn) btn.disabled = true;
 }
 
 // ============================================================================
@@ -232,7 +306,7 @@ async function handleHhCode() {
     const btn = document.getElementById('otpSubmitBtn');
     const errorEl = document.getElementById('otpError');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>';
+    btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></span>';
     errorEl.classList.add('hidden');
 
     try {
@@ -244,7 +318,7 @@ async function handleHhCode() {
 
         if (!resp || !resp.ok) {
             const err = await resp.json().catch(() => ({}));
-            throw new Error(err.detail || 'Code verification failed');
+            throw new Error(err.detail || 'Ошибка подтверждения кода');
         }
 
         document.getElementById('hhOtpForm').classList.add('hidden');
@@ -286,6 +360,10 @@ async function pollHhStatus() {
         const status = data.status;
 
         if (status === 'NEED_CODE') {
+            if (document.getElementById('hhOtpForm').classList.contains('hidden')
+                && document.getElementById('hhProcessing').classList.contains('hidden')) {
+                showOtpForm();
+            }
             return;
         }
 
@@ -301,6 +379,7 @@ async function pollHhStatus() {
 
         if (status === 'success') {
             document.getElementById('hhOtpForm').classList.add('hidden');
+            document.getElementById('hhWaitingCode').classList.add('hidden');
             document.getElementById('hhProcessing').classList.remove('hidden');
             document.getElementById('processingText').textContent = 'Аккаунт привязан!';
             document.getElementById('processingSubtext').textContent = 'Собираем данные с hh.ru, подождите...';
@@ -321,15 +400,15 @@ async function pollHhStatus() {
 
         if (status === 'error_fatal' || status === 'blocked' || status === 'limit_exceeded') {
             stopPolling();
-            const errorEl = document.getElementById('otpError');
-            if (document.getElementById('hhOtpForm').classList.contains('hidden')) {
-                document.getElementById('hhProcessing').classList.add('hidden');
-                document.getElementById('hhOtpForm').classList.remove('hidden');
-            }
+            document.getElementById('hhProcessing').classList.add('hidden');
+            document.getElementById('hhWaitingCode').classList.add('hidden');
+            document.getElementById('hhOtpForm').classList.add('hidden');
+            document.getElementById('hhLoginForm').classList.remove('hidden');
+            document.getElementById('hhLoginBtn').disabled = false;
+            document.getElementById('hhLoginBtn').textContent = 'Далее';
+
+            const errorEl = document.getElementById('hhLoginError');
             showError(errorEl, data.message || 'Ошибка входа. Попробуйте позже.');
-            const btn = document.getElementById('otpSubmitBtn');
-            btn.disabled = false;
-            btn.textContent = 'Подтвердить';
             return;
         }
 
@@ -348,7 +427,8 @@ async function loadResumes() {
     const selectBtn = document.getElementById('resumeSelectBtn');
 
     emptyEl.classList.add('hidden');
-    container.innerHTML = '<div class="skeleton h-20 w-full rounded-xl"></div>';
+    selectBtn.classList.add('hidden');
+    container.innerHTML = '<div class="skeleton h-16 w-full rounded-xl"></div>';
 
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/resumes`);
@@ -372,15 +452,15 @@ async function loadResumes() {
         }
 
         container.innerHTML = resumes.map(r => `
-            <div class="resume-card rounded-xl p-5 flex items-center gap-4 bg-surface-container-high/60 border border-outline-variant/10 hover:border-primary/30 transition-all" onclick="selectResume('${escapeAttr(r.resume_id)}', this)" data-resume-id="${escapeAttr(r.resume_id)}">
+            <div class="resume-card rounded-xl p-5 flex items-center gap-4 bg-surface-container-high/60 border border-outline-variant/10 hover:border-primary/30 transition-all"
+                 onclick="selectResume('${escapeAttr(r.resume_id)}', this)" data-resume-id="${escapeAttr(r.resume_id)}">
                 <div class="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center flex-shrink-0">
                     <span class="material-symbols-outlined text-on-surface-variant">description</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <span class="text-sm font-medium text-on-surface block truncate">${escapeHtml(r.title || 'Без названия')}</span>
+                    <span class="text-sm font-medium text-on-surface">${escapeHtml(r.title || 'Без названия')}</span>
                 </div>
-                <div class="w-5 h-5 rounded-full border-2 border-outline-variant flex items-center justify-center flex-shrink-0 resume-check">
-                </div>
+                <div class="w-5 h-5 rounded-full border-2 border-outline-variant flex items-center justify-center flex-shrink-0 resume-check"></div>
             </div>
         `).join('');
 
@@ -412,9 +492,8 @@ async function handleResumeSelect() {
 
     const btn = document.getElementById('resumeSelectBtn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>';
+    btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></span>';
 
-    // TODO: будущий эндпоинт для сохранения выбранного резюме + current_step = NULL
     btn.textContent = 'Готово!';
     setTimeout(() => {
         window.location.href = 'settings.html';

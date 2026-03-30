@@ -39,9 +39,7 @@ tailwind.config = {
                 "on-primary": "#350097",
                 "outline-variant": "#484455",
             },
-            fontFamily: {
-                inter: ["Inter", "system-ui", "sans-serif"],
-            },
+            fontFamily: { inter: ["Inter", "system-ui", "sans-serif"] },
             borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
         },
     },
@@ -49,22 +47,9 @@ tailwind.config = {
 </script>
 <style>
     body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; }
-
-    .glass-panel {
-        background: rgba(55, 51, 62, 0.4);
-        backdrop-filter: blur(40px);
-        -webkit-backdrop-filter: blur(40px);
-    }
-
-    .aurora-glow {
-        position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
-        width: 700px; height: 700px;
-        background: radial-gradient(circle, rgba(123,97,255,0.15) 0%, rgba(0,212,255,0.08) 50%, transparent 70%);
-        filter: blur(120px); z-index: 0; pointer-events: none;
-        animation: pulse 10s infinite alternate;
-    }
+    .glass-panel { background: rgba(55, 51, 62, 0.4); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
+    .aurora-glow { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 700px; height: 700px; background: radial-gradient(circle, rgba(123,97,255,0.15) 0%, rgba(0,212,255,0.08) 50%, transparent 70%); filter: blur(120px); z-index: 0; pointer-events: none; animation: pulse 10s infinite alternate; }
     @keyframes pulse { 0%{opacity:.4;transform:translateX(-50%) scale(1)} 100%{opacity:.7;transform:translateX(-50%) scale(1.1)} }
-
     .brand-logo-font { font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
 
     .stepper-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; transition: all 0.3s; }
@@ -75,60 +60,47 @@ tailwind.config = {
     .stepper-line.active { background: linear-gradient(90deg, #653edb, #5a30d0); }
     .stepper-line.pending { background: rgba(55,51,62,0.5); }
 
-    .btn-primary {
-        background: linear-gradient(to right, #5a30d0, #58309f);
-        transition: all 0.2s;
-        box-shadow: 0 10px 40px rgba(90,48,208,0.35);
-    }
+    .btn-primary { background: linear-gradient(to right, #5a30d0, #58309f); transition: all 0.2s; box-shadow: 0 10px 40px rgba(90,48,208,0.35); }
     .btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
     .btn-primary:active:not(:disabled) { transform: scale(0.98); }
     .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
+    .tab-btn { flex: 1; padding: 12px 0; font-size: 14px; font-weight: 500; border-radius: 10px; transition: all 0.2s; cursor: pointer; }
+    .tab-btn.active { background: #37333e; color: #e7e0ef; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .tab-btn:not(.active) { color: #938ea0; }
+    .tab-btn:not(.active):hover { color: #cac3d7; }
+
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-
-    .skeleton { background: linear-gradient(90deg, rgba(55,51,62,0.5) 25%, rgba(55,51,62,0.8) 50%, rgba(55,51,62,0.5) 75%);
-        background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    .skeleton { background: linear-gradient(90deg, rgba(55,51,62,0.5) 25%, rgba(55,51,62,0.8) 50%, rgba(55,51,62,0.5) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
     .resume-card { transition: all 0.2s; cursor: pointer; }
     .resume-card:hover { border-color: rgba(204,190,255,0.3) !important; }
     .resume-card.selected { border-color: #653edb !important; box-shadow: 0 0 16px rgba(101,62,219,0.2); }
-
-    .spinner {
-        width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
-        border-top-color: #fff; border-radius: 50%;
-        animation: spin 0.6s linear infinite; display: inline-block; vertical-align: middle;
-    }
+    .spinner { border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .slide-in { animation: slideIn 0.35s ease-out; }
     @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
 </style>
 </head>
 <body class="text-on-surface min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary relative overflow-x-hidden">
 
-<!-- Background blurs -->
 <div class="aurora-glow"></div>
 <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary-container/20 rounded-full blur-[120px] pointer-events-none"></div>
 <div class="absolute bottom-[-15%] right-[-10%] w-[40%] h-[40%] bg-secondary-container/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-<!-- Top bar -->
 <nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
     <div class="flex items-center justify-between h-full px-5 md:px-12 lg:px-16">
-        <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
-            <a href="cabinet.html" class="flex items-center gap-2 md:gap-3 no-underline">
-                <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
-                <div class="flex flex-col leading-tight">
-                    <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
-                    <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Первая настройка</div>
-                </div>
-            </a>
-        </div>
+        <a href="cabinet.html" class="flex items-center gap-2 md:gap-3 no-underline">
+            <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
+            <div class="flex flex-col leading-tight">
+                <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
+                <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Первая настройка</div>
+            </div>
+        </a>
     </div>
 </nav>
 
-<!-- Loading skeleton -->
 <div id="loadingSkeleton" class="relative z-10 flex-1 flex items-center justify-center px-4 pt-20">
     <div class="w-full max-w-[480px] space-y-6">
         <div class="skeleton h-10 w-48 mx-auto"></div>
@@ -136,9 +108,7 @@ tailwind.config = {
     </div>
 </div>
 
-<!-- Main content -->
 <div id="mainContent" class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pt-20 pb-8 hidden fade-in">
-
     <div class="w-full max-w-[480px]">
 
     <!-- Stepper -->
@@ -150,40 +120,69 @@ tailwind.config = {
 
     <!-- ==================== STEP 1: HH Login ==================== -->
     <div id="step1">
-        <!-- Auth Card -->
         <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
-            <div class="flex flex-col items-center text-center space-y-8">
+            <div class="flex flex-col items-center text-center space-y-7">
                 <div class="space-y-3">
                     <h1 class="text-3xl font-bold tracking-tight text-on-surface">Привяжите аккаунт hh.ru</h1>
                     <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
-                        Для синхронизации вашего резюме и откликов нам необходим доступ к вашему профилю HeadHunter
+                        Для синхронизации вашего резюме и откликов нам необходим доступ к вашему профилю HeadHunter.
                     </p>
                 </div>
 
                 <!-- Login form -->
                 <div id="hhLoginForm" class="w-full space-y-5">
-                    <div class="relative group">
+                    <!-- Tabs: Телефон / Почта -->
+                    <div class="bg-surface-container-lowest p-1.5 rounded-xl flex">
+                        <button type="button" id="tabPhone" class="tab-btn active" onclick="switchTab('phone')">Телефон</button>
+                        <button type="button" id="tabEmail" class="tab-btn" onclick="switchTab('email')">Почта</button>
+                    </div>
+
+                    <!-- Phone input -->
+                    <div id="inputPhone" class="relative">
                         <input
-                            type="text"
-                            id="hhLoginInput"
+                            type="tel"
+                            id="hhPhoneInput"
                             class="w-full bg-surface-container-high border-none rounded-xl py-5 px-6 text-on-surface focus:ring-0 focus:shadow-[0_0_30px_rgba(90,48,208,0.2)] transition-all placeholder-outline/50 font-medium text-[15px]"
-                            placeholder="+7 900 123 45 67 или email@mail.ru"
-                            autocomplete="off"
+                            placeholder="+7 900 123 45 67"
+                            autocomplete="tel"
+                            inputmode="tel"
                         >
                     </div>
+
+                    <!-- Email input (hidden by default) -->
+                    <div id="inputEmail" class="relative hidden">
+                        <input
+                            type="email"
+                            id="hhEmailInput"
+                            class="w-full bg-surface-container-high border-none rounded-xl py-5 px-6 text-on-surface focus:ring-0 focus:shadow-[0_0_30px_rgba(90,48,208,0.2)] transition-all placeholder-outline/50 font-medium text-[15px]"
+                            placeholder="mail@yandex.ru"
+                            autocomplete="email"
+                            inputmode="email"
+                        >
+                    </div>
+
                     <div id="hhLoginError" class="text-error text-xs hidden"></div>
                     <button onclick="handleHhLogin()" id="hhLoginBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer">
                         Далее
                     </button>
                 </div>
 
-                <!-- OTP form (hidden) -->
+                <!-- Waiting for code (after submit, before NEED_CODE) -->
+                <div id="hhWaitingCode" class="w-full py-4 hidden slide-in">
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="spinner w-8 h-8"></div>
+                        <p class="text-on-surface text-sm font-medium">Подключаемся к hh.ru...</p>
+                        <p class="text-on-surface-variant text-xs">Это займёт 10-20 секунд</p>
+                    </div>
+                </div>
+
+                <!-- OTP form (shown only after NEED_CODE) -->
                 <div id="hhOtpForm" class="w-full space-y-6 hidden slide-in">
                     <div class="text-center space-y-2">
                         <span class="material-symbols-outlined text-primary text-4xl">pin</span>
-                        <p class="text-on-surface text-sm font-medium" id="otpMessage">Введите код из СМС</p>
+                        <p class="text-on-surface text-sm font-medium" id="otpMessage">Введите код подтверждения</p>
                     </div>
-                    <div class="relative group">
+                    <div class="relative">
                         <input
                             type="text"
                             id="otpCodeInput"
@@ -203,11 +202,13 @@ tailwind.config = {
                     </button>
                 </div>
 
-                <!-- Processing state (hidden) -->
-                <div id="hhProcessing" class="w-full py-6 text-center space-y-4 hidden slide-in">
-                    <div class="spinner mx-auto" style="width:36px;height:36px;border-width:3px"></div>
-                    <p class="text-on-surface text-sm font-medium" id="processingText">Проверяем данные...</p>
-                    <p class="text-on-surface-variant text-xs" id="processingSubtext">Это может занять до минуты</p>
+                <!-- Processing state (syncing resumes) -->
+                <div id="hhProcessing" class="w-full hidden slide-in">
+                    <div class="flex flex-col items-center gap-3 py-4">
+                        <div class="spinner w-9 h-9"></div>
+                        <p class="text-on-surface text-sm font-medium" id="processingText">Проверяем данные...</p>
+                        <p class="text-on-surface-variant text-xs" id="processingSubtext">Это может занять до минуты</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -225,16 +226,14 @@ tailwind.config = {
                 </div>
 
                 <div id="resumesList" class="w-full space-y-3">
-                    <div class="skeleton h-20 w-full rounded-xl"></div>
-                    <div class="skeleton h-20 w-full rounded-xl"></div>
+                    <div class="skeleton h-16 w-full rounded-xl"></div>
+                    <div class="skeleton h-16 w-full rounded-xl"></div>
                 </div>
 
                 <div id="resumeEmpty" class="w-full py-8 text-center hidden">
                     <span class="material-symbols-outlined text-outline text-4xl mb-3">folder_off</span>
                     <p class="text-on-surface-variant text-sm">Резюме не найдены. Создайте резюме на hh.ru и попробуйте снова.</p>
-                    <button onclick="loadResumes()" class="mt-4 text-primary text-sm font-medium hover:underline cursor-pointer">
-                        Обновить список
-                    </button>
+                    <button onclick="loadResumes()" class="mt-4 text-primary text-sm font-medium hover:underline cursor-pointer">Обновить список</button>
                 </div>
 
                 <button onclick="handleResumeSelect()" id="resumeSelectBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer hidden" disabled>
@@ -245,14 +244,10 @@ tailwind.config = {
     </div>
 
     </div>
-
-    <!-- Footnote -->
-    <p class="mt-8 text-center text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold">
-        Aurora Career &copy; 2024-2026
-    </p>
+    <p class="mt-8 text-center text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/40 font-bold">Aurora Career &copy; 2024-2026</p>
 </div>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="onboarding.js?v=1.4"></script>
+<script src="onboarding.js?v=2.0"></script>
 </body>
 </html>
