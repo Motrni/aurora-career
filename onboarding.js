@@ -428,7 +428,7 @@ async function loadResumes() {
 
     emptyEl.classList.add('hidden');
     selectBtn.classList.add('hidden');
-    container.innerHTML = '<div class="skeleton h-16 w-full rounded-xl"></div>';
+    container.innerHTML = '<div class="skeleton h-20 md:h-24 w-full rounded-xl md:rounded-2xl"></div><div class="skeleton h-20 md:h-24 w-full rounded-xl md:rounded-2xl"></div>';
 
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/resumes`);
@@ -452,15 +452,16 @@ async function loadResumes() {
         }
 
         container.innerHTML = resumes.map(r => `
-            <div class="resume-card rounded-xl p-5 flex items-center gap-4 bg-surface-container-high/60 border border-outline-variant/10 hover:border-primary/30 transition-all"
+            <div class="resume-card rounded-xl md:rounded-2xl p-4 sm:p-5 md:p-6 flex items-start sm:items-center gap-4 bg-surface-container-high/60 border border-outline-variant/10 hover:border-primary/30 transition-all text-left"
                  onclick="selectResume('${escapeAttr(r.resume_id)}', this)" data-resume-id="${escapeAttr(r.resume_id)}">
-                <div class="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center flex-shrink-0">
-                    <span class="material-symbols-outlined text-on-surface-variant">description</span>
+                <div class="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-surface-container-lowest flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
+                    <span class="material-symbols-outlined text-on-surface-variant text-xl md:text-2xl">description</span>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <span class="text-sm font-medium text-on-surface">${escapeHtml(r.title || 'Без названия')}</span>
+                <div class="flex-1 min-w-0 py-0.5">
+                    <span class="text-base md:text-lg font-medium text-on-surface leading-snug block">${escapeHtml(r.title || 'Без названия')}</span>
                 </div>
-                <div class="w-5 h-5 rounded-full border-2 border-outline-variant flex items-center justify-center flex-shrink-0 resume-check"></div>
+                <div class="w-6 h-6 md:w-7 md:h-7 rounded-full border-2 border-outline-variant flex items-center justify-center flex-shrink-0 resume-check mt-1 sm:mt-0">
+                </div>
             </div>
         `).join('');
 
@@ -482,7 +483,7 @@ function selectResume(resumeId, el) {
     });
 
     el.classList.add('selected');
-    el.querySelector('.resume-check').innerHTML = '<span class="material-symbols-outlined text-primary text-sm">check</span>';
+    el.querySelector('.resume-check').innerHTML = '<span class="material-symbols-outlined text-primary text-lg md:text-xl">check</span>';
 
     document.getElementById('resumeSelectBtn').disabled = false;
 }
