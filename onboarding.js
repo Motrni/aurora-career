@@ -169,7 +169,7 @@ async function handleHhLogin() {
             ? `Код отправлен на ${loginValue}`
             : `Код отправлен в СМС на ${loginValue}`;
 
-        initOtpFields();
+        initCodeInput();
         startPolling();
 
     } catch (e) {
@@ -191,58 +191,34 @@ function resetHhLogin() {
 }
 
 // ============================================================================
-// OTP INPUT
+// CODE INPUT (4-6 digits, single field)
 // ============================================================================
 
-function initOtpFields() {
-    const fields = document.querySelectorAll('.otp-field');
-    fields[0].focus();
+function initCodeInput() {
+    const input = document.getElementById('otpCodeInput');
+    input.value = '';
+    input.focus();
 
-    fields.forEach((field, idx) => {
-        field.addEventListener('input', (e) => {
-            const val = e.target.value.replace(/\D/g, '');
-            e.target.value = val ? val[0] : '';
-            if (val && idx < fields.length - 1) {
-                fields[idx + 1].focus();
-            }
-            updateOtpSubmitState();
-        });
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/g, '').slice(0, 6);
+        document.getElementById('otpSubmitBtn').disabled = input.value.length < 4;
+    });
 
-        field.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && !field.value && idx > 0) {
-                fields[idx - 1].focus();
-                fields[idx - 1].value = '';
-                updateOtpSubmitState();
-            }
-        });
-
-        field.addEventListener('paste', (e) => {
-            e.preventDefault();
-            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
-            for (let i = 0; i < Math.min(paste.length, fields.length); i++) {
-                fields[i].value = paste[i];
-            }
-            const nextIdx = Math.min(paste.length, fields.length - 1);
-            fields[nextIdx].focus();
-            updateOtpSubmitState();
-        });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && input.value.length >= 4) {
+            handleHhCode();
+        }
     });
 }
 
 function getOtpValue() {
-    return Array.from(document.querySelectorAll('.otp-field'))
-        .map(f => f.value)
-        .join('');
+    return (document.getElementById('otpCodeInput').value || '').replace(/\D/g, '');
 }
 
 function clearOtp() {
-    document.querySelectorAll('.otp-field').forEach(f => { f.value = ''; });
-    updateOtpSubmitState();
-}
-
-function updateOtpSubmitState() {
-    const code = getOtpValue();
-    document.getElementById('otpSubmitBtn').disabled = code.length < 4;
+    const input = document.getElementById('otpCodeInput');
+    if (input) input.value = '';
+    document.getElementById('otpSubmitBtn').disabled = true;
 }
 
 // ============================================================================
@@ -364,15 +340,22 @@ async function loadResumes() {
     const emptyEl = document.getElementById('resumeEmpty');
     const selectBtn = document.getElementById('resumeSelectBtn');
 
+    emptyEl.classList.add('hidden');
+    container.innerHTML = '<div class="skeleton h-20 w-full rounded-xl"></div>';
+
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/resumes`);
+        console.log('[Resumes] Response status:', resp?.status);
+
         if (!resp || !resp.ok) {
+            console.error('[Resumes] Bad response:', resp?.status);
             container.innerHTML = '';
             emptyEl.classList.remove('hidden');
             return;
         }
 
         const data = await resp.json();
+        console.log('[Resumes] Data:', JSON.stringify(data));
         const resumes = data.resumes || [];
 
         if (resumes.length === 0) {

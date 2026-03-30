@@ -180,16 +180,19 @@ tailwind.config = {
                 <!-- OTP form (hidden) -->
                 <div id="hhOtpForm" class="w-full space-y-6 hidden slide-in">
                     <div class="text-center space-y-2">
-                        <span class="material-symbols-outlined text-primary text-4xl">sms</span>
+                        <span class="material-symbols-outlined text-primary text-4xl">pin</span>
                         <p class="text-on-surface text-sm font-medium" id="otpMessage">Введите код из СМС</p>
                     </div>
-                    <div class="flex justify-center gap-2.5" id="otpContainer">
-                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="0" inputmode="numeric" autocomplete="one-time-code">
-                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="1" inputmode="numeric">
-                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="2" inputmode="numeric">
-                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="3" inputmode="numeric">
-                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="4" inputmode="numeric">
-                        <input type="text" maxlength="1" class="w-12 h-14 bg-surface-container-high border-none rounded-xl text-center text-on-surface text-xl font-semibold focus:ring-0 focus:shadow-[0_0_20px_rgba(90,48,208,0.25)] transition-all otp-field" data-otp-idx="5" inputmode="numeric">
+                    <div class="relative group">
+                        <input
+                            type="text"
+                            id="otpCodeInput"
+                            maxlength="6"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            class="w-full bg-surface-container-high border-none rounded-xl py-5 px-6 text-on-surface text-center text-2xl font-bold tracking-[0.4em] focus:ring-0 focus:shadow-[0_0_30px_rgba(90,48,208,0.2)] transition-all placeholder-outline/40"
+                            placeholder="&#8226;&#8226;&#8226;&#8226;"
+                        >
                     </div>
                     <div id="otpError" class="text-error text-xs text-center hidden"></div>
                     <button onclick="handleHhCode()" id="otpSubmitBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer" disabled>
@@ -227,8 +230,11 @@ tailwind.config = {
                 </div>
 
                 <div id="resumeEmpty" class="w-full py-8 text-center hidden">
-                    <span class="material-symbols-outlined text-outline text-4xl mb-3">description_off</span>
+                    <span class="material-symbols-outlined text-outline text-4xl mb-3">folder_off</span>
                     <p class="text-on-surface-variant text-sm">Резюме не найдены. Создайте резюме на hh.ru и попробуйте снова.</p>
+                    <button onclick="loadResumes()" class="mt-4 text-primary text-sm font-medium hover:underline cursor-pointer">
+                        Обновить список
+                    </button>
                 </div>
 
                 <button onclick="handleResumeSelect()" id="resumeSelectBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer hidden" disabled>
@@ -247,6 +253,6 @@ tailwind.config = {
 </div>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="onboarding.js?v=1.2"></script>
+<script src="onboarding.js?v=1.3"></script>
 </body>
 </html>
