@@ -1,4 +1,4 @@
-/* manual-search.js v1.0 — Ручной режим поиска вакансий */
+/* manual-search.js v2.0 — Ручной режим поиска вакансий */
 (function () {
     "use strict";
 
@@ -6,8 +6,14 @@
     let _loading = false;
     let _observer = null;
     let _searchActive = false;
+    let _heartbeatTimer = null;
+    let _totalRendered = 0;
 
-    // DOM refs
+    const HEARTBEAT_INTERVAL = 5 * 60 * 1000; // 5 минут
+    const EMPTY_RETRY_DELAY = 500;
+    const MAX_EMPTY_RETRIES = 5;
+    let _emptyRetries = 0;
+
     const $ = (id) => document.getElementById(id);
 
     function refs() {
@@ -28,6 +34,8 @@
             errorText: $("manualSearchErrorText"),
             grid: $("manualVacancyGrid"),
             sentinel: $("manualLoadMoreSentinel"),
+            endOfResults: $("manualEndOfResults"),
+            sessionExpired: $("manualSessionExpired"),
         };
     }
 
@@ -44,13 +52,56 @@
             r.manual.style.display = "none";
             r.btnAutopilot.classList.add("active");
             r.btnManual.classList.remove("active");
+            _stopHeartbeat();
         } else {
             r.autopilot.style.display = "none";
             r.manual.style.display = "";
             r.btnAutopilot.classList.remove("active");
             r.btnManual.classList.add("active");
+            if (_searchActive) _startHeartbeat();
         }
     };
+
+    // ==================================================================
+    // HEARTBEAT (keep-alive TTL refresh)
+    // ==================================================================
+
+    function _startHeartbeat() {
+        _stopHeartbeat();
+        _heartbeatTimer = setInterval(async () => {
+            try {
+                const qs = buildAuthParams();
+                const resp = await apiFetch(`/api/manual-search/touch?${qs}`, {
+                    method: "POST",
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (!data.alive) {
+                        _handleSessionExpired();
+                    }
+                }
+            } catch (e) {
+                console.warn("[ManualSearch] heartbeat error:", e);
+            }
+        }, HEARTBEAT_INTERVAL);
+    }
+
+    function _stopHeartbeat() {
+        if (_heartbeatTimer) {
+            clearInterval(_heartbeatTimer);
+            _heartbeatTimer = null;
+        }
+    }
+
+    function _handleSessionExpired() {
+        _stopHeartbeat();
+        _searchActive = false;
+        _hasMore = false;
+        _destroyObserver();
+        const r = refs();
+        r.sentinel.classList.add("hidden");
+        if (r.sessionExpired) r.sessionExpired.classList.remove("hidden");
+    }
 
     // ==================================================================
     // START SEARCH
@@ -65,6 +116,8 @@
         r.skeleton.classList.remove("hidden");
         r.grid.innerHTML = "";
         _searchActive = false;
+        _totalRendered = 0;
+        _emptyRetries = 0;
 
         try {
             const qs = buildAuthParams();
@@ -87,16 +140,18 @@
             }
 
             _renderBatch(data.vacancies, r, true);
+            _totalRendered = data.vacancies.length;
             _hasMore = !!data.has_more;
             _searchActive = true;
 
-            if (data.timings || data.stats) {
-                _showStats(data, r);
-            }
+            _updateStats(data, r);
+            _startHeartbeat();
 
             if (_hasMore) {
                 _initObserver(r);
                 r.sentinel.classList.remove("hidden");
+            } else {
+                _showEndOfResults(r);
             }
         } catch (e) {
             _hideAll(r);
@@ -124,14 +179,33 @@
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
 
+            if (data.session_expired) {
+                _handleSessionExpired();
+                return;
+            }
+
             if (data.vacancies && data.vacancies.length > 0) {
                 _renderBatch(data.vacancies, r, false);
+                _totalRendered += data.vacancies.length;
+                _emptyRetries = 0;
+
+                if (data.stats) _updateStats(data, r);
+            } else {
+                _emptyRetries++;
+                if (_emptyRetries < MAX_EMPTY_RETRIES && data.has_more) {
+                    console.log(`[ManualSearch] Empty response, retry ${_emptyRetries}/${MAX_EMPTY_RETRIES}`);
+                    _loading = false;
+                    setTimeout(() => loadMoreVacancies(), EMPTY_RETRY_DELAY);
+                    return;
+                }
             }
+
             _hasMore = !!data.has_more;
 
             if (!_hasMore) {
                 r.sentinel.classList.add("hidden");
                 _destroyObserver();
+                _showEndOfResults(r);
             }
         } catch (e) {
             console.error("[ManualSearch] loadMore error:", e);
@@ -280,16 +354,30 @@
         r.empty.classList.add("hidden");
         r.error.classList.add("hidden");
         r.sentinel.classList.add("hidden");
+        if (r.endOfResults) r.endOfResults.classList.add("hidden");
+        if (r.sessionExpired) r.sessionExpired.classList.add("hidden");
     }
 
-    function _showStats(data, r) {
+    function _updateStats(data, r) {
         r.stats.classList.remove("hidden");
-        if (data.stats) {
-            r.statTotal.textContent = data.stats.api_total || "—";
-            r.statFiltered.textContent = data.stats.after_fast_filters || "—";
-        }
+        const s = data.stats;
+        if (!s) return;
+
+        const pagesLoaded = parseInt(s.api_pages_loaded) || 0;
+        const pagesTotal = parseInt(s.api_pages_total) || 0;
+        const apiTotal = pagesLoaded * 100;
+
+        r.statTotal.textContent = `${apiTotal} (стр. ${pagesLoaded}/${pagesTotal})`;
+        r.statFiltered.textContent = _totalRendered;
+
         if (data.timings && data.timings.total) {
             r.statTime.textContent = data.timings.total.toFixed(2) + "с";
+        }
+    }
+
+    function _showEndOfResults(r) {
+        if (r.endOfResults) {
+            r.endOfResults.classList.remove("hidden");
         }
     }
 
@@ -326,7 +414,7 @@
                     loadMoreVacancies();
                 }
             },
-            { rootMargin: "200px" }
+            { rootMargin: "400px" }
         );
         if (r.sentinel) _observer.observe(r.sentinel);
     }
