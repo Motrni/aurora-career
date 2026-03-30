@@ -1004,3 +1004,12 @@ function timeAgo(date) {
     if (diff < 86400) return `${Math.floor(diff / 3600)} ч назад`;
     return `${Math.floor(diff / 86400)} д назад`;
 }
+
+async function handleNavLogout() {
+    try {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: 'POST', credentials: 'include',
+        });
+    } catch (_) {}
+    window.location.href = 'auth.html';
+}

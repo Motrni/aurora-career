@@ -301,31 +301,41 @@ input[type="number"] { -moz-appearance: textfield; }
 <div class="light-leak-tl"></div>
 <div class="light-leak-br"></div>
 
-<!-- Navigation (matching index.html) -->
-<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased flex justify-between items-center px-5 md:px-12 lg:px-16 h-16 md:h-20 max-w-none shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
-    <div class="flex items-center gap-2 md:gap-3">
-        <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
-            <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
-            <div class="flex flex-col leading-tight">
-                <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
-                <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
-            </div>
-        </a>
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+    <div class="flex items-center justify-between h-full px-5 md:px-12 lg:px-16">
+        <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
+                <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
+                    <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </a>
+        </div>
+        <div class="hidden md:flex items-center gap-8">
+            <a href="cabinet.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors">Кабинет</a>
+            <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Настройки</span>
+            <a id="nav-responses" href="responses.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors">Отклики</a>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <button onclick="handleNavLogout()" class="hidden md:flex items-center gap-1.5 text-[#938ea0] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
+                <span class="material-symbols-outlined text-xl">logout</span>
+            </button>
+            <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
     </div>
-    <div class="hidden md:flex items-center gap-8">
-        <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Настройки</span>
-        <a id="nav-responses" href="responses.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors">Отклики</a>
-    </div>
-    <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
-        <span></span><span></span><span></span>
-    </button>
 </nav>
 
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
+    <a href="cabinet.html" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">Кабинет</a>
     <span class="text-on-surface text-base font-bold py-3.5 border-b border-white/5">Настройки</span>
     <a id="nav-responses-mobile" href="responses.html" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">Отклики</a>
-    <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">Вернуться на главную</a>
+    <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">На главную</a>
+    <button onclick="handleNavLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
 </div>
 
 <main class="flex-grow pt-28 md:pt-32 pb-16 md:pb-24 px-4 md:px-12 lg:px-16 max-w-[1400px] mx-auto w-full relative z-10">

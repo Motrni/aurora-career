@@ -75,6 +75,7 @@ tailwind.config = {
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
     .nav-locked { opacity: 0.4; pointer-events: none; position: relative; }
+    .nav-link-locked { opacity: 0.35; pointer-events: none; cursor: default; }
     .badge-locked {
         font-size: 0.6rem; padding: 2px 6px;
         background: rgba(147,142,160,0.15); border-radius: 4px;
@@ -85,13 +86,57 @@ tailwind.config = {
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
     .session-item { transition: background-color 0.15s; }
     .session-item:hover { background-color: rgba(204,190,255,0.04); }
+    .brand-logo-font { font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
+    .burger-btn span { display: block; width: 24px; height: 2px; background: #e7e0ef; transition: all 0.3s ease; }
+    .burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .burger-btn.active span:nth-child(2) { opacity: 0; }
+    .burger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+    .mobile-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    .mobile-menu.open { transform: translateX(0); }
 </style>
 </head>
-<body class="min-h-screen text-on-surface">
+<body class="min-h-screen flex flex-col text-on-surface selection:bg-primary/30 selection:text-primary">
 <div class="aurora-glow"></div>
 
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+    <div class="flex items-center justify-between h-full px-5 md:px-12 lg:px-16">
+        <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
+                <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
+                    <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </a>
+        </div>
+        <div class="hidden md:flex items-center gap-8">
+            <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Кабинет</span>
+            <a id="nav-settings" href="settings.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Настройки</a>
+            <a id="nav-responses" href="responses.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Отклики</a>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <button onclick="handleLogout()" class="hidden md:flex items-center gap-1.5 text-[#938ea0] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
+                <span class="material-symbols-outlined text-xl">logout</span>
+            </button>
+            <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
+    <span class="text-on-surface text-base font-bold py-3.5 border-b border-white/5">Кабинет</span>
+    <a id="nav-settings-mobile" href="settings.html" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Настройки</a>
+    <a id="nav-responses-mobile" href="responses.html" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Отклики</a>
+    <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">На главную</a>
+    <button onclick="handleLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
+</div>
+
 <!-- Loading skeleton -->
-<div id="loadingSkeleton" class="relative z-10 max-w-2xl mx-auto px-4 py-8 space-y-6">
+<div id="loadingSkeleton" class="relative z-10 max-w-2xl mx-auto px-4 pt-24 md:pt-28 pb-8 space-y-6">
     <div class="skeleton h-10 w-48 mb-6"></div>
     <div class="skeleton h-40 w-full rounded-2xl"></div>
     <div class="skeleton h-32 w-full rounded-2xl"></div>
@@ -99,18 +144,12 @@ tailwind.config = {
 </div>
 
 <!-- Main content (hidden until loaded) -->
-<div id="mainContent" class="relative z-10 max-w-2xl mx-auto px-4 py-8 hidden fade-in">
+<div id="mainContent" class="relative z-10 max-w-2xl mx-auto px-4 pt-24 md:pt-28 pb-8 hidden fade-in">
 
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-xl font-bold text-primary">Aurora Career</h1>
-            <p class="text-on-surface-variant text-sm mt-0.5" id="userEmail">-</p>
-        </div>
-        <button onclick="handleLogout()" class="btn-outline rounded-xl px-4 py-2 text-on-surface-variant text-sm flex items-center gap-2 cursor-pointer">
-            <span class="material-symbols-outlined text-lg">logout</span>
-            Выйти
-        </button>
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-on-surface">Личный кабинет</h1>
+        <p class="text-on-surface-variant text-sm mt-1" id="userEmail">-</p>
     </div>
 
     <!-- Subscription status -->

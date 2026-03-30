@@ -67,11 +67,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         currentUser = data;
 
-        if (data.subscription_status && data.subscription_status !== 'none') {
-            window.location.href = 'settings.html';
-            return;
-        }
-
         if (window.AuroraSession) {
             window.AuroraSession.startPing();
         }
@@ -142,6 +137,8 @@ function updateNavAccess(status) {
         navResponses.classList.remove('nav-locked');
         settingsLock.classList.add('hidden');
         responsesLock.classList.add('hidden');
+
+        document.querySelectorAll('.nav-link-locked').forEach(el => el.classList.remove('nav-link-locked'));
     }
 }
 
@@ -282,6 +279,17 @@ async function handleLinkTelegram() {
             window.open(data.deep_link, '_blank');
         }
     } catch (_) {}
+}
+
+// ============================================================================
+// MOBILE MENU
+// ============================================================================
+
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    const btn = document.getElementById('burger-btn');
+    menu.classList.toggle('open');
+    btn.classList.toggle('active');
 }
 
 // ============================================================================

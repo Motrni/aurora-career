@@ -1997,3 +1997,12 @@ function startRegModalResendTimer(startSec) {
         }
     }, 1000);
 }
+
+async function handleNavLogout() {
+    try {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: 'POST', credentials: 'include',
+        });
+    } catch (_) {}
+    window.location.href = 'auth.html';
+}
