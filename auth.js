@@ -9,6 +9,26 @@ const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.lo
 
 let currentOtpEmail = '';
 
+async function redirectBySubscription() {
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/me`, {
+            method: 'GET', credentials: 'include',
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.status === 'ok') {
+                if (data.subscription_status === 'none') {
+                    window.location.href = 'cabinet.html';
+                } else {
+                    window.location.href = 'settings.html';
+                }
+                return;
+            }
+        }
+    } catch (_) {}
+    window.location.href = 'cabinet.html';
+}
+
 function togglePwdVis(inputId, btn) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -140,7 +160,7 @@ async function handleLogin(e) {
         const { ok, status, data } = await apiCall('/api/auth/login', { email, password });
 
         if (ok) {
-            window.location.href = 'settings.html';
+            await redirectBySubscription();
             return;
         }
 
@@ -257,7 +277,7 @@ async function handleVerifyOtp(e) {
         const { ok, data } = await apiCall(endpoint, body);
 
         if (ok) {
-            window.location.href = 'settings.html';
+            await redirectBySubscription();
             return;
         }
 
@@ -349,7 +369,7 @@ async function handleResetPassword(e) {
         });
 
         if (ok) {
-            window.location.href = 'settings.html';
+            await redirectBySubscription();
             return;
         }
 
@@ -413,7 +433,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (resp.ok) {
             const data = await resp.json();
             if (data.status === 'ok') {
-                window.location.href = 'settings.html';
+                if (data.subscription_status === 'none') {
+                    window.location.href = 'cabinet.html';
+                } else {
+                    window.location.href = 'settings.html';
+                }
                 return;
             }
         }

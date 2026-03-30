@@ -57,6 +57,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
+                if (meData.subscription_status === 'none') {
+                    window.location.href = 'cabinet.html';
+                    return;
+                }
                 authMode = 'jwt';
             }
         }
