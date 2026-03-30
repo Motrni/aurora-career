@@ -153,6 +153,35 @@ tailwind.config = {
 <!-- Main content (hidden until loaded) -->
 <div id="mainContent" class="relative z-10 max-w-2xl mx-auto px-4 pt-24 md:pt-28 pb-8 hidden fade-in">
 
+    <!-- Payment success banner (shown when returning from CP) -->
+    <div id="paymentSuccessBanner" class="hidden mb-6 fade-in">
+        <div class="card rounded-2xl p-6 border border-[#4ade80]/20" style="background: linear-gradient(135deg, rgba(33,30,41,0.95), rgba(74,222,128,0.06));">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(74,222,128,0.12);">
+                    <span class="material-symbols-outlined text-[#4ade80] text-2xl">check_circle</span>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-lg font-bold text-on-surface">Оплата прошла успешно!</h2>
+                    <p class="text-on-surface-variant text-sm mt-1" id="paymentSuccessDesc">Подписка активирована. Все функции доступны.</p>
+                    <a href="settings.html" class="inline-flex items-center gap-2 mt-4 btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                        Перейти к настройкам
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment fail banner -->
+    <div id="paymentFailBanner" class="hidden mb-6 fade-in">
+        <div class="card rounded-2xl p-5 border border-[#ffb4ab]/20">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-error text-xl">error</span>
+                <p class="text-on-surface-variant text-sm">Оплата не прошла. Попробуйте ещё раз или выберите другой способ оплаты.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Page Header -->
     <div class="mb-8">
         <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-on-surface">Личный кабинет</h1>
@@ -296,6 +325,6 @@ tailwind.config = {
 
 <script src="https://widget.cloudpayments.ru/bundles/cloudpayments.js"></script>
 <script src="aurora-session.js?v=1"></script>
-<script src="cabinet.js?v=2.0"></script>
+<script src="cabinet.js?v=2.1"></script>
 </body>
 </html>

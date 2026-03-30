@@ -76,7 +76,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.AuroraSession.startPing();
         }
 
-        renderCabinet(data);
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentResult = urlParams.get('payment');
+
+        if (paymentResult === 'success') {
+            window.history.replaceState({}, '', window.location.pathname);
+
+            if (data.subscription_status === 'active' || data.subscription_status === 'trial') {
+                showPaymentSuccess(data.subscription_status);
+                renderCabinet(data);
+            } else {
+                showPaymentPending(data);
+            }
+        } else if (paymentResult === 'fail') {
+            window.history.replaceState({}, '', window.location.pathname);
+            document.getElementById('paymentFailBanner').classList.remove('hidden');
+            renderCabinet(data);
+        } else {
+            renderCabinet(data);
+        }
+
         loadSessions();
 
     } catch (e) {
@@ -431,6 +450,56 @@ async function handleActivateTrial() {
             btn.textContent = 'Активировать подписку';
         }
     }
+}
+
+function showPaymentSuccess(status) {
+    const banner = document.getElementById('paymentSuccessBanner');
+    const desc = document.getElementById('paymentSuccessDesc');
+    banner.classList.remove('hidden');
+
+    if (status === 'trial') {
+        desc.textContent = 'Пробный период активирован. Настройте поиск и начните получать отклики.';
+    } else {
+        desc.textContent = 'Подписка активирована. Все функции доступны.';
+    }
+
+    document.getElementById('loadingSkeleton').classList.add('hidden');
+    document.getElementById('mainContent').classList.remove('hidden');
+}
+
+async function showPaymentPending(initialData) {
+    const banner = document.getElementById('paymentSuccessBanner');
+    const desc = document.getElementById('paymentSuccessDesc');
+    banner.classList.remove('hidden');
+    desc.textContent = 'Платёж обрабатывается, подождите...';
+
+    document.getElementById('loadingSkeleton').classList.add('hidden');
+    document.getElementById('mainContent').classList.remove('hidden');
+    renderCabinet(initialData);
+
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const poll = setInterval(async () => {
+        attempts++;
+        try {
+            const resp = await apiFetch(`${API_BASE_URL}/api/auth/me`);
+            if (!resp || !resp.ok) return;
+            const data = await resp.json();
+
+            if (data.subscription_status === 'active' || data.subscription_status === 'trial') {
+                clearInterval(poll);
+                currentUser = data;
+                desc.textContent = 'Подписка активирована. Все функции доступны.';
+                renderCabinet(data);
+            }
+        } catch (_) {}
+
+        if (attempts >= maxAttempts) {
+            clearInterval(poll);
+            desc.textContent = 'Оплата принята. Подписка активируется в течение минуты — обновите страницу.';
+        }
+    }, 3000);
 }
 
 async function handleLinkTelegram() {
