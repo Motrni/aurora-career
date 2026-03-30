@@ -1,4 +1,4 @@
-/* manual-search.js v2.0 — Ручной режим поиска вакансий */
+/* manual-search.js v3.0 — Ручной режим поиска вакансий */
 (function () {
     "use strict";
 
@@ -9,10 +9,12 @@
     let _heartbeatTimer = null;
     let _totalRendered = 0;
 
-    const HEARTBEAT_INTERVAL = 5 * 60 * 1000; // 5 минут
+    const HEARTBEAT_INTERVAL = 5 * 60 * 1000;
     const EMPTY_RETRY_DELAY = 500;
     const MAX_EMPTY_RETRIES = 5;
     let _emptyRetries = 0;
+
+    const _vacancyCache = {};
 
     const $ = (id) => document.getElementById(id);
 
@@ -286,6 +288,7 @@
         if (clear) r.grid.innerHTML = "";
 
         vacancies.forEach((v, i) => {
+            _vacancyCache[v.id] = v;
             const card = _createCard(v);
             card.style.animationDelay = `${i * 50}ms`;
             card.classList.add("vacancy-card-animate");
@@ -295,7 +298,7 @@
 
     function _createCard(v) {
         const card = document.createElement("div");
-        card.className = "vacancy-card glass-panel p-5 md:p-6 rounded-xl flex flex-col gap-3";
+        card.className = "vacancy-card glass-panel p-5 md:p-6 rounded-xl flex flex-col gap-3 cursor-pointer";
         card.dataset.vacancyId = v.id;
 
         const tags = [];
@@ -316,20 +319,26 @@
                 }
                 <div class="min-w-0 flex-1">
                     <p class="text-xs text-on-surface-variant truncate">${esc(v.employer_name)}</p>
-                    <a href="${esc(v.url)}" target="_blank" rel="noopener" class="text-base font-semibold text-on-surface hover:text-primary transition-colors line-clamp-2 leading-snug">${esc(v.name)}</a>
+                    <span class="text-base font-semibold text-on-surface line-clamp-2 leading-snug">${esc(v.name)}</span>
                 </div>
             </div>
             ${tags.length ? `<div class="flex flex-wrap gap-1.5">${tags.join("")}</div>` : ""}
             ${v.description_short ? `<p class="text-xs text-on-surface-variant/70 line-clamp-3 leading-relaxed">${esc(v.description_short)}</p>` : ""}
             ${skills ? `<div class="flex flex-wrap gap-1">${skills}</div>` : ""}
-            <div class="flex gap-2 mt-auto pt-2 border-t border-outline-variant/10">
-                <button class="ms-apply-btn flex-1 px-4 py-2.5 rounded-lg bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all" onclick="applyToVacancy('${esc(v.id)}', this.closest('.vacancy-card'))">Откликнуться</button>
-                <button class="px-4 py-2.5 rounded-lg bg-surface-container text-on-surface-variant font-semibold text-sm hover:bg-surface-container-high transition-colors" onclick="skipVacancy('${esc(v.id)}', this.closest('.vacancy-card'))">Пропустить</button>
-                <a href="${esc(v.url)}" target="_blank" rel="noopener" class="px-3 py-2.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors flex items-center" title="Открыть на hh.ru">
+            <div class="flex gap-2 mt-auto pt-2 border-t border-outline-variant/10" data-actions>
+                <button class="ms-apply-btn flex-1 px-4 py-2.5 rounded-lg bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer" onclick="applyToVacancy('${esc(v.id)}', this.closest('.vacancy-card'))">Откликнуться</button>
+                <button class="px-4 py-2.5 rounded-lg bg-surface-container text-on-surface-variant font-semibold text-sm hover:bg-surface-container-high transition-colors cursor-pointer" onclick="skipVacancy('${esc(v.id)}', this.closest('.vacancy-card'))">Пропустить</button>
+                <a href="${esc(v.url)}" target="_blank" rel="noopener" class="px-3 py-2.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors flex items-center cursor-pointer" title="Открыть на hh.ru">
                     <span class="material-symbols-outlined text-lg">open_in_new</span>
                 </a>
             </div>
         `;
+
+        card.addEventListener("click", (e) => {
+            if (e.target.closest("[data-actions]")) return;
+            openVacancyModal(v.id);
+        });
+
         return card;
     }
 
@@ -401,6 +410,153 @@
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
+
+    // ==================================================================
+    // VACANCY DETAIL MODAL
+    // ==================================================================
+
+    let _currentModalId = null;
+
+    window.openVacancyModal = function openVacancyModal(vacancyId) {
+        const v = _vacancyCache[vacancyId];
+        if (!v) return;
+        _currentModalId = vacancyId;
+
+        const modal = $("vacancyModal");
+        const card = $("vacancyModalCard");
+        if (!modal || !card) return;
+
+        const logo = $("vmLogo");
+        const logoFallback = logo.nextElementSibling;
+        if (v.employer_logo) {
+            logo.src = v.employer_logo;
+            logo.classList.remove("hidden");
+            logoFallback.classList.add("hidden");
+        } else {
+            logo.classList.add("hidden");
+            logoFallback.classList.remove("hidden");
+        }
+
+        const empLink = $("vmEmployerLink");
+        empLink.textContent = v.employer_name || "";
+        empLink.href = v.employer_url || "#";
+
+        $("vmTitle").textContent = v.name || "";
+
+        const tagsEl = $("vmTags");
+        tagsEl.innerHTML = "";
+        const tagData = [];
+        if (v.salary_text) tagData.push({ text: v.salary_text, icon: "payments" });
+        if (v.area) tagData.push({ text: v.area, icon: "location_on" });
+        if (v.experience) tagData.push({ text: v.experience, icon: "work_history" });
+        if (v.schedule) tagData.push({ text: v.schedule, icon: "schedule" });
+        if (v.employment) tagData.push({ text: v.employment, icon: "work" });
+        tagData.forEach((t) => {
+            tagsEl.insertAdjacentHTML("beforeend", _tag(t.text, t.icon));
+        });
+
+        const reqBlock = $("vmRequirementBlock");
+        const reqText = $("vmRequirement");
+        if (v.requirement) {
+            reqText.innerHTML = v.requirement;
+            reqBlock.classList.remove("hidden");
+        } else {
+            reqBlock.classList.add("hidden");
+        }
+
+        const respBlock = $("vmResponsibilityBlock");
+        const respText = $("vmResponsibility");
+        if (v.responsibility) {
+            respText.innerHTML = v.responsibility;
+            respBlock.classList.remove("hidden");
+        } else {
+            respBlock.classList.add("hidden");
+        }
+
+        const grid = $("vmDetailsGrid");
+        grid.innerHTML = "";
+        const details = [];
+        if (v.address) details.push(["Адрес", v.address]);
+        if (v.work_format && v.work_format.length) details.push(["Формат", v.work_format.join(", ")]);
+        if (v.working_hours && v.working_hours.length) details.push(["Часы", v.working_hours.join(", ")]);
+        if (v.schedule_days && v.schedule_days.length) details.push(["График", v.schedule_days.join(", ")]);
+        if (v.professional_roles && v.professional_roles.length) details.push(["Роль", v.professional_roles.join(", ")]);
+        if (v.published_at) {
+            const d = new Date(v.published_at);
+            if (!isNaN(d)) details.push(["Опубликовано", d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })]);
+        }
+        if (v.has_test) details.push(["Тестовое", "Есть"]);
+        if (v.response_letter_required) details.push(["Сопр. письмо", "Обязательно"]);
+
+        details.forEach(([label, value]) => {
+            grid.insertAdjacentHTML("beforeend",
+                `<div class="vm-detail-cell"><div class="vm-detail-label">${esc(label)}</div><div class="vm-detail-value">${esc(value)}</div></div>`
+            );
+        });
+
+        $("vmOpenHH").href = v.url || "#";
+
+        const applyBtn = $("vmApplyBtn");
+        applyBtn.disabled = false;
+        applyBtn.textContent = "Откликнуться";
+        applyBtn.onclick = () => _modalApply(vacancyId);
+
+        $("vmSkipBtn").onclick = () => _modalSkip(vacancyId);
+
+        modal.classList.remove("pointer-events-none");
+        modal.classList.remove("opacity-0");
+        modal.setAttribute("aria-hidden", "false");
+        requestAnimationFrame(() => {
+            card.style.transform = "scale(1)";
+            card.style.opacity = "1";
+        });
+        document.body.style.overflow = "hidden";
+    };
+
+    window.closeVacancyModal = function closeVacancyModal() {
+        const modal = $("vacancyModal");
+        const card = $("vacancyModalCard");
+        if (!modal) return;
+
+        card.style.transform = "scale(0.95)";
+        card.style.opacity = "0";
+        modal.classList.add("opacity-0");
+
+        setTimeout(() => {
+            modal.classList.add("pointer-events-none");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.style.overflow = "";
+            _currentModalId = null;
+        }, 300);
+    };
+
+    async function _modalApply(vacancyId) {
+        const cardEl = document.querySelector(`.vacancy-card[data-vacancy-id="${vacancyId}"]`);
+        if (cardEl) {
+            await window.applyToVacancy(vacancyId, cardEl);
+        }
+        closeVacancyModal();
+    }
+
+    function _modalSkip(vacancyId) {
+        const cardEl = document.querySelector(`.vacancy-card[data-vacancy-id="${vacancyId}"]`);
+        if (cardEl) {
+            window.skipVacancy(vacancyId, cardEl);
+        }
+        closeVacancyModal();
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && _currentModalId) {
+            closeVacancyModal();
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (_currentModalId && e.target.id === "vacancyModalBackdrop") {
+            closeVacancyModal();
+        }
+    });
 
     // ==================================================================
     // INTERSECTION OBSERVER (infinite scroll)

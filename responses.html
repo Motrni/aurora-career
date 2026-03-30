@@ -187,6 +187,27 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 .vacancy-card-animate {
     animation: card-in 0.3s ease-out both;
 }
+
+.vm-detail-cell {
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.vm-detail-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(202,195,215,0.5);
+    margin-bottom: 3px;
+}
+.vm-detail-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: #e7e0ef;
+    line-height: 1.4;
+}
 </style>
 </head>
 
@@ -530,6 +551,62 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     </div><!-- /mainContent -->
 </main>
 
+<!-- Vacancy Detail Modal -->
+<div id="vacancyModal" class="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain p-4 md:p-6 opacity-0 transition-opacity duration-300 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="vmTitle">
+    <div class="absolute inset-0 z-0 bg-[#100d17]/80 backdrop-blur-md" id="vacancyModalBackdrop" tabindex="-1"></div>
+    <div id="vacancyModalCard" class="relative z-10 my-auto w-full max-w-2xl shrink-0 glass-panel rounded-xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 scale-95 opacity-0 transition-all duration-300 ease-out max-h-[90vh] flex flex-col">
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-container/10 rounded-full blur-[80px] pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-secondary-container/8 rounded-full blur-[80px] pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="relative p-5 md:p-8 pb-0 flex items-start gap-4 shrink-0">
+            <div id="vmLogoWrap" class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-surface-container flex items-center justify-center shrink-0 overflow-hidden">
+                <img id="vmLogo" src="" alt="" class="w-full h-full object-contain hidden" onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">
+                <span class="material-symbols-outlined text-on-surface-variant/40 text-2xl">apartment</span>
+            </div>
+            <div class="min-w-0 flex-1">
+                <a id="vmEmployerLink" href="#" target="_blank" rel="noopener" class="text-xs text-on-surface-variant hover:text-primary transition-colors truncate block"></a>
+                <h2 id="vmTitle" class="text-lg md:text-xl font-bold text-on-surface leading-snug mt-0.5"></h2>
+            </div>
+            <button type="button" onclick="closeVacancyModal()" class="p-2 -mr-2 -mt-1 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant shrink-0 cursor-pointer" aria-label="Закрыть">
+                <span class="material-symbols-outlined text-2xl">close</span>
+            </button>
+        </div>
+
+        <!-- Tags -->
+        <div id="vmTags" class="relative px-5 md:px-8 pt-4 flex flex-wrap gap-1.5 shrink-0"></div>
+
+        <!-- Scrollable Content -->
+        <div class="relative flex-1 overflow-y-auto px-5 md:px-8 py-5 space-y-5 scrollbar-thin">
+
+            <!-- Requirement -->
+            <div id="vmRequirementBlock" class="hidden">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 mb-2">Требования</h4>
+                <p id="vmRequirement" class="text-sm text-on-surface/90 leading-relaxed"></p>
+            </div>
+
+            <!-- Responsibility -->
+            <div id="vmResponsibilityBlock" class="hidden">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 mb-2">Обязанности</h4>
+                <p id="vmResponsibility" class="text-sm text-on-surface/90 leading-relaxed"></p>
+            </div>
+
+            <!-- Details Grid -->
+            <div id="vmDetailsGrid" class="grid grid-cols-2 gap-3">
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="relative shrink-0 p-5 md:px-8 md:py-5 border-t border-outline-variant/10 flex gap-2">
+            <button id="vmApplyBtn" class="ms-apply-btn flex-1 px-4 py-3 rounded-lg bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer">Откликнуться</button>
+            <button id="vmSkipBtn" class="px-4 py-3 rounded-lg bg-surface-container text-on-surface-variant font-semibold text-sm hover:bg-surface-container-high transition-colors cursor-pointer">Пропустить</button>
+            <a id="vmOpenHH" href="#" target="_blank" rel="noopener" class="px-4 py-3 rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors flex items-center cursor-pointer" title="Открыть на hh.ru">
+                <span class="material-symbols-outlined text-lg">open_in_new</span>
+            </a>
+        </div>
+    </div>
+</div>
+
 <!-- Footer -->
 <footer class="mt-auto w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
     <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
@@ -559,7 +636,7 @@ function toggleMobileMenu() {
 
 <script src="aurora-session.js?v=1"></script>
 <script src="responses.js?v=8.1"></script>
-<script src="manual-search.js?v=2.0"></script>
+<script src="manual-search.js?v=3.0"></script>
 
 </body>
 </html>
