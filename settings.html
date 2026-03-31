@@ -285,6 +285,17 @@ input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
 
+/* Salary validation highlight */
+#salarySection.salary-field-error {
+    border-color: rgba(248, 113, 113, 0.55) !important;
+    box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.35), 0 8px 28px rgba(248, 113, 113, 0.12);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+#salaryInput.salary-input-error {
+    box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.8);
+    background: rgba(248, 113, 113, 0.07) !important;
+}
+
 /* Region chip inline style override handled by JS, keeping class for light-theme compat */
 .region-chip { border-radius: 12px; }
 
@@ -422,7 +433,7 @@ input[type="number"] { -moz-appearance: textfield; }
                         </section>
 
                         <!-- Salary -->
-                        <section id="salarySection" class="p-5 md:p-6 rounded-2xl bg-surface-container-low/60 border border-outline-variant/10 backdrop-blur-md space-y-4">
+                        <section id="salarySection" class="scroll-mt-24 md:scroll-mt-32 p-5 md:p-6 rounded-2xl bg-surface-container-low/60 border border-outline-variant/10 backdrop-blur-md space-y-4">
                             <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Желаемая зарплата</h2>
                             <div class="space-y-4">
                                 <label class="flex items-center justify-between p-3 rounded-xl bg-surface-container-high/40 cursor-pointer group">
@@ -432,8 +443,10 @@ input[type="number"] { -moz-appearance: textfield; }
                                         <div class="w-10 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-outline after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container peer-checked:after:bg-white"></div>
                                     </div>
                                 </label>
-                                <div>
-                                    <input type="number" id="salaryInput" class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-base font-bold focus:ring-2 focus:ring-primary-container transition-all text-on-surface placeholder:text-outline-variant" placeholder="Например: 100000" min="0"/>
+                                <div class="min-w-0">
+                                    <input type="number" id="salaryInput" class="min-w-0 w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-3.5 md:px-4 text-sm md:text-base font-semibold md:font-bold focus:ring-2 focus:ring-primary-container transition-all text-on-surface placeholder:text-on-surface-variant/75 placeholder:text-xs md:placeholder:text-sm placeholder:font-normal" placeholder="Сумма в ₽" min="0" inputmode="numeric"/>
+                                    <p class="text-[10px] md:text-[11px] text-on-surface-variant/75 mt-1.5 leading-snug">Например: <span class="whitespace-nowrap">100&nbsp;000</span> (в поле можно без пробелов)</p>
+                                    <p id="salaryFieldError" class="hidden text-[#f87171] text-xs mt-2 font-medium leading-snug" role="alert"></p>
                                     <span class="block mt-2 text-[9px] uppercase tracking-widest text-on-surface-variant font-bold text-right">₽ / месяц</span>
                                 </div>
                             </div>
@@ -873,7 +886,7 @@ function toggleMobileMenu() {
 <script src="aurora-session.js?v=1"></script>
 <script src="settings-tour-steps.js?v=1.1"></script>
 <script src="settings-tour.js?v=1.1"></script>
-<script src="settings.js?v=5.1"></script>
+<script src="settings.js?v=5.2"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

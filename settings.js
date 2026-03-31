@@ -133,6 +133,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
 
     noSalaryCheckbox.addEventListener("change", (e) => {
+        clearSalaryFieldValidation();
         if (e.target.checked) {
             salaryInput.value = "";
             salaryInput.disabled = true;
@@ -140,7 +141,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             salaryInput.style.borderColor = "#333";
         } else {
             salaryInput.disabled = false;
-            salaryInput.placeholder = "Например: 100000";
+            salaryInput.placeholder = "Сумма в ₽";
+            salaryInput.style.borderColor = "";
             salaryInput.focus();
         }
     });
@@ -222,7 +224,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // [NEW] 8. Bind Events for Vacancy Counter
     // Salary
-    salaryInput.addEventListener("input", () => checkVacancies());
+    salaryInput.addEventListener("input", () => {
+        clearSalaryFieldValidation();
+        checkVacancies();
+    });
     noSalaryCheckbox.addEventListener("change", () => checkVacancies());
 
     // Experience
@@ -701,6 +706,7 @@ async function loadSettings() {
             noSalaryCheckbox.checked = false;
             salaryInput.value = settings.salary;
             salaryInput.disabled = false;
+            salaryInput.placeholder = "Сумма в ₽";
         }
 
         // Experience
@@ -1083,25 +1089,76 @@ function finalizeIdsFromSet() {
     return result;
 }
 
+function clearSalaryFieldValidation() {
+    const salarySection = document.getElementById("salarySection");
+    const salaryInput = document.getElementById("salaryInput");
+    const inline = document.getElementById("salaryFieldError");
+    const errDiv = document.getElementById("errorMsg");
+    if (salarySection) salarySection.classList.remove("salary-field-error");
+    if (salaryInput) {
+        salaryInput.classList.remove("salary-input-error");
+    }
+    if (inline) {
+        inline.classList.add("hidden");
+        inline.textContent = "";
+    }
+    if (errDiv) errDiv.style.display = "none";
+}
+
+function scrollToSalarySection() {
+    const el = document.getElementById("salarySection");
+    if (!el) return;
+    const headerOffset = window.matchMedia("(min-width: 768px)").matches ? 128 : 104;
+    const y = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+}
+
+function showSalaryValidationError(msg) {
+    showError(msg);
+    const salarySection = document.getElementById("salarySection");
+    const salaryInput = document.getElementById("salaryInput");
+    const inline = document.getElementById("salaryFieldError");
+    if (inline) {
+        inline.textContent = msg;
+        inline.classList.remove("hidden");
+    }
+    if (salarySection) salarySection.classList.add("salary-field-error");
+    if (salaryInput && !salaryInput.disabled) {
+        salaryInput.classList.add("salary-input-error");
+    }
+    scrollToSalarySection();
+    window.setTimeout(() => {
+        if (salaryInput && !salaryInput.disabled) {
+            try {
+                salaryInput.focus({ preventScroll: true });
+            } catch (_) {
+                salaryInput.focus();
+            }
+        }
+    }, 350);
+}
+
 async function saveSettings() {
     const salaryInput = document.getElementById("salaryInput");
     const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
+
+    clearSalaryFieldValidation();
 
     let salary = null;
 
     if (!noSalaryCheckbox.checked) {
         let val = salaryInput.value.trim();
         if (val === "") {
-            showError("Введите сумму или поставьте галочку 'Не указывать'");
+            showSalaryValidationError("Введите сумму или поставьте галочку 'Не указывать'");
             return;
         }
         salary = parseInt(val);
         if (isNaN(salary) || salary < 0) {
-            showError("Зарплата должна быть положительным числом!");
+            showSalaryValidationError("Зарплата должна быть положительным числом!");
             return;
         }
         if (salary > 100000000) {
-            showError("Зарплата не может превышать 100 млн ₽");
+            showSalaryValidationError("Зарплата не может превышать 100 млн ₽");
             return;
         }
     }
