@@ -338,6 +338,29 @@ input[type="number"] { -moz-appearance: textfield; }
     <button onclick="handleNavLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
 </div>
 
+<!-- Onboarding Stepper Bar (hidden by default, shown in onboarding mode) -->
+<div id="onboardingStepper" class="hidden w-full pt-20 md:pt-24 pb-2 px-5 md:px-12 lg:px-16 relative z-10">
+    <div class="max-w-md mx-auto flex items-center justify-center gap-0">
+        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold shadow">
+            <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">check</span>
+        </div>
+        <div class="flex-1 h-0.5 bg-green-500"></div>
+        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold shadow">
+            <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">check</span>
+        </div>
+        <div class="flex-1 h-0.5 bg-green-500"></div>
+        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold shadow">
+            <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">check</span>
+        </div>
+        <div class="flex-1 h-0.5 bg-green-500"></div>
+        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold shadow">
+            <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">check</span>
+        </div>
+        <div class="flex-1 h-0.5 bg-[#5a30d0]"></div>
+        <div class="w-8 h-8 rounded-full bg-[#5a30d0] flex items-center justify-center text-white text-xs font-bold shadow ring-2 ring-[#ccbeff]/30">5</div>
+    </div>
+</div>
+
 <main class="flex-grow pt-28 md:pt-32 pb-16 md:pb-24 px-4 md:px-12 lg:px-16 max-w-[1400px] mx-auto w-full relative z-10">
 
     <!-- Error -->
@@ -399,7 +422,7 @@ input[type="number"] { -moz-appearance: textfield; }
                         </section>
 
                         <!-- Salary -->
-                        <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/60 border border-outline-variant/10 backdrop-blur-md space-y-4">
+                        <section id="salarySection" class="p-5 md:p-6 rounded-2xl bg-surface-container-low/60 border border-outline-variant/10 backdrop-blur-md space-y-4">
                             <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Желаемая зарплата</h2>
                             <div class="space-y-4">
                                 <label class="flex items-center justify-between p-3 rounded-xl bg-surface-container-high/40 cursor-pointer group">
@@ -445,7 +468,7 @@ input[type="number"] { -moz-appearance: textfield; }
                     </div>
 
                     <!-- Advanced Search -->
-                    <section class="space-y-4 p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                    <section id="queryModeSection" class="space-y-4 p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5">
                         <div class="flex justify-between items-center mb-2">
                             <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Настройка поиска</h2>
                             <div class="p-1.5 bg-surface-container-highest/50 rounded-full flex">
@@ -829,8 +852,12 @@ input[type="number"] { -moz-appearance: textfield; }
             </div>
             <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Аврора</div>
         </div>
-        <div class="flex gap-6 md:gap-8 font-['Inter'] text-[10px] md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em]">
+        <div class="flex items-center gap-6 md:gap-8 font-['Inter'] text-[10px] md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em]">
             <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500" href="https://aurora-career.ru/" target="_blank">Главная</a>
+            <button id="helpBtn" class="flex items-center gap-1.5 text-[#cac3d7]/60 hover:text-[#ccbeff] transition-colors cursor-pointer" title="Помощь по настройкам">
+                <span class="material-symbols-outlined text-base">help</span>
+                <span class="hidden sm:inline">Помощь</span>
+            </button>
         </div>
     </div>
 </footer>
@@ -844,7 +871,9 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="settings.js?v=4.5"></script>
+<script src="settings-tour-steps.js?v=1.0"></script>
+<script src="settings-tour.js?v=1.0"></script>
+<script src="settings.js?v=5.0"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

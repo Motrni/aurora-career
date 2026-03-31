@@ -120,7 +120,10 @@ function initOnboarding(step) {
     document.getElementById('loadingSkeleton').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
 
-    if (step === 'onboarding_profile_complete') {
+    if (step === 'onboarding_settings') {
+        window.location.href = 'settings.html';
+        return;
+    } else if (step === 'onboarding_profile_complete') {
         showStep(4);
         showProfileComplete();
     } else if (step === 'onboarding_query_generating') {
@@ -149,12 +152,12 @@ function initOnboarding(step) {
 }
 
 // ============================================================================
-// STEPPER (4 steps)
+// STEPPER (5 steps)
 // ============================================================================
 
 function showStep(stepNum) {
-    const dots = [1, 2, 3, 4].map(i => document.getElementById(`stepDot${i}`));
-    const lines = [1, 2, 3].map(i => document.getElementById(`stepLine${i}`));
+    const dots = [1, 2, 3, 4, 5].map(i => document.getElementById(`stepDot${i}`));
+    const lines = [1, 2, 3, 4].map(i => document.getElementById(`stepLine${i}`));
     const steps = [1, 2, 3, 4].map(i => document.getElementById(`step${i}`));
     const checkIcon = '<span class="material-symbols-outlined text-sm">check</span>';
     const wrapper = document.getElementById('contentWrapper');
@@ -168,6 +171,7 @@ function showStep(stepNum) {
     }
 
     dots.forEach((dot, i) => {
+        if (!dot) return;
         const num = i + 1;
         if (num < stepNum) {
             dot.className = 'stepper-dot completed';
@@ -182,6 +186,7 @@ function showStep(stepNum) {
     });
 
     lines.forEach((line, i) => {
+        if (!line) return;
         line.className = (i + 1) < stepNum ? 'stepper-line active' : 'stepper-line pending';
     });
 
@@ -940,6 +945,37 @@ function showProfileComplete() {
 
     const wrapper = document.getElementById('contentWrapper');
     if (wrapper) wrapper.style.maxWidth = '480px';
+
+    const goBtn = document.getElementById('goToSettingsBtn');
+    if (goBtn) {
+        goBtn.addEventListener('click', handleGoToSettings);
+    }
+}
+
+async function handleGoToSettings() {
+    const btn = document.getElementById('goToSettingsBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></span>';
+    }
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/start-settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!resp.ok) throw new Error('Failed to start settings step');
+
+        window.location.href = 'settings.html';
+    } catch (e) {
+        console.error('[Onboarding] start-settings error:', e);
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Настроить поиск';
+        }
+    }
 }
 
 // ============================================================================

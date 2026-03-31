@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
-                if (meData.current_step && meData.current_step.startsWith('onboarding_')) {
+                if (meData.current_step && meData.current_step.startsWith('onboarding_') && meData.current_step !== 'onboarding_settings') {
                     window.location.href = 'onboarding.html';
                     return;
                 }
@@ -106,6 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     return;
                 }
                 authMode = 'jwt';
+                window._currentStep = meData.current_step || null;
                 console.log("[Auth] JWT session active");
             }
         }
@@ -177,6 +178,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 6. Save Logic (Search)
     document.getElementById("saveBtn").addEventListener("click", async () => {
+        if (_isOnboardingMode) {
+            await handleOnboardingSave();
+            return;
+        }
         try {
             await saveSettings();
         } catch (e) {
@@ -848,6 +853,9 @@ function tryInitTree() {
         setTimeout(() => {
             initDirtyStateTracking();
             checkVacancies();
+            if (window._currentStep === 'onboarding_settings') {
+                activateOnboardingMode();
+            }
         }, 100);
         initAccountSection();
     }
@@ -2010,3 +2018,132 @@ async function handleNavLogout() {
     } catch (_) {}
     window.location.href = 'auth.html';
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ONBOARDING MODE & GUIDED TOUR
+   ═══════════════════════════════════════════════════════════════ */
+
+let _isOnboardingMode = false;
+let _originalSaveFn = null;
+
+function activateOnboardingMode() {
+    _isOnboardingMode = true;
+
+    const stepper = document.getElementById('onboardingStepper');
+    if (stepper) stepper.classList.remove('hidden');
+
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.textContent = 'Сохранить и начать поиск';
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        saveBtn.classList.add('opacity-100', 'cursor-pointer');
+    }
+
+    setTimeout(() => {
+        if (window.SettingsTour && window.SETTINGS_TOUR_STEPS) {
+            const tour = new SettingsTour(window.SETTINGS_TOUR_STEPS, {
+                mode: 'onboarding',
+                onComplete: function () {
+                    console.log('[Tour] Onboarding tour completed');
+                }
+            });
+            tour.start();
+        }
+    }, 600);
+}
+
+async function handleOnboardingSave() {
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Сохраняю...';
+    }
+
+    try {
+        await saveSettings();
+
+        const resp = await authFetch(`${API_BASE_URL}/api/onboarding/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!resp.ok) {
+            throw new Error('Не удалось завершить онбординг');
+        }
+
+        window._currentStep = null;
+        _isOnboardingMode = false;
+
+        showCongratsPopup();
+
+    } catch (e) {
+        console.error('[Onboarding] Complete error:', e);
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Сохранить и начать поиск';
+        }
+    }
+}
+
+function showCongratsPopup() {
+    const existing = document.getElementById('congratsOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'congratsOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);animation:tourPopIn 0.3s ease-out';
+    overlay.innerHTML = `
+        <div style="
+            max-width: 420px; width: calc(100% - 32px);
+            background: rgba(33, 30, 41, 0.97);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(204, 190, 255, 0.12);
+            border-radius: 20px;
+            padding: 36px 28px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            font-family: 'Inter', system-ui, sans-serif;
+        ">
+            <div style="font-size:48px;margin-bottom:16px">🎉</div>
+            <h2 style="font-size:22px;font-weight:800;color:#e7e0ef;margin-bottom:10px;line-height:1.3">Поздравляем!</h2>
+            <p style="font-size:14px;color:#cac3d7;line-height:1.6;margin-bottom:8px">
+                Вы сделали все необходимые настройки.
+            </p>
+            <p style="font-size:12px;color:#938ea0;line-height:1.5;margin-bottom:24px">
+                Если появятся вопросы — нажмите кнопку помощи внизу страницы.
+            </p>
+            <button id="congratsDismissBtn" style="
+                background: linear-gradient(to right, #5a30d0, #58309f);
+                color: #fff; border: none; border-radius: 12px;
+                padding: 12px 36px; font-size: 15px; font-weight: 700;
+                cursor: pointer; font-family: inherit;
+                transition: filter 0.2s;
+            ">Начать</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document.getElementById('congratsDismissBtn').addEventListener('click', () => {
+        overlay.remove();
+        const stepper = document.getElementById('onboardingStepper');
+        if (stepper) stepper.classList.add('hidden');
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn) {
+            saveBtn.textContent = 'Сохранить изменения';
+            initDirtyStateTracking();
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const helpBtn = document.getElementById('helpBtn');
+    if (helpBtn) {
+        helpBtn.addEventListener('click', () => {
+            if (window.SettingsTour && window.SETTINGS_TOUR_STEPS) {
+                new SettingsTour(window.SETTINGS_TOUR_STEPS, { mode: 'help' }).start();
+            }
+        });
+    }
+});

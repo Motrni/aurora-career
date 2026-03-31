@@ -161,7 +161,7 @@ tailwind.config = {
 <div id="mainContent" class="hidden w-full flex flex-col items-center px-4 pb-8 fade-in">
     <div id="contentWrapper" class="w-full max-w-[480px] transition-all duration-500">
 
-    <!-- Stepper: 4 шага -->
+    <!-- Stepper: 5 шагов -->
     <div class="flex items-center justify-center gap-2 sm:gap-3 mb-8" id="stepperBar">
         <div class="stepper-dot active" id="stepDot1">1</div>
         <div class="stepper-line pending" id="stepLine1"></div>
@@ -170,6 +170,8 @@ tailwind.config = {
         <div class="stepper-dot pending" id="stepDot3">3</div>
         <div class="stepper-line pending" id="stepLine3"></div>
         <div class="stepper-dot pending" id="stepDot4">4</div>
+        <div class="stepper-line pending" id="stepLine4"></div>
+        <div class="stepper-dot pending" id="stepDot5">5</div>
     </div>
 
     <!-- ==================== STEP 1: HH Login ==================== -->
@@ -403,7 +405,7 @@ tailwind.config = {
                             Поисковый профиль создан в Pro-режиме. Теперь давайте настроим параметры поиска.
                         </p>
                     </div>
-                    <button id="goToSettingsBtn" class="btn-primary btn-pulse w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer" disabled>
+                    <button id="goToSettingsBtn" class="btn-primary btn-pulse w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer">
                         Настроить поиск
                     </button>
                 </div>
@@ -434,6 +436,6 @@ tailwind.config = {
 </main>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="onboarding.js?v=4.0"></script>
+<script src="onboarding.js?v=5.0"></script>
 </body>
 </html>
