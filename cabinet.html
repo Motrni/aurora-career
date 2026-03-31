@@ -119,9 +119,9 @@ tailwind.config = {
         </div>
         <div class="hidden md:flex items-center gap-8">
             <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Кабинет</span>
-            <a id="nav-onboarding" href="onboarding.html" class="hidden text-[#ccbeff] font-medium text-sm transition-colors border-b border-dashed border-[#653edb]/50 pb-0.5">Первая настройка</a>
-            <a id="nav-settings" href="settings.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Настройки</a>
-            <a id="nav-responses" href="responses.html" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Отклики</a>
+            <a id="nav-onboarding" href="/onboarding" class="hidden text-[#ccbeff] font-medium text-sm transition-colors border-b border-dashed border-[#653edb]/50 pb-0.5">Первая настройка</a>
+            <a id="nav-settings" href="/settings" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Настройки</a>
+            <a id="nav-responses" href="/responses" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Отклики</a>
         </div>
         <div class="flex items-center gap-3 flex-shrink-0">
             <button onclick="handleLogout()" class="hidden md:flex items-center gap-1.5 text-[#938ea0] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
@@ -137,9 +137,9 @@ tailwind.config = {
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
     <span class="text-on-surface text-base font-bold py-3.5 border-b border-white/5">Кабинет</span>
-    <a id="nav-onboarding-mobile" href="onboarding.html" class="hidden text-primary text-base font-semibold py-3.5 border-b border-white/5">Первая настройка</a>
-    <a id="nav-settings-mobile" href="settings.html" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Настройки</a>
-    <a id="nav-responses-mobile" href="responses.html" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Отклики</a>
+    <a id="nav-onboarding-mobile" href="/onboarding" class="hidden text-primary text-base font-semibold py-3.5 border-b border-white/5">Первая настройка</a>
+    <a id="nav-settings-mobile" href="/settings" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Настройки</a>
+    <a id="nav-responses-mobile" href="/responses" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Отклики</a>
     <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">На главную</a>
     <button onclick="handleLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
 </div>
@@ -165,7 +165,7 @@ tailwind.config = {
                 <div class="flex-1">
                     <h2 class="text-lg font-bold text-on-surface">Оплата прошла успешно!</h2>
                     <p class="text-on-surface-variant text-sm mt-1" id="paymentSuccessDesc">Подписка активирована. Все функции доступны.</p>
-                    <a href="settings.html" id="paymentSuccessLink" class="inline-flex items-center gap-2 mt-4 btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer">
+                    <a href="/settings" id="paymentSuccessLink" class="inline-flex items-center gap-2 mt-4 btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer">
                         <span class="material-symbols-outlined text-lg">arrow_forward</span>
                         Перейти к настройкам
                     </a>
@@ -244,7 +244,7 @@ tailwind.config = {
     <!-- Navigation cards -->
     <div class="space-y-3 mb-6">
         <!-- Settings -->
-        <a href="settings.html" id="navSettings" class="card rounded-2xl p-5 flex items-center gap-4 nav-locked card-hover block cursor-pointer">
+        <a href="/settings" id="navSettings" class="card rounded-2xl p-5 flex items-center gap-4 nav-locked card-hover block cursor-pointer">
             <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
                 <span class="material-symbols-outlined text-on-surface-variant">tune</span>
             </div>
@@ -259,7 +259,7 @@ tailwind.config = {
         </a>
 
         <!-- Responses -->
-        <a href="responses.html" id="navResponses" class="card rounded-2xl p-5 flex items-center gap-4 nav-locked card-hover block cursor-pointer">
+        <a href="/responses" id="navResponses" class="card rounded-2xl p-5 flex items-center gap-4 nav-locked card-hover block cursor-pointer">
             <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
                 <span class="material-symbols-outlined text-on-surface-variant">send</span>
             </div>

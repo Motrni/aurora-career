@@ -50,7 +50,7 @@ async function authFetch(url, options = {}) {
         if (refreshed) {
             resp = await fetch(url, options);
         } else {
-            window.location.href = 'auth.html';
+            window.location.href = '/auth';
             return resp;
         }
     }
@@ -103,11 +103,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (meData.current_step && meData.current_step.startsWith('onboarding_')
                     && meData.current_step !== 'onboarding_settings'
                     && meData.current_step !== 'onboarding_save_pending') {
-                    window.location.href = 'onboarding.html';
+                    window.location.href = '/onboarding';
                     return;
                 }
                 if (meData.subscription_status === 'none') {
-                    window.location.href = 'cabinet.html';
+                    window.location.href = '/cabinet';
                     return;
                 }
                 authMode = 'jwt';
@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Fallback to legacy if JWT not available
     if (!authMode) {
         if (!legacyUserId || !legacySign) {
-            window.location.href = 'auth.html';
+            window.location.href = '/auth';
             return;
         }
         authMode = 'legacy';
@@ -251,8 +251,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const suffix = `?user_id=${legacyUserId}&sign=${legacySign}`;
         const navResp = document.getElementById('nav-responses');
         const navRespMob = document.getElementById('nav-responses-mobile');
-        if (navResp) navResp.href = `responses.html${suffix}`;
-        if (navRespMob) navRespMob.href = `responses.html${suffix}`;
+        if (navResp) navResp.href = `/responses${suffix}`;
+        if (navRespMob) navRespMob.href = `/responses${suffix}`;
     }
 
     window.addEventListener('scroll', requestSaveBarStateUpdate, { passive: true });
@@ -2031,7 +2031,7 @@ async function handleLogout() {
             method: 'POST', credentials: 'include'
         });
     } catch (_) {}
-    window.location.href = 'auth.html';
+    window.location.href = '/auth';
 }
 
 
@@ -2296,7 +2296,7 @@ async function handleNavLogout() {
             method: 'POST', credentials: 'include',
         });
     } catch (_) {}
-    window.location.href = 'auth.html';
+    window.location.href = '/auth';
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2309,8 +2309,8 @@ let _onboardingCompleting = false;
 
 function _lockNavForOnboarding() {
     const selectors = [
-        'a[href="cabinet.html"]',
-        'a[href="responses.html"]',
+        'a[href="/cabinet"]',
+        'a[href="/responses"]',
         '#nav-responses',
         '#nav-responses-mobile'
     ];

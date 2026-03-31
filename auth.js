@@ -18,17 +18,17 @@ async function redirectBySubscription() {
             const data = await resp.json();
             if (data.status === 'ok') {
                 if (data.current_step && data.current_step.startsWith('onboarding_')) {
-                    window.location.href = 'onboarding.html';
+                    window.location.href = '/onboarding';
                 } else if (data.subscription_status === 'none') {
-                    window.location.href = 'cabinet.html';
+                    window.location.href = '/cabinet';
                 } else {
-                    window.location.href = 'settings.html';
+                    window.location.href = '/settings';
                 }
                 return;
             }
         }
     } catch (_) {}
-    window.location.href = 'cabinet.html';
+    window.location.href = '/cabinet';
 }
 
 function togglePwdVis(inputId, btn) {
@@ -436,9 +436,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await resp.json();
             if (data.status === 'ok') {
                 if (data.subscription_status === 'none') {
-                    window.location.href = 'cabinet.html';
+                    window.location.href = '/cabinet';
                 } else {
-                    window.location.href = 'settings.html';
+                    window.location.href = '/settings';
                 }
                 return;
             }
