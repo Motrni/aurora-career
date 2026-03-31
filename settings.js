@@ -236,6 +236,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelectorAll("#scheduleContainer input").forEach(cb => {
         cb.addEventListener("change", () => {
             checkVacancies();
+            syncScheduleVisualState();
             updateSaveButtonState();
         });
     });
@@ -313,6 +314,22 @@ function updateSaveButtonState() {
         saveBtn.innerText = SEARCH_SAVE_LABEL_CLEAN;
         saveBtn.style.opacity = "0.5";
     }
+}
+
+function syncScheduleVisualState() {
+    document.querySelectorAll('#scheduleContainer input[type="checkbox"]').forEach(cb => {
+        const label = cb.closest('label');
+        if (!label) return;
+        if (cb.checked) {
+            label.style.background = 'rgba(90,48,208,0.1)';
+            label.style.borderColor = 'rgba(90,48,208,0.3)';
+            label.style.color = '#ccbeff';
+        } else {
+            label.style.background = '';
+            label.style.borderColor = '';
+            label.style.color = '';
+        }
+    });
 }
 
 function initDirtyStateTracking() {
@@ -744,6 +761,9 @@ async function loadSettings() {
 
         // Schedule (Work Formats)
         let scheduleData = settings.work_formats || settings.search_schedule;
+        document.querySelectorAll('#scheduleContainer input[type="checkbox"]').forEach(cb => {
+            cb.checked = false;
+        });
 
         if (scheduleData) {
             let sched = [];
@@ -759,6 +779,7 @@ async function loadSettings() {
                 if (cb) cb.checked = true;
             });
         }
+        syncScheduleVisualState();
 
         // Query Mode & Boolean Logic
         const mode = settings.query_mode || 'simple';
