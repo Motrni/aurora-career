@@ -81,6 +81,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 1. Initialize UI Components (Tag Inputs)
     window.tagsInclude = new TagInput("tagsIncludeContainer", "keywordsIncludeInput", "keywordsIncludeConfirm");
     window.tagsExclude = new TagInput("tagsExcludeContainer", "keywordsExcludeInput", "keywordsExcludeConfirm");
+    window.ignoredEmployers = new IgnoredEmployersInput(
+        "ignoredEmployerInput",
+        "ignoredEmployerApplyBtn",
+        "ignoredEmployersChips",
+        "ignoredEmployersError"
+    );
 
     // 1. URL Params (Legacy auth fallback)
     const urlParams = new URLSearchParams(window.location.search);
@@ -303,6 +309,15 @@ let _saveBarRaf = null;
 
 function serializeSearchForm() {
     // Collects all data from Search Tab inputs
+    let ignoredEmployersSerialized = "";
+    if (window.ignoredEmployers) {
+        const sortedPairs = Object.entries(window.ignoredEmployers.getEmployers())
+            .sort(([leftId], [rightId]) => leftId.localeCompare(rightId));
+        ignoredEmployersSerialized = sortedPairs
+            .map(([employerId, employerName]) => `${employerId}:${employerName}`)
+            .join("|");
+    }
+
     const data = {
         salary: document.getElementById('salaryInput').value,
         noSalary: document.getElementById('noSalaryCheckbox').checked,
@@ -318,7 +333,8 @@ function serializeSearchForm() {
         queryMode: document.querySelector('.mode-btn.active') ? document.querySelector('.mode-btn.active').dataset.mode : 'simple',
 
         // Schedule
-        schedule: Array.from(document.querySelectorAll('#scheduleContainer input:checked')).map(el => el.value).sort().join(',')
+        schedule: Array.from(document.querySelectorAll('#scheduleContainer input:checked')).map(el => el.value).sort().join(','),
+        ignoredEmployers: ignoredEmployersSerialized
     };
     return JSON.stringify(data);
 }
@@ -562,6 +578,157 @@ class TagInput {
             `;
             // Insert before input
             this.container.insertBefore(tag, this.input);
+        });
+    }
+}
+
+class IgnoredEmployersInput {
+    constructor(inputId, applyBtnId, chipsContainerId, errorId) {
+        this.input = document.getElementById(inputId);
+        this.applyBtn = document.getElementById(applyBtnId);
+        this.chipsContainer = document.getElementById(chipsContainerId);
+        this.errorBox = document.getElementById(errorId);
+        this.employers = {};
+        this.isResolving = false;
+
+        if (!this.input || !this.applyBtn || !this.chipsContainer || !this.errorBox) {
+            return;
+        }
+
+        this.applyBtn.addEventListener("click", () => this.applyInput());
+        this.input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                this.applyInput();
+            }
+        });
+
+        this.render();
+    }
+
+    getEmployers() {
+        return { ...this.employers };
+    }
+
+    setEmployers(rawEmployers) {
+        this.employers = {};
+        if (rawEmployers && typeof rawEmployers === "object" && !Array.isArray(rawEmployers)) {
+            Object.entries(rawEmployers).forEach(([employerId, employerName]) => {
+                const normalizedId = String(employerId).trim();
+                if (!normalizedId) return;
+                this.employers[normalizedId] = employerName == null ? "" : String(employerName).trim();
+            });
+        }
+        this.hideError();
+        this.render();
+    }
+
+    async applyInput() {
+        if (this.isResolving || !this.input || !this.applyBtn) return;
+
+        const value = this.input.value.trim();
+        if (!value) {
+            this.showError("Введите ID или ссылку на работодателя.");
+            return;
+        }
+
+        if (Object.keys(this.employers).length >= 20) {
+            this.showError("Достигнут лимит: не более 20 работодателей.");
+            return;
+        }
+
+        this.isResolving = true;
+        const originalBtnText = this.applyBtn.textContent;
+        this.applyBtn.disabled = true;
+        this.applyBtn.textContent = "Проверяю...";
+
+        try {
+            const payload = { value };
+            if (authMode === "legacy" && legacyUserId && legacySign) {
+                payload.user_id = parseInt(legacyUserId);
+                payload.sign = legacySign;
+            }
+
+            const response = await authFetch(`${API_BASE_URL}/api/ignored-employers/resolve`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.status !== "ok") {
+                const message = data.detail || data.error || "Не удалось проверить работодателя.";
+                throw new Error(message);
+            }
+
+            const employerId = String(data.id || "").trim();
+            const employerName = String(data.name || "").trim();
+            if (!employerId) {
+                throw new Error("Некорректный ID работодателя.");
+            }
+
+            this.employers[employerId] = employerName || employerId;
+            this.input.value = "";
+            this.hideError();
+            this.render();
+            updateSaveButtonState();
+        } catch (error) {
+            this.showError(error.message || "Ошибка проверки работодателя.");
+        } finally {
+            this.isResolving = false;
+            this.applyBtn.disabled = false;
+            this.applyBtn.textContent = originalBtnText || "Применить";
+        }
+    }
+
+    removeEmployer(employerId) {
+        delete this.employers[employerId];
+        this.render();
+        updateSaveButtonState();
+    }
+
+    showError(message) {
+        if (!this.errorBox) return;
+        this.errorBox.textContent = message;
+        this.errorBox.classList.remove("hidden");
+    }
+
+    hideError() {
+        if (!this.errorBox) return;
+        this.errorBox.textContent = "";
+        this.errorBox.classList.add("hidden");
+    }
+
+    render() {
+        if (!this.chipsContainer) return;
+        this.chipsContainer.innerHTML = "";
+
+        const entries = Object.entries(this.employers).sort(([leftId], [rightId]) => leftId.localeCompare(rightId));
+        if (entries.length === 0) {
+            const placeholder = document.createElement("span");
+            placeholder.className = "text-xs text-on-surface-variant/70";
+            placeholder.textContent = "Исключений пока нет";
+            this.chipsContainer.appendChild(placeholder);
+            return;
+        }
+
+        entries.forEach(([employerId, employerName]) => {
+            const chip = document.createElement("div");
+            chip.className = "tag";
+
+            const text = document.createElement("span");
+            text.textContent = employerName || employerId;
+            chip.appendChild(text);
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.className = "tag-remove";
+            removeButton.innerHTML = "&times;";
+            removeButton.setAttribute("aria-label", `Удалить ${employerName || employerId}`);
+            removeButton.onclick = () => this.removeEmployer(employerId);
+            chip.appendChild(removeButton);
+
+            this.chipsContainer.appendChild(chip);
         });
     }
 }
@@ -907,6 +1074,9 @@ async function loadSettings() {
         const keys = keywordsData || { included: [], excluded: [] };
         if (window.tagsInclude) window.tagsInclude.setTags(keys.included || []);
         if (window.tagsExclude) window.tagsExclude.setTags(keys.excluded || []);
+        if (window.ignoredEmployers) {
+            window.ignoredEmployers.setEmployers(settings.ignored_employers || {});
+        }
 
         // Load Boolean Draft or Custom Query
         let boolVal = settings.boolean_draft || settings.custom_query || "";
@@ -1346,6 +1516,7 @@ async function saveSettings() {
         keywords: keywordsData,
         boolean_draft: booleanDraft,
         custom_query: finalQuery,
+        ignored_employers: window.ignoredEmployers ? window.ignoredEmployers.getEmployers() : {},
         message_id: messageId ? parseInt(messageId) : null
     };
     

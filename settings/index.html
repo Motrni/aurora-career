@@ -572,6 +572,27 @@ body.has-floating-save {
                         </div>
                     </section>
 
+                    <section id="ignoredEmployersSection" class="space-y-4 p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Исключения работодателей</h2>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input
+                                type="text"
+                                id="ignoredEmployerInput"
+                                class="w-full bg-surface-container-high/50 border border-outline-variant/10 rounded-xl py-3 px-4 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 transition-all text-sm"
+                                placeholder="Вставьте id или ссылку на работодателя"
+                            />
+                            <button
+                                type="button"
+                                id="ignoredEmployerApplyBtn"
+                                class="sm:w-auto px-6 py-3 rounded-xl bg-primary-container text-on-primary-container font-semibold hover:opacity-90 transition-all"
+                            >
+                                Применить
+                            </button>
+                        </div>
+                        <div id="ignoredEmployersError" class="hidden text-xs text-[#f87171] bg-[#f87171]/10 border border-[#f87171]/30 rounded-lg px-3 py-2"></div>
+                        <div id="ignoredEmployersChips" class="tags-container min-h-[56px]"></div>
+                    </section>
+
                 </div><!-- End left column -->
 
                 <!-- Right Column -->
@@ -973,7 +994,7 @@ function toggleMobileMenu() {
 <script src="aurora-session.js?v=1"></script>
 <script src="settings-tour-steps.js?v=1.2"></script>
 <script src="settings-tour.js?v=1.1"></script>
-<script src="settings.js?v=5.8"></script>
+<script src="settings.js?v=5.9"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
