@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<base href="/">
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Личный кабинет | Aurora Career</title>
+<link rel="icon" type="image/png" href="favicon.png?v=3">
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "outline": "#938ea0",
+                "on-secondary-container": "#c7aaff",
+                "primary-container": "#5a30d0",
+                "on-surface": "#e7e0ef",
+                "surface-container-low": "#1d1a24",
+                "surface-variant": "#37333e",
+                "background": "#15121c",
+                "on-background": "#e7e0ef",
+                "inverse-primary": "#653edb",
+                "primary": "#ccbeff",
+                "surface": "#15121c",
+                "surface-container": "#211e29",
+                "surface-container-high": "#2c2833",
+                "surface-container-highest": "#37333e",
+                "on-surface-variant": "#cac3d7",
+                "error": "#ffb4ab",
+                "error-container": "#93000a",
+                "on-primary": "#350097",
+                "outline-variant": "#484455",
+            },
+            fontFamily: {
+                inter: ["Inter", "system-ui", "sans-serif"],
+            },
+        },
+    },
+};
+</script>
+<style>
+    body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; }
+    .aurora-glow {
+        position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+        width: 700px; height: 700px;
+        background: radial-gradient(circle, rgba(123,97,255,0.15) 0%, rgba(0,212,255,0.08) 50%, transparent 70%);
+        filter: blur(120px); z-index: 0; pointer-events: none;
+        animation: pulse 10s infinite alternate;
+    }
+    @keyframes pulse { 0%{opacity:.4;transform:translateX(-50%) scale(1)} 100%{opacity:.7;transform:translateX(-50%) scale(1.1)} }
+    .card {
+        background: rgba(33,30,41,0.85);
+        border: 1px solid rgba(147,142,160,0.12);
+        backdrop-filter: blur(12px);
+    }
+    .card-hover { transition: border-color 0.2s, box-shadow 0.2s; }
+    .card-hover:hover { border-color: rgba(204,190,255,0.25); box-shadow: 0 0 20px rgba(101,62,219,0.08); }
+    .btn-primary {
+        background: linear-gradient(135deg, #653edb 0%, #5a30d0 100%);
+        transition: all 0.2s;
+    }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-outline {
+        border: 1px solid rgba(204,190,255,0.3);
+        transition: all 0.2s;
+    }
+    .btn-outline:hover { border-color: #ccbeff; background: rgba(204,190,255,0.06); }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .nav-locked { opacity: 0.4; pointer-events: none; position: relative; }
+    .nav-link-locked { opacity: 0.35; pointer-events: none; cursor: default; }
+    .badge-locked {
+        font-size: 0.6rem; padding: 2px 6px;
+        background: rgba(147,142,160,0.15); border-radius: 4px;
+        color: #938ea0; white-space: nowrap;
+    }
+    .skeleton { background: linear-gradient(90deg, rgba(55,51,62,0.5) 25%, rgba(55,51,62,0.8) 50%, rgba(55,51,62,0.5) 75%);
+        background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .session-item { transition: background-color 0.15s; }
+    .session-item:hover { background-color: rgba(204,190,255,0.04); }
+    .brand-logo-font { font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
+    .burger-btn span { display: block; width: 24px; height: 2px; background: #e7e0ef; transition: all 0.3s ease; }
+    .burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .burger-btn.active span:nth-child(2) { opacity: 0; }
+    .burger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+    .mobile-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    .mobile-menu.open { transform: translateX(0); }
+    .tariff-popular { position: relative; border: 1px solid rgba(101,62,219,0.35); }
+    .tariff-popular::before {
+        content: 'Популярный'; position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+        font-size: 10px; font-weight: 600; color: #fff; padding: 1px 10px;
+        background: linear-gradient(135deg, #653edb, #5a30d0); border-radius: 10px;
+    }
+    .price-per-day { font-size: 11px; color: #938ea0; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col text-on-surface selection:bg-primary/30 selection:text-primary">
+<div class="aurora-glow"></div>
+
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+    <div class="flex items-center justify-between h-full px-5 md:px-12 lg:px-16">
+        <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
+                <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
+                    <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </a>
+        </div>
+        <div class="hidden md:flex items-center gap-8">
+            <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Кабинет</span>
+            <a id="nav-onboarding" href="/onboarding/" class="hidden text-[#ccbeff] font-medium text-sm transition-colors border-b border-dashed border-[#653edb]/50 pb-0.5">Первая настройка</a>
+            <a id="nav-settings" href="/settings/" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Настройки</a>
+            <a id="nav-responses" href="/responses/" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Отклики</a>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <button onclick="handleLogout()" class="hidden md:flex items-center gap-1.5 text-[#938ea0] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
+                <span class="material-symbols-outlined text-xl">logout</span>
+            </button>
+            <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
+    <span class="text-on-surface text-base font-bold py-3.5 border-b border-white/5">Кабинет</span>
+    <a id="nav-onboarding-mobile" href="/onboarding/" class="hidden text-primary text-base font-semibold py-3.5 border-b border-white/5">Первая настройка</a>
+    <a id="nav-settings-mobile" href="/settings/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Настройки</a>
+    <a id="nav-responses-mobile" href="/responses/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Отклики</a>
+    <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">На главную</a>
+    <button onclick="handleLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
+</div>
+
+<!-- Loading skeleton -->
+<div id="loadingSkeleton" class="relative z-10 max-w-2xl mx-auto px-4 pt-24 md:pt-28 pb-8 space-y-6">
+    <div class="skeleton h-10 w-48 mb-6"></div>
+    <div class="skeleton h-40 w-full rounded-2xl"></div>
+    <div class="skeleton h-32 w-full rounded-2xl"></div>
+    <div class="skeleton h-28 w-full rounded-2xl"></div>
+</div>
+
+<!-- Main content (hidden until loaded) -->
+<div id="mainContent" class="relative z-10 max-w-2xl mx-auto px-4 pt-24 md:pt-28 pb-8 hidden fade-in">
+
+    <!-- Payment success banner (shown when returning from CP) -->
+    <div id="paymentSuccessBanner" class="hidden mb-6 fade-in">
+        <div class="card rounded-2xl p-6 border border-[#4ade80]/20" style="background: linear-gradient(135deg, rgba(33,30,41,0.95), rgba(74,222,128,0.06));">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(74,222,128,0.12);">
+                    <span class="material-symbols-outlined text-[#4ade80] text-2xl">check_circle</span>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-lg font-bold text-on-surface">Оплата прошла успешно!</h2>
+                    <p class="text-on-surface-variant text-sm mt-1" id="paymentSuccessDesc">Подписка активирована. Все функции доступны.</p>
+                    <a href="/settings/" id="paymentSuccessLink" class="inline-flex items-center gap-2 mt-4 btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                        Перейти к настройкам
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment fail banner -->
+    <div id="paymentFailBanner" class="hidden mb-6 fade-in">
+        <div class="card rounded-2xl p-5 border border-[#ffb4ab]/20">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-error text-xl">error</span>
+                <p class="text-on-surface-variant text-sm">Оплата не прошла. Попробуйте ещё раз или выберите другой способ оплаты.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-on-surface">Личный кабинет</h1>
+        <p class="text-on-surface-variant text-sm mt-1" id="userEmail">-</p>
+    </div>
+
+    <!-- Subscription status -->
+    <div class="card rounded-2xl p-6 mb-4 card-hover" id="subscriptionCard">
+        <div class="flex items-start gap-4">
+            <div class="w-11 h-11 rounded-xl bg-primary-container/30 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-primary text-2xl" id="subIcon">credit_card_off</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-base font-semibold text-on-surface" id="subTitle">Подписка не активна</h2>
+                <p class="text-on-surface-variant text-sm mt-1" id="subDescription">
+                    Выберите тариф, чтобы получить доступ к автопилоту откликов и настройкам поиска.
+                </p>
+                <div class="mt-4" id="subActions"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tariff grid (hidden until loaded, only for subscription=none) -->
+    <div id="tariffGrid" class="mb-6 hidden">
+        <!-- Trial card -->
+        <div class="card rounded-2xl p-5 mb-3 card-hover cursor-pointer border border-transparent hover:border-[#653edb]/40" onclick="handleActivateTrial()" id="trialCard">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-[#653edb]/15 flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-primary">rocket_launch</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-on-surface">Пробный период</span>
+                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#653edb]/20 text-primary">3 дня</span>
+                        </div>
+                        <p class="text-on-surface-variant text-xs mt-0.5">10 откликов/день. Требуется привязка карты.</p>
+                    </div>
+                </div>
+                <div class="text-right flex-shrink-0 ml-3">
+                    <div class="text-lg font-bold text-primary">1 ₽</div>
+                    <div class="text-[10px] text-on-surface-variant">вернётся</div>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/5">
+                <p class="text-on-surface-variant text-[11px] leading-relaxed">
+                    После окончания пробного периода с карты спишется стоимость месячного тарифа. Вы можете отменить подписку в любой момент.
+                </p>
+            </div>
+        </div>
+
+        <!-- Paid tariffs -->
+        <div id="paidTariffs" class="space-y-3">
+            <div class="skeleton h-16 w-full rounded-2xl"></div>
+        </div>
+    </div>
+
+    <!-- Navigation cards -->
+    <div class="space-y-3 mb-6">
+        <!-- Settings -->
+        <a href="/settings/" id="navSettings" class="card rounded-2xl p-5 flex items-center gap-4 nav-locked card-hover block cursor-pointer">
+            <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-on-surface-variant">tune</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-on-surface">Настройки поиска</span>
+                    <span class="badge-locked" id="settingsLock">Нужна подписка</span>
+                </div>
+                <p class="text-on-surface-variant text-xs mt-0.5">Резюме, регион, отрасль, зарплата</p>
+            </div>
+            <span class="material-symbols-outlined text-outline text-xl">chevron_right</span>
+        </a>
+
+        <!-- Responses -->
+        <a href="/responses/" id="navResponses" class="card rounded-2xl p-5 flex items-center gap-4 nav-locked card-hover block cursor-pointer">
+            <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-on-surface-variant">send</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-on-surface">Автопилот откликов</span>
+                    <span class="badge-locked" id="responsesLock">Нужна подписка</span>
+                </div>
+                <p class="text-on-surface-variant text-xs mt-0.5">Автоматические отклики на вакансии</p>
+            </div>
+            <span class="material-symbols-outlined text-outline text-xl">chevron_right</span>
+        </a>
+    </div>
+
+    <!-- Telegram link -->
+    <div class="card rounded-2xl p-5 mb-4 card-hover hidden" id="telegramCard">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-on-surface-variant">link</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <span class="text-sm font-medium text-on-surface">Привязать Telegram</span>
+                <p class="text-on-surface-variant text-xs mt-0.5">Получайте уведомления и управляйте ботом</p>
+            </div>
+            <button onclick="handleLinkTelegram()" class="btn-outline rounded-xl px-4 py-2 text-primary text-sm cursor-pointer">
+                Привязать
+            </button>
+        </div>
+    </div>
+
+    <!-- Telegram linked -->
+    <div class="card rounded-2xl p-5 mb-4 hidden" id="telegramLinkedCard">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-primary-container/20 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-primary">check_circle</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <span class="text-sm font-medium text-on-surface">Telegram привязан</span>
+                <p class="text-on-surface-variant text-xs mt-0.5">Аккаунт связан с Telegram-ботом</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sessions -->
+    <div class="card rounded-2xl p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-on-surface-variant">devices</span>
+                <span class="text-sm font-medium text-on-surface">Активные сессии</span>
+            </div>
+            <button onclick="handleRevokeAll()" class="text-error text-xs hover:underline cursor-pointer" id="revokeAllBtn">
+                Завершить все
+            </button>
+        </div>
+        <div id="sessionsList" class="space-y-2">
+            <div class="skeleton h-12 w-full rounded-lg"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center pb-6">
+        <p class="text-outline text-xs">Aurora Career &copy; 2024-2026</p>
+    </div>
+</div>
+
+<script src="https://widget.cloudpayments.ru/bundles/cloudpayments.js"></script>
+<script src="aurora-session.js?v=1"></script>
+<script src="cabinet.js?v=2.2"></script>
+</body>
+</html>

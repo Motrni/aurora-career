@@ -64,14 +64,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (meData.status === "ok") {
                 if (meData.current_step && meData.current_step.startsWith('onboarding_')) {
                     if (meData.current_step === 'onboarding_settings' || meData.current_step === 'onboarding_save_pending') {
-                        window.location.href = '/settings';
+                        window.location.href = '/settings/';
                     } else {
-                        window.location.href = '/onboarding';
+                        window.location.href = '/onboarding/';
                     }
                     return;
                 }
                 if (meData.subscription_status === 'none') {
-                    window.location.href = '/cabinet';
+                    window.location.href = '/cabinet/';
                     return;
                 }
                 authMode = 'jwt';
@@ -111,8 +111,8 @@ function propagateAuthToNavLinks() {
     const suffix = `?user_id=${legacyUserId}&sign=${legacySign}`;
     const navSettings = document.getElementById('nav-settings');
     const navSettingsMobile = document.getElementById('nav-settings-mobile');
-    if (navSettings) navSettings.href = `/settings${suffix}`;
-    if (navSettingsMobile) navSettingsMobile.href = `/settings${suffix}`;
+    if (navSettings) navSettings.href = `/settings/${suffix}`;
+    if (navSettingsMobile) navSettingsMobile.href = `/settings/${suffix}`;
 }
 
 function toggleGlobalLoading(isLoading) {
@@ -1093,5 +1093,5 @@ async function handleNavLogout() {
             method: 'POST', credentials: 'include',
         });
     } catch (_) {}
-    window.location.href = '/auth';
+    window.location.href = '/auth/';
 }

@@ -26,7 +26,7 @@ async function apiFetch(url, options = {}) {
         if (refreshResp.ok) {
             resp = await fetch(url, options);
         } else {
-            window.location.href = '/auth';
+            window.location.href = '/auth/';
             return null;
         }
     }
@@ -55,13 +55,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (!meResp.ok) {
-            window.location.href = '/auth';
+            window.location.href = '/auth/';
             return;
         }
 
         const data = await meResp.json();
         if (data.status !== 'ok') {
-            window.location.href = '/auth';
+            window.location.href = '/auth/';
             return;
         }
 
@@ -90,9 +90,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderCabinet(data);
         } else if (hasOnboarding) {
             if (data.current_step === 'onboarding_settings' || data.current_step === 'onboarding_save_pending') {
-                window.location.href = '/settings';
+                window.location.href = '/settings/';
             } else {
-                window.location.href = '/onboarding';
+                window.location.href = '/onboarding/';
             }
             return;
         } else {
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (e) {
         console.error('[Cabinet] Init error:', e);
-        window.location.href = '/auth';
+        window.location.href = '/auth/';
     }
 });
 
@@ -139,10 +139,10 @@ function updateSubscriptionCard(status) {
             title.textContent = 'Пробный период';
             if (hasOnboarding) {
                 desc.textContent = 'У вас активен пробный период. Завершите первую настройку, чтобы начать поиск.';
-                actions.innerHTML = '<a href="/onboarding" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
+                actions.innerHTML = '<a href="/onboarding/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
             } else {
                 desc.textContent = 'У вас активен пробный период. Настройки поиска и автопилот откликов доступны.';
-                actions.innerHTML = '<a href="/settings" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
+                actions.innerHTML = '<a href="/settings/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
             }
             break;
         case 'active':
@@ -150,10 +150,10 @@ function updateSubscriptionCard(status) {
             title.textContent = 'Подписка активна';
             if (hasOnboarding) {
                 desc.textContent = 'Подписка активна. Завершите первую настройку — привяжите hh.ru и выберите резюме.';
-                actions.innerHTML = '<a href="/onboarding" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
+                actions.innerHTML = '<a href="/onboarding/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
             } else {
                 desc.textContent = 'Все функции доступны. Настраивайте поиск и запускайте автопилот.';
-                actions.innerHTML = '<a href="/settings" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
+                actions.innerHTML = '<a href="/settings/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
             }
             break;
         case 'ended_trial':
@@ -319,7 +319,7 @@ async function handleLogout() {
             method: 'POST', credentials: 'include',
         });
     } catch (_) {}
-    window.location.href = '/auth';
+    window.location.href = '/auth/';
 }
 
 async function loadTariffs() {
@@ -423,7 +423,7 @@ async function handleActivateTrial() {
         if (!resp || !resp.ok) {
             const err = await resp.json().catch(() => ({}));
             if (resp.status === 409) {
-                window.location.href = '/onboarding';
+                window.location.href = '/onboarding/';
                 return;
             }
             throw new Error(err.detail || 'Init failed');
@@ -452,7 +452,7 @@ async function handleActivateTrial() {
 
         widget.pay('auth', widgetOpts, {
             onSuccess: function () {
-                window.location.href = '/onboarding';
+                window.location.href = '/onboarding/';
             },
             onFail: function (reason) {
                 console.error('[CP Widget] Fail:', reason);
@@ -482,7 +482,7 @@ function showPaymentSuccess(status, hasOnboarding) {
     if (hasOnboarding) {
         desc.textContent = 'Подписка активирована. Осталось привязать аккаунт hh.ru и выбрать резюме.';
         if (link) {
-            link.href = '/onboarding';
+            link.href = '/onboarding/';
             link.innerHTML = '<span class="material-symbols-outlined text-lg">arrow_forward</span> Начать настройку';
         }
     } else if (status === 'trial') {

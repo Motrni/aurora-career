@@ -54,7 +54,7 @@ async function apiFetch(url, options = {}) {
         if (refreshResp.ok) {
             resp = await fetch(url, options);
         } else {
-            window.location.href = '/auth';
+            window.location.href = '/auth/';
             return null;
         }
     }
@@ -83,13 +83,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (!meResp.ok) {
-            window.location.href = '/auth';
+            window.location.href = '/auth/';
             return;
         }
 
         const data = await meResp.json();
         if (data.status !== 'ok') {
-            window.location.href = '/auth';
+            window.location.href = '/auth/';
             return;
         }
 
@@ -97,9 +97,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!data.current_step || !data.current_step.startsWith('onboarding_')) {
             if (data.subscription_status === 'none') {
-                window.location.href = '/cabinet';
+                window.location.href = '/cabinet/';
             } else {
-                window.location.href = '/settings';
+                window.location.href = '/settings/';
             }
             return;
         }
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (e) {
         console.error('[Onboarding] Init error:', e);
-        window.location.href = '/auth';
+        window.location.href = '/auth/';
     }
 });
 
@@ -121,7 +121,7 @@ function initOnboarding(step) {
     document.getElementById('mainContent').classList.remove('hidden');
 
     if (step === 'onboarding_settings') {
-        window.location.href = '/settings';
+        window.location.href = '/settings/';
         return;
     } else if (step === 'onboarding_profile_complete') {
         showStep(4);
@@ -968,7 +968,7 @@ async function handleGoToSettings() {
 
         if (!resp.ok) throw new Error('Failed to start settings step');
 
-        window.location.href = '/settings';
+        window.location.href = '/settings/';
     } catch (e) {
         console.error('[Onboarding] start-settings error:', e);
         if (btn) {

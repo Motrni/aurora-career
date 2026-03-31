@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<base href="/">
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Первая настройка | Aurora Career</title>
+<link rel="icon" type="image/png" href="favicon.png?v=3">
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "surface-container-lowest": "#100d17",
+                "outline": "#938ea0",
+                "on-secondary-container": "#c7aaff",
+                "primary-container": "#5a30d0",
+                "secondary-container": "#58309f",
+                "on-surface": "#e7e0ef",
+                "surface-container-low": "#1d1a24",
+                "surface-variant": "#37333e",
+                "background": "#15121c",
+                "on-background": "#e7e0ef",
+                "inverse-primary": "#653edb",
+                "primary": "#ccbeff",
+                "surface": "#15121c",
+                "surface-container": "#211e29",
+                "surface-container-high": "#2c2833",
+                "surface-container-highest": "#37333e",
+                "on-surface-variant": "#cac3d7",
+                "error": "#ffb4ab",
+                "error-container": "#93000a",
+                "on-primary": "#350097",
+                "outline-variant": "#484455",
+                "vibrant-green": "#00e676",
+                "on-error-container": "#ffdad6",
+            },
+            fontFamily: { inter: ["Inter", "system-ui", "sans-serif"] },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+        },
+    },
+};
+</script>
+<style>
+    body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; }
+    .glass-panel { background: rgba(55, 51, 62, 0.4); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
+    .aurora-glow { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 700px; height: 700px; background: radial-gradient(circle, rgba(123,97,255,0.15) 0%, rgba(0,212,255,0.08) 50%, transparent 70%); filter: blur(120px); z-index: 0; pointer-events: none; animation: pulse 10s infinite alternate; }
+    @keyframes pulse { 0%{opacity:.4;transform:translateX(-50%) scale(1)} 100%{opacity:.7;transform:translateX(-50%) scale(1.1)} }
+    .brand-logo-font { font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
+
+    .stepper-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+    .stepper-dot.active { background: linear-gradient(135deg, #653edb, #5a30d0); color: #fff; box-shadow: 0 0 24px rgba(101,62,219,0.4); }
+    .stepper-dot.completed { background: #653edb; color: #fff; }
+    .stepper-dot.pending { background: rgba(55,51,62,0.7); color: #938ea0; }
+    .stepper-line { height: 2px; flex: 1; transition: background 0.3s; }
+    .stepper-line.active { background: linear-gradient(90deg, #653edb, #5a30d0); }
+    .stepper-line.pending { background: rgba(55,51,62,0.5); }
+
+    .btn-primary { background: linear-gradient(to right, #5a30d0, #58309f); transition: all 0.2s; box-shadow: 0 10px 40px rgba(90,48,208,0.35); }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+    .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+    .tab-track .tab-btn {
+        flex: 1; padding: 12px 16px; font-size: 14px; font-weight: 600; font-family: inherit;
+        border: none; border-radius: 9999px;
+        transition: color 0.2s, box-shadow 0.2s, filter 0.2s, background 0.2s;
+        cursor: pointer; background: transparent; color: rgba(255, 255, 255, 0.55);
+    }
+    .tab-track .tab-btn.active {
+        background: linear-gradient(to right, #5a30d0, #58309f); color: #ffffff;
+        font-weight: 700; box-shadow: 0 4px 24px rgba(90, 48, 208, 0.45);
+    }
+    .tab-track .tab-btn:not(.active):hover { color: rgba(255, 255, 255, 0.92); }
+
+    .hh-form-input { outline: none !important; border-style: none; }
+    .hh-form-input:focus { outline: none !important; --tw-ring-shadow: 0 0 #0000; --tw-ring-offset-shadow: 0 0 #0000; box-shadow: 0 0 30px rgba(90,48,208,0.2); }
+    .hh-form-input:focus-visible { outline: 2px solid rgba(101,62,219,0.45) !important; outline-offset: 2px; box-shadow: 0 0 30px rgba(90,48,208,0.2); }
+
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .skeleton { background: linear-gradient(90deg, rgba(55,51,62,0.5) 25%, rgba(55,51,62,0.8) 50%, rgba(55,51,62,0.5) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .resume-card { transition: all 0.2s; cursor: pointer; }
+    .resume-card:hover { border-color: rgba(204,190,255,0.3) !important; }
+    .resume-card.selected { border-color: #653edb !important; box-shadow: 0 0 16px rgba(101,62,219,0.2); }
+    .spinner { border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .slide-in { animation: slideIn 0.35s ease-out; }
+    @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+
+    .analysis-text-rotate { animation: textFadeSwap 0.5s ease; }
+    @keyframes textFadeSwap { 0%{opacity:0;transform:translateY(8px)} 100%{opacity:1;transform:translateY(0)} }
+
+    .gauge-circle-bg { stroke: rgba(55,51,62,0.6); }
+    .gauge-circle-progress { transition: stroke-dashoffset 1.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.6s ease; }
+    .score-counter { font-variant-numeric: tabular-nums; }
+
+    /* Индикатор загрузки: ~26% окружности (r=58 → C≈364.42), линейный offset на полный оборот — дуга идёт по кругу без качели */
+    .analyze-ring {
+        stroke-dasharray: 94.75 269.67;
+        stroke-dashoffset: 0;
+        animation: analyzeSweep 1.15s linear infinite;
+        filter: drop-shadow(0 0 5px rgba(101, 62, 219, 0.35));
+    }
+    @keyframes analyzeSweep {
+        to { stroke-dashoffset: -364.42; }
+    }
+
+    @keyframes btnPulse {
+        0%, 100% { box-shadow: 0 10px 40px rgba(90,48,208,0.35); }
+        50% { box-shadow: 0 10px 50px rgba(90,48,208,0.6), 0 0 20px rgba(101,62,219,0.25); }
+    }
+    .btn-pulse { animation: btnPulse 2.5s ease-in-out infinite; }
+
+    .glass-card { background: rgba(55, 51, 62, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: relative; overflow: hidden; }
+    .glow-green { box-shadow: inset 0 0 20px rgba(0, 230, 118, 0.1); }
+    .glow-red { box-shadow: inset 0 0 20px rgba(147, 0, 10, 0.2); }
+    .spotlight-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(204, 190, 255, 0.1) 0%, transparent 70%); opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 1; }
+    .spotlight-card:hover::before { opacity: 1; }
+    .spotlight-card > * { position: relative; z-index: 2; }
+    .role-card-enter { animation: roleCardIn 0.3s ease-out both; }
+    @keyframes roleCardIn { from { opacity: 0; transform: scale(0.92) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes successPop { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+    .success-pop { animation: successPop 0.5s ease-out; }
+</style>
+</head>
+<body class="text-on-surface min-h-screen selection:bg-primary/30 selection:text-primary relative overflow-x-hidden">
+
+<div class="aurora-glow"></div>
+<div class="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary-container/20 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="fixed bottom-[-15%] right-[-10%] w-[40%] h-[40%] bg-secondary-container/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+    <div class="flex items-center justify-between h-full px-5 md:px-12 lg:px-16">
+        <a href="/cabinet/" class="flex items-center gap-2 md:gap-3 no-underline">
+            <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
+            <div class="flex flex-col leading-tight">
+                <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
+                <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Первая настройка</div>
+            </div>
+        </a>
+    </div>
+</nav>
+
+<main class="relative z-10 flex flex-col w-full pt-24 md:pt-28">
+
+<div id="loadingSkeleton" class="flex flex-col items-center justify-center px-4 pb-8 min-h-[50vh]">
+    <div class="w-full max-w-[480px] space-y-6">
+        <div class="skeleton h-10 w-48 mx-auto"></div>
+        <div class="skeleton h-64 w-full rounded-xl"></div>
+    </div>
+</div>
+
+<div id="mainContent" class="hidden w-full flex flex-col items-center px-4 pb-8 fade-in">
+    <div id="contentWrapper" class="w-full max-w-[480px] transition-all duration-500">
+
+    <!-- Stepper: 5 шагов -->
+    <div class="flex items-center justify-center gap-2 sm:gap-3 mb-8" id="stepperBar">
+        <div class="stepper-dot active" id="stepDot1">1</div>
+        <div class="stepper-line pending" id="stepLine1"></div>
+        <div class="stepper-dot pending" id="stepDot2">2</div>
+        <div class="stepper-line pending" id="stepLine2"></div>
+        <div class="stepper-dot pending" id="stepDot3">3</div>
+        <div class="stepper-line pending" id="stepLine3"></div>
+        <div class="stepper-dot pending" id="stepDot4">4</div>
+        <div class="stepper-line pending" id="stepLine4"></div>
+        <div class="stepper-dot pending" id="stepDot5">5</div>
+    </div>
+
+    <!-- ==================== STEP 1: HH Login ==================== -->
+    <div id="step1">
+        <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+            <div class="flex flex-col items-center text-center space-y-7">
+                <div class="space-y-3">
+                    <h1 class="text-3xl font-bold tracking-tight text-on-surface">Привяжите аккаунт hh.ru</h1>
+                    <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                        Для синхронизации вашего резюме и откликов нам необходим доступ к вашему профилю HeadHunter.
+                    </p>
+                </div>
+
+                <div id="hhLoginForm" class="w-full space-y-5">
+                    <div class="tab-track bg-surface-container-lowest p-1.5 rounded-full flex gap-1">
+                        <button type="button" id="tabPhone" class="tab-btn active" onclick="switchTab('phone')">Телефон</button>
+                        <button type="button" id="tabEmail" class="tab-btn" onclick="switchTab('email')">Почта</button>
+                    </div>
+                    <div id="inputPhone" class="relative">
+                        <input type="tel" id="hhPhoneInput" class="hh-form-input w-full bg-surface-container-high border-none rounded-xl py-5 px-6 text-on-surface transition-shadow placeholder:text-on-surface-variant/50 font-medium text-[15px]" placeholder="+7 900 123 45 67" autocomplete="tel" inputmode="tel">
+                    </div>
+                    <div id="inputEmail" class="relative hidden">
+                        <input type="email" id="hhEmailInput" class="hh-form-input w-full bg-surface-container-high border-none rounded-xl py-5 px-6 text-on-surface transition-shadow placeholder:text-on-surface-variant/50 font-medium text-[15px]" placeholder="mail@yandex.ru" autocomplete="email" inputmode="email">
+                    </div>
+                    <div id="hhLoginError" class="text-error text-xs hidden"></div>
+                    <button onclick="handleHhLogin()" id="hhLoginBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer">Далее</button>
+                </div>
+
+                <div id="hhWaitingCode" class="w-full py-4 hidden slide-in">
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="spinner w-8 h-8"></div>
+                        <p class="text-on-surface text-sm font-medium">Подключаемся к hh.ru...</p>
+                        <p class="text-on-surface-variant text-xs">Это займёт 10–20 секунд</p>
+                    </div>
+                </div>
+
+                <div id="hhOtpForm" class="w-full space-y-6 hidden slide-in">
+                    <div class="text-center space-y-2">
+                        <span class="material-symbols-outlined text-primary text-4xl">pin</span>
+                        <p class="text-on-surface text-sm font-medium" id="otpMessage">Введите код подтверждения</p>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="otpCodeInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code" class="hh-form-input w-full bg-surface-container-high border-none rounded-xl py-5 px-6 text-on-surface text-center text-2xl font-bold tracking-[0.4em] transition-shadow placeholder:text-on-surface-variant/40" placeholder="&#8226;&#8226;&#8226;&#8226;">
+                    </div>
+                    <div id="otpError" class="text-error text-xs text-center hidden"></div>
+                    <button onclick="handleHhCode()" id="otpSubmitBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer" disabled>Подтвердить</button>
+                    <button onclick="resetHhLogin()" class="w-full text-on-surface-variant text-xs text-center py-2 cursor-pointer hover:text-primary transition-colors">Ввести другой номер / email</button>
+                </div>
+
+                <div id="hhProcessing" class="w-full hidden slide-in">
+                    <div class="flex flex-col items-center gap-3 py-4">
+                        <div class="spinner w-9 h-9"></div>
+                        <p class="text-on-surface text-sm font-medium" id="processingText">Проверяем данные...</p>
+                        <p class="text-on-surface-variant text-xs" id="processingSubtext">Это может занять до минуты</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== STEP 2: Resume Select ==================== -->
+    <div id="step2" class="hidden">
+        <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+            <div class="flex flex-col items-center text-center space-y-8">
+                <div class="space-y-3">
+                    <h1 class="text-3xl font-bold tracking-tight text-on-surface">Выберите резюме</h1>
+                    <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                        Выберите резюме, по которому мы будем искать вакансии и отправлять отклики
+                    </p>
+                </div>
+                <div id="resumesList" class="w-full space-y-3">
+                    <div class="skeleton h-16 w-full rounded-xl"></div>
+                    <div class="skeleton h-16 w-full rounded-xl"></div>
+                </div>
+                <div id="resumeEmpty" class="w-full py-8 text-center hidden">
+                    <span class="material-symbols-outlined text-outline text-4xl mb-3">folder_off</span>
+                    <p class="text-on-surface-variant text-sm">Резюме не найдены. Создайте резюме на hh.ru и попробуйте снова.</p>
+                    <button onclick="loadResumes()" class="mt-4 text-primary text-sm font-medium hover:underline cursor-pointer">Обновить список</button>
+                </div>
+                <button onclick="handleResumeSelect()" id="resumeSelectBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer hidden" disabled>Продолжить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== STEP 3: Analysis ==================== -->
+    <div id="step3" class="hidden">
+
+        <!-- Analyzing state -->
+        <div id="analysisLoading">
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 py-4">
+                    <div class="space-y-3">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Анализируем резюме</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            AI оценивает ваше резюме по ключевым критериям рекрутеров
+                        </p>
+                    </div>
+                    <div class="relative w-28 h-28 flex items-center justify-center">
+                        <svg class="w-full h-full" viewBox="0 0 128 128" style="transform: rotate(-90deg)">
+                            <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                            <circle class="analyze-ring" cx="64" cy="64" fill="transparent" r="58" stroke="#5a30d0" stroke-width="8" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-3xl">psychology</span>
+                        </div>
+                    </div>
+                    <p class="text-on-surface text-sm font-medium h-5" id="analysisRotatingText">Анализирую опыт работы...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result state -->
+        <div id="analysisResult" class="hidden fade-in">
+            <div class="glass-panel rounded-xl p-6 sm:p-8 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="space-y-6">
+
+                    <!-- Header row: gauge + verdict -->
+                    <div class="flex items-center gap-5 sm:gap-6">
+                        <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
+                            <svg class="w-full h-full" viewBox="0 0 128 128" style="transform: rotate(-90deg)">
+                                <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                                <circle id="scoreCircle" class="gauge-circle-progress" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-width="8" stroke-linecap="round"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span id="scoreValue" class="text-2xl sm:text-3xl font-bold text-on-surface score-counter">0</span>
+                                <span class="text-[9px] sm:text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">из 100</span>
+                            </div>
+                        </div>
+                        <div class="flex-1 text-left space-y-2">
+                            <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-on-surface">Анализ готов</h2>
+                            <div id="scoreVerdict" class="inline-block text-sm font-semibold px-4 py-1.5 rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- Report text -->
+                    <div id="reportPreview" class="w-full text-left bg-surface-container-high/40 rounded-xl p-5 sm:p-6">
+                        <p class="text-on-surface-variant text-sm sm:text-[15px] leading-relaxed whitespace-pre-line" id="reportText"></p>
+                    </div>
+
+                    <!-- CTA -->
+                    <div class="space-y-3 pt-2">
+                        <p class="text-on-surface-variant text-sm text-center">Теперь давайте настроим поисковый профиль</p>
+                        <button id="searchProfileBtn" class="btn-primary btn-pulse w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer">
+                            Настроить поисковый профиль
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== STEP 4: Search Profile ==================== -->
+    <div id="step4" class="hidden">
+
+        <!-- Loading: roles clustering -->
+        <div id="rolesLoading">
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 py-4">
+                    <div class="space-y-3">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Анализируем рынок</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            AI изучает вакансии и формирует категории ролей под ваш профиль
+                        </p>
+                    </div>
+                    <div class="relative w-28 h-28 flex items-center justify-center">
+                        <svg class="w-full h-full" viewBox="0 0 128 128" style="transform: rotate(-90deg)">
+                            <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                            <circle class="analyze-ring" cx="64" cy="64" fill="transparent" r="58" stroke="#5a30d0" stroke-width="8" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-3xl">category</span>
+                        </div>
+                    </div>
+                    <p class="text-on-surface text-sm font-medium h-5" id="rolesRotatingText">Ищу подходящие вакансии...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Roles grid -->
+        <div id="rolesSection" class="hidden fade-in">
+            <div class="text-center mb-8 space-y-3">
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-on-surface">Выбор ролей</h1>
+                <p class="text-on-surface-variant text-sm md:text-base leading-relaxed max-w-xl mx-auto">
+                    Мы проанализировали рынок и нашли эти категории. Нажимайте на карточки, чтобы убрать лишнее. <span class="text-primary">Оставьте зелёным только то, что вы реально ищете.</span>
+                </p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 md:gap-4 mb-24" id="rolesGrid"></div>
+            <div class="fixed bottom-0 left-0 w-full p-5 md:p-6 z-40 flex justify-center bg-gradient-to-t from-background via-background/95 to-transparent">
+                <button onclick="handleConfirmRoles()" id="confirmRolesBtn" class="w-full md:w-auto btn-primary text-white px-10 py-4 rounded-xl font-bold text-lg shadow-[0_0_40px_rgba(90,48,208,0.3)] hover:shadow-[0_0_60px_rgba(90,48,208,0.5)] transition-all active:scale-95 flex items-center justify-center gap-3 cursor-pointer">
+                    Далее
+                </button>
+            </div>
+        </div>
+
+        <!-- Query generating -->
+        <div id="queryGenerating" class="hidden fade-in">
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 py-4">
+                    <div class="space-y-3">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Генерируем профиль</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            AI создаёт оптимальный поисковый запрос на основе выбранных ролей
+                        </p>
+                    </div>
+                    <div class="relative w-28 h-28 flex items-center justify-center">
+                        <svg class="w-full h-full" viewBox="0 0 128 128" style="transform: rotate(-90deg)">
+                            <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                            <circle class="analyze-ring" cx="64" cy="64" fill="transparent" r="58" stroke="#5a30d0" stroke-width="8" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-3xl">tune</span>
+                        </div>
+                    </div>
+                    <p class="text-on-surface text-sm font-medium">Формируем поисковый запрос...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile complete -->
+        <div id="profileComplete" class="hidden fade-in">
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 success-pop">
+                    <div class="w-20 h-20 rounded-full bg-vibrant-green/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-vibrant-green text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    </div>
+                    <div class="space-y-2">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Профиль настроен</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            Поисковый профиль создан в Pro-режиме. Теперь давайте настроим параметры поиска.
+                        </p>
+                    </div>
+                    <button id="goToSettingsBtn" class="btn-primary btn-pulse w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer">
+                        Настроить поиск
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    </div>
+</div>
+
+<!-- Подвал как на /responses — без ссылки «Главная» -->
+<footer class="w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
+    <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-center md:justify-start items-center gap-4 md:gap-6">
+        <div class="flex flex-col items-center md:items-start gap-2">
+            <div class="flex items-center gap-2 md:gap-3">
+                <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-base md:text-lg text-[#ccbeff]">Аврора</div>
+                    <div class="text-[8px] md:text-[9px] text-[#cac3d7]/70 font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </div>
+            <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Аврора</div>
+        </div>
+    </div>
+</footer>
+
+</main>
+
+<script src="aurora-session.js?v=1"></script>
+<script src="onboarding.js?v=5.0"></script>
+</body>
+</html>
