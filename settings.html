@@ -611,6 +611,35 @@ input[type="number"] { -moz-appearance: textfield; }
                 <!-- Left Column: Settings Form -->
                 <div class="lg:col-span-7 space-y-6 md:space-y-8">
 
+                    <!-- Contact Data for Cover Letter -->
+                    <section id="contactDataSection" class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Контактные данные</h2>
+                        <p class="text-xs text-on-surface-variant/70">Эти данные будут указаны в конце сопроводительного письма</p>
+
+                        <div id="contactSourceHint" class="text-xs text-primary-container/80 bg-primary-container/10 rounded-lg px-3 py-2 hidden">
+                            Найдено в вашем резюме
+                        </div>
+                        <div id="contactNotFoundHint" class="text-xs text-tertiary/80 bg-tertiary/10 rounded-lg px-3 py-2 hidden">
+                            Telegram не найден в резюме. Укажите вручную
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase block">Telegram</label>
+                                <input type="text" id="contactTgInput" class="w-full bg-surface-container-high/50 border border-outline-variant/10 rounded-xl py-3 px-4 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 transition-all text-sm" placeholder="@username" />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase block">Телефон</label>
+                                <input type="tel" id="contactPhoneInput" class="w-full bg-surface-container-high/50 border border-outline-variant/10 rounded-xl py-3 px-4 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 transition-all text-sm" placeholder="+7 (999) 000-00-00" />
+                            </div>
+                            <label class="flex items-center gap-3 cursor-pointer select-none">
+                                <input type="checkbox" id="contactHideCheckbox" class="sr-only peer" />
+                                <div class="w-10 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-tertiary relative"></div>
+                                <span class="text-xs text-on-surface-variant">Не указывать контакты в сопроводительном</span>
+                            </label>
+                        </div>
+                    </section>
+
                     <!-- Style Select -->
                     <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Стиль письма</h2>
@@ -886,7 +915,7 @@ function toggleMobileMenu() {
 <script src="aurora-session.js?v=1"></script>
 <script src="settings-tour-steps.js?v=1.1"></script>
 <script src="settings-tour.js?v=1.1"></script>
-<script src="settings.js?v=5.2"></script>
+<script src="settings.js?v=5.3"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

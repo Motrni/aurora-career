@@ -19,6 +19,9 @@ let currentSelectedAreaIds = new Set();
 let messageId = null;
 window.BOT_USERNAME = "Aurora_Career_Bot";
 window.USER_FIRST_NAME = "Кандидат";
+window.USER_CONTACT_TG = null;
+window.USER_PHONE = null;
+window.USER_ENRICHMENT_DONE = false;
 
 // Auth State (Hybrid: JWT or Legacy HMAC)
 let authMode = null; // 'jwt' or 'legacy'
@@ -688,6 +691,12 @@ async function loadSettings() {
         if (data.first_name) {
             window.USER_FIRST_NAME = data.first_name;
         }
+
+        // Contact data
+        window.USER_CONTACT_TG = data.contact_tg || null;
+        window.USER_PHONE = data.phone || null;
+        window.USER_ENRICHMENT_DONE = data.contact_enrichment_done || false;
+        _applyContactDataUI();
 
         const settings = data.settings;
 
@@ -1498,11 +1507,14 @@ async function saveResponseSettings() {
         saveBtn.innerText = "Сохраняю...";
 
         // Collect Data — Hybrid auth
+        const hideContacts = document.getElementById("contactHideCheckbox").checked;
         const payload = {
             cl_use_default: document.getElementById("clUseDefaultCheckbox").checked,
             cl_header: document.getElementById("clHeaderInput").value.trim(),
             cl_footer: document.getElementById("clFooterInput").value.trim(),
-            cl_style: document.getElementById("clStyleSelect").value
+            cl_style: document.getElementById("clStyleSelect").value,
+            contact_tg: hideContacts ? "" : (document.getElementById("contactTgInput").value.trim() || ""),
+            phone: hideContacts ? "" : (document.getElementById("contactPhoneInput").value.trim() || ""),
         };
         
         // Add legacy auth if needed
@@ -1551,6 +1563,55 @@ function toggleCLFields(show) {
     }
 }
 
+// --- CONTACT DATA UI ---
+function _applyContactDataUI() {
+    const tgInput = document.getElementById("contactTgInput");
+    const phoneInput = document.getElementById("contactPhoneInput");
+    const hideCheckbox = document.getElementById("contactHideCheckbox");
+    const sourceHint = document.getElementById("contactSourceHint");
+    const notFoundHint = document.getElementById("contactNotFoundHint");
+
+    if (!tgInput || !phoneInput) return;
+
+    if (window.USER_CONTACT_TG) {
+        tgInput.value = window.USER_CONTACT_TG;
+    }
+    if (window.USER_PHONE) {
+        phoneInput.value = window.USER_PHONE;
+    }
+
+    // Hints
+    if (sourceHint) {
+        const hasData = window.USER_CONTACT_TG || window.USER_PHONE;
+        sourceHint.classList.toggle("hidden", !hasData);
+    }
+    if (notFoundHint) {
+        const showNotFound = window.USER_ENRICHMENT_DONE && !window.USER_CONTACT_TG;
+        notFoundHint.classList.toggle("hidden", !showNotFound);
+    }
+
+    // Toggle fields on hide checkbox
+    if (hideCheckbox) {
+        hideCheckbox.addEventListener("change", () => {
+            const disabled = hideCheckbox.checked;
+            tgInput.disabled = disabled;
+            phoneInput.disabled = disabled;
+            if (disabled) {
+                tgInput.style.opacity = "0.4";
+                phoneInput.style.opacity = "0.4";
+            } else {
+                tgInput.style.opacity = "1";
+                phoneInput.style.opacity = "1";
+            }
+            updateCLPreview();
+        });
+    }
+
+    // Live preview on input change
+    tgInput.addEventListener("input", updateCLPreview);
+    phoneInput.addEventListener("input", updateCLPreview);
+}
+
 // [NEW] Cover Letter Preview Update
 function updateCLPreview() {
     const shouldUseDefault = document.getElementById("clUseDefaultCheckbox").checked;
@@ -1581,6 +1642,17 @@ function updateCLPreview() {
         bodyEl.innerHTML = `Увидел вашу вакансию QA Engineer. Мой опыт в тестировании финтех-продуктов хорошо ложится на ваши задачи, особенно в части автоматизации на Python и Selenium.<br><br>На прошлых проектах плотно работал с PostgreSQL, писал интеграционные тесты и настраивал CI/CD пайплайны. Знаю, как выстроить процесс регрессионного тестирования с нуля.<br><br>Буду рад пообщаться и обсудить детали.`;
     }
 
+    // Build footer text from contact fields
+    const hideContacts = document.getElementById("contactHideCheckbox")?.checked;
+    const tgVal = hideContacts ? "" : (document.getElementById("contactTgInput")?.value.trim() || "");
+    const phoneVal = hideContacts ? "" : (document.getElementById("contactPhoneInput")?.value.trim() || "");
+    let contactFooterLines = [];
+    if (tgVal) contactFooterLines.push(`ТГ: ${tgVal}`);
+    if (phoneVal) contactFooterLines.push(`Номер: ${phoneVal}`);
+    const contactFooterText = contactFooterLines.length > 0
+        ? contactFooterLines.join("\n")
+        : (hideContacts ? "(Контакты скрыты)" : "ТГ: @username\nНомер: +7 (999) 000-00-00");
+
     if (shouldUseDefault) {
         // Default Mode
         headerEl.innerText = `Здравствуйте, меня зовут ${window.USER_FIRST_NAME}.`;
@@ -1588,7 +1660,7 @@ function updateCLPreview() {
         headerEl.style.color = "#888";
         headerEl.style.fontWeight = "normal";
 
-        footerEl.innerText = "ТГ: @username\nНомер: +7 (999) 000-00-00";
+        footerEl.innerText = contactFooterText;
         footerEl.style.fontStyle = "italic";
         footerEl.style.color = "#888";
         footerEl.style.fontWeight = "normal";
