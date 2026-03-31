@@ -385,7 +385,7 @@ input[type="number"] { -moz-appearance: textfield; }
             <div>
                 <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface" id="pageTitle">Настройки поиска</h1>
             </div>
-            <div class="p-1.5 bg-surface-container-low rounded-full flex self-start">
+            <div id="tabSwitcher" class="p-1.5 bg-surface-container-low rounded-full flex self-start">
                 <div class="px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap" id="tab-btn-search" onclick="switchMainTab('search')">Настройки поиска</div>
                 <div class="px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap" id="tab-btn-response" onclick="switchMainTab('response')">Настройки откликов</div>
             </div>
@@ -408,7 +408,7 @@ input[type="number"] { -moz-appearance: textfield; }
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 zone1-grid">
 
                         <!-- Experience -->
-                        <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
+                        <section id="experienceSection" class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
                             <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Опыт работы</h2>
                             <div class="flex flex-col gap-1">
                                 <select id="experienceSelect" class="w-full bg-surface-container-high/50 border-none rounded-xl py-3 px-4 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23cac3d7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px;">
@@ -440,7 +440,7 @@ input[type="number"] { -moz-appearance: textfield; }
                         </section>
 
                         <!-- Schedule -->
-                        <section class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
+                        <section id="scheduleSection" class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
                             <h2 class="text-lg font-bold tracking-tight text-on-surface/80">График работы</h2>
                             <div class="grid grid-cols-2 gap-2" id="scheduleContainer">
                                 <label class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container-high/40 border border-outline-variant/5 text-on-surface-variant hover:text-on-surface transition-all hover:bg-surface-container-highest cursor-pointer">
@@ -534,7 +534,7 @@ input[type="number"] { -moz-appearance: textfield; }
                     </div><!-- End vacancyCounterDesktopSlot -->
 
                     <!-- Region Search -->
-                    <section class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                    <section id="regionSection" class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Регион поиска</h2>
                         <div id="regionContainer" class="flex flex-col" style="height: 320px;">
                             <div class="mb-3">
@@ -555,7 +555,7 @@ input[type="number"] { -moz-appearance: textfield; }
                     </section>
 
                     <!-- Industry -->
-                    <section class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                    <section id="industrySection" class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Отрасли компаний</h2>
                         <div id="industryContainer" class="flex flex-col" style="height: 400px;">
                             <div class="relative mb-3">
@@ -612,7 +612,7 @@ input[type="number"] { -moz-appearance: textfield; }
                     </section>
 
                     <!-- AI Switch Card -->
-                    <div class="glass-panel p-6 md:p-8 rounded-2xl shadow-2xl border border-white/5">
+                    <div id="aiSwitchCard" class="glass-panel p-6 md:p-8 rounded-2xl shadow-2xl border border-white/5">
                         <div class="flex items-center justify-between gap-4">
                             <div class="space-y-1">
                                 <h3 class="text-base md:text-lg font-bold text-on-background">Использовать стандартное (AI) начало и конец</h3>
@@ -871,9 +871,9 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="settings-tour-steps.js?v=1.0"></script>
-<script src="settings-tour.js?v=1.0"></script>
-<script src="settings.js?v=5.0"></script>
+<script src="settings-tour-steps.js?v=1.1"></script>
+<script src="settings-tour.js?v=1.1"></script>
+<script src="settings.js?v=5.1"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

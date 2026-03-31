@@ -292,6 +292,8 @@ function serializeSearchForm() {
 }
 
 function updateSaveButtonState() {
+    if (_isOnboardingMode) return;
+
     const saveBtn = document.getElementById('saveBtn');
     if (!initialSearchState) return;
 

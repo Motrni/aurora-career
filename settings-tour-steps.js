@@ -1,6 +1,7 @@
 /**
  * settings-tour-steps.js — Tour step configuration for Aurora Career settings.
  * Edit this file to add/modify/reorder guided tour steps.
+ * Selectors point to full container sections for proper spotlight coverage.
  */
 
 window.SETTINGS_TOUR_STEPS = [
@@ -21,25 +22,25 @@ window.SETTINGS_TOUR_STEPS = [
         side: 'bottom'
     },
     {
-        selector: '#experienceSelect',
+        selector: '#experienceSection',
         title: 'Опыт работы',
         description: 'Чтобы не сужать выдачу, обычно лучше оставить «Не важно» — так вы не пропустите хорошие вакансии.',
         side: 'bottom'
     },
     {
-        selector: '#scheduleContainer',
+        selector: '#scheduleSection',
         title: 'График работы',
         description: 'Выберите подходящие форматы: удалённая работа, офис, гибрид или разъезды. Если ничего не выбрано, поиск идёт по всем форматам.',
         side: 'bottom'
     },
     {
-        selector: '#regionContainer',
+        selector: '#regionSection',
         title: 'Регионы поиска',
         description: 'Добавьте города и регионы, где хотите искать вакансии. Без указания регионов поиск выполняется максимально широко.',
         side: 'bottom'
     },
     {
-        selector: '#industryContainer',
+        selector: '#industrySection',
         title: 'Отрасли компаний',
         description: 'Укажите интересующие отрасли, чтобы исключить вакансии из нерелевантных направлений.',
         side: 'bottom'
@@ -51,7 +52,7 @@ window.SETTINGS_TOUR_STEPS = [
         side: 'bottom'
     },
     {
-        selector: '#tab-btn-response',
+        selector: '#tabSwitcher',
         title: 'Вкладки разделов',
         description: 'В «Настройках поиска» вы управляете фильтрами, а в «Настройках откликов» — текстом сопроводительного письма.',
         side: 'bottom',
@@ -61,19 +62,37 @@ window.SETTINGS_TOUR_STEPS = [
         }
     },
     {
-        selector: '#clHeaderInput',
-        title: 'Шапка сопроводительного',
-        description: 'Текст, который будет вставлен в начало каждого сопроводительного письма. Представьтесь и кратко опишите свою мотивацию.',
+        selector: '#aiSwitchCard',
+        title: 'AI-режим сопроводительного',
+        description: 'Когда включено — нейросеть сама создаёт идеальное приветствие и подпись для каждого отклика. Если хотите свой текст — выключите переключатель.',
         side: 'bottom',
         onBeforeShow: function () {
             window.switchMainTab('response');
         }
     },
     {
-        selector: '#clFooterInput',
-        title: 'Подпись сопроводительного',
-        description: 'Текст подписи в конце письма. Укажите контакты, ссылки на портфолио или Telegram.',
-        side: 'top'
+        selector: '#clCustomFields',
+        title: 'Шапка и подпись письма',
+        description: 'Если вы отключили AI-режим, здесь можно указать своё приветствие (начало письма) и подпись (конец письма). Они будут добавляться к каждому отклику автоматически.',
+        side: 'bottom',
+        onBeforeShow: function () {
+            var checkbox = document.getElementById('clUseDefaultCheckbox');
+            if (checkbox && checkbox.checked) {
+                checkbox.checked = false;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            var fields = document.getElementById('clCustomFields');
+            if (fields) fields.style.display = '';
+        }
+    },
+    {
+        selector: '#clPreviewBox',
+        title: 'Предпросмотр отклика',
+        description: 'Здесь видно, как ваш отклик будет выглядеть для рекрутера. Шапка и подпись подставляются автоматически — проверьте, всё ли выглядит так, как нужно.',
+        side: 'top',
+        onBeforeShow: function () {
+            window.switchMainTab('response');
+        }
     },
     {
         selector: '#helpBtn',

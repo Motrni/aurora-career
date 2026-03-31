@@ -10,17 +10,17 @@ class SettingsTour {
         this.mode = options.mode || 'help';
         this.onComplete = options.onComplete || null;
         this.currentIdx = 0;
-        this.overlay = null;
         this.spotlight = null;
         this.popover = null;
         this._resizeHandler = null;
+        this._clickBlocker = null;
     }
 
     start() {
         if (!this.steps.length) return;
         this.currentIdx = 0;
         this._injectCSS();
-        this._createOverlay();
+        this._createElements();
         this._showStep(0);
         this._resizeHandler = () => this._repositionCurrent();
         window.addEventListener('resize', this._resizeHandler);
@@ -43,9 +43,9 @@ class SettingsTour {
     }
 
     destroy() {
-        if (this.overlay) { this.overlay.remove(); this.overlay = null; }
         if (this.spotlight) { this.spotlight.remove(); this.spotlight = null; }
         if (this.popover) { this.popover.remove(); this.popover = null; }
+        if (this._clickBlocker) { this._clickBlocker.remove(); this._clickBlocker = null; }
         if (this._resizeHandler) {
             window.removeEventListener('resize', this._resizeHandler);
             this._resizeHandler = null;
@@ -57,27 +57,29 @@ class SettingsTour {
         const style = document.createElement('style');
         style.id = 'tour-engine-css';
         style.textContent = `
-            .tour-overlay {
-                position: fixed; inset: 0; z-index: 9997;
-                background: rgba(0,0,0,0.6);
-                transition: opacity 0.3s ease;
+            .tour-click-blocker {
+                position: fixed; inset: 0; z-index: 9996;
+                background: transparent;
             }
             .tour-spotlight {
                 position: absolute; z-index: 9998;
-                border-radius: 12px;
-                box-shadow: 0 0 0 9999px rgba(0,0,0,0.65);
+                border-radius: 14px;
+                box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
                 pointer-events: none;
-                transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: top 0.35s cubic-bezier(0.4,0,0.2,1),
+                            left 0.35s cubic-bezier(0.4,0,0.2,1),
+                            width 0.35s cubic-bezier(0.4,0,0.2,1),
+                            height 0.35s cubic-bezier(0.4,0,0.2,1);
             }
             .tour-popover {
                 position: absolute; z-index: 9999;
-                width: 340px; max-width: calc(100vw - 32px);
-                background: rgba(33, 30, 41, 0.97);
+                width: 360px; max-width: calc(100vw - 32px);
+                background: rgba(29, 26, 36, 0.97);
                 backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-                border: 1px solid rgba(204, 190, 255, 0.12);
+                border: 1px solid rgba(204, 190, 255, 0.15);
                 border-radius: 16px;
-                padding: 20px 22px;
-                box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+                padding: 22px 24px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(204,190,255,0.05);
                 animation: tourPopIn 0.25s ease-out;
                 font-family: 'Inter', system-ui, sans-serif;
             }
@@ -90,8 +92,8 @@ class SettingsTour {
                 margin-bottom: 8px; line-height: 1.3;
             }
             .tour-popover-desc {
-                font-size: 13px; color: #cac3d7; line-height: 1.55;
-                margin-bottom: 16px;
+                font-size: 13px; color: #cac3d7; line-height: 1.6;
+                margin-bottom: 18px;
             }
             .tour-popover-footer {
                 display: flex; align-items: center; justify-content: space-between;
@@ -101,13 +103,13 @@ class SettingsTour {
                 letter-spacing: 0.05em;
             }
             .tour-btn-next {
-                background: linear-gradient(to right, #5a30d0, #58309f);
+                background: linear-gradient(135deg, #5a30d0, #653edb);
                 color: #fff; border: none; border-radius: 10px;
-                padding: 10px 22px; font-size: 13px; font-weight: 700;
+                padding: 10px 24px; font-size: 13px; font-weight: 700;
                 cursor: pointer; transition: filter 0.2s, transform 0.1s;
                 font-family: inherit;
             }
-            .tour-btn-next:hover { filter: brightness(1.12); }
+            .tour-btn-next:hover { filter: brightness(1.15); }
             .tour-btn-next:active { transform: scale(0.97); }
             .tour-btn-close {
                 position: absolute; top: 12px; right: 12px;
@@ -121,10 +123,10 @@ class SettingsTour {
         document.head.appendChild(style);
     }
 
-    _createOverlay() {
-        this.overlay = document.createElement('div');
-        this.overlay.className = 'tour-overlay';
-        document.body.appendChild(this.overlay);
+    _createElements() {
+        this._clickBlocker = document.createElement('div');
+        this._clickBlocker.className = 'tour-click-blocker';
+        document.body.appendChild(this._clickBlocker);
 
         this.spotlight = document.createElement('div');
         this.spotlight.className = 'tour-spotlight';
@@ -141,7 +143,7 @@ class SettingsTour {
 
         if (step.onBeforeShow) {
             step.onBeforeShow();
-            await this._delay(350);
+            await this._delay(400);
         }
 
         const el = document.querySelector(step.selector);
@@ -151,7 +153,7 @@ class SettingsTour {
         }
 
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        await this._delay(350);
+        await this._delay(400);
 
         this._positionSpotlight(el);
         this._renderPopover(step, el, idx);
@@ -159,7 +161,7 @@ class SettingsTour {
 
     _positionSpotlight(el) {
         const rect = el.getBoundingClientRect();
-        const pad = 8;
+        const pad = 10;
         this.spotlight.style.top = (rect.top + window.scrollY - pad) + 'px';
         this.spotlight.style.left = (rect.left + window.scrollX - pad) + 'px';
         this.spotlight.style.width = (rect.width + pad * 2) + 'px';
@@ -188,22 +190,22 @@ class SettingsTour {
         this.popover.__tourClose = () => this.close();
         document.getElementById('tourNextBtn').addEventListener('click', () => this.next());
 
-        const popW = 340;
-        const popH = this.popover.offsetHeight || 180;
+        const popW = 360;
+        const popH = this.popover.offsetHeight || 200;
         let top, left;
 
         if (side === 'top') {
-            top = rect.top + window.scrollY - popH - 16;
+            top = rect.top + window.scrollY - popH - 18;
             left = rect.left + window.scrollX + rect.width / 2 - popW / 2;
         } else {
-            top = rect.bottom + window.scrollY + 16;
+            top = rect.bottom + window.scrollY + 18;
             left = rect.left + window.scrollX + rect.width / 2 - popW / 2;
         }
 
         const vw = window.innerWidth;
         if (left < 16) left = 16;
         if (left + popW > vw - 16) left = vw - popW - 16;
-        if (top < 0) top = rect.bottom + window.scrollY + 16;
+        if (top < window.scrollY) top = rect.bottom + window.scrollY + 18;
 
         this.popover.style.top = top + 'px';
         this.popover.style.left = left + 'px';
