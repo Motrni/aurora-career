@@ -30,6 +30,9 @@ let nextMorningMsk = "08:00";
 let statusPollTimer = null;
 let sseConnectedAt = null; // Момент подключения SSE — события ДО него исторические
 
+let toastHideTimer = null;
+let toastAfterTimer = null;
+
 window.BOT_USERNAME = "Aurora_Career_Bot";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -127,6 +130,59 @@ function toggleGlobalLoading(isLoading) {
 function showError(msg) {
     const el = document.getElementById("errorMsg");
     if (el) { el.innerText = msg; el.style.display = "block"; }
+}
+
+/** Всплывашка у верхнего края окна, исчезает через durationMs (по умолчанию ~2.5 с). */
+function showToast(message, durationMs = 2600) {
+    const host = document.getElementById("pageToast");
+    const text = document.getElementById("pageToastText");
+    if (!host || !text) return;
+    text.textContent = message;
+    if (toastHideTimer) clearTimeout(toastHideTimer);
+    if (toastAfterTimer) clearTimeout(toastAfterTimer);
+    host.classList.add("toast-visible");
+    host.setAttribute("aria-hidden", "false");
+
+    toastHideTimer = setTimeout(() => {
+        host.classList.remove("toast-visible");
+        host.setAttribute("aria-hidden", "true");
+        toastAfterTimer = setTimeout(() => {
+            text.textContent = "";
+        }, 320);
+    }, durationMs);
+}
+
+function isRateLimitError(err) {
+    if (!err) return false;
+    if (err.status === 429) return true;
+    const m = String(err.message || "").toLowerCase();
+    return (
+        m.includes("too many") ||
+        m.includes("429") ||
+        m.includes("rate limit") ||
+        m.includes("слишком много")
+    );
+}
+
+/** Ошибки кнопки автопилота — коротко и без «висящего» баннера. */
+function showAutopilotActionError(err) {
+    if (isRateLimitError(err)) {
+        showToast("Не так часто — подождите пару секунд.");
+        return;
+    }
+    const raw = err && err.message ? String(err.message) : "";
+    if (!raw || raw.length > 100) {
+        showToast("Не получилось переключить. Попробуйте ещё раз.");
+        return;
+    }
+    showToast(raw);
+}
+
+function throwHttpError(resp, errBody) {
+    const detail = errBody?.detail || `HTTP ${resp.status}`;
+    const ex = new Error(detail);
+    ex.status = resp.status;
+    return ex;
 }
 
 function buildAuthParams() {
@@ -537,7 +593,7 @@ window.toggleAutopilot = async function () {
             });
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
-                throw new Error(err.detail || `HTTP ${resp.status}`);
+                throw throwHttpError(resp, err);
             }
             await refreshStatusFromServer();
             disconnectSSE();
@@ -553,7 +609,7 @@ window.toggleAutopilot = async function () {
 
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
-            throw new Error(err.detail || `HTTP ${resp.status}`);
+            throw throwHttpError(resp, err);
         }
 
         const data = await resp.json();
@@ -575,7 +631,7 @@ window.toggleAutopilot = async function () {
 
     } catch (e) {
         console.error("[toggleAutopilot]", e);
-        showError("Ошибка переключения: " + e.message);
+        showAutopilotActionError(e);
     } finally {
         btn.disabled = false;
     }
@@ -595,7 +651,7 @@ window.resumeAutopilotNow = async function () {
 
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
-            throw new Error(err.detail || `HTTP ${resp.status}`);
+            throw throwHttpError(resp, err);
         }
 
         await refreshStatusFromServer();
@@ -608,7 +664,7 @@ window.resumeAutopilotNow = async function () {
         }
     } catch (e) {
         console.error("[resumeAutopilotNow]", e);
-        showError("Не удалось запустить: " + e.message);
+        showAutopilotActionError(e);
     } finally {
         if (btn) btn.disabled = false;
     }

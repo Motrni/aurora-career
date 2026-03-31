@@ -140,6 +140,40 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     border: 1px solid rgba(248,113,113,0.2); margin-bottom: 16px;
 }
 
+/* Всплывающее уведомление: фиксировано от верхнего края окна */
+.page-toast-host {
+    position: fixed;
+    left: 50%;
+    top: 1rem;
+    transform: translateX(-50%) translateY(-10px);
+    z-index: 100;
+    max-width: min(90vw, 22rem);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s;
+    pointer-events: none;
+}
+.page-toast-host.toast-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+.page-toast-inner {
+    pointer-events: auto;
+    border-radius: 0.875rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(44, 40, 51, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0.75rem 1.15rem;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #e7e0ef;
+    line-height: 1.4;
+}
+
 .luxury-gradient {
     background: linear-gradient(135deg, #5a30d0 0%, #3e0c85 100%);
 }
@@ -255,6 +289,12 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
         </div>
     </div>
 </nav>
+
+<div id="pageToast" class="page-toast-host" aria-live="polite" aria-atomic="true" role="status" aria-hidden="true">
+    <div class="page-toast-inner">
+        <span id="pageToastText"></span>
+    </div>
+</div>
 
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
@@ -653,7 +693,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="responses.js?v=8.2"></script>
+<script src="responses.js?v=8.3"></script>
 <script src="manual-search.js?v=3.1"></script>
 
 </body>
