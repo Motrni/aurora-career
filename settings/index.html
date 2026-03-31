@@ -218,6 +218,64 @@ input:indeterminate {
 .tag-confirm-btn.visible { display: flex; }
 .tag-confirm-btn:hover { background: rgba(90,48,208,0.35); }
 
+/* Ignored employers: transient error rail + input flash + chip enter */
+.ignored-employers-error-rail {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.42s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease;
+}
+.ignored-employers-error-rail.is-visible {
+    max-height: 5.5rem;
+    opacity: 1;
+}
+.ignored-employers-error-msg {
+    margin-top: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.65rem;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: #fecaca;
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    box-shadow: 0 0 18px rgba(248, 113, 113, 0.12);
+    transform: translateY(-10px);
+    opacity: 0;
+    transition: transform 0.38s cubic-bezier(0.34, 1.25, 0.64, 1), opacity 0.3s ease;
+}
+.ignored-employers-error-rail.is-visible .ignored-employers-error-msg {
+    transform: translateY(0);
+    opacity: 1;
+}
+#ignoredEmployerInput.ignored-input-flash-error {
+    border-color: #ff3b5c !important;
+    box-shadow:
+        0 0 0 2px rgba(255, 59, 92, 0.55),
+        0 0 22px rgba(255, 59, 92, 0.35),
+        0 0 40px rgba(255, 45, 85, 0.2) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+#ignoredEmployerInput.ignored-input-flash-success {
+    border-color: #34d399 !important;
+    box-shadow:
+        0 0 0 2px rgba(52, 211, 153, 0.45),
+        0 0 18px rgba(52, 211, 153, 0.28) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+@keyframes ignored-tag-enter {
+    from {
+        opacity: 0;
+        transform: scale(0.88) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+.tag.tag--ignored-enter {
+    animation: ignored-tag-enter 0.48s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
 /* Error */
 .error {
     color: #f87171; font-size: 0.9rem; display: none; text-align: center;
@@ -349,6 +407,25 @@ body.has-floating-save {
     #searchActionBar.is-floating,
     #searchActionBar.is-docked {
         animation: none !important;
+        transition: none !important;
+    }
+    .ignored-employers-error-rail,
+    .ignored-employers-error-msg {
+        transition: none !important;
+    }
+    .ignored-employers-error-rail.is-visible {
+        max-height: 6rem;
+        opacity: 1;
+    }
+    .ignored-employers-error-rail.is-visible .ignored-employers-error-msg {
+        transform: none !important;
+        opacity: 1 !important;
+    }
+    .tag.tag--ignored-enter {
+        animation: none !important;
+    }
+    #ignoredEmployerInput.ignored-input-flash-error,
+    #ignoredEmployerInput.ignored-input-flash-success {
         transition: none !important;
     }
 }
@@ -584,12 +661,14 @@ body.has-floating-save {
                             <button
                                 type="button"
                                 id="ignoredEmployerApplyBtn"
-                                class="sm:w-auto px-6 py-3 rounded-xl bg-primary-container text-on-primary-container font-semibold hover:opacity-90 transition-all"
+                                class="sm:w-auto px-6 py-3 rounded-xl bg-primary-container text-on-primary-container font-semibold hover:opacity-90 transition-all cursor-pointer"
                             >
                                 Применить
                             </button>
                         </div>
-                        <div id="ignoredEmployersError" class="hidden text-xs text-[#f87171] bg-[#f87171]/10 border border-[#f87171]/30 rounded-lg px-3 py-2"></div>
+                        <div id="ignoredEmployersErrorRail" class="ignored-employers-error-rail" aria-live="polite">
+                            <div id="ignoredEmployersError" class="ignored-employers-error-msg"></div>
+                        </div>
                         <div id="ignoredEmployersChips" class="tags-container min-h-[56px]"></div>
                     </section>
 
@@ -994,7 +1073,7 @@ function toggleMobileMenu() {
 <script src="aurora-session.js?v=1"></script>
 <script src="settings-tour-steps.js?v=1.2"></script>
 <script src="settings-tour.js?v=1.1"></script>
-<script src="settings.js?v=5.9"></script>
+<script src="settings.js?v=6.0"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

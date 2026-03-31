@@ -588,8 +588,15 @@ class IgnoredEmployersInput {
         this.applyBtn = document.getElementById(applyBtnId);
         this.chipsContainer = document.getElementById(chipsContainerId);
         this.errorBox = document.getElementById(errorId);
+        this.errorRail = document.getElementById("ignoredEmployersErrorRail");
         this.employers = {};
         this.isResolving = false;
+        this._lastAddedId = null;
+        this._errorHideTimeout = null;
+        this._errorClearTimeout = null;
+        this._inputFlashTimeout = null;
+        this._transientErrorMs = 3800;
+        this._railCollapseMs = 450;
 
         if (!this.input || !this.applyBtn || !this.chipsContainer || !this.errorBox) {
             return;
@@ -610,6 +617,83 @@ class IgnoredEmployersInput {
         return { ...this.employers };
     }
 
+    _extractEmployerIdForDuplicateCheck(raw) {
+        const value = String(raw || "").trim();
+        if (!value) return null;
+        if (/^\d+$/.test(value)) return value;
+        const match = value.match(/(?:^|[/])employer\/(\d+)(?:[/?#]|$)/i);
+        return match ? match[1] : null;
+    }
+
+    _clearFeedbackTimers() {
+        if (this._errorHideTimeout) {
+            clearTimeout(this._errorHideTimeout);
+            this._errorHideTimeout = null;
+        }
+        if (this._errorClearTimeout) {
+            clearTimeout(this._errorClearTimeout);
+            this._errorClearTimeout = null;
+        }
+        if (this._inputFlashTimeout) {
+            clearTimeout(this._inputFlashTimeout);
+            this._inputFlashTimeout = null;
+        }
+    }
+
+    _flashInput(kind) {
+        if (!this.input) return;
+        this.input.classList.remove("ignored-input-flash-error", "ignored-input-flash-success");
+        void this.input.offsetWidth;
+        if (kind === "error") {
+            this.input.classList.add("ignored-input-flash-error");
+            this._inputFlashTimeout = setTimeout(() => {
+                this.input.classList.remove("ignored-input-flash-error");
+                this._inputFlashTimeout = null;
+            }, 2800);
+        } else if (kind === "success") {
+            this.input.classList.add("ignored-input-flash-success");
+            this._inputFlashTimeout = setTimeout(() => {
+                this.input.classList.remove("ignored-input-flash-success");
+                this._inputFlashTimeout = null;
+            }, 2000);
+        }
+    }
+
+    showTransientError(message) {
+        if (!this.errorBox) return;
+        this._clearFeedbackTimers();
+
+        if (this.errorRail) {
+            this.errorRail.classList.remove("is-visible");
+            void this.errorRail.offsetHeight;
+        }
+
+        this.errorBox.textContent = message;
+        if (this.errorRail) {
+            this.errorRail.classList.add("is-visible");
+        } else {
+            this.errorBox.classList.remove("hidden");
+        }
+
+        this._flashInput("error");
+
+        this._errorHideTimeout = setTimeout(() => {
+            this._errorHideTimeout = null;
+            if (this.errorRail) {
+                this.errorRail.classList.remove("is-visible");
+                this._errorClearTimeout = setTimeout(() => {
+                    this._errorClearTimeout = null;
+                    if (this.errorRail && !this.errorRail.classList.contains("is-visible")) {
+                        this.errorBox.textContent = "";
+                    }
+                }, this._railCollapseMs);
+            } else {
+                this.errorBox.textContent = "";
+                this.errorBox.classList.add("hidden");
+            }
+        }, this._transientErrorMs);
+    }
+
     setEmployers(rawEmployers) {
         this.employers = {};
         if (rawEmployers && typeof rawEmployers === "object" && !Array.isArray(rawEmployers)) {
@@ -628,12 +712,18 @@ class IgnoredEmployersInput {
 
         const value = this.input.value.trim();
         if (!value) {
-            this.showError("Введите ID или ссылку на работодателя.");
+            this.showTransientError("Введите ID или ссылку на работодателя.");
             return;
         }
 
         if (Object.keys(this.employers).length >= 20) {
-            this.showError("Достигнут лимит: не более 20 работодателей.");
+            this.showTransientError("Достигнут лимит: не более 20 работодателей.");
+            return;
+        }
+
+        const duplicateId = this._extractEmployerIdForDuplicateCheck(value);
+        if (duplicateId && Object.prototype.hasOwnProperty.call(this.employers, duplicateId)) {
+            this.showTransientError("Работодатель уже есть в списке");
             return;
         }
 
@@ -667,13 +757,20 @@ class IgnoredEmployersInput {
                 throw new Error("Некорректный ID работодателя.");
             }
 
-            this.employers[employerId] = employerName || employerId;
-            this.input.value = "";
+            if (Object.prototype.hasOwnProperty.call(this.employers, employerId)) {
+                this.showTransientError("Работодатель уже есть в списке");
+                return;
+            }
+
             this.hideError();
+            this.employers[employerId] = employerName || employerId;
+            this._lastAddedId = employerId;
+            this.input.value = "";
+            this._flashInput("success");
             this.render();
             updateSaveButtonState();
         } catch (error) {
-            this.showError(error.message || "Ошибка проверки работодателя.");
+            this.showTransientError(error.message || "Ошибка проверки работодателя.");
         } finally {
             this.isResolving = false;
             this.applyBtn.disabled = false;
@@ -687,20 +784,23 @@ class IgnoredEmployersInput {
         updateSaveButtonState();
     }
 
-    showError(message) {
-        if (!this.errorBox) return;
-        this.errorBox.textContent = message;
-        this.errorBox.classList.remove("hidden");
-    }
-
     hideError() {
+        this._clearFeedbackTimers();
         if (!this.errorBox) return;
-        this.errorBox.textContent = "";
-        this.errorBox.classList.add("hidden");
+        if (this.errorRail) {
+            this.errorRail.classList.remove("is-visible");
+            this.errorBox.textContent = "";
+        } else {
+            this.errorBox.textContent = "";
+            this.errorBox.classList.add("hidden");
+        }
     }
 
     render() {
         if (!this.chipsContainer) return;
+        const lastAdded = this._lastAddedId;
+        this._lastAddedId = null;
+
         this.chipsContainer.innerHTML = "";
 
         const entries = Object.entries(this.employers).sort(([leftId], [rightId]) => leftId.localeCompare(rightId));
@@ -715,6 +815,14 @@ class IgnoredEmployersInput {
         entries.forEach(([employerId, employerName]) => {
             const chip = document.createElement("div");
             chip.className = "tag";
+            if (lastAdded && employerId === lastAdded) {
+                chip.classList.add("tag--ignored-enter");
+                chip.addEventListener(
+                    "animationend",
+                    () => chip.classList.remove("tag--ignored-enter"),
+                    { once: true }
+                );
+            }
 
             const text = document.createElement("span");
             text.textContent = employerName || employerId;
