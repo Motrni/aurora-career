@@ -13,6 +13,8 @@ let authMode = null;
 let legacyUserId = null;
 let legacySign = null;
 let isAutopilotActive = false;
+/** Пока бот подхватывает кампанию (до первого search_started / search_complete). */
+let isAutopilotStarting = false;
 let eventSource = null;
 let lastEventId = 0;
 let rejectedPage = 0;
@@ -244,6 +246,11 @@ function updateStatusPanel(data) {
     updateBoostUpsellVisibility();
 }
 
+function setProgressSpinnerVisible(visible) {
+    const spinner = document.getElementById("progressSpinner");
+    if (spinner) spinner.classList.toggle("hidden", !visible);
+}
+
 function renderProgress(applied, limit) {
     const pct = limit > 0 ? applied / limit : 0;
 
@@ -256,8 +263,14 @@ function renderProgress(applied, limit) {
 
     const pctRound = Math.round(pct * 100);
     const progressText = document.getElementById("progressText");
+    if (!progressText) return;
+
+    if (!isAutopilotActive) {
+        isAutopilotStarting = false;
+    }
 
     if (isDailyPaused) {
+        setProgressSpinnerVisible(false);
         if (dailyQuotaFull) {
             progressText.innerText =
                 `На сегодня лимит откликов исчерпан. Следующий автозапуск — завтра в ${nextMorningMsk} (МСК).`;
@@ -268,8 +281,16 @@ function renderProgress(applied, limit) {
         return;
     }
 
+    if (isAutopilotActive && isAutopilotStarting) {
+        progressText.innerText = "Автопилот запускается";
+        setProgressSpinnerVisible(true);
+        return;
+    }
+
+    setProgressSpinnerVisible(false);
+
     if (isAutopilotActive) {
-        progressText.innerText = `Автопилот работает — ${pctRound}%`;
+        progressText.innerText = "Автопилот работает";
     } else if (applied > 0) {
         progressText.innerText = `Автопилот выключен — ${pctRound}%`;
     } else {
@@ -537,18 +558,19 @@ window.toggleAutopilot = async function () {
 
         const data = await resp.json();
         isAutopilotActive = data.is_active;
+        if (isAutopilotActive) {
+            isAutopilotStarting = true;
+        } else {
+            isAutopilotStarting = false;
+        }
         await refreshStatusFromServer();
 
-        const progressText = document.getElementById("progressText");
         if (isAutopilotActive) {
-            progressText.innerText = "Автопилот запускается — ожидание бота (~10 сек)...";
             connectSSE();
             startStatusPolling();
         } else {
-            progressText.innerText = "Автопилот остановлен";
             disconnectSSE();
             stopStatusPolling();
-            renderProgress(currentApplied, currentDailyLimit);
         }
 
     } catch (e) {
@@ -578,9 +600,9 @@ window.resumeAutopilotNow = async function () {
 
         await refreshStatusFromServer();
 
-        const progressText = document.getElementById("progressText");
         if (isAutopilotActive) {
-            if (progressText) progressText.innerText = "Автопилот запускается — ожидание бота (~10 сек)...";
+            isAutopilotStarting = true;
+            renderProgress(currentApplied, currentDailyLimit);
             connectSSE();
             startStatusPolling();
         }
@@ -703,17 +725,12 @@ function handleSSEEvent(evt) {
         }
 
         if (evt.type === 'search_started') {
-            const found = evt.details?.found_total || 0;
-            void refreshStatusFromServer().then(() => {
-                if (found <= 0) return;
-                const progressText = document.getElementById("progressText");
-                if (progressText) {
-                    progressText.innerText = `Автопилот работает — обработка ${found} вакансий...`;
-                }
-            });
+            isAutopilotStarting = false;
+            void refreshStatusFromServer();
         }
 
         if (evt.type === 'search_complete') {
+            isAutopilotStarting = false;
             refreshStatusFromServer();
             const progressText = document.getElementById("progressText");
             if (progressText) {
@@ -723,6 +740,7 @@ function handleSSEEvent(evt) {
         }
 
         if (evt.type === 'search_exhausted') {
+            isAutopilotStarting = false;
             refreshStatusFromServer();
             const progressText = document.getElementById("progressText");
             if (progressText) {
