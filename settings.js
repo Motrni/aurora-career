@@ -70,6 +70,9 @@ let isIndustriesLoaded = false;
 let isAreasLoaded = false;
 let isSettingsLoaded = false;
 let vacancyCheckTimeout = null;
+/** Debounce для /api/check_vacancies: обычные поля vs набор Boolean-строки. */
+const VACANCY_DEBOUNCE_DEFAULT_MS = 700;
+const VACANCY_DEBOUNCE_BOOLEAN_MS = 1600;
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Show Skeleton immediately
@@ -237,7 +240,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             simpleEditor.style.display = 'none';
             advancedEditor.style.display = 'block';
         }
-        // [NEW] Trigger check logic on switch
+        updateSaveButtonState();
         checkVacancies();
     };
 
@@ -261,8 +264,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     });
 
-    // Boolean Input
-    document.getElementById("booleanQueryInput").addEventListener("input", () => checkVacancies());
+    // Boolean: сразу помечаем форму «грязной» (через initDirtyStateTracking на textarea),
+    // запрос счётчика к hh — с увеличенным debounce, не на каждый символ с тем же таймингом что у зарплаты.
+    document.getElementById("booleanQueryInput").addEventListener("input", () => {
+        checkVacancies(VACANCY_DEBOUNCE_BOOLEAN_MS);
+    });
 
     // 9. Propagate auth params to Responses nav links
     if (authMode === 'legacy' && legacyUserId && legacySign) {
@@ -307,6 +313,15 @@ let _saveBarBaseTop = null;
 let _saveBarDocked = false;
 let _saveBarRaf = null;
 
+/** Режим запроса: у кнопок нет data-mode, ориентируемся на класс active. */
+function getSearchQueryMode() {
+    const advancedBtn = document.getElementById("modeAdvancedBtn");
+    if (advancedBtn && advancedBtn.classList.contains("active")) {
+        return "advanced";
+    }
+    return "simple";
+}
+
 function serializeSearchForm() {
     // Collects all data from Search Tab inputs
     let ignoredEmployersSerialized = "";
@@ -317,6 +332,9 @@ function serializeSearchForm() {
             .map(([employerId, employerName]) => `${employerId}:${employerName}`)
             .join("|");
     }
+
+    const booleanEl = document.getElementById("booleanQueryInput");
+    const booleanQuery = booleanEl ? booleanEl.value : "";
 
     const data = {
         salary: document.getElementById('salaryInput').value,
@@ -329,8 +347,8 @@ function serializeSearchForm() {
         keywordsInclude: window.tagsInclude ? window.tagsInclude.getTags().sort().join(',') : '',
         keywordsExclude: window.tagsExclude ? window.tagsExclude.getTags().sort().join(',') : '',
 
-        // Query Mode
-        queryMode: document.querySelector('.mode-btn.active') ? document.querySelector('.mode-btn.active').dataset.mode : 'simple',
+        queryMode: getSearchQueryMode(),
+        booleanQuery,
 
         // Schedule
         schedule: Array.from(document.querySelectorAll('#scheduleContainer input:checked')).map(el => el.value).sort().join(','),
@@ -910,7 +928,7 @@ function extractWords(innerStr) {
 // ----------------------------------
 
 // [NEW] VACANCY COUNTER LOGIC
-function checkVacancies() {
+function checkVacancies(debounceMs = VACANCY_DEBOUNCE_DEFAULT_MS) {
     // Debounce
     if (vacancyCheckTimeout) clearTimeout(vacancyCheckTimeout);
 
@@ -1040,7 +1058,7 @@ function checkVacancies() {
             if (sDot) { sDot.className = "flex h-2 w-2 rounded-full bg-red-400"; }
             if (sText) { sText.innerText = "Ошибка"; }
         }
-    }, 700); // 700ms debounce
+    }, debounceMs);
 }
 
 function toggleGlobalLoading(isLoading) {

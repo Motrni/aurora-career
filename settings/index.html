@@ -617,8 +617,8 @@ body.has-floating-save {
                         <div class="flex justify-between items-center mb-2">
                             <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Настройка поиска</h2>
                             <div class="p-1.5 bg-surface-container-highest/50 rounded-full flex">
-                                <button class="px-5 py-2 rounded-full text-sm font-semibold transition-all mode-btn active" id="modeSimpleBtn" onclick="window.switchQueryMode('simple')">Простой</button>
-                                <button class="px-5 py-2 rounded-full text-sm font-semibold transition-all mode-btn" id="modeAdvancedBtn" onclick="window.switchQueryMode('advanced')">Boolean</button>
+                                <button type="button" class="px-5 py-2 rounded-full text-sm font-semibold transition-all mode-btn active cursor-pointer" id="modeSimpleBtn" data-mode="simple" onclick="window.switchQueryMode('simple')">Простой</button>
+                                <button type="button" class="px-5 py-2 rounded-full text-sm font-semibold transition-all mode-btn cursor-pointer" id="modeAdvancedBtn" data-mode="advanced" onclick="window.switchQueryMode('advanced')">Boolean</button>
                             </div>
                         </div>
 
@@ -1074,7 +1074,7 @@ function toggleMobileMenu() {
 <script src="aurora-session.js?v=1"></script>
 <script src="settings-tour-steps.js?v=1.2"></script>
 <script src="settings-tour.js?v=1.1"></script>
-<script src="settings.js?v=6.1"></script>
+<script src="settings.js?v=6.2"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
