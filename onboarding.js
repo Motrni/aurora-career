@@ -3,6 +3,7 @@
  * Шаг 1: Привязка HH.ru аккаунта (табы Телефон/Почта, OTP после NEED_CODE)
  * Шаг 2: Выбор резюме (полное название, без truncate)
  * Шаг 3: AI-анализ резюме (gauge + отчёт)
+ * Шаг 4: Настройка поискового профиля (роли → Pro-запрос)
  */
 
 const API_BASE_URL = window.AuroraSession
@@ -16,7 +17,18 @@ let selectedResumeId = null;
 let pollInterval = null;
 let analysisInterval = null;
 let textRotateInterval = null;
+let rolesInterval = null;
+let profileInterval = null;
+let rolesTextInterval = null;
 let activeTab = 'phone';
+let currentRoles = [];
+
+const ROLES_PHRASES = [
+    'Ищу подходящие вакансии...',
+    'Анализирую заголовки...',
+    'Группирую по категориям...',
+    'Формирую роли...',
+];
 
 const ANALYSIS_PHRASES = [
     'Анализирую опыт работы...',
@@ -108,7 +120,21 @@ function initOnboarding(step) {
     document.getElementById('loadingSkeleton').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
 
-    if (step === 'onboarding_analysis_complete') {
+    if (step === 'onboarding_profile_complete') {
+        showStep(4);
+        showProfileComplete();
+    } else if (step === 'onboarding_query_generating') {
+        showStep(4);
+        showQueryGenerating();
+        startProfilePolling();
+    } else if (step === 'onboarding_roles_ready') {
+        showStep(4);
+        loadRolesFromServer();
+    } else if (step === 'onboarding_search_profile') {
+        showStep(4);
+        startRolesPolling();
+        startRolesTextRotation();
+    } else if (step === 'onboarding_analysis_complete') {
         showStep(3);
         loadAnalysisResult();
     } else if (step === 'onboarding_analysis') {
@@ -123,49 +149,45 @@ function initOnboarding(step) {
 }
 
 // ============================================================================
-// STEPPER (3 steps)
+// STEPPER (4 steps)
 // ============================================================================
 
 function showStep(stepNum) {
-    const dot1 = document.getElementById('stepDot1');
-    const dot2 = document.getElementById('stepDot2');
-    const dot3 = document.getElementById('stepDot3');
-    const line1 = document.getElementById('stepLine1');
-    const line2 = document.getElementById('stepLine2');
-    const step1El = document.getElementById('step1');
-    const step2El = document.getElementById('step2');
-    const step3El = document.getElementById('step3');
-
+    const dots = [1, 2, 3, 4].map(i => document.getElementById(`stepDot${i}`));
+    const lines = [1, 2, 3].map(i => document.getElementById(`stepLine${i}`));
+    const steps = [1, 2, 3, 4].map(i => document.getElementById(`step${i}`));
     const checkIcon = '<span class="material-symbols-outlined text-sm">check</span>';
-
-    [step1El, step2El, step3El].forEach(el => el.classList.add('hidden'));
-
     const wrapper = document.getElementById('contentWrapper');
-    if (wrapper && stepNum < 3) wrapper.style.maxWidth = '480px';
 
-    if (stepNum === 1) {
-        dot1.className = 'stepper-dot active'; dot1.textContent = '1';
-        dot2.className = 'stepper-dot pending'; dot2.textContent = '2';
-        dot3.className = 'stepper-dot pending'; dot3.textContent = '3';
-        line1.className = 'stepper-line pending';
-        line2.className = 'stepper-line pending';
-        step1El.classList.remove('hidden');
-    } else if (stepNum === 2) {
-        dot1.className = 'stepper-dot completed'; dot1.innerHTML = checkIcon;
-        dot2.className = 'stepper-dot active'; dot2.textContent = '2';
-        dot3.className = 'stepper-dot pending'; dot3.textContent = '3';
-        line1.className = 'stepper-line active';
-        line2.className = 'stepper-line pending';
-        step2El.classList.remove('hidden');
-        loadResumes();
-    } else {
-        dot1.className = 'stepper-dot completed'; dot1.innerHTML = checkIcon;
-        dot2.className = 'stepper-dot completed'; dot2.innerHTML = checkIcon;
-        dot3.className = 'stepper-dot active'; dot3.textContent = '3';
-        line1.className = 'stepper-line active';
-        line2.className = 'stepper-line active';
-        step3El.classList.remove('hidden');
+    steps.forEach(el => { if (el) el.classList.add('hidden'); });
+
+    if (wrapper) {
+        if (stepNum <= 2) wrapper.style.maxWidth = '480px';
+        else if (stepNum === 3) wrapper.style.maxWidth = '640px';
+        else wrapper.style.maxWidth = '960px';
     }
+
+    dots.forEach((dot, i) => {
+        const num = i + 1;
+        if (num < stepNum) {
+            dot.className = 'stepper-dot completed';
+            dot.innerHTML = checkIcon;
+        } else if (num === stepNum) {
+            dot.className = 'stepper-dot active';
+            dot.textContent = String(num);
+        } else {
+            dot.className = 'stepper-dot pending';
+            dot.textContent = String(num);
+        }
+    });
+
+    lines.forEach((line, i) => {
+        line.className = (i + 1) < stepNum ? 'stepper-line active' : 'stepper-line pending';
+    });
+
+    if (steps[stepNum - 1]) steps[stepNum - 1].classList.remove('hidden');
+
+    if (stepNum === 2) loadResumes();
 }
 
 // ============================================================================
@@ -659,9 +681,7 @@ function displayAnalysisResult(score, report) {
     document.getElementById('reportText').textContent = reportClean;
 
     const profileBtn = document.getElementById('searchProfileBtn');
-    profileBtn.onclick = () => {
-        // TODO: переход к настройке поискового профиля
-    };
+    profileBtn.onclick = () => handleStartProfile();
 }
 
 function animateCounter(el, from, to, duration) {
@@ -677,6 +697,249 @@ function animateCounter(el, from, to, duration) {
     }
 
     requestAnimationFrame(tick);
+}
+
+// ============================================================================
+// STEP 4: SEARCH PROFILE
+// ============================================================================
+
+async function handleStartProfile() {
+    const btn = document.getElementById('searchProfileBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></span>';
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/start-profile`, {
+            method: 'POST',
+        });
+
+        if (!resp || !resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || 'Ошибка запуска');
+        }
+
+        showStep(4);
+        startRolesPolling();
+        startRolesTextRotation();
+
+    } catch (e) {
+        console.error('[Start Profile] Error:', e);
+        btn.disabled = false;
+        btn.textContent = 'Настроить поисковый профиль';
+    }
+}
+
+function startRolesTextRotation() {
+    let idx = 0;
+    const el = document.getElementById('rolesRotatingText');
+    if (!el) return;
+    rolesTextInterval = setInterval(() => {
+        idx = (idx + 1) % ROLES_PHRASES.length;
+        el.textContent = ROLES_PHRASES[idx];
+        el.classList.remove('analysis-text-rotate');
+        void el.offsetWidth;
+        el.classList.add('analysis-text-rotate');
+    }, 2500);
+}
+
+function stopRolesTextRotation() {
+    if (rolesTextInterval) {
+        clearInterval(rolesTextInterval);
+        rolesTextInterval = null;
+    }
+}
+
+function startRolesPolling() {
+    stopRolesPolling();
+    rolesInterval = setInterval(pollRolesStatus, 3000);
+}
+
+function stopRolesPolling() {
+    if (rolesInterval) {
+        clearInterval(rolesInterval);
+        rolesInterval = null;
+    }
+}
+
+async function pollRolesStatus() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/roles-status`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+
+        if (data.status === 'ready') {
+            stopRolesPolling();
+            stopRolesTextRotation();
+            renderRoles(data.roles);
+        }
+    } catch (e) {
+        console.error('[Roles Poll] Error:', e);
+    }
+}
+
+async function loadRolesFromServer() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/roles-status`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+        if (data.status === 'ready') {
+            renderRoles(data.roles);
+        } else {
+            startRolesPolling();
+            startRolesTextRotation();
+        }
+    } catch (e) {
+        console.error('[Load Roles] Error:', e);
+    }
+}
+
+function renderRoles(roles) {
+    currentRoles = roles.map(r => ({ name: r, active: true }));
+
+    const wrapper = document.getElementById('contentWrapper');
+    if (wrapper) wrapper.style.maxWidth = '960px';
+
+    document.getElementById('rolesLoading').classList.add('hidden');
+    document.getElementById('rolesSection').classList.remove('hidden');
+
+    const grid = document.getElementById('rolesGrid');
+    grid.innerHTML = currentRoles.map((role, i) => `
+        <div class="spotlight-card glass-card rounded-xl p-5 sm:p-6 border border-outline-variant/10 cursor-pointer select-none glow-green role-card-enter transition-all duration-200"
+             style="animation-delay: ${i * 60}ms"
+             data-role-idx="${i}" onclick="toggleRole(${i}, this)">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-vibrant-green/10 transition-colors duration-200 role-icon-bg">
+                    <span class="material-symbols-outlined text-vibrant-green text-lg transition-colors duration-200 role-icon" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                </div>
+                <span class="text-on-surface font-medium text-sm sm:text-[15px]">${escapeHtml(role.name)}</span>
+            </div>
+        </div>
+    `).join('');
+
+    grid.addEventListener('mousemove', handleSpotlight);
+}
+
+function handleSpotlight(e) {
+    const cards = e.currentTarget.querySelectorAll('.spotlight-card');
+    cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width * 100);
+        const y = ((e.clientY - rect.top) / rect.height * 100);
+        card.style.setProperty('--mouse-x', x + '%');
+        card.style.setProperty('--mouse-y', y + '%');
+    });
+}
+
+function toggleRole(idx, el) {
+    const role = currentRoles[idx];
+    role.active = !role.active;
+
+    const iconBg = el.querySelector('.role-icon-bg');
+    const icon = el.querySelector('.role-icon');
+
+    if (role.active) {
+        el.classList.remove('glow-red');
+        el.classList.add('glow-green');
+        el.classList.remove('border-error-container/30');
+        el.classList.add('border-outline-variant/10');
+        iconBg.classList.remove('bg-error/10');
+        iconBg.classList.add('bg-vibrant-green/10');
+        icon.classList.remove('text-error');
+        icon.classList.add('text-vibrant-green');
+        icon.textContent = 'check_circle';
+    } else {
+        el.classList.remove('glow-green');
+        el.classList.add('glow-red');
+        el.classList.remove('border-outline-variant/10');
+        el.classList.add('border-error-container/30');
+        iconBg.classList.remove('bg-vibrant-green/10');
+        iconBg.classList.add('bg-error/10');
+        icon.classList.remove('text-vibrant-green');
+        icon.classList.add('text-error');
+        icon.textContent = 'cancel';
+    }
+}
+
+async function handleConfirmRoles() {
+    const liked = currentRoles.filter(r => r.active).map(r => r.name);
+    const disliked = currentRoles.filter(r => !r.active).map(r => r.name);
+
+    if (liked.length === 0) {
+        alert('Выберите хотя бы одну роль');
+        return;
+    }
+
+    const btn = document.getElementById('confirmRolesBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></span> Сохраняем...';
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/confirm-roles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ liked, disliked }),
+        });
+
+        if (!resp || !resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || 'Ошибка сохранения');
+        }
+
+        showQueryGenerating();
+        startProfilePolling();
+
+    } catch (e) {
+        console.error('[Confirm Roles] Error:', e);
+        btn.disabled = false;
+        btn.textContent = 'Далее';
+    }
+}
+
+function showQueryGenerating() {
+    document.getElementById('rolesLoading').classList.add('hidden');
+    document.getElementById('rolesSection').classList.add('hidden');
+    document.getElementById('queryGenerating').classList.remove('hidden');
+    document.getElementById('profileComplete').classList.add('hidden');
+
+    const wrapper = document.getElementById('contentWrapper');
+    if (wrapper) wrapper.style.maxWidth = '480px';
+}
+
+function startProfilePolling() {
+    stopProfilePolling();
+    profileInterval = setInterval(pollProfileStatus, 3000);
+}
+
+function stopProfilePolling() {
+    if (profileInterval) {
+        clearInterval(profileInterval);
+        profileInterval = null;
+    }
+}
+
+async function pollProfileStatus() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/profile-status`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+
+        if (data.status === 'complete') {
+            stopProfilePolling();
+            showProfileComplete();
+        }
+    } catch (e) {
+        console.error('[Profile Poll] Error:', e);
+    }
+}
+
+function showProfileComplete() {
+    document.getElementById('rolesLoading').classList.add('hidden');
+    document.getElementById('rolesSection').classList.add('hidden');
+    document.getElementById('queryGenerating').classList.add('hidden');
+    document.getElementById('profileComplete').classList.remove('hidden');
+
+    const wrapper = document.getElementById('contentWrapper');
+    if (wrapper) wrapper.style.maxWidth = '480px';
 }
 
 // ============================================================================

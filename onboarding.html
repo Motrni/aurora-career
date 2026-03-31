@@ -38,6 +38,8 @@ tailwind.config = {
                 "error-container": "#93000a",
                 "on-primary": "#350097",
                 "outline-variant": "#484455",
+                "vibrant-green": "#00e676",
+                "on-error-container": "#ffdad6",
             },
             fontFamily: { inter: ["Inter", "system-ui", "sans-serif"] },
             borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
@@ -114,6 +116,17 @@ tailwind.config = {
         50% { box-shadow: 0 10px 50px rgba(90,48,208,0.6), 0 0 20px rgba(101,62,219,0.25); }
     }
     .btn-pulse { animation: btnPulse 2.5s ease-in-out infinite; }
+
+    .glass-card { background: rgba(55, 51, 62, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: relative; overflow: hidden; }
+    .glow-green { box-shadow: inset 0 0 20px rgba(0, 230, 118, 0.1); }
+    .glow-red { box-shadow: inset 0 0 20px rgba(147, 0, 10, 0.2); }
+    .spotlight-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(204, 190, 255, 0.1) 0%, transparent 70%); opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 1; }
+    .spotlight-card:hover::before { opacity: 1; }
+    .spotlight-card > * { position: relative; z-index: 2; }
+    .role-card-enter { animation: roleCardIn 0.3s ease-out both; }
+    @keyframes roleCardIn { from { opacity: 0; transform: scale(0.92) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes successPop { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+    .success-pop { animation: successPop 0.5s ease-out; }
 </style>
 </head>
 <body class="text-on-surface min-h-screen selection:bg-primary/30 selection:text-primary relative overflow-x-hidden">
@@ -146,13 +159,15 @@ tailwind.config = {
 <div id="mainContent" class="hidden w-full flex flex-col items-center px-4 pb-8 fade-in">
     <div id="contentWrapper" class="w-full max-w-[480px] transition-all duration-500">
 
-    <!-- Stepper: 3 шага -->
-    <div class="flex items-center justify-center gap-2 sm:gap-3 mb-8">
+    <!-- Stepper: 4 шага -->
+    <div class="flex items-center justify-center gap-2 sm:gap-3 mb-8" id="stepperBar">
         <div class="stepper-dot active" id="stepDot1">1</div>
         <div class="stepper-line pending" id="stepLine1"></div>
         <div class="stepper-dot pending" id="stepDot2">2</div>
         <div class="stepper-line pending" id="stepLine2"></div>
         <div class="stepper-dot pending" id="stepDot3">3</div>
+        <div class="stepper-line pending" id="stepLine3"></div>
+        <div class="stepper-dot pending" id="stepDot4">4</div>
     </div>
 
     <!-- ==================== STEP 1: HH Login ==================== -->
@@ -306,6 +321,95 @@ tailwind.config = {
 
     </div>
 
+    <!-- ==================== STEP 4: Search Profile ==================== -->
+    <div id="step4" class="hidden">
+
+        <!-- Loading: roles clustering -->
+        <div id="rolesLoading">
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 py-4">
+                    <div class="space-y-3">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Анализируем рынок</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            AI изучает вакансии и формирует категории ролей под ваш профиль
+                        </p>
+                    </div>
+                    <div class="relative w-28 h-28 flex items-center justify-center">
+                        <svg class="w-full h-full" viewBox="0 0 128 128" style="transform: rotate(-90deg)">
+                            <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                            <circle class="analyze-ring" cx="64" cy="64" fill="transparent" r="58" stroke="#5a30d0" stroke-dasharray="364.4" stroke-width="8" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-3xl">category</span>
+                        </div>
+                    </div>
+                    <p class="text-on-surface text-sm font-medium h-5" id="rolesRotatingText">Ищу подходящие вакансии...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Roles grid -->
+        <div id="rolesSection" class="hidden fade-in">
+            <div class="text-center mb-8 space-y-3">
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-on-surface">Выбор ролей</h1>
+                <p class="text-on-surface-variant text-sm md:text-base leading-relaxed max-w-xl mx-auto">
+                    Мы проанализировали рынок и нашли эти категории. Нажимайте на карточки, чтобы убрать лишнее. <span class="text-primary">Оставьте зелёным только то, что вы реально ищете.</span>
+                </p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 md:gap-4 mb-24" id="rolesGrid"></div>
+            <div class="fixed bottom-0 left-0 w-full p-5 md:p-6 z-40 flex justify-center bg-gradient-to-t from-background via-background/95 to-transparent">
+                <button onclick="handleConfirmRoles()" id="confirmRolesBtn" class="w-full md:w-auto btn-primary text-white px-10 py-4 rounded-xl font-bold text-lg shadow-[0_0_40px_rgba(90,48,208,0.3)] hover:shadow-[0_0_60px_rgba(90,48,208,0.5)] transition-all active:scale-95 flex items-center justify-center gap-3 cursor-pointer">
+                    Далее
+                </button>
+            </div>
+        </div>
+
+        <!-- Query generating -->
+        <div id="queryGenerating" class="hidden fade-in">
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 py-4">
+                    <div class="space-y-3">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Генерируем профиль</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            AI создаёт оптимальный поисковый запрос на основе выбранных ролей
+                        </p>
+                    </div>
+                    <div class="relative w-28 h-28 flex items-center justify-center">
+                        <svg class="w-full h-full" viewBox="0 0 128 128" style="transform: rotate(-90deg)">
+                            <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                            <circle class="analyze-ring" cx="64" cy="64" fill="transparent" r="58" stroke="#5a30d0" stroke-dasharray="364.4" stroke-width="8" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-3xl">tune</span>
+                        </div>
+                    </div>
+                    <p class="text-on-surface text-sm font-medium">Формируем поисковый запрос...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile complete -->
+        <div id="profileComplete" class="hidden fade-in">
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 success-pop">
+                    <div class="w-20 h-20 rounded-full bg-vibrant-green/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-vibrant-green text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    </div>
+                    <div class="space-y-2">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Профиль настроен</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            Поисковый профиль создан в Pro-режиме. Теперь давайте настроим параметры поиска.
+                        </p>
+                    </div>
+                    <button id="goToSettingsBtn" class="btn-primary btn-pulse w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer" disabled>
+                        Настроить поиск
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
     </div>
 </div>
 
@@ -328,6 +432,6 @@ tailwind.config = {
 </main>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="onboarding.js?v=3.1"></script>
+<script src="onboarding.js?v=4.0"></script>
 </body>
 </html>
