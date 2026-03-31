@@ -299,6 +299,45 @@ input[type="number"] { -moz-appearance: textfield; }
 /* Region chip inline style override handled by JS, keeping class for light-theme compat */
 .region-chip { border-radius: 12px; }
 
+#searchActionBar {
+    transition: transform 0.25s ease, opacity 0.25s ease, box-shadow 0.25s ease;
+}
+#searchActionBar.is-floating {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 70;
+    margin-top: 0 !important;
+    background: rgba(22, 19, 30, 0.96);
+    border-color: rgba(204, 190, 255, 0.22);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+}
+body.has-floating-save {
+    padding-bottom: 132px;
+}
+#onboardingSaveHint {
+    color: #ccbeff;
+}
+@media (min-width: 768px) {
+    #searchActionBar.is-floating {
+        left: 24px;
+        right: 24px;
+        bottom: 18px;
+    }
+    body.has-floating-save {
+        padding-bottom: 152px;
+    }
+}
+@media (min-width: 1280px) {
+    #searchActionBar.is-floating {
+        left: 50%;
+        right: auto;
+        width: min(1280px, calc(100% - 64px));
+        transform: translateX(-50%);
+    }
+}
+
 @media (max-width: 767px) {
     .desktop-grid { grid-template-columns: 1fr !important; }
     .zone1-grid { grid-template-columns: 1fr !important; }
@@ -584,7 +623,10 @@ input[type="number"] { -moz-appearance: textfield; }
             </div><!-- End grid -->
 
             <!-- Action Bar -->
-            <div class="mt-10 md:mt-16 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 p-6 md:p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
+            <div id="searchActionBar" class="mt-10 md:mt-16 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 p-6 md:p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
+                <p id="onboardingSaveHint" class="hidden w-full text-center text-xs md:text-sm font-semibold -mt-1">
+                    Сохрани настройки и сможешь приступить к поиску
+                </p>
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                         <span class="material-symbols-outlined">verified</span>
@@ -914,9 +956,9 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="settings-tour-steps.js?v=1.1"></script>
+<script src="settings-tour-steps.js?v=1.2"></script>
 <script src="settings-tour.js?v=1.1"></script>
-<script src="settings.js?v=5.5"></script>
+<script src="settings.js?v=5.7"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

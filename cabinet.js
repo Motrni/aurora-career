@@ -89,7 +89,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('paymentFailBanner').classList.remove('hidden');
             renderCabinet(data);
         } else if (hasOnboarding) {
-            window.location.href = 'onboarding.html';
+            if (data.current_step === 'onboarding_settings' || data.current_step === 'onboarding_save_pending') {
+                window.location.href = 'settings.html';
+            } else {
+                window.location.href = 'onboarding.html';
+            }
             return;
         } else {
             renderCabinet(data);

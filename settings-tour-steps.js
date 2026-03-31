@@ -96,11 +96,22 @@ window.SETTINGS_TOUR_STEPS = [
     },
     {
         selector: '#helpBtn',
-        title: 'Всё готово!',
-        description: 'Настройки сконфигурированы. Если понадобится напоминание — нажмите кнопку помощи, и гайд запустится снова.',
+        title: 'Кнопка помощи',
+        description: 'Если понадобится напоминание по настройкам — нажмите эту кнопку, и гайд запустится снова.',
         side: 'top',
         onBeforeShow: function () {
             window.switchMainTab('search');
+        }
+    },
+    {
+        selector: '#saveBtn',
+        title: 'Сохраните настройки',
+        description: 'После изменения настроек сохраните результаты — и вы сможете перейти в другие разделы сайта.',
+        side: 'top',
+        onBeforeShow: function () {
+            window.switchMainTab('search');
+            var footer = document.querySelector('#saveBtn');
+            if (footer) footer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
 ];

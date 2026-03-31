@@ -100,7 +100,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
-                if (meData.current_step && meData.current_step.startsWith('onboarding_') && meData.current_step !== 'onboarding_settings') {
+                if (meData.current_step && meData.current_step.startsWith('onboarding_')
+                    && meData.current_step !== 'onboarding_settings'
+                    && meData.current_step !== 'onboarding_save_pending') {
                     window.location.href = 'onboarding.html';
                     return;
                 }
@@ -275,6 +277,7 @@ window.switchMainTab = function (tabName) {
 let initialSearchState = null;
 const SEARCH_SAVE_LABEL_DIRTY = "Сохранить";
 const SEARCH_SAVE_LABEL_CLEAN = "Нет изменений";
+let _hasSearchChanges = false;
 
 function serializeSearchForm() {
     // Collects all data from Search Tab inputs
@@ -299,13 +302,19 @@ function serializeSearchForm() {
 }
 
 function updateSaveButtonState() {
-    if (_isOnboardingMode) return;
-
     const saveBtn = document.getElementById('saveBtn');
     if (!initialSearchState) return;
 
     const currentState = serializeSearchForm();
-    if (currentState !== initialSearchState) {
+    _hasSearchChanges = currentState !== initialSearchState;
+
+    if (_isOnboardingMode) {
+        _styleOnboardingSaveBtn();
+        updateSaveBarFloatingState();
+        return;
+    }
+
+    if (_hasSearchChanges) {
         saveBtn.disabled = false;
         saveBtn.innerText = SEARCH_SAVE_LABEL_DIRTY;
         saveBtn.style.opacity = "1";
@@ -313,6 +322,21 @@ function updateSaveButtonState() {
         saveBtn.disabled = true;
         saveBtn.innerText = SEARCH_SAVE_LABEL_CLEAN;
         saveBtn.style.opacity = "0.5";
+    }
+    updateSaveBarFloatingState();
+}
+
+function updateSaveBarFloatingState() {
+    const actionBar = document.getElementById('searchActionBar');
+    const hint = document.getElementById('onboardingSaveHint');
+    if (!actionBar) return;
+
+    const shouldFloat = _isOnboardingMode || _hasSearchChanges;
+    actionBar.classList.toggle('is-floating', shouldFloat);
+    document.body.classList.toggle('has-floating-save', shouldFloat);
+
+    if (hint) {
+        hint.classList.toggle('hidden', !_isOnboardingMode);
     }
 }
 
@@ -891,6 +915,8 @@ function tryInitTree() {
             checkVacancies();
             if (window._currentStep === 'onboarding_settings') {
                 activateOnboardingMode();
+            } else if (window._currentStep === 'onboarding_save_pending') {
+                activateOnboardingSavePending();
             }
         }, 100);
         initAccountSection();
@@ -1266,6 +1292,7 @@ async function saveSettings() {
         }
 
         initialSearchState = serializeSearchForm();
+        _hasSearchChanges = false;
 
         initialSettings = {
             salary: salary,
@@ -2202,6 +2229,54 @@ async function handleNavLogout() {
 
 let _isOnboardingMode = false;
 let _originalSaveFn = null;
+let _onboardingCompleting = false;
+
+function _lockNavForOnboarding() {
+    const selectors = [
+        'a[href="cabinet.html"]',
+        'a[href="responses.html"]',
+        '#nav-responses',
+        '#nav-responses-mobile'
+    ];
+    selectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(link => {
+            link.dataset.originalHref = link.href;
+            link.removeAttribute('href');
+            link.style.opacity = '0.35';
+            link.style.cursor = 'not-allowed';
+            link.style.pointerEvents = 'auto';
+            link.addEventListener('click', _blockNavClick);
+        });
+    });
+}
+
+function _unlockNav() {
+    document.querySelectorAll('[data-original-href]').forEach(link => {
+        link.href = link.dataset.originalHref;
+        delete link.dataset.originalHref;
+        link.style.opacity = '';
+        link.style.cursor = '';
+        link.style.pointerEvents = '';
+        link.removeEventListener('click', _blockNavClick);
+    });
+}
+
+function _blockNavClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function _styleOnboardingSaveBtn() {
+    const saveBtn = document.getElementById('saveBtn');
+    if (!saveBtn) return;
+    saveBtn.textContent = 'Сохранить и начать поиск';
+    saveBtn.disabled = false;
+    saveBtn.style.opacity = '1';
+    saveBtn.style.background = 'linear-gradient(135deg, #5a30d0, #653edb)';
+    saveBtn.style.color = '#fff';
+    saveBtn.classList.remove('disabled:opacity-40');
+    updateSaveBarFloatingState();
+}
 
 function activateOnboardingMode() {
     _isOnboardingMode = true;
@@ -2209,20 +2284,26 @@ function activateOnboardingMode() {
     const stepper = document.getElementById('onboardingStepper');
     if (stepper) stepper.classList.remove('hidden');
 
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.textContent = 'Сохранить и начать поиск';
-        saveBtn.disabled = false;
-        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        saveBtn.classList.add('opacity-100', 'cursor-pointer');
-    }
+    _styleOnboardingSaveBtn();
+    _lockNavForOnboarding();
+    updateSaveBarFloatingState();
 
     setTimeout(() => {
         if (window.SettingsTour && window.SETTINGS_TOUR_STEPS) {
             const tour = new SettingsTour(window.SETTINGS_TOUR_STEPS, {
                 mode: 'onboarding',
-                onComplete: function () {
-                    console.log('[Tour] Onboarding tour completed');
+                onComplete: async function () {
+                    console.log('[Tour] Onboarding tour completed → onboarding_save_pending');
+                    try {
+                        await authFetch(`${API_BASE_URL}/api/onboarding/tour-done`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include'
+                        });
+                        window._currentStep = 'onboarding_save_pending';
+                    } catch (e) {
+                        console.error('[Tour] tour-done API error:', e);
+                    }
                 }
             });
             tour.start();
@@ -2230,11 +2311,26 @@ function activateOnboardingMode() {
     }, 600);
 }
 
+function activateOnboardingSavePending() {
+    _isOnboardingMode = true;
+
+    const stepper = document.getElementById('onboardingStepper');
+    if (stepper) stepper.classList.remove('hidden');
+
+    _styleOnboardingSaveBtn();
+    _lockNavForOnboarding();
+    updateSaveBarFloatingState();
+}
+
 async function handleOnboardingSave() {
+    if (_onboardingCompleting) return;
+    _onboardingCompleting = true;
+
     const saveBtn = document.getElementById('saveBtn');
 
     const saved = await saveSettings();
     if (!saved) {
+        _onboardingCompleting = false;
         return;
     }
 
@@ -2251,15 +2347,20 @@ async function handleOnboardingSave() {
 
         window._currentStep = null;
         _isOnboardingMode = false;
+        _hasSearchChanges = false;
+        _onboardingCompleting = false;
 
+        _unlockNav();
+        updateSaveBarFloatingState();
         showCongratsPopup();
 
     } catch (e) {
+        _onboardingCompleting = false;
         console.error('[Onboarding] Complete error:', e);
         if (saveBtn) {
             saveBtn.disabled = false;
             saveBtn.textContent = 'Сохранить и начать поиск';
-            saveBtn.style.background = '';
+            saveBtn.style.background = 'linear-gradient(135deg, #5a30d0, #653edb)';
         }
         showError(e.message || 'Не удалось завершить онбординг');
     }
@@ -2307,6 +2408,11 @@ function showCongratsPopup() {
         overlay.remove();
         const stepper = document.getElementById('onboardingStepper');
         if (stepper) stepper.classList.add('hidden');
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn) {
+            saveBtn.style.background = '';
+            saveBtn.style.color = '';
+        }
         initDirtyStateTracking();
     });
 }

@@ -58,7 +58,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
                 if (meData.current_step && meData.current_step.startsWith('onboarding_')) {
-                    window.location.href = 'onboarding.html';
+                    if (meData.current_step === 'onboarding_settings' || meData.current_step === 'onboarding_save_pending') {
+                        window.location.href = 'settings.html';
+                    } else {
+                        window.location.href = 'onboarding.html';
+                    }
                     return;
                 }
                 if (meData.subscription_status === 'none') {
