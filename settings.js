@@ -646,10 +646,7 @@ class IgnoredEmployersInput {
         void this.input.offsetWidth;
         if (kind === "error") {
             this.input.classList.add("ignored-input-flash-error");
-            this._inputFlashTimeout = setTimeout(() => {
-                this.input.classList.remove("ignored-input-flash-error");
-                this._inputFlashTimeout = null;
-            }, 2800);
+            // Класс снимается в одном кадре с закрытием рельсы (showTransientError / hideError), без отдельного таймера.
         } else if (kind === "success") {
             this.input.classList.add("ignored-input-flash-success");
             this._inputFlashTimeout = setTimeout(() => {
@@ -679,6 +676,9 @@ class IgnoredEmployersInput {
 
         this._errorHideTimeout = setTimeout(() => {
             this._errorHideTimeout = null;
+            if (this.input) {
+                this.input.classList.remove("ignored-input-flash-error");
+            }
             if (this.errorRail) {
                 this.errorRail.classList.remove("is-visible");
                 this._errorClearTimeout = setTimeout(() => {
@@ -786,6 +786,9 @@ class IgnoredEmployersInput {
 
     hideError() {
         this._clearFeedbackTimers();
+        if (this.input) {
+            this.input.classList.remove("ignored-input-flash-error", "ignored-input-flash-success");
+        }
         if (!this.errorBox) return;
         if (this.errorRail) {
             this.errorRail.classList.remove("is-visible");
