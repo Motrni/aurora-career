@@ -108,8 +108,8 @@ tailwind.config = {
 
 <!-- Navigation -->
 <nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
-    <div class="flex items-center justify-between h-full px-5 md:px-12 lg:px-16">
-        <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
+    <div class="h-full w-full px-5 md:px-12 lg:px-16 flex md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:gap-x-6">
+        <div class="flex items-center gap-2 md:gap-3 shrink-0 md:justify-self-start">
             <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
                 <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
                 <div class="flex flex-col leading-tight">
@@ -118,14 +118,14 @@ tailwind.config = {
                 </div>
             </a>
         </div>
-        <div class="hidden md:flex items-center gap-8">
-            <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Кабинет</span>
-            <a id="nav-onboarding" href="/onboarding/" class="hidden text-[#ccbeff] font-medium text-sm transition-colors border-b border-dashed border-[#653edb]/50 pb-0.5">Первая настройка</a>
-            <a id="nav-settings" href="/settings/" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Настройки</a>
-            <a id="nav-responses" href="/responses/" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors nav-link-locked">Отклики</a>
+        <div class="hidden md:flex items-center justify-center gap-6 lg:gap-8 xl:gap-10 md:justify-self-center whitespace-nowrap">
+            <span class="text-[#e7e0ef] font-bold text-base border-b-2 border-[#5a30d0] pb-1">Кабинет</span>
+            <a id="nav-onboarding" href="/onboarding/" class="hidden text-[#e7e0ef] font-semibold text-base transition-colors border-b border-dashed border-[#653edb]/50 pb-0.5 hover:text-[#ccbeff] cursor-pointer">Первая настройка</a>
+            <a id="nav-settings" href="/settings/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer nav-link-locked">Настройки</a>
+            <a id="nav-responses" href="/responses/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer nav-link-locked">Отклики</a>
         </div>
-        <div class="flex items-center gap-3 flex-shrink-0">
-            <button onclick="handleLogout()" class="hidden md:flex items-center gap-1.5 text-[#938ea0] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
+        <div class="flex items-center gap-3 shrink-0 ml-auto md:ml-0 md:justify-self-end">
+            <button onclick="handleLogout()" class="hidden md:flex items-center gap-1.5 text-[#e7e0ef] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
                 <span class="material-symbols-outlined text-xl">logout</span>
             </button>
             <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
@@ -137,11 +137,11 @@ tailwind.config = {
 
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
-    <span class="text-on-surface text-base font-bold py-3.5 border-b border-white/5">Кабинет</span>
-    <a id="nav-onboarding-mobile" href="/onboarding/" class="hidden text-primary text-base font-semibold py-3.5 border-b border-white/5">Первая настройка</a>
-    <a id="nav-settings-mobile" href="/settings/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Настройки</a>
-    <a id="nav-responses-mobile" href="/responses/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5 nav-link-locked">Отклики</a>
-    <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">На главную</a>
+    <span class="text-[#e7e0ef] text-base font-bold py-3.5 border-b border-white/5">Кабинет</span>
+    <a id="nav-onboarding-mobile" href="/onboarding/" class="hidden text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Первая настройка</a>
+    <a id="nav-settings-mobile" href="/settings/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5 nav-link-locked">Настройки</a>
+    <a id="nav-responses-mobile" href="/responses/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5 nav-link-locked">Отклики</a>
+    <a href="/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">На главную</a>
     <button onclick="handleLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
 </div>
 

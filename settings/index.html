@@ -446,8 +446,8 @@ body.has-floating-save {
 
 <!-- Navigation -->
 <nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
-    <div class="flex items-center justify-between h-full px-5 md:px-12 lg:px-16">
-        <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
+    <div class="h-full w-full px-5 md:px-12 lg:px-16 flex md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:gap-x-6">
+        <div class="flex items-center gap-2 md:gap-3 shrink-0 md:justify-self-start">
             <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
                 <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
                 <div class="flex flex-col leading-tight">
@@ -456,13 +456,13 @@ body.has-floating-save {
                 </div>
             </a>
         </div>
-        <div class="hidden md:flex items-center gap-8">
-            <a href="/cabinet/" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors">Кабинет</a>
-            <span class="text-[#ccbeff] font-bold text-sm border-b-2 border-[#5a30d0] pb-1">Настройки</span>
-            <a id="nav-responses" href="/responses/" class="text-[#cac3d7] hover:text-[#ccbeff] font-medium text-sm transition-colors">Отклики</a>
+        <div class="hidden md:flex items-center justify-center gap-8 lg:gap-10 md:justify-self-center whitespace-nowrap">
+            <a href="/cabinet/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer">Кабинет</a>
+            <span class="text-[#e7e0ef] font-bold text-base border-b-2 border-[#5a30d0] pb-1">Настройки</span>
+            <a id="nav-responses" href="/responses/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer">Отклики</a>
         </div>
-        <div class="flex items-center gap-3 flex-shrink-0">
-            <button onclick="handleNavLogout()" class="hidden md:flex items-center gap-1.5 text-[#938ea0] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
+        <div class="flex items-center gap-3 shrink-0 ml-auto md:ml-0 md:justify-self-end">
+            <button onclick="handleNavLogout()" class="hidden md:flex items-center gap-1.5 text-[#e7e0ef] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
                 <span class="material-symbols-outlined text-xl">logout</span>
             </button>
             <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
@@ -474,9 +474,9 @@ body.has-floating-save {
 
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
-    <a href="/cabinet/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">Кабинет</a>
-    <span class="text-on-surface text-base font-bold py-3.5 border-b border-white/5">Настройки</span>
-    <a id="nav-responses-mobile" href="/responses/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">Отклики</a>
+    <a href="/cabinet/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Кабинет</a>
+    <span class="text-[#e7e0ef] text-base font-bold py-3.5 border-b border-white/5">Настройки</span>
+    <a id="nav-responses-mobile" href="/responses/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Отклики</a>
     <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">На главную</a>
     <button onclick="handleNavLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
 </div>
