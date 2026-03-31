@@ -62,6 +62,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
+                if (meData.need_reauth) {
+                    window.location.href = '/reauth/';
+                    return;
+                }
                 if (meData.current_step && meData.current_step.startsWith('onboarding_')) {
                     if (meData.current_step === 'onboarding_settings' || meData.current_step === 'onboarding_save_pending') {
                         window.location.href = '/settings/';
@@ -197,7 +201,15 @@ function buildAuthParams() {
 async function apiFetch(path, opts = {}) {
     const url = `${API_BASE_URL}${path}`;
     const defaults = { credentials: "include" };
-    return fetch(url, { ...defaults, ...opts });
+    const resp = await fetch(url, { ...defaults, ...opts });
+    if (resp.status === 409) {
+        const body = await resp.json().catch(() => ({}));
+        if (body.detail && body.detail.includes('re-authentication')) {
+            window.location.href = '/reauth/';
+            return resp;
+        }
+    }
+    return resp;
 }
 
 // ============================================================================

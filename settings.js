@@ -35,6 +35,14 @@ async function authFetch(url, options = {}) {
     options.credentials = 'include';
     let resp = await fetch(url, options);
 
+    if (resp.status === 409) {
+        const body = await resp.clone().json().catch(() => ({}));
+        if (body.detail && body.detail.includes('re-authentication')) {
+            window.location.href = '/reauth/';
+            return resp;
+        }
+    }
+
     if (resp.status === 401 && authMode === 'jwt') {
         if (!_isRefreshing) {
             _isRefreshing = true;
@@ -100,6 +108,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
+                if (meData.need_reauth) {
+                    window.location.href = '/reauth/';
+                    return;
+                }
                 if (meData.current_step && meData.current_step.startsWith('onboarding_')
                     && meData.current_step !== 'onboarding_settings'
                     && meData.current_step !== 'onboarding_save_pending') {

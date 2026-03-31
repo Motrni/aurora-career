@@ -19,6 +19,14 @@ async function apiFetch(url, options = {}) {
     options.credentials = 'include';
     let resp = await fetch(url, options);
 
+    if (resp.status === 409) {
+        const body = await resp.clone().json().catch(() => ({}));
+        if (body.detail && body.detail.includes('re-authentication')) {
+            window.location.href = '/reauth/';
+            return null;
+        }
+    }
+
     if (resp.status === 401) {
         const refreshResp = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
             method: 'POST', credentials: 'include',
@@ -62,6 +70,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await meResp.json();
         if (data.status !== 'ok') {
             window.location.href = '/auth/';
+            return;
+        }
+
+        if (data.need_reauth) {
+            window.location.href = '/reauth/';
             return;
         }
 

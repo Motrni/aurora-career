@@ -95,6 +95,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         currentUser = data;
 
+        if (data.need_reauth) {
+            window.location.href = '/reauth/';
+            return;
+        }
+
         if (!data.current_step || !data.current_step.startsWith('onboarding_')) {
             if (data.subscription_status === 'none') {
                 window.location.href = '/cabinet/';

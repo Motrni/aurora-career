@@ -17,7 +17,9 @@ async function redirectBySubscription() {
         if (resp.ok) {
             const data = await resp.json();
             if (data.status === 'ok') {
-                if (data.current_step && data.current_step.startsWith('onboarding_')) {
+                if (data.need_reauth) {
+                    window.location.href = '/reauth/';
+                } else if (data.current_step && data.current_step.startsWith('onboarding_')) {
                     window.location.href = '/onboarding/';
                 } else if (data.subscription_status === 'none') {
                     window.location.href = '/cabinet/';
@@ -435,7 +437,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (resp.ok) {
             const data = await resp.json();
             if (data.status === 'ok') {
-                if (data.subscription_status === 'none') {
+                if (data.need_reauth) {
+                    window.location.href = '/reauth/';
+                } else if (data.subscription_status === 'none') {
                     window.location.href = '/cabinet/';
                 } else {
                     window.location.href = '/settings/';
