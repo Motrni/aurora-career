@@ -189,6 +189,11 @@ function throwHttpError(resp, errBody) {
     return ex;
 }
 
+/** 409 от API при need_reauth / нет hh_cookies — уводим на повторную привязку HH. */
+function shouldRedirectToHHReauth(status, errBody) {
+    return status === 409 && errBody && String(errBody.detail || "").includes("re-authentication");
+}
+
 function buildAuthParams() {
     const p = new URLSearchParams();
     if (authMode === 'legacy' && legacyUserId && legacySign) {
@@ -203,8 +208,8 @@ async function apiFetch(path, opts = {}) {
     const defaults = { credentials: "include" };
     const resp = await fetch(url, { ...defaults, ...opts });
     if (resp.status === 409) {
-        const body = await resp.json().catch(() => ({}));
-        if (body.detail && body.detail.includes('re-authentication')) {
+        const body = await resp.clone().json().catch(() => ({}));
+        if (body.detail && String(body.detail).includes('re-authentication')) {
             window.location.href = '/reauth/';
             return resp;
         }
@@ -221,7 +226,13 @@ async function initPage() {
         const authQ = buildAuthParams();
         const url = `/api/campaign/status${authQ ? '?' + authQ : ''}`;
         const resp = await apiFetch(url);
-        if (!resp.ok) throw new Error(`Status ${resp.status}`);
+        if (!resp.ok) {
+            if (shouldRedirectToHHReauth(resp.status, await resp.json().catch(() => ({})))) {
+                window.location.href = "/reauth/";
+                return;
+            }
+            throw new Error(`Status ${resp.status}`);
+        }
         const data = await resp.json();
 
         if (data.status !== "ok") throw new Error(data.detail || "Unknown");
@@ -605,6 +616,10 @@ window.toggleAutopilot = async function () {
             });
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
+                if (shouldRedirectToHHReauth(resp.status, err)) {
+                    window.location.href = "/reauth/";
+                    return;
+                }
                 throw throwHttpError(resp, err);
             }
             await refreshStatusFromServer();
@@ -621,6 +636,10 @@ window.toggleAutopilot = async function () {
 
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
+            if (shouldRedirectToHHReauth(resp.status, err)) {
+                window.location.href = "/reauth/";
+                return;
+            }
             throw throwHttpError(resp, err);
         }
 
@@ -663,6 +682,10 @@ window.resumeAutopilotNow = async function () {
 
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
+            if (shouldRedirectToHHReauth(resp.status, err)) {
+                window.location.href = "/reauth/";
+                return;
+            }
             throw throwHttpError(resp, err);
         }
 
