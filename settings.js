@@ -255,6 +255,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (navRespMob) navRespMob.href = `responses.html${suffix}`;
     }
 
+    window.addEventListener('scroll', requestSaveBarStateUpdate, { passive: true });
+    window.addEventListener('resize', () => {
+        refreshSaveBarBaseTop();
+        requestSaveBarStateUpdate();
+    });
+
 }); // End of DOMContentLoaded
 
 // --- TAB SWITCHING LOGIC ---
@@ -271,6 +277,7 @@ window.switchMainTab = function (tabName) {
     } else {
         document.getElementById('responseSettingsTab').classList.add('active');
     }
+    updateSaveBarFloatingState();
 }
 
 // --- DIRTY STATE LOGIC ---
@@ -278,6 +285,9 @@ let initialSearchState = null;
 const SEARCH_SAVE_LABEL_DIRTY = "Сохранить";
 const SEARCH_SAVE_LABEL_CLEAN = "Нет изменений";
 let _hasSearchChanges = false;
+let _saveBarBaseTop = null;
+let _saveBarDocked = false;
+let _saveBarRaf = null;
 
 function serializeSearchForm() {
     // Collects all data from Search Tab inputs
@@ -331,13 +341,77 @@ function updateSaveBarFloatingState() {
     const hint = document.getElementById('onboardingSaveHint');
     if (!actionBar) return;
 
-    const shouldFloat = _isOnboardingMode || _hasSearchChanges;
-    actionBar.classList.toggle('is-floating', shouldFloat);
-    document.body.classList.toggle('has-floating-save', shouldFloat);
+    const searchTab = document.getElementById('searchSettingsTab');
+    const isSearchTabActive = searchTab && searchTab.classList.contains('active');
+
+    if (!isSearchTabActive && !_isOnboardingMode) {
+        actionBar.classList.remove('is-floating', 'is-docked');
+        document.body.classList.remove('has-floating-save');
+        return;
+    }
+
+    if (_isOnboardingMode) {
+        _saveBarDocked = false;
+        actionBar.classList.add('is-floating');
+        actionBar.classList.remove('is-docked');
+        document.body.classList.add('has-floating-save');
+    } else if (_hasSearchChanges) {
+        if (_saveBarBaseTop === null) {
+            refreshSaveBarBaseTop();
+        }
+        const viewportBottom = window.scrollY + window.innerHeight;
+        if (_saveBarDocked) {
+            if (viewportBottom < (_saveBarBaseTop - 72)) {
+                _saveBarDocked = false;
+            }
+        } else {
+            if (viewportBottom >= (_saveBarBaseTop + 24)) {
+                _saveBarDocked = true;
+            }
+        }
+
+        actionBar.classList.toggle('is-floating', !_saveBarDocked);
+        actionBar.classList.toggle('is-docked', _saveBarDocked);
+        document.body.classList.toggle('has-floating-save', !_saveBarDocked);
+    } else {
+        _saveBarDocked = false;
+        actionBar.classList.remove('is-floating', 'is-docked');
+        document.body.classList.remove('has-floating-save');
+    }
 
     if (hint) {
         hint.classList.toggle('hidden', !_isOnboardingMode);
     }
+}
+
+function refreshSaveBarBaseTop() {
+    const actionBar = document.getElementById('searchActionBar');
+    if (!actionBar) return;
+
+    const hadFloating = actionBar.classList.contains('is-floating');
+    const hadDocked = actionBar.classList.contains('is-docked');
+    if (hadFloating || hadDocked) {
+        actionBar.classList.remove('is-floating', 'is-docked');
+        document.body.classList.remove('has-floating-save');
+    }
+
+    const rect = actionBar.getBoundingClientRect();
+    _saveBarBaseTop = rect.top + window.scrollY;
+
+    if (hadDocked) {
+        actionBar.classList.add('is-docked');
+    } else if (hadFloating) {
+        actionBar.classList.add('is-floating');
+        document.body.classList.add('has-floating-save');
+    }
+}
+
+function requestSaveBarStateUpdate() {
+    if (_saveBarRaf !== null) return;
+    _saveBarRaf = requestAnimationFrame(() => {
+        _saveBarRaf = null;
+        updateSaveBarFloatingState();
+    });
 }
 
 function syncScheduleVisualState() {
@@ -911,6 +985,7 @@ function tryInitTree() {
         initAreaTree();
         toggleGlobalLoading(false);
         setTimeout(() => {
+            refreshSaveBarBaseTop();
             initDirtyStateTracking();
             checkVacancies();
             if (window._currentStep === 'onboarding_settings') {
@@ -918,6 +993,7 @@ function tryInitTree() {
             } else if (window._currentStep === 'onboarding_save_pending') {
                 activateOnboardingSavePending();
             }
+            requestSaveBarStateUpdate();
         }, 100);
         initAccountSection();
     }
