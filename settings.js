@@ -187,11 +187,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             await handleOnboardingSave();
             return;
         }
-        try {
-            await saveSettings();
-        } catch (e) {
-            showError("Ошибка при сохранении. " + e.message);
-        }
+        await saveSettings();
     });
 
     // 6.1 Save Logic (Response)
@@ -276,6 +272,8 @@ window.switchMainTab = function (tabName) {
 
 // --- DIRTY STATE LOGIC ---
 let initialSearchState = null;
+const SEARCH_SAVE_LABEL_DIRTY = "Сохранить";
+const SEARCH_SAVE_LABEL_CLEAN = "Нет изменений";
 
 function serializeSearchForm() {
     // Collects all data from Search Tab inputs
@@ -308,11 +306,11 @@ function updateSaveButtonState() {
     const currentState = serializeSearchForm();
     if (currentState !== initialSearchState) {
         saveBtn.disabled = false;
-        saveBtn.innerText = "Сохранить изменения";
+        saveBtn.innerText = SEARCH_SAVE_LABEL_DIRTY;
         saveBtn.style.opacity = "1";
     } else {
         saveBtn.disabled = true;
-        saveBtn.innerText = "Нет изменений";
+        saveBtn.innerText = SEARCH_SAVE_LABEL_CLEAN;
         saveBtn.style.opacity = "0.5";
     }
 }
@@ -1159,16 +1157,16 @@ async function saveSettings() {
         let val = salaryInput.value.trim();
         if (val === "") {
             showSalaryValidationError("Введите сумму или поставьте галочку 'Не указывать'");
-            return;
+            return false;
         }
         salary = parseInt(val);
         if (isNaN(salary) || salary < 0) {
             showSalaryValidationError("Зарплата должна быть положительным числом!");
-            return;
+            return false;
         }
         if (salary > 100000000) {
             showSalaryValidationError("Зарплата не может превышать 100 млн ₽");
-            return;
+            return false;
         }
     }
 
@@ -1222,41 +1220,68 @@ async function saveSettings() {
         payload.sign = legacySign;
     }
 
-    const response = await authFetch(`${API_BASE_URL}/api/settings/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-    if (data.status !== "ok") {
-        throw new Error(data.error || "Ошибка сервера");
+    const saveBtn = document.getElementById("saveBtn");
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Сохраняю...";
+        saveBtn.style.background = "";
     }
 
-    const saveBtn = document.getElementById("saveBtn");
-    const originalText = "Сохранить изменения"; // Reset to default text
-    saveBtn.innerText = "Сохранено! ✅";
-    saveBtn.style.background = "#4caf50";
+    try {
+        const response = await authFetch(`${API_BASE_URL}/api/settings/update`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
-    // [FIX] Update initial state to current state so button gets disabled
-    initialSearchState = serializeSearchForm();
-    updateSaveButtonState(); // Should disable the button now
+        const data = await response.json();
+        if (data.status !== "ok") {
+            throw new Error(data.error || "Ошибка сервера");
+        }
 
-    setTimeout(() => {
-        saveBtn.innerText = originalText;
-        saveBtn.style.background = "linear-gradient(45deg, #a962ff, #6247aa)";
-        // Re-check state just in case user changed something during timeout
-        updateSaveButtonState();
-    }, 2000);
+        if (saveBtn) {
+            saveBtn.textContent = "Сохранено!";
+            saveBtn.style.background = "#4caf50";
+        }
 
-    initialSettings = {
-        salary: salary,
-        experience: experience,
-        industry: selectedIndustries,
-        work_formats: selectedSchedule
-    };
+        initialSearchState = serializeSearchForm();
 
-    document.getElementById("errorMsg").style.display = "none";
+        initialSettings = {
+            salary: salary,
+            experience: experience,
+            industry: selectedIndustries,
+            work_formats: selectedSchedule
+        };
+
+        const errDiv = document.getElementById("errorMsg");
+        if (errDiv) errDiv.style.display = "none";
+
+        setTimeout(() => {
+            if (saveBtn) saveBtn.style.background = "";
+            if (!_isOnboardingMode) {
+                updateSaveButtonState();
+            }
+        }, 2000);
+
+        return true;
+    } catch (e) {
+        console.error(e);
+        if (saveBtn) {
+            saveBtn.textContent = "Ошибка";
+            saveBtn.style.background = "#ff4d4d";
+            saveBtn.disabled = false;
+            setTimeout(() => {
+                saveBtn.style.background = "";
+                if (_isOnboardingMode) {
+                    saveBtn.textContent = "Сохранить и начать поиск";
+                } else {
+                    updateSaveButtonState();
+                }
+            }, 3000);
+        }
+        showError(e.message || "Ошибка при сохранении.");
+        return false;
+    }
 }
 
 // (Duplicate code removed)
@@ -2186,14 +2211,13 @@ function activateOnboardingMode() {
 
 async function handleOnboardingSave() {
     const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Сохраняю...';
+
+    const saved = await saveSettings();
+    if (!saved) {
+        return;
     }
 
     try {
-        await saveSettings();
-
         const resp = await authFetch(`${API_BASE_URL}/api/onboarding/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2214,7 +2238,9 @@ async function handleOnboardingSave() {
         if (saveBtn) {
             saveBtn.disabled = false;
             saveBtn.textContent = 'Сохранить и начать поиск';
+            saveBtn.style.background = '';
         }
+        showError(e.message || 'Не удалось завершить онбординг');
     }
 }
 
@@ -2260,11 +2286,7 @@ function showCongratsPopup() {
         overlay.remove();
         const stepper = document.getElementById('onboardingStepper');
         if (stepper) stepper.classList.add('hidden');
-        const saveBtn = document.getElementById('saveBtn');
-        if (saveBtn) {
-            saveBtn.textContent = 'Сохранить изменения';
-            initDirtyStateTracking();
-        }
+        initDirtyStateTracking();
     });
 }
 
