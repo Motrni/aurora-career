@@ -231,8 +231,9 @@
         <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#network" data-section="network">Как это работает?</a>
         <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#archive" data-section="archive">Стоимость</a>
     </div>
-    <div class="hidden md:flex gap-6 items-center">
+    <div class="hidden md:flex gap-3 items-center">
         <button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-[#ccbeff]/10 transition-all duration-300 active:scale-95 ease-out" onclick="toggleModal('join-modal')">Присоединиться</button>
+        <a id="authBtn" href="/auth/" class="text-[#cac3d7] border border-white/10 px-5 py-2.5 rounded-full text-sm font-semibold hover:text-[#e7e0ef] hover:border-[#ccbeff]/30 hover:bg-[#ccbeff]/5 transition-all duration-300 active:scale-95 ease-out">Вход</a>
     </div>
     <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
         <span></span><span></span><span></span>
@@ -242,6 +243,7 @@
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
     <button onclick="toggleModal('join-modal'); toggleMobileMenu();" class="w-full bg-gradient-to-tr from-primary-container to-secondary-container text-white py-4 rounded-xl text-base font-bold mt-4 mb-2">Присоединиться</button>
+    <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()" class="w-full text-center border border-white/10 text-[#cac3d7] py-3.5 rounded-xl text-base font-semibold mb-2 hover:text-[#e7e0ef] transition-colors">Вход</a>
     <a href="#opportunities" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Возможности</a>
     <a href="#insights" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Проблемы поиска</a>
     <a href="#network" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Как это работает?</a>
@@ -604,8 +606,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const navLinks = document.querySelectorAll('.nav-link');
-        const sections = document.querySelectorAll('section[id]');
+        var navLinks = document.querySelectorAll('.nav-link');
+        var sections = document.querySelectorAll('section[id]');
 
         function setActiveLink(sectionId) {
             navLinks.forEach(function(link) {
@@ -628,6 +630,38 @@
         }, { rootMargin: '-40% 0px -55% 0px' });
 
         sections.forEach(function(section) { observer.observe(section); });
+
+        (function checkAuthState() {
+            var h = window.location.hostname;
+            var apiBase = (h.indexOf('twc1.net') !== -1 || h.indexOf('aurora-develop') !== -1)
+                ? 'https://api.aurora-develop.ru'
+                : 'https://api.aurora-career.ru';
+
+            function setLoggedIn() {
+                var btn = document.getElementById('authBtn');
+                var btnMobile = document.getElementById('authBtnMobile');
+                if (btn) { btn.textContent = 'Кабинет'; btn.href = '/cabinet/'; }
+                if (btnMobile) { btnMobile.textContent = 'Кабинет'; btnMobile.href = '/cabinet/'; }
+            }
+
+            fetch(apiBase + '/api/auth/me', { method: 'GET', credentials: 'include' })
+                .then(function(resp) {
+                    if (resp.ok) return resp.json();
+                    if (resp.status === 401) {
+                        return fetch(apiBase + '/api/auth/refresh', { method: 'POST', credentials: 'include' })
+                            .then(function(refreshResp) {
+                                if (!refreshResp.ok) return null;
+                                return fetch(apiBase + '/api/auth/me', { method: 'GET', credentials: 'include' })
+                                    .then(function(r) { return r.ok ? r.json() : null; });
+                            });
+                    }
+                    return null;
+                })
+                .then(function(data) {
+                    if (data && data.status === 'ok') setLoggedIn();
+                })
+                .catch(function() {});
+        })();
     });
 </script>
 </body>
