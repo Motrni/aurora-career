@@ -3,6 +3,12 @@
    (c) 2024-2025 Aurora Career. All rights reserved.
 */
 
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+}
+
 const API_BASE_URL = window.AuroraSession
     ? window.AuroraSession.getApiBase()
     : ((window.location.hostname.includes('twc1.net') || window.location.hostname.includes('aurora-develop'))
@@ -589,7 +595,7 @@ class TagInput {
             const tag = document.createElement("div");
             tag.className = "tag";
             tag.innerHTML = `
-                <span>${tagText}</span>
+                <span>${escapeHtml(tagText)}</span>
                 <div class="tag-remove" onclick="this.parentNode.remove(); window.${this === window.tagsInclude ? 'tagsInclude' : 'tagsExclude'}.removeTag(${index})">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </div>
@@ -2306,8 +2312,8 @@ async function loadSessions() {
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined text-on-surface-variant text-lg">devices</span>
                         <div>
-                            <p class="text-on-surface text-xs font-medium">${s.device_name || 'Устройство'}</p>
-                            <p class="text-outline text-[10px]">${s.ip_address || ''} &middot; ${lastUsed}</p>
+                            <p class="text-on-surface text-xs font-medium">${escapeHtml(s.device_name || 'Устройство')}</p>
+                            <p class="text-outline text-[10px]">${escapeHtml(s.ip_address || '')} &middot; ${lastUsed}</p>
                         </div>
                     </div>
                     ${currentBadge}

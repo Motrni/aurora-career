@@ -1,4 +1,4 @@
-/* manual-search.js v3.0 — Ручной режим поиска вакансий */
+/* manual-search.js v3.2 — Ручной режим поиска вакансий */
 (function () {
     "use strict";
 
@@ -29,7 +29,6 @@
             stats: $("manualSearchStats"),
             statTotal: $("msStatTotal"),
             statFiltered: $("msStatFiltered"),
-            statTime: $("msStatTime"),
             skeleton: $("manualSearchSkeleton"),
             empty: $("manualSearchEmpty"),
             error: $("manualSearchError"),
@@ -378,10 +377,6 @@
 
         r.statTotal.textContent = `${apiTotal} (стр. ${pagesLoaded}/${pagesTotal})`;
         r.statFiltered.textContent = _totalRendered;
-
-        if (data.timings && data.timings.total) {
-            r.statTime.textContent = data.timings.total.toFixed(2) + "с";
-        }
     }
 
     function _showEndOfResults(r) {
