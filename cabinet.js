@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.3 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.4 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  */
 
@@ -113,6 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         loadSessions();
+        initCabinetBoostModal();
 
     } catch (e) {
         console.error('[Cabinet] Init error:', e);
@@ -431,24 +432,46 @@ async function loadDailyStats() {
         const data = await resp.json();
         if (data.status !== 'ok' || !data.days) return;
 
-        renderDailyChart(data.days, data.total);
+        renderDailyChart(data.days);
     } catch (e) {
         console.error('[DailyStats] Error:', e);
     }
 }
 
-function renderDailyChart(days, total) {
+function renderDailyStatsFooter() {
+    const u = currentUser;
+    const gaEl = document.getElementById('statGlobalApps');
+    const dlEl = document.getElementById('statDailyLimit');
+    const cta = document.getElementById('cabinetBoostCta');
+    if (!gaEl || !dlEl || !cta) return;
+
+    if (!u) {
+        gaEl.textContent = '—';
+        dlEl.textContent = '—';
+        cta.classList.add('hidden');
+        return;
+    }
+
+    const ga = u.global_applications != null ? Number(u.global_applications) : 0;
+    const dl = u.daily_limit != null ? Number(u.daily_limit) : 20;
+    gaEl.textContent = Number.isFinite(ga) ? String(ga) : '0';
+    dlEl.textContent = Number.isFinite(dl) ? String(dl) : '20';
+
+    if (!Object.prototype.hasOwnProperty.call(u, 'has_active_boost')) {
+        cta.classList.add('hidden');
+    } else {
+        cta.classList.toggle('hidden', u.has_active_boost === true);
+    }
+}
+
+function renderDailyChart(days) {
     const card = document.getElementById('dailyStatsCard');
     const chart = document.getElementById('statsChart');
     const labels = document.getElementById('statsLabels');
     const yAxis = document.getElementById('statsYAxis');
-    const totalEl = document.getElementById('statsTotal');
-
-    totalEl.textContent = total;
 
     const dataMax = Math.max(...days.map(d => d.count), 0);
     const { axisMax, ticks } = computeAxisScale(dataMax);
-    const todayStr = days.length > 0 ? days[days.length - 1].date : new Date().toISOString().slice(0, 10);
 
     if (yAxis) {
         yAxis.innerHTML = ticks.map((t) => `<span class="block leading-none">${t}</span>`).join('');
@@ -456,9 +479,7 @@ function renderDailyChart(days, total) {
 
     chart.innerHTML = days.map((d) => {
         const hPct = axisMax > 0 ? (d.count / axisMax) * 100 : 0;
-        const isToday = d.date === todayStr;
-        const todayClass = isToday ? ' bar-today' : '';
-        return `<div class="stats-bar-slot flex flex-col items-center justify-end relative flex-1 min-w-0 max-w-[2.75rem] mx-auto${todayClass}">
+        return `<div class="stats-bar-slot flex flex-col items-center justify-end relative flex-1 min-w-0 max-w-[2.75rem] mx-auto">
             <div class="bar-tooltip">${d.count}</div>
             <div class="stats-bar-track relative overflow-hidden shrink-0">
                 <div class="stats-bar-fill absolute bottom-0 left-0 right-0 w-full cursor-default" style="height: ${hPct}%;"></div>
@@ -467,18 +488,136 @@ function renderDailyChart(days, total) {
     }).join('');
 
     labels.innerHTML = days.map((d) => {
-        const isToday = d.date === todayStr;
-        const todayLabelClass = isToday ? ' bar-today-label' : '';
         const dateLine = formatChartDayMonth(d.date);
         const wd = weekdayLongRu(d.date);
-        const dot = isToday ? '<span class="inline-block w-1 h-1 rounded-full bg-primary align-middle ml-0.5" aria-hidden="true"></span>' : '';
-        return `<div class="flex-1 min-w-0 text-center px-0.5${todayLabelClass}">
-            <div class="stats-label-date text-[11px] md:text-xs font-semibold text-on-surface leading-tight">${dateLine}${dot}</div>
+        return `<div class="flex-1 min-w-0 text-center px-0.5">
+            <div class="stats-label-date text-[11px] md:text-xs font-semibold text-on-surface leading-tight">${dateLine}</div>
             <div class="stats-label-weekday text-[9px] md:text-[10px] text-on-surface-variant leading-snug mt-0.5">${wd}</div>
         </div>`;
     }).join('');
 
+    renderDailyStatsFooter();
     card.classList.remove('hidden');
+}
+
+// ============================================================================
+// BOOST MODAL (как на /responses/)
+// ============================================================================
+
+function openCabinetBoostModal() {
+    const modal = document.getElementById('cabinetBoostModal');
+    const card = document.getElementById('cabinetBoostModalCard');
+    if (!modal) return;
+
+    cabinetBoostShowStep1();
+
+    modal.classList.remove('pointer-events-none');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('overflow-hidden');
+
+    requestAnimationFrame(() => {
+        modal.classList.add('opacity-100');
+        modal.classList.remove('opacity-0');
+        card.classList.add('scale-100', 'opacity-100');
+        card.classList.remove('scale-95', 'opacity-0');
+    });
+}
+
+function closeCabinetBoostModal() {
+    const modal = document.getElementById('cabinetBoostModal');
+    const card = document.getElementById('cabinetBoostModalCard');
+    if (!modal) return;
+
+    modal.classList.remove('opacity-100');
+    modal.classList.add('opacity-0');
+    card.classList.remove('scale-100', 'opacity-100');
+    card.classList.add('scale-95', 'opacity-0');
+
+    const onDone = () => {
+        modal.classList.add('pointer-events-none');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+        modal.removeEventListener('transitionend', onDone);
+    };
+    modal.addEventListener('transitionend', onDone, { once: true });
+}
+
+function cabinetBoostShowStep1() {
+    const s1 = document.getElementById('cabinetBoostStep1');
+    const s2 = document.getElementById('cabinetBoostStep2');
+    const err = document.getElementById('cabinetBoostError');
+    if (s1) s1.classList.remove('hidden');
+    if (s2) s2.classList.add('hidden');
+    if (err) { err.classList.add('hidden'); err.textContent = ''; }
+    document.querySelectorAll('.cabinet-boost-tier-btn').forEach((b) => { b.disabled = false; });
+}
+
+function cabinetBoostShowStep2(paymentUrl, amount, description) {
+    document.getElementById('cabinetBoostStep1').classList.add('hidden');
+    document.getElementById('cabinetBoostStep2').classList.remove('hidden');
+    document.getElementById('cabinetBoostStep2Desc').textContent = description;
+    document.getElementById('cabinetBoostStep2Price').textContent = Math.round(amount);
+    document.getElementById('cabinetBoostPayLink').href = paymentUrl;
+}
+
+async function purchaseCabinetBoost(tier) {
+    const errEl = document.getElementById('cabinetBoostError');
+
+    document.querySelectorAll('.cabinet-boost-tier-btn').forEach((b) => { b.disabled = true; });
+    if (errEl) { errEl.classList.add('hidden'); errEl.textContent = ''; }
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/boost/purchase`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tier: String(tier) }),
+        });
+
+        if (!resp || !resp.ok) {
+            const err = resp ? await resp.json().catch(() => ({})) : {};
+            throw new Error(err.detail || (resp ? `HTTP ${resp.status}` : 'Нет ответа'));
+        }
+
+        const data = await resp.json();
+        if (!data.payment_url) throw new Error('Не удалось сформировать ссылку на оплату');
+
+        cabinetBoostShowStep2(data.payment_url, data.amount, data.description);
+    } catch (e) {
+        console.error('[purchaseCabinetBoost]', e);
+        if (errEl) {
+            errEl.textContent = e.message || 'Произошла ошибка';
+            errEl.classList.remove('hidden');
+        }
+        document.querySelectorAll('.cabinet-boost-tier-btn').forEach((b) => { b.disabled = false; });
+    }
+}
+
+function initCabinetBoostModal() {
+    const modal = document.getElementById('cabinetBoostModal');
+    const backdrop = document.getElementById('cabinetBoostModalBackdrop');
+    const openBtn = document.getElementById('cabinetOpenBoostBtn');
+
+    openBtn?.addEventListener('click', openCabinetBoostModal);
+
+    modal?.addEventListener('click', (e) => {
+        if (e.target === backdrop) closeCabinetBoostModal();
+    });
+
+    document.getElementById('cabinetBoostModalClose')?.addEventListener('click', closeCabinetBoostModal);
+    document.querySelectorAll('.cabinet-boost-modal-close-btn').forEach((b) => {
+        b.addEventListener('click', closeCabinetBoostModal);
+    });
+
+    document.querySelectorAll('.cabinet-boost-tier-btn').forEach((b) => {
+        b.addEventListener('click', () => purchaseCabinetBoost(b.dataset.boostTier));
+    });
+
+    document.getElementById('cabinetBoostBackBtn')?.addEventListener('click', cabinetBoostShowStep1);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || !modal || modal.getAttribute('aria-hidden') === 'true') return;
+        closeCabinetBoostModal();
+    });
 }
 
 // ============================================================================
