@@ -1,4 +1,4 @@
-/* manual-search.js v3.2 — Ручной режим поиска вакансий */
+/* manual-search.js v4.0 — Ручной режим + корзина вакансий */
 (function () {
     "use strict";
 
@@ -15,6 +15,11 @@
     let _emptyRetries = 0;
 
     const _vacancyCache = {};
+
+    const CART_LIMIT = 60;
+    let _cartSet = new Set();
+    let _cartCount = 0;
+    let _cartSending = false;
 
     const $ = (id) => document.getElementById(id);
 
@@ -37,7 +42,28 @@
             sentinel: $("manualLoadMoreSentinel"),
             endOfResults: $("manualEndOfResults"),
             sessionExpired: $("manualSessionExpired"),
+            floatingBar: $("cartFloatingBar"),
+            cartBarCount: $("cartBarCount"),
+            cartSendBtnCount: $("cartSendBtnCount"),
         };
+    }
+
+    // ==================================================================
+    // CART INIT
+    // ==================================================================
+
+    async function _initCartCount() {
+        try {
+            const qs = buildAuthParams();
+            const resp = await apiFetch(`/api/cart/count?${qs}`);
+            if (resp.ok) {
+                const data = await resp.json();
+                _cartCount = data.count || 0;
+                _updateFloatingBar();
+            }
+        } catch (e) {
+            console.warn("[Cart] init count error:", e);
+        }
     }
 
     // ==================================================================
@@ -54,12 +80,14 @@
             r.btnAutopilot.classList.add("active");
             r.btnManual.classList.remove("active");
             _stopHeartbeat();
+            _hideFloatingBar();
         } else {
             r.autopilot.style.display = "none";
             r.manual.style.display = "";
             r.btnAutopilot.classList.remove("active");
             r.btnManual.classList.add("active");
             if (_searchActive) _startHeartbeat();
+            _updateFloatingBar();
         }
     };
 
@@ -194,7 +222,6 @@
             } else {
                 _emptyRetries++;
                 if (_emptyRetries < MAX_EMPTY_RETRIES && data.has_more) {
-                    console.log(`[ManualSearch] Empty response, retry ${_emptyRetries}/${MAX_EMPTY_RETRIES}`);
                     _loading = false;
                     setTimeout(() => loadMoreVacancies(), EMPTY_RETRY_DELAY);
                     return;
@@ -217,7 +244,7 @@
     }
 
     // ==================================================================
-    // APPLY / SKIP
+    // APPLY (instant — "Самолетик")
     // ==================================================================
 
     window.applyToVacancy = async function applyToVacancy(vacancyId, cardEl) {
@@ -238,13 +265,7 @@
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
 
-            cardEl.style.transition = "opacity 0.3s, transform 0.3s";
-            cardEl.style.opacity = "0";
-            cardEl.style.transform = "scale(0.95)";
-            setTimeout(() => {
-                cardEl.remove();
-                _checkEmptyGrid();
-            }, 300);
+            _animateRemoveCard(cardEl);
 
             if (data.limit_reached) {
                 _showToast("Дневной лимит исчерпан");
@@ -252,30 +273,361 @@
         } catch (e) {
             if (btn) {
                 btn.disabled = false;
-                btn.textContent = "Откликнуться";
+                btn.innerHTML = '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">send</span>';
             }
             console.error("[ManualSearch] apply error:", e);
         }
     };
 
-    window.skipVacancy = async function skipVacancy(vacancyId, cardEl) {
+    // ==================================================================
+    // CART: SELECT / DESELECT
+    // ==================================================================
+
+    window.selectForCart = async function selectForCart(vacancyId, cardEl) {
+        const selectBtn = cardEl.querySelector(".ms-select-btn");
+        if (!selectBtn || selectBtn.disabled) return;
+
+        if (_cartSet.has(vacancyId)) {
+            await _deselectFromCart(vacancyId, cardEl);
+            return;
+        }
+
+        if (_cartCount >= CART_LIMIT) {
+            _showToast("Вы выбрали максимум вакансий (60) для отправки");
+            return;
+        }
+
+        selectBtn.disabled = true;
+        const vData = _vacancyCache[vacancyId] || {};
+
         try {
             const qs = buildAuthParams();
-            apiFetch(`/api/manual-search/skip?${qs}`, {
+            const resp = await apiFetch(`/api/cart/add?${qs}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ vacancy_id: vacancyId, vacancy_data: vData }),
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                if (resp.status === 400 && err.detail && err.detail.includes("limit")) {
+                    _showToast("Корзина заполнена (60)");
+                }
+                throw new Error(err.detail || `HTTP ${resp.status}`);
+            }
+
+            const data = await resp.json();
+            _cartSet.add(vacancyId);
+            _cartCount = data.cart_count;
+            _applySelectedState(cardEl, true);
+            _updateFloatingBar();
+            _updateAllSelectButtons();
+        } catch (e) {
+            console.error("[Cart] add error:", e);
+        } finally {
+            selectBtn.disabled = false;
+        }
+    };
+
+    async function _deselectFromCart(vacancyId, cardEl) {
+        const selectBtn = cardEl.querySelector(".ms-select-btn");
+        if (selectBtn) selectBtn.disabled = true;
+
+        try {
+            const qs = buildAuthParams();
+            const resp = await apiFetch(`/api/cart/remove?${qs}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ vacancy_id: vacancyId }),
             });
 
-            cardEl.style.transition = "opacity 0.3s, transform 0.3s";
-            cardEl.style.opacity = "0";
-            cardEl.style.transform = "translateX(-20px)";
-            setTimeout(() => {
-                cardEl.remove();
-                _checkEmptyGrid();
-            }, 300);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            _cartSet.delete(vacancyId);
+            _cartCount = data.cart_count;
+            _applySelectedState(cardEl, false);
+            _updateFloatingBar();
+            _updateAllSelectButtons();
         } catch (e) {
-            console.error("[ManualSearch] skip error:", e);
+            console.error("[Cart] remove error:", e);
+        } finally {
+            if (selectBtn) selectBtn.disabled = false;
+        }
+    }
+
+    function _applySelectedState(cardEl, selected) {
+        const applyBtn = cardEl.querySelector(".ms-apply-btn");
+        const selectBtn = cardEl.querySelector(".ms-select-btn");
+        const badge = cardEl.querySelector(".ms-selected-badge");
+
+        if (selected) {
+            cardEl.classList.add("ring-2", "ring-primary/40");
+            if (applyBtn) applyBtn.classList.add("hidden");
+            if (badge) badge.classList.remove("hidden");
+            if (selectBtn) {
+                selectBtn.innerHTML = '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">close</span><span class="hidden md:inline">Отменить</span>';
+                selectBtn.classList.remove("bg-surface-container", "text-on-surface-variant");
+                selectBtn.classList.add("bg-primary/10", "text-primary");
+            }
+        } else {
+            cardEl.classList.remove("ring-2", "ring-primary/40");
+            if (applyBtn) applyBtn.classList.remove("hidden");
+            if (badge) badge.classList.add("hidden");
+            if (selectBtn) {
+                selectBtn.innerHTML = '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">check_circle</span><span class="hidden md:inline">Выбрать</span>';
+                selectBtn.classList.add("bg-surface-container", "text-on-surface-variant");
+                selectBtn.classList.remove("bg-primary/10", "text-primary");
+            }
+        }
+    }
+
+    function _updateAllSelectButtons() {
+        const isFull = _cartCount >= CART_LIMIT;
+        document.querySelectorAll(".vacancy-card").forEach((card) => {
+            const vid = card.dataset.vacancyId;
+            const selectBtn = card.querySelector(".ms-select-btn");
+            if (!selectBtn) return;
+
+            if (_cartSet.has(vid)) return;
+
+            if (isFull) {
+                selectBtn.disabled = true;
+                selectBtn.title = "Вы выбрали максимум вакансий (60) для отправки";
+                selectBtn.classList.add("opacity-40", "cursor-not-allowed");
+            } else {
+                selectBtn.disabled = false;
+                selectBtn.title = "";
+                selectBtn.classList.remove("opacity-40", "cursor-not-allowed");
+            }
+        });
+    }
+
+    // ==================================================================
+    // FLOATING BAR
+    // ==================================================================
+
+    function _updateFloatingBar() {
+        const bar = $("cartFloatingBar");
+        if (!bar) return;
+        const countEl = $("cartBarCount");
+        const sendCountEl = $("cartSendBtnCount");
+
+        if (_cartCount > 0) {
+            bar.classList.remove("hidden");
+            requestAnimationFrame(() => {
+                bar.classList.remove("translate-y-full");
+            });
+            if (countEl) countEl.textContent = _cartCount;
+            if (sendCountEl) sendCountEl.textContent = _cartCount;
+        } else {
+            _hideFloatingBar();
+        }
+    }
+
+    function _hideFloatingBar() {
+        const bar = $("cartFloatingBar");
+        if (!bar) return;
+        bar.classList.add("translate-y-full");
+        setTimeout(() => bar.classList.add("hidden"), 300);
+    }
+
+    // ==================================================================
+    // PRE-CHECKOUT & SEND
+    // ==================================================================
+
+    window.cartPreCheckout = async function cartPreCheckout() {
+        if (_cartSending || _cartCount === 0) return;
+
+        const remaining = (typeof currentDailyLimit !== "undefined" && typeof currentApplied !== "undefined")
+            ? Math.max(0, currentDailyLimit - currentApplied)
+            : 20;
+
+        if (_cartCount <= remaining) {
+            await _cartSendAll();
+        } else {
+            _openCartLimitModal(_cartCount, remaining);
+        }
+    };
+
+    async function _cartSendAll() {
+        if (_cartSending) return;
+        _cartSending = true;
+        const sendBtn = $("cartSendBtn");
+        if (sendBtn) sendBtn.disabled = true;
+
+        try {
+            const qs = buildAuthParams();
+            const resp = await apiFetch(`/api/cart/send?${qs}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ max_count: CART_LIMIT }),
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error(err.detail || `HTTP ${resp.status}`);
+            }
+
+            const data = await resp.json();
+            _handleSendResult(data);
+        } catch (e) {
+            console.error("[Cart] send error:", e);
+            _showToast("Ошибка отправки: " + e.message);
+        } finally {
+            _cartSending = false;
+            if (sendBtn) sendBtn.disabled = false;
+        }
+    }
+
+    window.cartSendAvailable = async function cartSendAvailable() {
+        if (_cartSending) return;
+        _cartSending = true;
+
+        const remaining = (typeof currentDailyLimit !== "undefined" && typeof currentApplied !== "undefined")
+            ? Math.max(0, currentDailyLimit - currentApplied)
+            : 20;
+
+        closeCartLimitModal();
+
+        try {
+            const qs = buildAuthParams();
+            const resp = await apiFetch(`/api/cart/send?${qs}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ max_count: remaining }),
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error(err.detail || `HTTP ${resp.status}`);
+            }
+
+            const data = await resp.json();
+            _handleSendResult(data);
+        } catch (e) {
+            console.error("[Cart] send available error:", e);
+            _showToast("Ошибка отправки: " + e.message);
+        } finally {
+            _cartSending = false;
+        }
+    };
+
+    function _handleSendResult(data) {
+        if (data.sent && data.sent.length > 0) {
+            data.sent.forEach((item) => {
+                const vid = item.vacancy_id;
+                _cartSet.delete(vid);
+                const card = document.querySelector(`.vacancy-card[data-vacancy-id="${vid}"]`);
+                if (card) _animateRemoveCard(card);
+            });
+            _showToast(`Отправлено ${data.sent_count} откликов`);
+        }
+
+        if (data.inactive && data.inactive.length > 0) {
+            data.inactive.forEach((item) => {
+                const vid = item.vacancy_id;
+                _cartSet.delete(vid);
+                const card = document.querySelector(`.vacancy-card[data-vacancy-id="${vid}"]`);
+                if (card) _markCardInactive(card);
+            });
+        }
+
+        _cartCount = data.cart_remaining || 0;
+
+        if (typeof currentApplied !== "undefined" && typeof currentDailyLimit !== "undefined" && data.remaining_limit !== undefined) {
+            currentApplied = currentDailyLimit - data.remaining_limit;
+        }
+
+        _updateFloatingBar();
+        _updateAllSelectButtons();
+    }
+
+    function _markCardInactive(cardEl) {
+        cardEl.classList.add("opacity-50", "pointer-events-none");
+        cardEl.classList.remove("ring-2", "ring-primary/40");
+        const actions = cardEl.querySelector("[data-actions]");
+        if (actions) {
+            actions.innerHTML = '<p class="text-xs text-on-surface-variant/60 italic py-2">Вакансия больше не актуальна</p>';
+        }
+        const badge = cardEl.querySelector(".ms-selected-badge");
+        if (badge) badge.classList.add("hidden");
+    }
+
+    // ==================================================================
+    // CART LIMIT MODAL
+    // ==================================================================
+
+    function _openCartLimitModal(total, remaining) {
+        const modal = $("cartLimitModal");
+        const card = $("cartLimitCard");
+        if (!modal) return;
+
+        $("cartLimitSubtitle").textContent =
+            `Вы пытаетесь отправить ${total} откликов, но ваш доступный лимит на сегодня: ${remaining}`;
+        $("cartLimitSendCount").textContent = remaining;
+        $("cartLimitQueueCount").textContent = total - remaining;
+        $("cartLimitSendAvailableBtnCount").textContent = remaining;
+
+        const sendList = $("cartLimitSendList");
+        sendList.innerHTML = "";
+
+        const allCards = document.querySelectorAll(".vacancy-card");
+        let shown = 0;
+        allCards.forEach((c) => {
+            const vid = c.dataset.vacancyId;
+            if (!_cartSet.has(vid)) return;
+            if (shown >= remaining) return;
+            const v = _vacancyCache[vid] || {};
+            const row = document.createElement("div");
+            row.className = "text-xs text-on-surface/80 truncate";
+            row.textContent = `${v.name || vid} — ${v.employer_name || ""}`;
+            sendList.appendChild(row);
+            shown++;
+        });
+
+        modal.classList.remove("pointer-events-none", "opacity-0");
+        modal.setAttribute("aria-hidden", "false");
+        requestAnimationFrame(() => {
+            card.style.transform = "scale(1)";
+            card.style.opacity = "1";
+        });
+        document.body.style.overflow = "hidden";
+    }
+
+    window.closeCartLimitModal = function closeCartLimitModal() {
+        const modal = $("cartLimitModal");
+        const card = $("cartLimitCard");
+        if (!modal) return;
+
+        card.style.transform = "scale(0.95)";
+        card.style.opacity = "0";
+        modal.classList.add("opacity-0");
+
+        setTimeout(() => {
+            modal.classList.add("pointer-events-none");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.style.overflow = "";
+        }, 300);
+    };
+
+    window.cartOpenBoostUpsell = function cartOpenBoostUpsell() {
+        closeCartLimitModal();
+        if (typeof openBoostModal === "function") {
+            openBoostModal();
+        } else {
+            const boostModal = $("boostModal");
+            if (boostModal) {
+                boostModal.classList.remove("pointer-events-none", "opacity-0");
+                boostModal.setAttribute("aria-hidden", "false");
+                const boostCard = $("boostModalCard");
+                if (boostCard) {
+                    requestAnimationFrame(() => {
+                        boostCard.style.transform = "scale(1)";
+                        boostCard.style.opacity = "1";
+                    });
+                }
+                document.body.style.overflow = "hidden";
+            }
         }
     };
 
@@ -297,8 +649,10 @@
 
     function _createCard(v) {
         const card = document.createElement("div");
-        card.className = "vacancy-card glass-panel p-5 md:p-6 rounded-xl flex flex-col gap-3 cursor-pointer";
+        card.className = "vacancy-card glass-panel p-5 md:p-6 rounded-xl flex flex-col gap-3 cursor-pointer relative transition-all duration-200";
         card.dataset.vacancyId = v.id;
+
+        const isInCart = _cartSet.has(v.id);
 
         const tags = [];
         if (v.salary_text) tags.push(_tag(v.salary_text, "payments"));
@@ -310,7 +664,18 @@
             .map((s) => `<span class="vacancy-tag">${esc(s)}</span>`)
             .join("");
 
+        const selectDisabled = !isInCart && _cartCount >= CART_LIMIT;
+        const selectBtnClasses = isInCart
+            ? "bg-primary/10 text-primary"
+            : "bg-surface-container text-on-surface-variant";
+        const selectBtnContent = isInCart
+            ? '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">close</span><span class="hidden md:inline">Отменить</span>'
+            : '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">check_circle</span><span class="hidden md:inline">Выбрать</span>';
+
         card.innerHTML = `
+            <div class="ms-selected-badge absolute top-3 right-3 ${isInCart ? "" : "hidden"} bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span class="material-symbols-outlined" style="font-size:12px;font-variation-settings:'FILL' 1">check</span>Выбрано
+            </div>
             <div class="flex items-start gap-4">
                 ${v.employer_logo
                     ? `<img src="${esc(v.employer_logo)}" alt="" class="w-10 h-10 rounded-lg bg-surface-container object-contain shrink-0" onerror="this.style.display='none'">`
@@ -325,13 +690,21 @@
             ${v.description_short ? `<p class="text-xs text-on-surface-variant/70 line-clamp-3 leading-relaxed">${esc(v.description_short)}</p>` : ""}
             ${skills ? `<div class="flex flex-wrap gap-1">${skills}</div>` : ""}
             <div class="flex gap-2 mt-auto pt-2 border-t border-outline-variant/10" data-actions>
-                <button class="ms-apply-btn flex-1 px-4 py-2.5 rounded-lg bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer" onclick="applyToVacancy('${esc(v.id)}', this.closest('.vacancy-card'))">Откликнуться</button>
-                <button class="px-4 py-2.5 rounded-lg bg-surface-container text-on-surface-variant font-semibold text-sm hover:bg-surface-container-high transition-colors cursor-pointer" onclick="skipVacancy('${esc(v.id)}', this.closest('.vacancy-card'))">Пропустить</button>
+                <button class="ms-apply-btn ${isInCart ? "hidden" : ""} px-4 py-2.5 rounded-lg bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer flex items-center gap-1.5" onclick="applyToVacancy('${esc(v.id)}', this.closest('.vacancy-card'))">
+                    <span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1">send</span>
+                </button>
+                <button class="ms-select-btn flex-1 px-4 py-2.5 rounded-lg ${selectBtnClasses} font-semibold text-sm hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${selectDisabled ? "opacity-40 cursor-not-allowed" : ""}" onclick="selectForCart('${esc(v.id)}', this.closest('.vacancy-card'))" ${selectDisabled ? 'disabled title="Вы выбрали максимум вакансий (60) для отправки"' : ""}>
+                    ${selectBtnContent}
+                </button>
                 <a href="${esc(v.url)}" target="_blank" rel="noopener" class="px-3 py-2.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors flex items-center cursor-pointer" title="Открыть на hh.ru">
                     <span class="material-symbols-outlined text-lg">open_in_new</span>
                 </a>
             </div>
         `;
+
+        if (isInCart) {
+            card.classList.add("ring-2", "ring-primary/40");
+        }
 
         card.addEventListener("click", (e) => {
             if (e.target.closest("[data-actions]")) return;
@@ -385,6 +758,16 @@
         }
     }
 
+    function _animateRemoveCard(cardEl) {
+        cardEl.style.transition = "opacity 0.3s, transform 0.3s";
+        cardEl.style.opacity = "0";
+        cardEl.style.transform = "scale(0.95)";
+        setTimeout(() => {
+            cardEl.remove();
+            _checkEmptyGrid();
+        }, 300);
+    }
+
     function _checkEmptyGrid() {
         const r = refs();
         if (r.grid.children.length === 0 && !_hasMore) {
@@ -396,7 +779,7 @@
 
     function _showToast(msg) {
         const toast = document.createElement("div");
-        toast.className = "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl bg-surface-container text-on-surface text-sm font-semibold shadow-2xl border border-outline-variant/10";
+        toast.className = "fixed bottom-20 left-1/2 -translate-x-1/2 z-[90] px-6 py-3 rounded-xl bg-surface-container text-on-surface text-sm font-semibold shadow-2xl border border-outline-variant/10";
         toast.textContent = msg;
         document.body.appendChild(toast);
         setTimeout(() => {
@@ -455,11 +838,34 @@
 
         $("vmOpenHH").href = v.url || "#";
 
+        const isInCart = _cartSet.has(vacancyId);
+
         const applyBtn = $("vmApplyBtn");
         applyBtn.disabled = false;
-        applyBtn.textContent = "Откликнуться";
-        applyBtn.onclick = () => _modalApply(vacancyId);
-        $("vmSkipBtn").onclick = () => _modalSkip(vacancyId);
+        if (isInCart) {
+            applyBtn.classList.add("hidden");
+        } else {
+            applyBtn.classList.remove("hidden");
+            applyBtn.innerHTML = '<span class="material-symbols-outlined text-lg mr-1" style="font-variation-settings:\'FILL\' 1">send</span> Откликнуться';
+            applyBtn.onclick = () => _modalApply(vacancyId);
+        }
+
+        const skipBtn = $("vmSkipBtn");
+        if (isInCart) {
+            skipBtn.textContent = "Убрать из корзины";
+            skipBtn.onclick = () => {
+                const cardEl = document.querySelector(`.vacancy-card[data-vacancy-id="${vacancyId}"]`);
+                if (cardEl) _deselectFromCart(vacancyId, cardEl);
+                closeVacancyModal();
+            };
+        } else {
+            skipBtn.innerHTML = '<span class="material-symbols-outlined text-lg mr-1" style="font-variation-settings:\'FILL\' 1">check_circle</span> Выбрать';
+            skipBtn.onclick = () => {
+                const cardEl = document.querySelector(`.vacancy-card[data-vacancy-id="${vacancyId}"]`);
+                if (cardEl) selectForCart(vacancyId, cardEl);
+                closeVacancyModal();
+            };
+        }
 
         _showDescriptionState("loading");
 
@@ -633,23 +1039,22 @@
         closeVacancyModal();
     }
 
-    function _modalSkip(vacancyId) {
-        const cardEl = document.querySelector(`.vacancy-card[data-vacancy-id="${vacancyId}"]`);
-        if (cardEl) {
-            window.skipVacancy(vacancyId, cardEl);
-        }
-        closeVacancyModal();
-    }
-
     document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && _currentModalId) {
-            closeVacancyModal();
+        if (e.key === "Escape") {
+            if (_currentModalId) closeVacancyModal();
+            const cartModal = $("cartLimitModal");
+            if (cartModal && !cartModal.classList.contains("pointer-events-none")) {
+                closeCartLimitModal();
+            }
         }
     });
 
     document.addEventListener("click", (e) => {
         if (_currentModalId && e.target.id === "vacancyModalBackdrop") {
             closeVacancyModal();
+        }
+        if (e.target.id === "cartLimitBackdrop") {
+            closeCartLimitModal();
         }
     });
 
@@ -676,4 +1081,10 @@
             _observer = null;
         }
     }
+
+    // ==================================================================
+    // BOOT
+    // ==================================================================
+
+    _initCartCount();
 })();
