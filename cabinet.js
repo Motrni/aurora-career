@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.2 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.3 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  */
 
@@ -380,6 +380,49 @@ async function refreshCabinetUser() {
 // DAILY STATS
 // ============================================================================
 
+/**
+ * Верх оси Y: «красивое» округление вверх по шагу 1–2–5 × 10ⁿ.
+ */
+function computeAxisMax(dataMax, segments = 4) {
+    if (dataMax <= 0) return 5;
+    const roughStep = dataMax / segments;
+    const pow10 = Math.pow(10, Math.floor(Math.log10(roughStep)));
+    const f = roughStep / pow10;
+    const nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+    const step = nf * pow10;
+    return Math.ceil(dataMax / step) * step;
+}
+
+/** Ровно 5 отметок сверху вниз (макс → 0), как на референсе. */
+function buildLinearTicks(axisMax, count = 5) {
+    const raw = [];
+    for (let i = 0; i < count; i++) {
+        raw.push(Math.round((axisMax * (count - 1 - i)) / (count - 1)));
+    }
+    raw[count - 1] = 0;
+    return [...new Set(raw)].sort((a, b) => b - a);
+}
+
+function computeAxisScale(dataMax) {
+    const axisMax = computeAxisMax(dataMax);
+    const ticks = buildLinearTicks(axisMax, 5);
+    return { axisMax, ticks };
+}
+
+function formatChartDayMonth(isoDate) {
+    const parts = isoDate.split('-');
+    if (parts.length !== 3) return isoDate;
+    const [y, m, day] = parts;
+    return `${day.padStart(2, '0')}.${m.padStart(2, '0')}`;
+}
+
+function weekdayLongRu(isoDate) {
+    const dt = new Date(`${isoDate}T12:00:00`);
+    const s = dt.toLocaleDateString('ru-RU', { weekday: 'long' });
+    if (!s) return '';
+    return s.charAt(0).toLocaleUpperCase('ru-RU') + s.slice(1);
+}
+
 async function loadDailyStats() {
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/cabinet/daily-stats`);
@@ -398,34 +441,41 @@ function renderDailyChart(days, total) {
     const card = document.getElementById('dailyStatsCard');
     const chart = document.getElementById('statsChart');
     const labels = document.getElementById('statsLabels');
+    const yAxis = document.getElementById('statsYAxis');
     const totalEl = document.getElementById('statsTotal');
 
     totalEl.textContent = total;
 
-    const maxCount = Math.max(...days.map(d => d.count), 1);
-    const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const dataMax = Math.max(...days.map(d => d.count), 0);
+    const { axisMax, ticks } = computeAxisScale(dataMax);
     const todayStr = days.length > 0 ? days[days.length - 1].date : new Date().toISOString().slice(0, 10);
 
-    chart.innerHTML = days.map(d => {
-        const pct = Math.max((d.count / maxCount) * 100, 3);
+    if (yAxis) {
+        yAxis.innerHTML = ticks.map((t) => `<span class="block leading-none">${t}</span>`).join('');
+    }
+
+    chart.innerHTML = days.map((d) => {
+        const hPct = axisMax > 0 ? (d.count / axisMax) * 100 : 0;
         const isToday = d.date === todayStr;
         const todayClass = isToday ? ' bar-today' : '';
-        const barBg = isToday
-            ? 'background: linear-gradient(to top, rgba(101,62,219,0.8), rgba(204,190,255,0.5));'
-            : 'background: linear-gradient(to top, rgba(101,62,219,0.4), rgba(204,190,255,0.15));';
-        return `<div class="flex-1 flex flex-col items-center justify-end h-full bar-wrapper relative${todayClass}">
+        return `<div class="stats-bar-slot flex flex-col items-center justify-end relative flex-1 min-w-0 max-w-[2.75rem] mx-auto${todayClass}">
             <div class="bar-tooltip">${d.count}</div>
-            <div class="bar-col w-full cursor-default" style="height: ${pct}%; ${barBg}"></div>
+            <div class="stats-bar-track relative overflow-hidden shrink-0">
+                <div class="stats-bar-fill absolute bottom-0 left-0 right-0 w-full cursor-default" style="height: ${hPct}%;"></div>
+            </div>
         </div>`;
     }).join('');
 
-    labels.innerHTML = days.map(d => {
-        const dt = new Date(d.date + 'T12:00:00');
-        const name = dayNames[dt.getDay()];
+    labels.innerHTML = days.map((d) => {
         const isToday = d.date === todayStr;
         const todayLabelClass = isToday ? ' bar-today-label' : '';
-        const todayMarker = isToday ? '<span class="block w-1 h-1 rounded-full bg-primary mx-auto mt-1"></span>' : '';
-        return `<span class="text-[10px] text-on-surface-variant font-medium flex-1 text-center${todayLabelClass}">${name}${todayMarker}</span>`;
+        const dateLine = formatChartDayMonth(d.date);
+        const wd = weekdayLongRu(d.date);
+        const dot = isToday ? '<span class="inline-block w-1 h-1 rounded-full bg-primary align-middle ml-0.5" aria-hidden="true"></span>' : '';
+        return `<div class="flex-1 min-w-0 text-center px-0.5${todayLabelClass}">
+            <div class="stats-label-date text-[11px] md:text-xs font-semibold text-on-surface leading-tight">${dateLine}${dot}</div>
+            <div class="stats-label-weekday text-[9px] md:text-[10px] text-on-surface-variant leading-snug mt-0.5">${wd}</div>
+        </div>`;
     }).join('');
 
     card.classList.remove('hidden');

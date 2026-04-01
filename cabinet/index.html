@@ -149,27 +149,59 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 }
 .price-per-day { font-size: 11px; color: #938ea0; }
 
-.bar-col {
-    transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    min-height: 4px;
-    border-radius: 6px 6px 0 0;
+/* Daily stats: Y-axis + narrow capsule bars */
+.stats-chart-area {
+    --stats-chart-h: 9rem;
 }
-.bar-col:hover { filter: brightness(1.3); }
+@media (min-width: 768px) {
+    .stats-chart-area { --stats-chart-h: 10.5rem; }
+}
+.stats-y-axis {
+    height: var(--stats-chart-h);
+    min-width: 1.75rem;
+}
+.stats-bar-track {
+    width: 1.75rem;
+    height: var(--stats-chart-h);
+    background: rgba(204, 190, 255, 0.08);
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+@media (min-width: 768px) {
+    .stats-bar-track { width: 2rem; }
+}
+.stats-bar-fill {
+    transition: height 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
+    border-radius: 9999px 9999px 0 0;
+    min-height: 0;
+    background: linear-gradient(to top, rgba(101, 62, 219, 0.75), rgba(204, 190, 255, 0.35));
+}
+.stats-bar-slot:hover .stats-bar-fill { filter: brightness(1.15); }
 .bar-tooltip {
     position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
     background: rgba(33,30,41,0.95); border: 1px solid rgba(204,190,255,0.2);
     padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
     color: #ccbeff; white-space: nowrap; opacity: 0; pointer-events: none;
     transition: opacity 0.15s;
+    z-index: 2;
 }
-.bar-wrapper:hover .bar-tooltip { opacity: 1; }
+.stats-bar-slot:hover .bar-tooltip { opacity: 1; }
 
-.bar-today .bar-col {
-    background: linear-gradient(to top, rgba(101,62,219,0.8), rgba(204,190,255,0.5)) !important;
+.bar-today .stats-bar-track {
+    border-color: rgba(204, 190, 255, 0.35);
+    box-shadow: 0 0 0 1px rgba(90, 48, 208, 0.35);
+    background: rgba(90, 48, 208, 0.12);
 }
-.bar-today-label {
+.bar-today .stats-bar-fill {
+    background: linear-gradient(to top, rgba(101,62,219,0.95), rgba(204,190,255,0.55)) !important;
+}
+.bar-today-label .stats-label-date {
     color: #ccbeff !important;
     font-weight: 700 !important;
+}
+.bar-today-label .stats-label-weekday {
+    color: #e7deff !important;
+    font-weight: 600 !important;
 }
 
 /* Активная подписка: переливающаяся изумрудно-фиолетовая обводка */
@@ -411,8 +443,13 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                             <span class="text-on-surface-variant text-xs">всего</span>
                         </div>
                     </div>
-                    <div class="flex items-end gap-2 md:gap-3 h-32 md:h-40" id="statsChart"></div>
-                    <div class="flex justify-between mt-2 px-0.5" id="statsLabels"></div>
+                    <div class="stats-chart-area flex gap-2 md:gap-3 items-stretch mt-1">
+                        <div id="statsYAxis" class="stats-y-axis flex flex-col justify-between text-[10px] md:text-[11px] tabular-nums text-on-surface-variant text-right leading-none py-0.5 shrink-0" aria-hidden="true"></div>
+                        <div class="flex-1 min-w-0 flex flex-col">
+                            <div class="flex items-end justify-between gap-1 md:gap-2" id="statsChart"></div>
+                            <div class="flex justify-between gap-0.5 md:gap-1 mt-2 md:mt-3" id="statsLabels"></div>
+                        </div>
+                    </div>
                 </section>
 
             </div><!-- End left column -->
@@ -553,6 +590,6 @@ function toggleMobileMenu() {
     </div>
 </div>
 
-<script src="cabinet.js?v=3.2"></script>
+<script src="cabinet.js?v=3.3"></script>
 </body>
 </html>
