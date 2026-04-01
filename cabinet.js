@@ -1,5 +1,5 @@
 /**
- * cabinet.js — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.0 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  */
 
@@ -125,9 +125,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ============================================================================
 
 async function renderCabinet(user) {
+    // Greeting
+    const greetEl = document.getElementById('greetingTitle');
+    if (user.first_name) {
+        greetEl.textContent = `Привет, ${user.first_name}!`;
+    } else {
+        greetEl.textContent = 'Привет!';
+    }
+
     document.getElementById('userEmail').textContent = user.email || 'Без email';
 
-    updateSubscriptionCard(user.subscription_status);
+    updateSubscriptionCard(user);
     updateNavAccess(user.subscription_status);
     updateTelegramCard(user.has_telegram);
 
@@ -135,57 +143,178 @@ async function renderCabinet(user) {
         await loadTariffs();
     }
 
+    const hasAccess = user.subscription_status === 'trial' || user.subscription_status === 'active';
+    if (hasAccess) {
+        loadDailyStats();
+    }
+
     document.getElementById('loadingSkeleton').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
 }
 
-function updateSubscriptionCard(status) {
+// ============================================================================
+// SUBSCRIPTION CARD
+// ============================================================================
+
+function updateSubscriptionCard(user) {
+    const status = user.subscription_status;
+    const sub = user.subscription || {};
     const icon = document.getElementById('subIcon');
+    const iconWrap = document.getElementById('subIconWrap');
     const title = document.getElementById('subTitle');
     const desc = document.getElementById('subDescription');
     const actions = document.getElementById('subActions');
+    const badge = document.getElementById('subBadge');
+    const details = document.getElementById('subDetails');
+    const card = document.getElementById('subscriptionCard');
     const hasOnboarding = currentUser && currentUser.current_step && currentUser.current_step.startsWith('onboarding_');
 
     switch (status) {
-        case 'trial':
+        case 'trial': {
             icon.textContent = 'hourglass_top';
+            iconWrap.style.background = 'rgba(101,62,219,0.18)';
             title.textContent = 'Пробный период';
+            badge.textContent = 'Trial';
+            badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#653edb]/20 text-primary';
+
             if (hasOnboarding) {
-                desc.textContent = 'У вас активен пробный период. Завершите первую настройку, чтобы начать поиск.';
+                desc.textContent = 'Завершите первую настройку, чтобы начать поиск.';
                 actions.innerHTML = '<a href="/onboarding/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
             } else {
-                desc.textContent = 'У вас активен пробный период. Настройки поиска и автопилот откликов доступны.';
-                actions.innerHTML = '<a href="/settings/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
+                desc.textContent = 'Настройки поиска и автопилот откликов доступны.';
+                actions.innerHTML = '<a href="/settings/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Настройки поиска</a>';
+            }
+
+            showSubDetails(sub);
+            if (sub.expires_at) {
+                const trialEnd = formatDate(sub.expires_at);
+                const detailExpires = document.getElementById('subDetailExpires');
+                if (detailExpires) {
+                    detailExpires.querySelector('#subExpiresValue').textContent = trialEnd;
+                    const daysLeft = daysUntil(sub.expires_at);
+                    if (daysLeft !== null && daysLeft >= 0) {
+                        detailExpires.querySelector('#subExpiresValue').textContent = `${trialEnd} (${daysLeft} дн.)`;
+                    }
+                }
             }
             break;
-        case 'active':
+        }
+        case 'active': {
             icon.textContent = 'verified';
+            icon.style.fontVariationSettings = "'FILL' 1";
+            iconWrap.style.background = 'rgba(74,222,128,0.12)';
             title.textContent = 'Подписка активна';
+            badge.textContent = 'Active';
+            badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#4ade80]/15 text-[#4ade80]';
+
             if (hasOnboarding) {
-                desc.textContent = 'Подписка активна. Завершите первую настройку — привяжите hh.ru и выберите резюме.';
+                desc.textContent = 'Завершите первую настройку — привяжите hh.ru и выберите резюме.';
                 actions.innerHTML = '<a href="/onboarding/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
             } else {
                 desc.textContent = 'Все функции доступны. Настраивайте поиск и запускайте автопилот.';
-                actions.innerHTML = '<a href="/settings/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Перейти к настройкам</a>';
+                actions.innerHTML = '<a href="/settings/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Настройки поиска</a>';
             }
+
+            showSubDetails(sub);
             break;
-        case 'ended_trial':
+        }
+        case 'ended_trial': {
+            card.className = 'card rounded-2xl p-6 mb-4 card-hover';
             icon.textContent = 'timer_off';
             title.textContent = 'Пробный период закончился';
             desc.textContent = 'Выберите тариф ниже, чтобы продолжить пользоваться сервисом.';
             actions.innerHTML = '';
             break;
-        case 'ended_active':
+        }
+        case 'ended_active': {
+            card.className = 'card rounded-2xl p-6 mb-4 card-hover';
             icon.textContent = 'event_busy';
             title.textContent = 'Подписка истекла';
             desc.textContent = 'Продлите подписку, чтобы вернуть доступ к настройкам поиска и автопилоту.';
             actions.innerHTML = '';
             break;
-        default:
+        }
+        default: {
+            card.className = 'card rounded-2xl p-6 mb-4 card-hover';
             desc.textContent = 'Выберите тариф, чтобы получить доступ к автопилоту откликов и настройкам поиска.';
             break;
+        }
     }
 }
+
+function showSubDetails(sub) {
+    const details = document.getElementById('subDetails');
+    details.classList.remove('hidden');
+
+    if (sub.expires_at) {
+        document.getElementById('subExpiresValue').textContent = formatDate(sub.expires_at);
+    }
+
+    if (sub.next_payment_date) {
+        const billingRow = document.getElementById('subDetailBilling');
+        billingRow.classList.remove('hidden');
+        document.getElementById('subBillingValue').textContent = formatDate(sub.next_payment_date);
+    }
+
+    if (sub.card_last_four) {
+        const cardRow = document.getElementById('subDetailCard');
+        cardRow.classList.remove('hidden');
+        const cardType = sub.card_type || '';
+        document.getElementById('subCardValue').textContent = `${cardType} •••• ${sub.card_last_four}`.trim();
+    }
+}
+
+// ============================================================================
+// DAILY STATS
+// ============================================================================
+
+async function loadDailyStats() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/cabinet/daily-stats`);
+        if (!resp || !resp.ok) return;
+
+        const data = await resp.json();
+        if (data.status !== 'ok' || !data.days) return;
+
+        renderDailyChart(data.days, data.total);
+    } catch (e) {
+        console.error('[DailyStats] Error:', e);
+    }
+}
+
+function renderDailyChart(days, total) {
+    const card = document.getElementById('dailyStatsCard');
+    const chart = document.getElementById('statsChart');
+    const labels = document.getElementById('statsLabels');
+    const totalEl = document.getElementById('statsTotal');
+
+    totalEl.textContent = total;
+
+    const maxCount = Math.max(...days.map(d => d.count), 1);
+
+    const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+    chart.innerHTML = days.map(d => {
+        const pct = Math.max((d.count / maxCount) * 100, 3);
+        const dt = new Date(d.date + 'T12:00:00');
+        return `<div class="flex-1 flex flex-col items-center justify-end h-full bar-wrapper relative">
+            <div class="bar-tooltip">${d.count}</div>
+            <div class="bar-col w-full rounded-t-lg cursor-default" style="height: ${pct}%; background: linear-gradient(to top, rgba(101,62,219,0.6), rgba(204,190,255,0.3));"></div>
+        </div>`;
+    }).join('');
+
+    labels.innerHTML = days.map(d => {
+        const dt = new Date(d.date + 'T12:00:00');
+        const name = dayNames[dt.getDay()];
+        return `<span class="text-[10px] text-on-surface-variant font-medium flex-1 text-center">${name}</span>`;
+    }).join('');
+
+    card.classList.remove('hidden');
+}
+
+// ============================================================================
+// NAV ACCESS
+// ============================================================================
 
 function updateNavAccess(status) {
     const hasAccess = status === 'trial' || status === 'active';
@@ -358,7 +487,7 @@ async function loadTariffs() {
             const pricePerDay = (t.price / t.duration_days).toFixed(0);
             const isPopular = i === popularIdx;
             const months = Math.round(t.duration_days / 30);
-            const monthLabel = months === 1 ? 'мес' : (months < 5 ? 'мес' : 'мес');
+            const monthLabel = 'мес';
 
             return `
             <div class="card rounded-2xl p-5 card-hover cursor-pointer ${isPopular ? 'tariff-popular' : ''}"
@@ -422,10 +551,10 @@ async function handlePurchase(planCode) {
 }
 
 async function handleActivateTrial() {
-    const btn = document.getElementById('subscribeBtn');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Загрузка...';
+    const trialCard = document.getElementById('trialCard');
+    if (trialCard) {
+        trialCard.style.opacity = '0.6';
+        trialCard.style.pointerEvents = 'none';
     }
 
     try {
@@ -469,9 +598,9 @@ async function handleActivateTrial() {
             },
             onFail: function (reason) {
                 console.error('[CP Widget] Fail:', reason);
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = 'Активировать подписку';
+                if (trialCard) {
+                    trialCard.style.opacity = '1';
+                    trialCard.style.pointerEvents = 'auto';
                 }
             },
             onComplete: function () {},
@@ -479,9 +608,9 @@ async function handleActivateTrial() {
 
     } catch (e) {
         console.error('[Trial] Error:', e);
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Активировать подписку';
+        if (trialCard) {
+            trialCard.style.opacity = '1';
+            trialCard.style.pointerEvents = 'auto';
         }
     }
 }
@@ -553,8 +682,8 @@ async function handleLinkTelegram() {
         if (!resp || !resp.ok) return;
 
         const data = await resp.json();
-        if (data.deep_link) {
-            window.open(data.deep_link, '_blank');
+        if (data.link) {
+            window.open(data.link, '_blank');
         }
     } catch (_) {}
 }
@@ -578,4 +707,27 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+function formatDate(isoStr) {
+    if (!isoStr) return '—';
+    try {
+        const d = new Date(isoStr);
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch (_) {
+        return '—';
+    }
+}
+
+function daysUntil(isoStr) {
+    if (!isoStr) return null;
+    try {
+        const target = new Date(isoStr);
+        const now = new Date();
+        const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+        return diff;
+    } catch (_) {
+        return null;
+    }
 }
