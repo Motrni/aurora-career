@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.5 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.6 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  */
 
@@ -41,21 +41,21 @@ async function apiFetch(url, options = {}) {
     return resp;
 }
 
-/** Компенсация исчезновения вертикального скроллбара при `overflow: hidden` (дублирует/дополняет `scrollbar-gutter: stable` на `html`). */
+/**
+ * Блокировка прокрутки фона под модалкой.
+ * Не трогаем padding-right: при `scrollbar-gutter: stable` на `html` дополнительный отступ дублирует резерв и смещает вёрстку.
+ */
 let _bodyScrollLockDepth = 0;
 
 function lockBodyScroll() {
     _bodyScrollLockDepth += 1;
     if (_bodyScrollLockDepth !== 1) return;
-    const w = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
-    if (w > 0) document.body.style.paddingRight = `${w}px`;
     document.body.classList.add('overflow-hidden');
 }
 
 function unlockBodyScroll() {
     _bodyScrollLockDepth = Math.max(0, _bodyScrollLockDepth - 1);
     if (_bodyScrollLockDepth !== 0) return;
-    document.body.style.paddingRight = '';
     document.body.classList.remove('overflow-hidden');
 }
 

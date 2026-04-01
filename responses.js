@@ -217,21 +217,21 @@ async function apiFetch(path, opts = {}) {
     return resp;
 }
 
-/** Компенсация исчезновения вертикального скроллбара при `overflow: hidden` (вместе с `scrollbar-gutter: stable` на `html`). */
+/**
+ * Блокировка прокрутки фона под модалкой.
+ * Без padding-right: иначе конфликт с `scrollbar-gutter: stable` на `html` и сдвиг блоков влево/вправо.
+ */
 let _bodyScrollLockDepth = 0;
 
 function lockBodyScroll() {
     _bodyScrollLockDepth += 1;
     if (_bodyScrollLockDepth !== 1) return;
-    const w = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
-    if (w > 0) document.body.style.paddingRight = `${w}px`;
     document.body.classList.add("overflow-hidden");
 }
 
 function unlockBodyScroll() {
     _bodyScrollLockDepth = Math.max(0, _bodyScrollLockDepth - 1);
     if (_bodyScrollLockDepth !== 0) return;
-    document.body.style.paddingRight = "";
     document.body.classList.remove("overflow-hidden");
 }
 
