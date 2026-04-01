@@ -255,19 +255,44 @@ function showOtpForm() {
     const isEmail = loginDisplayValue.includes('@');
     document.getElementById('otpMessage').textContent = isEmail
         ? `Код отправлен на ${loginDisplayValue}`
-        : `Код отправлен на ${loginDisplayValue}`;
+        : `Код отправлен в СМС на ${loginDisplayValue}`;
 
-    const otpInput = document.getElementById('otpCodeInput');
-    otpInput.value = '';
-    otpInput.focus();
-    otpInput.addEventListener('input', () => {
-        document.getElementById('otpSubmitBtn').disabled = otpInput.value.trim().length < 4;
+    initCodeInput();
+}
+
+function initCodeInput() {
+    const old = document.getElementById('otpCodeInput');
+    const input = old.cloneNode(true);
+    old.parentNode.replaceChild(input, old);
+    input.value = '';
+    input.focus();
+
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/g, '').slice(0, 6);
+        document.getElementById('otpSubmitBtn').disabled = input.value.length < 4;
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && input.value.length >= 4) {
+            handleHhCode();
+        }
     });
 }
 
+function getOtpValue() {
+    return (document.getElementById('otpCodeInput').value || '').replace(/\D/g, '');
+}
+
+function clearOtp() {
+    const input = document.getElementById('otpCodeInput');
+    if (input) input.value = '';
+    const btn = document.getElementById('otpSubmitBtn');
+    if (btn) btn.disabled = true;
+}
+
 async function handleHhCode() {
-    const code = document.getElementById('otpCodeInput').value.trim();
-    if (!code) return;
+    const code = getOtpValue();
+    if (code.length < 4) return;
 
     const btn = document.getElementById('otpSubmitBtn');
     const errorEl = document.getElementById('otpError');
@@ -289,9 +314,12 @@ async function handleHhCode() {
 
         document.getElementById('hhOtpForm').classList.add('hidden');
         document.getElementById('hhProcessing').classList.remove('hidden');
+        document.getElementById('processingText').textContent = 'Привязываем аккаунт...';
+        document.getElementById('processingSubtext').textContent = 'Собираем данные с hh.ru, подождите...';
 
     } catch (e) {
         showError(errorEl, e.message || 'Ошибка при отправке кода');
+        clearOtp();
         btn.disabled = false;
         btn.textContent = 'Подтвердить';
     }
@@ -306,6 +334,9 @@ function resetHhLogin() {
     const btn = document.getElementById('hhLoginBtn');
     btn.disabled = false;
     btn.textContent = 'Далее';
+    document.getElementById('hhPhoneInput').value = '';
+    document.getElementById('hhEmailInput').value = '';
+    clearOtp();
 }
 
 // ============================================================================
@@ -314,32 +345,68 @@ function resetHhLogin() {
 
 function startPolling() {
     stopPolling();
-    pollInterval = setInterval(async () => {
-        try {
-            const resp = await apiFetch(`${API_BASE_URL}/api/reauth/hh-status`);
-            if (!resp) return;
-            const data = await resp.json();
+    void pollReauthHhStatus();
+    pollInterval = setInterval(pollReauthHhStatus, 2000);
+}
 
-            switch (data.status) {
-                case 'need_code':
-                    showOtpForm();
-                    break;
-                case 'sync_complete':
-                case 'success':
-                    stopPolling();
-                    showStep(2);
-                    break;
-                case 'error':
-                case 'failed':
-                    stopPolling();
-                    resetHhLogin();
-                    showError(document.getElementById('hhLoginError'), 'Ошибка авторизации. Попробуйте ещё раз.');
-                    break;
+/** Статусы совпадают с auth_service.py / Redis (как onboarding.js, не lower-case). */
+async function pollReauthHhStatus() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/reauth/hh-status`);
+        if (!resp || !resp.ok) return;
+
+        const data = await resp.json();
+        const status = data.status;
+
+        if (status === 'NEED_CODE') {
+            if (document.getElementById('hhOtpForm').classList.contains('hidden')
+                && document.getElementById('hhProcessing').classList.contains('hidden')) {
+                showOtpForm();
             }
-        } catch (e) {
-            console.error('[Polling] Error:', e);
+            return;
         }
-    }, 2000);
+
+        if (status === 'wrong_code') {
+            const errorEl = document.getElementById('otpError');
+            showError(errorEl, 'Неверный код. Попробуйте ещё раз.');
+            clearOtp();
+            const btn = document.getElementById('otpSubmitBtn');
+            btn.disabled = false;
+            btn.textContent = 'Подтвердить';
+            return;
+        }
+
+        if (status === 'success') {
+            document.getElementById('hhOtpForm').classList.add('hidden');
+            document.getElementById('hhWaitingCode').classList.add('hidden');
+            document.getElementById('hhProcessing').classList.remove('hidden');
+            document.getElementById('processingText').textContent = 'Аккаунт привязан!';
+            document.getElementById('processingSubtext').textContent = 'Собираем данные с hh.ru, подождите...';
+            return;
+        }
+
+        if (status === 'sync_complete') {
+            stopPolling();
+            document.getElementById('hhProcessing').classList.remove('hidden');
+            document.getElementById('processingText').textContent = 'Готово!';
+            document.getElementById('processingSubtext').textContent = 'Загружаем ваши резюме...';
+            setTimeout(() => { showStep(2); }, 1000);
+            return;
+        }
+
+        if (status === 'error_fatal' || status === 'blocked' || status === 'limit_exceeded') {
+            stopPolling();
+            document.getElementById('hhProcessing').classList.add('hidden');
+            document.getElementById('hhWaitingCode').classList.add('hidden');
+            document.getElementById('hhOtpForm').classList.add('hidden');
+            document.getElementById('hhLoginForm').classList.remove('hidden');
+            document.getElementById('hhLoginBtn').disabled = false;
+            document.getElementById('hhLoginBtn').textContent = 'Далее';
+            showError(document.getElementById('hhLoginError'), data.message || 'Ошибка авторизации. Попробуйте ещё раз.');
+        }
+    } catch (e) {
+        console.error('[Reauth Polling] Error:', e);
+    }
 }
 
 function stopPolling() {
