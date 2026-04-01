@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.0 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.1 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  */
 
@@ -148,8 +148,8 @@ async function renderCabinet(user) {
         loadDailyStats();
     }
 
-    document.getElementById('loadingSkeleton').classList.add('hidden');
-    document.getElementById('mainContent').classList.remove('hidden');
+    document.getElementById('loadingSkeleton').style.display = 'none';
+    document.getElementById('mainContent').style.display = '';
 }
 
 // ============================================================================
@@ -219,7 +219,7 @@ function updateSubscriptionCard(user) {
             break;
         }
         case 'ended_trial': {
-            card.className = 'card rounded-2xl p-6 mb-4 card-hover';
+            card.className = 'p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5 relative overflow-hidden';
             icon.textContent = 'timer_off';
             title.textContent = 'Пробный период закончился';
             desc.textContent = 'Выберите тариф ниже, чтобы продолжить пользоваться сервисом.';
@@ -227,7 +227,7 @@ function updateSubscriptionCard(user) {
             break;
         }
         case 'ended_active': {
-            card.className = 'card rounded-2xl p-6 mb-4 card-hover';
+            card.className = 'p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5 relative overflow-hidden';
             icon.textContent = 'event_busy';
             title.textContent = 'Подписка истекла';
             desc.textContent = 'Продлите подписку, чтобы вернуть доступ к настройкам поиска и автопилоту.';
@@ -235,7 +235,7 @@ function updateSubscriptionCard(user) {
             break;
         }
         default: {
-            card.className = 'card rounded-2xl p-6 mb-4 card-hover';
+            card.className = 'p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5 relative overflow-hidden';
             desc.textContent = 'Выберите тариф, чтобы получить доступ к автопилоту откликов и настройкам поиска.';
             break;
         }
@@ -291,22 +291,29 @@ function renderDailyChart(days, total) {
     totalEl.textContent = total;
 
     const maxCount = Math.max(...days.map(d => d.count), 1);
-
     const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const todayStr = days.length > 0 ? days[days.length - 1].date : new Date().toISOString().slice(0, 10);
 
     chart.innerHTML = days.map(d => {
         const pct = Math.max((d.count / maxCount) * 100, 3);
-        const dt = new Date(d.date + 'T12:00:00');
-        return `<div class="flex-1 flex flex-col items-center justify-end h-full bar-wrapper relative">
+        const isToday = d.date === todayStr;
+        const todayClass = isToday ? ' bar-today' : '';
+        const barBg = isToday
+            ? 'background: linear-gradient(to top, rgba(101,62,219,0.8), rgba(204,190,255,0.5));'
+            : 'background: linear-gradient(to top, rgba(101,62,219,0.4), rgba(204,190,255,0.15));';
+        return `<div class="flex-1 flex flex-col items-center justify-end h-full bar-wrapper relative${todayClass}">
             <div class="bar-tooltip">${d.count}</div>
-            <div class="bar-col w-full rounded-t-lg cursor-default" style="height: ${pct}%; background: linear-gradient(to top, rgba(101,62,219,0.6), rgba(204,190,255,0.3));"></div>
+            <div class="bar-col w-full cursor-default" style="height: ${pct}%; ${barBg}"></div>
         </div>`;
     }).join('');
 
     labels.innerHTML = days.map(d => {
         const dt = new Date(d.date + 'T12:00:00');
         const name = dayNames[dt.getDay()];
-        return `<span class="text-[10px] text-on-surface-variant font-medium flex-1 text-center">${name}</span>`;
+        const isToday = d.date === todayStr;
+        const todayLabelClass = isToday ? ' bar-today-label' : '';
+        const todayMarker = isToday ? '<span class="block w-1 h-1 rounded-full bg-primary mx-auto mt-1"></span>' : '';
+        return `<span class="text-[10px] text-on-surface-variant font-medium flex-1 text-center${todayLabelClass}">${name}${todayMarker}</span>`;
     }).join('');
 
     card.classList.remove('hidden');
@@ -490,7 +497,7 @@ async function loadTariffs() {
             const monthLabel = 'мес';
 
             return `
-            <div class="card rounded-2xl p-5 card-hover cursor-pointer ${isPopular ? 'tariff-popular' : ''}"
+            <div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/5 cursor-pointer hover:border-primary/20 transition-all ${isPopular ? 'tariff-popular' : ''}"
                  onclick="handlePurchase('${escapeHtml(t.plan_code)}')" data-plan="${escapeHtml(t.plan_code)}">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -633,8 +640,8 @@ function showPaymentSuccess(status, hasOnboarding) {
         desc.textContent = 'Подписка активирована. Все функции доступны.';
     }
 
-    document.getElementById('loadingSkeleton').classList.add('hidden');
-    document.getElementById('mainContent').classList.remove('hidden');
+    document.getElementById('loadingSkeleton').style.display = 'none';
+    document.getElementById('mainContent').style.display = '';
 }
 
 async function showPaymentPending(initialData) {
@@ -643,8 +650,8 @@ async function showPaymentPending(initialData) {
     banner.classList.remove('hidden');
     desc.textContent = 'Платёж обрабатывается, подождите...';
 
-    document.getElementById('loadingSkeleton').classList.add('hidden');
-    document.getElementById('mainContent').classList.remove('hidden');
+    document.getElementById('loadingSkeleton').style.display = 'none';
+    document.getElementById('mainContent').style.display = '';
     renderCabinet(initialData);
 
     let attempts = 0;
