@@ -78,7 +78,7 @@ tailwind.config = {
 }
 </script>
 <style>
-html { scroll-behavior: smooth; color-scheme: dark; }
+html { scroll-behavior: smooth; color-scheme: dark; scrollbar-gutter: stable; }
 body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0ef; min-width: 320px; overflow-x: hidden; }
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
 
@@ -460,8 +460,8 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
         <div id="boostStep1">
             <div class="relative p-6 md:p-10 flex justify-between items-start gap-4">
                 <h2 id="boostModalTitle" class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-on-surface pr-2">Увеличьте лимит откликов</h2>
-                <button type="button" id="boostModalClose" class="p-2 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant shrink-0" aria-label="Закрыть">
-                    <span class="material-symbols-outlined text-3xl">close</span>
+                <button type="button" id="boostModalClose" class="inline-flex items-center justify-center size-10 shrink-0 rounded-full p-0 leading-none hover:bg-white/10 transition-colors text-on-surface-variant" aria-label="Закрыть">
+                    <span class="material-symbols-outlined text-3xl leading-none">close</span>
                 </button>
             </div>
             <div class="relative px-6 md:px-10 pb-2">
@@ -506,8 +506,8 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
         <div id="boostStep2" class="hidden">
             <div class="relative p-6 md:p-10 flex justify-between items-start gap-4">
                 <h2 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-on-surface pr-2">Счёт сформирован</h2>
-                <button type="button" class="boost-modal-close-btn p-2 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant shrink-0" aria-label="Закрыть">
-                    <span class="material-symbols-outlined text-3xl">close</span>
+                <button type="button" class="boost-modal-close-btn inline-flex items-center justify-center size-10 shrink-0 rounded-full p-0 leading-none hover:bg-white/10 transition-colors text-on-surface-variant" aria-label="Закрыть">
+                    <span class="material-symbols-outlined text-3xl leading-none">close</span>
                 </button>
             </div>
             <div class="relative px-6 md:px-10 pb-4 space-y-3">
@@ -694,7 +694,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=1"></script>
-<script src="responses.js?v=8.4"></script>
+<script src="responses.js?v=8.5"></script>
 <script src="manual-search.js?v=3.1"></script>
 
 </body>

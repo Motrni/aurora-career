@@ -217,6 +217,24 @@ async function apiFetch(path, opts = {}) {
     return resp;
 }
 
+/** Компенсация исчезновения вертикального скроллбара при `overflow: hidden` (вместе с `scrollbar-gutter: stable` на `html`). */
+let _bodyScrollLockDepth = 0;
+
+function lockBodyScroll() {
+    _bodyScrollLockDepth += 1;
+    if (_bodyScrollLockDepth !== 1) return;
+    const w = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+    if (w > 0) document.body.style.paddingRight = `${w}px`;
+    document.body.classList.add("overflow-hidden");
+}
+
+function unlockBodyScroll() {
+    _bodyScrollLockDepth = Math.max(0, _bodyScrollLockDepth - 1);
+    if (_bodyScrollLockDepth !== 0) return;
+    document.body.style.paddingRight = "";
+    document.body.classList.remove("overflow-hidden");
+}
+
 // ============================================================================
 // INIT PAGE
 // ============================================================================
@@ -393,7 +411,7 @@ function openBoostModal() {
 
     modal.classList.remove("pointer-events-none");
     modal.setAttribute("aria-hidden", "false");
-    document.body.classList.add("overflow-hidden");
+    lockBodyScroll();
 
     requestAnimationFrame(() => {
         modal.classList.add("opacity-100");
@@ -416,7 +434,7 @@ function closeBoostModal() {
     const onDone = () => {
         modal.classList.add("pointer-events-none");
         modal.setAttribute("aria-hidden", "true");
-        document.body.classList.remove("overflow-hidden");
+        unlockBodyScroll();
         modal.removeEventListener("transitionend", onDone);
     };
     modal.addEventListener("transitionend", onDone, { once: true });
