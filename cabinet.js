@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.1 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.2 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  */
 
@@ -156,6 +156,98 @@ async function renderCabinet(user) {
 // SUBSCRIPTION CARD
 // ============================================================================
 
+function resetSubscriptionCardState() {
+    const outer = document.getElementById('subscriptionCardOuter');
+    const card = document.getElementById('subscriptionCard');
+    const icon = document.getElementById('subIcon');
+    const badge = document.getElementById('subBadge');
+
+    outer.className = 'rounded-2xl';
+    card.className = 'glass-panel p-6 md:p-8 rounded-2xl border border-outline-variant/5 relative overflow-hidden';
+    icon.style.fontVariationSettings = '';
+
+    badge.classList.add('hidden');
+    badge.textContent = '';
+
+    document.getElementById('subDetails').classList.add('hidden');
+    document.getElementById('subDetailBilling').classList.add('hidden');
+    document.getElementById('subDetailAmount').classList.add('hidden');
+    document.getElementById('subDetailCard').classList.add('hidden');
+    document.getElementById('subActions').innerHTML = '';
+    document.getElementById('subBillingValue').textContent = '—';
+    document.getElementById('subAmountValue').textContent = '—';
+}
+
+function nextBillingDisplayText(sub) {
+    const ar = !!sub.auto_renew_active;
+    const cp = sub.cp_status || '';
+    const nxt = sub.next_payment_date;
+    if (ar) {
+        if (nxt) return formatDate(nxt);
+        return 'Дата следующего списания уточняется у платёжной системы.';
+    }
+    if (cp === 'Cancelled') {
+        return 'Автопродление отключено — новых списаний не будет. Доступ сохраняется до конца оплаченного периода.';
+    }
+    if (cp === 'PastDue' || cp === 'Rejected') {
+        return 'Проблема с оплатой — автосписание приостановлено. Обновите карту или напишите в поддержку.';
+    }
+    return 'Рекуррентные списания не подключены — списаний по расписанию не будет.';
+}
+
+function applySubscriptionBillingRows(sub) {
+    const details = document.getElementById('subDetails');
+    details.classList.remove('hidden');
+
+    document.getElementById('subDetailExpires').classList.remove('hidden');
+    if (sub.expires_at) {
+        let t = formatDate(sub.expires_at);
+        const dLeft = daysUntil(sub.expires_at);
+        if (dLeft !== null && dLeft >= 0) t = `${t} (${dLeft} дн.)`;
+        document.getElementById('subExpiresValue').textContent = t;
+    } else {
+        document.getElementById('subExpiresValue').textContent = '—';
+    }
+
+    document.getElementById('subDetailBilling').classList.remove('hidden');
+    document.getElementById('subBillingValue').textContent = nextBillingDisplayText(sub);
+
+    const amtRow = document.getElementById('subDetailAmount');
+    if (sub.auto_renew_active && sub.recurring_amount != null && !Number.isNaN(Number(sub.recurring_amount))) {
+        amtRow.classList.remove('hidden');
+        const n = Number(sub.recurring_amount);
+        document.getElementById('subAmountValue').textContent = `${Math.round(n).toLocaleString('ru-RU')} ₽`;
+    } else {
+        amtRow.classList.add('hidden');
+    }
+
+    const cardRow = document.getElementById('subDetailCard');
+    if (sub.card_last_four) {
+        cardRow.classList.remove('hidden');
+        const cardType = sub.card_type || '';
+        document.getElementById('subCardValue').textContent = `${cardType} •••• ${sub.card_last_four}`.trim();
+    } else {
+        cardRow.classList.add('hidden');
+    }
+}
+
+function setSubscriptionActionButtons(sub, status) {
+    const hasOnboarding = currentUser && currentUser.current_step && currentUser.current_step.startsWith('onboarding_');
+    const parts = [];
+    if (hasOnboarding && (status === 'active' || status === 'trial')) {
+        parts.push('<a href="/onboarding/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>');
+    }
+    if (sub.auto_renew_active) {
+        parts.push('<button type="button" onclick="openCancelSubscriptionModal()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-error/35 text-error font-semibold text-sm hover:bg-error/10 transition-colors cursor-pointer">Отменить подписку</button>');
+    }
+    const el = document.getElementById('subActions');
+    if (parts.length === 0) {
+        el.innerHTML = '';
+        return;
+    }
+    el.innerHTML = `<div class="flex flex-col gap-3">${parts.join('')}</div>`;
+}
+
 function updateSubscriptionCard(user) {
     const status = user.subscription_status;
     const sub = user.subscription || {};
@@ -163,11 +255,12 @@ function updateSubscriptionCard(user) {
     const iconWrap = document.getElementById('subIconWrap');
     const title = document.getElementById('subTitle');
     const desc = document.getElementById('subDescription');
-    const actions = document.getElementById('subActions');
     const badge = document.getElementById('subBadge');
-    const details = document.getElementById('subDetails');
     const card = document.getElementById('subscriptionCard');
+    const outer = document.getElementById('subscriptionCardOuter');
     const hasOnboarding = currentUser && currentUser.current_step && currentUser.current_step.startsWith('onboarding_');
+
+    resetSubscriptionCardState();
 
     switch (status) {
         case 'trial': {
@@ -176,46 +269,36 @@ function updateSubscriptionCard(user) {
             title.textContent = 'Пробный период';
             badge.textContent = 'Trial';
             badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#653edb]/20 text-primary';
+            badge.classList.remove('hidden');
 
             if (hasOnboarding) {
                 desc.textContent = 'Завершите первую настройку, чтобы начать поиск.';
-                actions.innerHTML = '<a href="/onboarding/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
             } else {
-                desc.textContent = 'Настройки поиска и автопилот откликов доступны.';
-                actions.innerHTML = '<a href="/settings/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Настройки поиска</a>';
+                desc.textContent = 'Пробный период: доступны поиск и автопилот. Ниже — даты и списания; настройки — в карточках справа.';
             }
 
-            showSubDetails(sub);
-            if (sub.expires_at) {
-                const trialEnd = formatDate(sub.expires_at);
-                const detailExpires = document.getElementById('subDetailExpires');
-                if (detailExpires) {
-                    detailExpires.querySelector('#subExpiresValue').textContent = trialEnd;
-                    const daysLeft = daysUntil(sub.expires_at);
-                    if (daysLeft !== null && daysLeft >= 0) {
-                        detailExpires.querySelector('#subExpiresValue').textContent = `${trialEnd} (${daysLeft} дн.)`;
-                    }
-                }
-            }
+            applySubscriptionBillingRows(sub);
+            setSubscriptionActionButtons(sub, 'trial');
             break;
         }
         case 'active': {
-            icon.textContent = 'verified';
-            icon.style.fontVariationSettings = "'FILL' 1";
+            outer.classList.add('subscription-active-glow');
+            icon.textContent = 'subscriptions';
+            icon.style.fontVariationSettings = "'FILL' 0, 'wght' 400";
             iconWrap.style.background = 'rgba(74,222,128,0.12)';
             title.textContent = 'Подписка активна';
             badge.textContent = 'Active';
             badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#4ade80]/15 text-[#4ade80]';
+            badge.classList.remove('hidden');
 
             if (hasOnboarding) {
                 desc.textContent = 'Завершите первую настройку — привяжите hh.ru и выберите резюме.';
-                actions.innerHTML = '<a href="/onboarding/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Начать настройку</a>';
             } else {
-                desc.textContent = 'Все функции доступны. Настраивайте поиск и запускайте автопилот.';
-                actions.innerHTML = '<a href="/settings/" class="btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm inline-block cursor-pointer">Настройки поиска</a>';
+                desc.textContent = 'Все функции доступны. Управление поиском и откликами — в блоках справа.';
             }
 
-            showSubDetails(sub);
+            applySubscriptionBillingRows(sub);
+            setSubscriptionActionButtons(sub, 'active');
             break;
         }
         case 'ended_trial': {
@@ -223,7 +306,6 @@ function updateSubscriptionCard(user) {
             icon.textContent = 'timer_off';
             title.textContent = 'Пробный период закончился';
             desc.textContent = 'Выберите тариф ниже, чтобы продолжить пользоваться сервисом.';
-            actions.innerHTML = '';
             break;
         }
         case 'ended_active': {
@@ -231,37 +313,67 @@ function updateSubscriptionCard(user) {
             icon.textContent = 'event_busy';
             title.textContent = 'Подписка истекла';
             desc.textContent = 'Продлите подписку, чтобы вернуть доступ к настройкам поиска и автопилоту.';
-            actions.innerHTML = '';
             break;
         }
         default: {
             card.className = 'p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5 relative overflow-hidden';
+            icon.textContent = 'credit_card_off';
+            iconWrap.style.background = 'rgba(101,62,219,0.15)';
+            title.textContent = 'Подписка не активна';
             desc.textContent = 'Выберите тариф, чтобы получить доступ к автопилоту откликов и настройкам поиска.';
             break;
         }
     }
 }
 
-function showSubDetails(sub) {
-    const details = document.getElementById('subDetails');
-    details.classList.remove('hidden');
+function openCancelSubscriptionModal() {
+    const m = document.getElementById('cancelSubModal');
+    m.classList.remove('hidden');
+    m.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('overflow-hidden');
+}
 
-    if (sub.expires_at) {
-        document.getElementById('subExpiresValue').textContent = formatDate(sub.expires_at);
-    }
+function closeCancelSubscriptionModal() {
+    const m = document.getElementById('cancelSubModal');
+    m.classList.add('hidden');
+    m.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('overflow-hidden');
+}
 
-    if (sub.next_payment_date) {
-        const billingRow = document.getElementById('subDetailBilling');
-        billingRow.classList.remove('hidden');
-        document.getElementById('subBillingValue').textContent = formatDate(sub.next_payment_date);
+async function confirmCancelSubscription() {
+    const btn = document.getElementById('cancelSubConfirmBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
     }
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/subscription/cancel`, { method: 'POST' });
+        if (!resp || !resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            alert(err.detail || 'Не удалось отключить автопродление. Попробуйте позже.');
+            return;
+        }
+        closeCancelSubscriptionModal();
+        await refreshCabinetUser();
+    } catch (e) {
+        console.error('[CancelSub]', e);
+        alert('Ошибка сети. Попробуйте позже.');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+}
 
-    if (sub.card_last_four) {
-        const cardRow = document.getElementById('subDetailCard');
-        cardRow.classList.remove('hidden');
-        const cardType = sub.card_type || '';
-        document.getElementById('subCardValue').textContent = `${cardType} •••• ${sub.card_last_four}`.trim();
-    }
+async function refreshCabinetUser() {
+    const resp = await apiFetch(`${API_BASE_URL}/api/auth/me`);
+    if (!resp || !resp.ok) return;
+    const data = await resp.json();
+    if (data.status !== 'ok') return;
+    currentUser = data;
+    await renderCabinet(data);
+    loadSessions();
 }
 
 // ============================================================================
