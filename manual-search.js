@@ -1,4 +1,4 @@
-/* manual-search.js v4.3 — Ручной режим + корзина вакансий */
+/* manual-search.js v4.5 — Ручной режим + корзина вакансий */
 (function () {
     "use strict";
 
@@ -6,6 +6,7 @@
     let _loading = false;
     let _observer = null;
     let _searchActive = false;
+    let _searchStarted = false;
     let _heartbeatTimer = null;
     let _totalRendered = 0;
 
@@ -132,6 +133,7 @@
         _stopHeartbeat();
         _unbindSessionVisibility();
         _searchActive = false;
+        _searchStarted = false;
         _hasMore = false;
         _destroyObserver();
         const r = refs();
@@ -214,6 +216,12 @@
                 return;
             }
 
+            _searchStarted = true;
+
+            if (data.cart) {
+                _syncCartFromServer(data.cart);
+            }
+
             _renderBatch(data.vacancies, r, true);
             _totalRendered = data.vacancies.length;
             _hasMore = !!data.has_more;
@@ -222,6 +230,7 @@
             _updateStats(data, r);
             _startHeartbeat();
             _bindSessionVisibility();
+            _updateFloatingBar();
 
             if (_hasMore) {
                 _initObserver(r);
@@ -483,6 +492,29 @@
     }
 
     // ==================================================================
+    // CART SYNC (after start_search validation)
+    // ==================================================================
+
+    function _syncCartFromServer(cartInfo) {
+        if (!cartInfo) return;
+
+        if (cartInfo.removed_ids && cartInfo.removed_ids.length > 0) {
+            cartInfo.removed_ids.forEach((vid) => {
+                _cartSet.delete(vid);
+            });
+            _showToast(
+                cartInfo.removed_ids.length === 1
+                    ? "1 вакансия из корзины больше не актуальна"
+                    : `${cartInfo.removed_ids.length} вакансий из корзины больше не актуальны`
+            );
+        }
+
+        if (typeof cartInfo.count === "number") {
+            _cartCount = cartInfo.count;
+        }
+    }
+
+    // ==================================================================
     // FLOATING BAR
     // ==================================================================
 
@@ -492,7 +524,7 @@
         const countEl = $("cartBarCount");
         const sendCountEl = $("cartSendBtnCount");
 
-        if (_cartCount > 0) {
+        if (_cartCount > 0 && _searchStarted) {
             bar.classList.remove("hidden");
             requestAnimationFrame(() => {
                 bar.classList.remove("translate-y-full");
