@@ -1,4 +1,4 @@
-/* manual-search.js v4.6 — Ручной режим + корзина вакансий */
+/* manual-search.js v5.0 — Ручной режим + корзина + буст из корзины */
 (function () {
     "use strict";
 
@@ -387,7 +387,13 @@
         }
 
         selectBtn.disabled = true;
+        const prevSelectHtml = selectBtn.innerHTML;
+        selectBtn.classList.add("ms-cart-btn-loading");
+        selectBtn.innerHTML =
+            '<span class="ms-cart-spinner" aria-hidden="true"></span><span class="sr-only">Добавление в корзину…</span>';
+
         const vData = _vacancyCache[vacancyId] || {};
+        let cartAddErrorToasted = false;
 
         try {
             const qs = buildAuthParams();
@@ -401,7 +407,10 @@
                 const err = await resp.json().catch(() => ({}));
                 if (resp.status === 400 && err.detail && err.detail.includes("limit")) {
                     _showToast("Корзина заполнена (60)");
+                } else {
+                    _showToast("Не удалось добавить в корзину");
                 }
+                cartAddErrorToasted = true;
                 throw new Error(err.detail || `HTTP ${resp.status}`);
             }
 
@@ -413,7 +422,12 @@
             _updateAllSelectButtons();
         } catch (e) {
             console.error("[Cart] add error:", e);
+            selectBtn.innerHTML = prevSelectHtml;
+            if (!cartAddErrorToasted) {
+                _showToast("Не удалось добавить в корзину");
+            }
         } finally {
+            selectBtn.classList.remove("ms-cart-btn-loading");
             selectBtn.disabled = false;
         }
     };
@@ -422,6 +436,14 @@
         const selectBtn = cardEl.querySelector(".ms-select-btn");
         if (selectBtn) selectBtn.disabled = true;
 
+        const prevSelectHtml = selectBtn ? selectBtn.innerHTML : "";
+        if (selectBtn) {
+            selectBtn.classList.add("ms-cart-btn-loading");
+            selectBtn.innerHTML =
+                '<span class="ms-cart-spinner" aria-hidden="true"></span><span class="sr-only">Удаление из корзины…</span>';
+        }
+
+        let cartRemoveErrorToasted = false;
         try {
             const qs = buildAuthParams();
             const resp = await apiFetch(`/api/cart/remove?${qs}`, {
@@ -430,7 +452,11 @@
                 body: JSON.stringify({ vacancy_id: vacancyId }),
             });
 
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            if (!resp.ok) {
+                _showToast("Не удалось убрать из корзины");
+                cartRemoveErrorToasted = true;
+                throw new Error(`HTTP ${resp.status}`);
+            }
             const data = await resp.json();
             _cartSet.delete(vacancyId);
             _cartCount = data.cart_count;
@@ -439,8 +465,15 @@
             _updateAllSelectButtons();
         } catch (e) {
             console.error("[Cart] remove error:", e);
+            if (selectBtn) selectBtn.innerHTML = prevSelectHtml;
+            if (!cartRemoveErrorToasted) {
+                _showToast("Не удалось убрать из корзины");
+            }
         } finally {
-            if (selectBtn) selectBtn.disabled = false;
+            if (selectBtn) {
+                selectBtn.classList.remove("ms-cart-btn-loading");
+                selectBtn.disabled = false;
+            }
         }
     }
 
@@ -666,13 +699,18 @@
     }
 
     // ==================================================================
-    // CART LIMIT MODAL
+    // CART LIMIT MODAL (3-step: options → payment → processing/success)
     // ==================================================================
+
+    let _cartLimitPaymentId = null;
+    let _cartLimitPollTimer = null;
 
     function _openCartLimitModal(total, remaining) {
         const modal = $("cartLimitModal");
         const card = $("cartLimitCard");
         if (!modal) return;
+
+        _cartLimitPaymentId = null;
 
         $("cartLimitSubtitle").textContent =
             `Вы пытаетесь отправить ${total} откликов, но ваш доступный лимит на сегодня: ${remaining}`;
@@ -680,9 +718,57 @@
         $("cartLimitQueueCount").textContent = total - remaining;
         $("cartLimitSendAvailableBtnCount").textContent = remaining;
 
+        const opt2Count = Math.min(total, remaining + 20);
+        const opt3Count = Math.min(total, remaining + 40);
+
+        const freeOption = $("cartLimitFreeOption");
+        const boost20 = $("cartLimitBoost20Option");
+        const boost40 = $("cartLimitBoost40Option");
+
+        if (remaining > 0) {
+            freeOption.classList.remove("hidden");
+        } else {
+            freeOption.classList.add("hidden");
+        }
+
+        if (opt2Count > remaining) {
+            boost20.classList.remove("hidden");
+            const btn20 = $("cartLimitBoost20Btn");
+            if (opt2Count >= total) {
+                $("cartLimitBoost20Title").textContent = `Отправить все ${total} с бустом +20`;
+                const extra = remaining + 20 - total;
+                $("cartLimitBoost20Sub").textContent = extra > 0
+                    ? `990 ₽ / 30 дней · останется ещё ${extra} откликов сегодня`
+                    : "990 ₽ / 30 дней";
+            } else {
+                $("cartLimitBoost20Title").textContent = `Отправить ${opt2Count} откликов с бустом +20`;
+                $("cartLimitBoost20Sub").textContent = "990 ₽ / 30 дней";
+            }
+            btn20.onclick = () => cartBoostPurchase("20", opt2Count);
+        } else {
+            boost20.classList.add("hidden");
+        }
+
+        if (opt3Count > opt2Count) {
+            boost40.classList.remove("hidden");
+            const btn40 = $("cartLimitBoost40Btn");
+            if (opt3Count >= total) {
+                $("cartLimitBoost40Title").textContent = `Отправить все ${total} с бустом +40`;
+                const extra = remaining + 40 - total;
+                $("cartLimitBoost40Sub").textContent = extra > 0
+                    ? `1490 ₽ / 30 дней · останется ещё ${extra} откликов сегодня`
+                    : "1490 ₽ / 30 дней";
+            } else {
+                $("cartLimitBoost40Title").textContent = `Отправить ${opt3Count} откликов с бустом +40`;
+                $("cartLimitBoost40Sub").textContent = "1490 ₽ / 30 дней";
+            }
+            btn40.onclick = () => cartBoostPurchase("40", opt3Count);
+        } else {
+            boost40.classList.add("hidden");
+        }
+
         const sendList = $("cartLimitSendList");
         sendList.innerHTML = "";
-
         const allCards = document.querySelectorAll(".vacancy-card");
         let shown = 0;
         allCards.forEach((c) => {
@@ -697,6 +783,10 @@
             shown++;
         });
 
+        cartLimitShowStep1();
+        const errEl = $("cartLimitError");
+        if (errEl) { errEl.classList.add("hidden"); errEl.textContent = ""; }
+
         modal.classList.remove("pointer-events-none", "opacity-0");
         modal.setAttribute("aria-hidden", "false");
         requestAnimationFrame(() => {
@@ -706,7 +796,39 @@
         document.body.style.overflow = "hidden";
     }
 
+    window.cartLimitShowStep1 = function cartLimitShowStep1() {
+        const s1 = $("cartLimitStep1");
+        const s2 = $("cartLimitStep2");
+        const s3 = $("cartLimitStep3");
+        if (s1) s1.classList.remove("hidden");
+        if (s2) s2.classList.add("hidden");
+        if (s3) s3.classList.add("hidden");
+    };
+
+    function _cartLimitShowStep2(paymentUrl, amount, description, sendCount) {
+        $("cartLimitStep1").classList.add("hidden");
+        $("cartLimitStep2").classList.remove("hidden");
+        $("cartLimitStep3").classList.add("hidden");
+        $("cartLimitPayDesc").textContent = description;
+        $("cartLimitPayPrice").textContent = Math.round(amount);
+        $("cartLimitPaySendCount").textContent = sendCount;
+        $("cartLimitPayLink").href = paymentUrl;
+    }
+
+    function _cartLimitShowStep3() {
+        $("cartLimitStep1").classList.add("hidden");
+        $("cartLimitStep2").classList.add("hidden");
+        $("cartLimitStep3").classList.remove("hidden");
+        $("cartLimitProcessing").classList.remove("hidden");
+        $("cartLimitSuccess").classList.add("hidden");
+        $("cartLimitTimeout").classList.add("hidden");
+    }
+
     window.closeCartLimitModal = function closeCartLimitModal() {
+        if (_cartLimitPollTimer) {
+            clearTimeout(_cartLimitPollTimer);
+            _cartLimitPollTimer = null;
+        }
         const modal = $("cartLimitModal");
         const card = $("cartLimitCard");
         if (!modal) return;
@@ -722,26 +844,127 @@
         }, 300);
     };
 
-    window.cartOpenBoostUpsell = function cartOpenBoostUpsell() {
-        closeCartLimitModal();
-        if (typeof openBoostModal === "function") {
-            openBoostModal();
-        } else {
-            const boostModal = $("boostModal");
-            if (boostModal) {
-                boostModal.classList.remove("pointer-events-none", "opacity-0");
-                boostModal.setAttribute("aria-hidden", "false");
-                const boostCard = $("boostModalCard");
-                if (boostCard) {
-                    requestAnimationFrame(() => {
-                        boostCard.style.transform = "scale(1)";
-                        boostCard.style.opacity = "1";
-                    });
-                }
-                document.body.style.overflow = "hidden";
+    window.cartBoostPurchase = async function cartBoostPurchase(tier, maxCount) {
+        const errEl = $("cartLimitError");
+        if (errEl) { errEl.classList.add("hidden"); errEl.textContent = ""; }
+
+        try {
+            const authQ = buildAuthParams();
+            const url = `/api/boost/purchase${authQ ? "?" + authQ : ""}`;
+            const resp = await apiFetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    tier: String(tier),
+                    auto_send_cart: true,
+                    cart_max_count: maxCount,
+                }),
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error(err.detail || `HTTP ${resp.status}`);
+            }
+
+            const data = await resp.json();
+            if (!data.payment_url) throw new Error("Не удалось сформировать ссылку на оплату");
+
+            _cartLimitPaymentId = data.payment_id;
+            sessionStorage.setItem("cart_boost_payment_id", String(data.payment_id));
+            sessionStorage.setItem("cart_boost_max_count", String(maxCount));
+
+            _cartLimitShowStep2(data.payment_url, data.amount, data.description, maxCount);
+        } catch (e) {
+            console.error("[CartBoost] purchase error:", e);
+            if (errEl) {
+                errEl.textContent = e.message || "Произошла ошибка";
+                errEl.classList.remove("hidden");
             }
         }
     };
+
+    async function _pollBoostPaymentStatus(paymentId, maxAttempts) {
+        maxAttempts = maxAttempts || 40;
+        let attempt = 0;
+
+        async function poll() {
+            attempt++;
+            try {
+                const authQ = buildAuthParams();
+                const resp = await apiFetch(
+                    `/api/boost/payment-status?payment_id=${paymentId}${authQ ? "&" + authQ : ""}`,
+                );
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+
+                if (data.status === "processed") {
+                    $("cartLimitProcessing").classList.add("hidden");
+                    $("cartLimitSuccess").classList.remove("hidden");
+                    const cr = data.cart_result || {};
+                    $("cartLimitSuccessCount").textContent =
+                        cr.sent_count > 0
+                            ? `Отправлено ${cr.sent_count} откликов!`
+                            : "Ваши отклики отправлены!";
+
+                    _cartCount = cr.cart_remaining ?? 0;
+                    _updateFloatingBar();
+                    _updateAllSelectButtons();
+
+                    if (typeof currentDailyLimit !== "undefined") {
+                        currentApplied = (currentApplied || 0) + (cr.sent_count || 0);
+                    }
+
+                    sessionStorage.removeItem("cart_boost_payment_id");
+                    sessionStorage.removeItem("cart_boost_max_count");
+                    return;
+                }
+
+                if (attempt >= maxAttempts) {
+                    $("cartLimitProcessing").classList.add("hidden");
+                    $("cartLimitTimeout").classList.remove("hidden");
+                    sessionStorage.removeItem("cart_boost_payment_id");
+                    sessionStorage.removeItem("cart_boost_max_count");
+                    return;
+                }
+
+                _cartLimitPollTimer = setTimeout(poll, 3000);
+            } catch (e) {
+                console.error("[CartBoost] poll error:", e);
+                if (attempt >= maxAttempts) {
+                    $("cartLimitProcessing").classList.add("hidden");
+                    $("cartLimitTimeout").classList.remove("hidden");
+                    return;
+                }
+                _cartLimitPollTimer = setTimeout(poll, 3000);
+            }
+        }
+
+        poll();
+    }
+
+    function _checkBoostPaymentOnLoad() {
+        const params = new URLSearchParams(window.location.search);
+        const paymentId = params.get("boost_payment") || sessionStorage.getItem("cart_boost_payment_id");
+        if (!paymentId) return;
+
+        window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+
+        const modal = $("cartLimitModal");
+        const card = $("cartLimitCard");
+        if (!modal) return;
+
+        _cartLimitShowStep3();
+
+        modal.classList.remove("pointer-events-none", "opacity-0");
+        modal.setAttribute("aria-hidden", "false");
+        requestAnimationFrame(() => {
+            card.style.transform = "scale(1)";
+            card.style.opacity = "1";
+        });
+        document.body.style.overflow = "hidden";
+
+        _pollBoostPaymentStatus(parseInt(paymentId, 10));
+    }
 
     // ==================================================================
     // RENDER
@@ -1214,4 +1437,5 @@
     // ==================================================================
 
     _initCartCount();
+    _checkBoostPaymentOnLoad();
 })();
