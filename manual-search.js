@@ -1,4 +1,4 @@
-/* manual-search.js v4.2 — Ручной режим + корзина вакансий */
+/* manual-search.js v4.3 — Ручной режим + корзина вакансий */
 (function () {
     "use strict";
 
@@ -440,22 +440,22 @@
         const badge = cardEl.querySelector(".ms-selected-badge");
 
         if (selected) {
-            cardEl.classList.add("ring-2", "ring-primary/40");
+            cardEl.classList.add("ms-cart-selected");
             if (applyBtn) applyBtn.classList.add("hidden");
             if (badge) badge.classList.remove("hidden");
             if (selectBtn) {
                 selectBtn.innerHTML = '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">close</span><span class="hidden md:inline">Отменить</span>';
                 selectBtn.classList.remove("bg-surface-container", "text-on-surface-variant");
-                selectBtn.classList.add("bg-primary/10", "text-primary");
+                selectBtn.classList.add("bg-emerald-500/15", "text-emerald-300");
             }
         } else {
-            cardEl.classList.remove("ring-2", "ring-primary/40");
+            cardEl.classList.remove("ms-cart-selected");
             if (applyBtn) applyBtn.classList.remove("hidden");
             if (badge) badge.classList.add("hidden");
             if (selectBtn) {
                 selectBtn.innerHTML = '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">check_circle</span><span class="hidden md:inline">Выбрать</span>';
                 selectBtn.classList.add("bg-surface-container", "text-on-surface-variant");
-                selectBtn.classList.remove("bg-primary/10", "text-primary");
+                selectBtn.classList.remove("bg-emerald-500/15", "text-emerald-300");
             }
         }
     }
@@ -623,7 +623,7 @@
 
     function _markCardInactive(cardEl) {
         cardEl.classList.add("opacity-50", "pointer-events-none");
-        cardEl.classList.remove("ring-2", "ring-primary/40");
+        cardEl.classList.remove("ms-cart-selected");
         const actions = cardEl.querySelector("[data-actions]");
         if (actions) {
             actions.innerHTML = '<p class="text-xs text-on-surface-variant/60 italic py-2">Вакансия больше не актуальна</p>';
@@ -728,7 +728,7 @@
 
     function _createCard(v) {
         const card = document.createElement("div");
-        card.className = "vacancy-card glass-panel p-5 md:p-6 rounded-xl flex flex-col gap-3 cursor-pointer relative transition-all duration-200";
+        card.className = "vacancy-card glass-panel p-5 md:p-6 flex flex-col gap-3 cursor-pointer relative";
         card.dataset.vacancyId = v.id;
 
         const isInCart = _cartSet.has(v.id);
@@ -745,15 +745,15 @@
 
         const selectDisabled = !isInCart && _cartCount >= CART_LIMIT;
         const selectBtnClasses = isInCart
-            ? "bg-primary/10 text-primary"
+            ? "bg-emerald-500/15 text-emerald-300"
             : "bg-surface-container text-on-surface-variant";
         const selectBtnContent = isInCart
             ? '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">close</span><span class="hidden md:inline">Отменить</span>'
             : '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">check_circle</span><span class="hidden md:inline">Выбрать</span>';
 
         card.innerHTML = `
-            <div class="ms-selected-badge absolute top-3 right-3 ${isInCart ? "" : "hidden"} bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span class="material-symbols-outlined" style="font-size:12px;font-variation-settings:'FILL' 1">check</span>Выбрано
+            <div class="ms-selected-badge absolute text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${isInCart ? "" : "hidden"}">
+                <span class="material-symbols-outlined text-emerald-300" style="font-size:12px;font-variation-settings:'FILL' 1">check</span>Выбрано
             </div>
             <div class="flex items-start gap-4">
                 ${v.employer_logo
@@ -782,7 +782,7 @@
         `;
 
         if (isInCart) {
-            card.classList.add("ring-2", "ring-primary/40");
+            card.classList.add("ms-cart-selected");
         }
 
         card.addEventListener("click", (e) => {

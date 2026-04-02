@@ -193,12 +193,36 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     background: rgba(255,255,255,0.04);
 }
 
-.vacancy-card {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+/* Карточки ручного режима: ring в Tailwind = box-shadow; hover перетирал обводку выбора */
+#manualVacancyGrid .vacancy-card {
+    border: 2px solid transparent;
+    border-radius: 0.875rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
-.vacancy-card:hover {
+.vacancy-card:not(.ms-cart-selected):not(.ms-card-applied):hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 30px rgba(90,48,208,0.12);
+}
+.vacancy-card.ms-cart-selected {
+    border-color: rgba(52, 211, 153, 0.55);
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.12);
+}
+.vacancy-card.ms-cart-selected:hover {
+    transform: none;
+    box-shadow: 0 4px 22px rgba(52, 211, 153, 0.14);
+    border-color: rgba(52, 211, 153, 0.72);
+}
+.vacancy-card.ms-card-applied:hover {
+    transform: none;
+    box-shadow: none;
+}
+#manualVacancyGrid .ms-selected-badge {
+    top: 0.625rem;
+    right: 1rem;
+    z-index: 2;
+    background: rgba(16, 185, 129, 0.22);
+    color: #6ee7b7;
+    border: 1px solid rgba(52, 211, 153, 0.45);
 }
 
 .vacancy-tag {
@@ -762,7 +786,7 @@ function toggleMobileMenu() {
 
 <script src="aurora-session.js?v=2"></script>
 <script src="responses.js?v=8.7"></script>
-<script src="manual-search.js?v=4.2"></script>
+<script src="manual-search.js?v=4.3"></script>
 
 </body>
 </html>
