@@ -718,9 +718,6 @@
         $("cartLimitQueueCount").textContent = total - remaining;
         $("cartLimitSendAvailableBtnCount").textContent = remaining;
 
-        const opt2Count = Math.min(total, remaining + 20);
-        const opt3Count = Math.min(total, remaining + 40);
-
         const freeOption = $("cartLimitFreeOption");
         const boost20 = $("cartLimitBoost20Option");
         const boost40 = $("cartLimitBoost40Option");
@@ -731,38 +728,28 @@
             freeOption.classList.add("hidden");
         }
 
-        if (opt2Count > remaining) {
+        const needsBoost = total > remaining;
+
+        if (needsBoost) {
             boost20.classList.remove("hidden");
-            const btn20 = $("cartLimitBoost20Btn");
-            if (opt2Count >= total) {
-                $("cartLimitBoost20Title").textContent = `Отправить все ${total} с бустом +20`;
-                const extra = remaining + 20 - total;
-                $("cartLimitBoost20Sub").textContent = extra > 0
-                    ? `990 ₽ / 30 дней · останется ещё ${extra} откликов сегодня`
-                    : "990 ₽ / 30 дней";
-            } else {
-                $("cartLimitBoost20Title").textContent = `Отправить ${opt2Count} откликов с бустом +20`;
-                $("cartLimitBoost20Sub").textContent = "990 ₽ / 30 дней";
-            }
-            btn20.onclick = () => cartBoostPurchase("20", opt2Count);
+            const extra20 = remaining + 20 - total;
+            $("cartLimitBoost20Title").textContent = `Отправить все ${total} с бустом +20`;
+            $("cartLimitBoost20Sub").textContent = extra20 > 0
+                ? `990 ₽ / 30 дней · останется ещё ${extra20} откликов сегодня`
+                : "990 ₽ / 30 дней";
+            $("cartLimitBoost20Btn").onclick = () => cartBoostPurchase("20", total);
         } else {
             boost20.classList.add("hidden");
         }
 
-        if (opt3Count > opt2Count) {
+        if (needsBoost) {
             boost40.classList.remove("hidden");
-            const btn40 = $("cartLimitBoost40Btn");
-            if (opt3Count >= total) {
-                $("cartLimitBoost40Title").textContent = `Отправить все ${total} с бустом +40`;
-                const extra = remaining + 40 - total;
-                $("cartLimitBoost40Sub").textContent = extra > 0
-                    ? `1490 ₽ / 30 дней · останется ещё ${extra} откликов сегодня`
-                    : "1490 ₽ / 30 дней";
-            } else {
-                $("cartLimitBoost40Title").textContent = `Отправить ${opt3Count} откликов с бустом +40`;
-                $("cartLimitBoost40Sub").textContent = "1490 ₽ / 30 дней";
-            }
-            btn40.onclick = () => cartBoostPurchase("40", opt3Count);
+            const extra40 = remaining + 40 - total;
+            $("cartLimitBoost40Title").textContent = `Отправить все ${total} с бустом +40`;
+            $("cartLimitBoost40Sub").textContent = extra40 > 0
+                ? `1490 ₽ / 30 дней · останется ещё ${extra40} откликов сегодня`
+                : "1490 ₽ / 30 дней";
+            $("cartLimitBoost40Btn").onclick = () => cartBoostPurchase("40", total);
         } else {
             boost40.classList.add("hidden");
         }
