@@ -103,6 +103,7 @@
     function _startHeartbeat() {
         _stopHeartbeat();
         _heartbeatTimer = setInterval(async () => {
+            if (document.hidden) return;
             try {
                 const qs = buildAuthParams();
                 const resp = await apiFetch(`/api/manual-search/touch?${qs}`, {
