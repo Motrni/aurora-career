@@ -1,4 +1,4 @@
-/* manual-search.js v4.0 — Ручной режим + корзина вакансий */
+/* manual-search.js v4.2 — Ручной режим + корзина вакансий */
 (function () {
     "use strict";
 
@@ -293,8 +293,22 @@
     // APPLY (instant — "Самолетик")
     // ==================================================================
 
+    function _restoreApplyButton(btn) {
+        if (!btn) return;
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">send</span>';
+    }
+
     window.applyToVacancy = async function applyToVacancy(vacancyId, cardEl) {
+        if (!cardEl || cardEl.classList.contains("ms-card-applied")) return false;
+
         const btn = cardEl.querySelector(".ms-apply-btn");
+        const vData = _vacancyCache[vacancyId] || {};
+        if (!vData || typeof vData !== "object" || Object.keys(vData).length === 0) {
+            _showToast("Нет данных вакансии. Запустите поиск заново.");
+            return false;
+        }
+
         if (btn) {
             btn.disabled = true;
             btn.innerHTML = '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
@@ -305,23 +319,40 @@
             const resp = await apiFetch(`/api/manual-search/apply?${qs}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ vacancy_id: vacancyId }),
+                body: JSON.stringify({ vacancy_id: vacancyId, vacancy_data: vData }),
             });
 
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
 
-            _animateRemoveCard(cardEl);
+            if (data.error === "no_resume_selected") {
+                _showToast("Выберите резюме в настройках");
+                _restoreApplyButton(btn);
+                return false;
+            }
+            if (data.error === "vacancy_data_required") {
+                _showToast("Нет данных вакансии для отклика");
+                _restoreApplyButton(btn);
+                return false;
+            }
+
+            if (data.queued === false) {
+                _showToast("Уже в очереди или отклик уже обработан");
+                _restoreApplyButton(btn);
+                return false;
+            }
+
+            _showAppliedPlaceholder(cardEl);
 
             if (data.limit_reached) {
                 _showToast("Дневной лимит исчерпан");
             }
+            return true;
         } catch (e) {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<span class="material-symbols-outlined text-lg" style="font-variation-settings:\'FILL\' 1">send</span>';
-            }
+            _restoreApplyButton(btn);
             console.error("[ManualSearch] apply error:", e);
+            _showToast("Ошибка отправки отклика");
+            return false;
         }
     };
 
@@ -330,6 +361,8 @@
     // ==================================================================
 
     window.selectForCart = async function selectForCart(vacancyId, cardEl) {
+        if (!cardEl || cardEl.classList.contains("ms-card-applied")) return;
+
         const selectBtn = cardEl.querySelector(".ms-select-btn");
         if (!selectBtn || selectBtn.disabled) return;
 
@@ -736,13 +769,13 @@
             ${v.description_short ? `<p class="text-xs text-on-surface-variant/70 line-clamp-3 leading-relaxed">${esc(v.description_short)}</p>` : ""}
             ${skills ? `<div class="flex flex-wrap gap-1">${skills}</div>` : ""}
             <div class="flex gap-2 mt-auto pt-2 border-t border-outline-variant/10" data-actions>
-                <button class="ms-apply-btn ${isInCart ? "hidden" : ""} px-4 py-2.5 rounded-lg bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer flex items-center gap-1.5" onclick="applyToVacancy('${esc(v.id)}', this.closest('.vacancy-card'))">
+                <button type="button" class="ms-apply-btn ${isInCart ? "hidden" : ""} px-4 py-2.5 rounded-lg bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer flex items-center gap-1.5" onclick="event.stopPropagation(); void applyToVacancy('${esc(v.id)}', this.closest('.vacancy-card'))">
                     <span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1">send</span>
                 </button>
-                <button class="ms-select-btn flex-1 px-4 py-2.5 rounded-lg ${selectBtnClasses} font-semibold text-sm hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${selectDisabled ? "opacity-40 cursor-not-allowed" : ""}" onclick="selectForCart('${esc(v.id)}', this.closest('.vacancy-card'))" ${selectDisabled ? 'disabled title="Вы выбрали максимум вакансий (60) для отправки"' : ""}>
+                <button type="button" class="ms-select-btn flex-1 px-4 py-2.5 rounded-lg ${selectBtnClasses} font-semibold text-sm hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${selectDisabled ? "opacity-40 cursor-not-allowed" : ""}" onclick="event.stopPropagation(); void selectForCart('${esc(v.id)}', this.closest('.vacancy-card'))" ${selectDisabled ? 'disabled title="Вы выбрали максимум вакансий (60) для отправки"' : ""}>
                     ${selectBtnContent}
                 </button>
-                <a href="${esc(v.url)}" target="_blank" rel="noopener" class="px-3 py-2.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors flex items-center cursor-pointer" title="Открыть на hh.ru">
+                <a href="${esc(v.url)}" target="_blank" rel="noopener" class="px-3 py-2.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors flex items-center cursor-pointer" title="Открыть на hh.ru" onclick="event.stopPropagation()">
                     <span class="material-symbols-outlined text-lg">open_in_new</span>
                 </a>
             </div>
@@ -753,6 +786,7 @@
         }
 
         card.addEventListener("click", (e) => {
+            if (card.classList.contains("ms-card-applied")) return;
             if (e.target.closest("[data-actions]")) return;
             openVacancyModal(v.id);
         });
@@ -812,6 +846,18 @@
             cardEl.remove();
             _checkEmptyGrid();
         }, 300);
+    }
+
+    function _showAppliedPlaceholder(cardEl) {
+        if (!cardEl || cardEl.querySelector(".ms-applied-overlay")) return;
+        cardEl.classList.add("ms-card-applied", "pointer-events-none", "cursor-default");
+        const overlay = document.createElement("div");
+        overlay.className =
+            "ms-applied-overlay absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-xl bg-surface/90 backdrop-blur-sm border border-emerald-500/25";
+        overlay.innerHTML =
+            '<span class="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400" style="font-variation-settings:\'FILL\' 1">check_circle</span>' +
+            '<span class="text-sm font-bold text-center px-3 text-emerald-800 dark:text-emerald-300">Отклик отправлен!</span>';
+        cardEl.appendChild(overlay);
     }
 
     function _checkEmptyGrid() {
@@ -1081,6 +1127,8 @@
         const cardEl = document.querySelector(`.vacancy-card[data-vacancy-id="${vacancyId}"]`);
         if (cardEl) {
             await window.applyToVacancy(vacancyId, cardEl);
+        } else {
+            _showToast("Карточка не найдена в списке");
         }
         closeVacancyModal();
     }
