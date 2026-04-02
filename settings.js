@@ -38,6 +38,14 @@ async function authFetch(url, options = {}) {
     options.credentials = 'include';
     let resp = await fetch(url, options);
 
+    if (resp.status === 403) {
+        var subStatus = resp.headers.get('X-Sub-Status');
+        if (subStatus) {
+            window.location.href = '/cabinet/';
+            return null;
+        }
+    }
+
     if (resp.status === 409) {
         const body = await resp.clone().json().catch(() => ({}));
         if (body.detail && body.detail.includes('re-authentication')) {
@@ -118,7 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     window.location.href = '/onboarding/';
                     return;
                 }
-                if (meData.subscription_status === 'none') {
+                if (!meData.has_access) {
                     window.location.href = '/cabinet/';
                     return;
                 }

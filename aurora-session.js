@@ -65,8 +65,18 @@
             .then(function (r) {
                 if (r.ok) {
                     _lastSuccessfulPing = Date.now();
+                    return r.json();
                 } else if (r.status === 401) {
                     refreshNow();
+                }
+                return null;
+            })
+            .then(function (data) {
+                if (data && data.status === 'ok' && data.has_access === false) {
+                    var p = window.location.pathname;
+                    if (p !== '/cabinet/' && p !== '/cabinet') {
+                        window.location.href = '/cabinet/';
+                    }
                 }
             })
             .catch(function () {});

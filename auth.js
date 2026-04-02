@@ -21,7 +21,7 @@ async function redirectBySubscription() {
                     window.location.href = '/reauth/';
                 } else if (data.current_step && data.current_step.startsWith('onboarding_')) {
                     window.location.href = '/onboarding/';
-                } else if (data.subscription_status === 'none') {
+                } else if (!data.has_access) {
                     window.location.href = '/cabinet/';
                 } else {
                     window.location.href = '/settings/';
@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (data.status === 'ok') {
                 if (data.need_reauth) {
                     window.location.href = '/reauth/';
-                } else if (data.subscription_status === 'none') {
+                } else if (!data.has_access) {
                     window.location.href = '/cabinet/';
                 } else {
                     window.location.href = '/settings/';

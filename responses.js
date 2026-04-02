@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                     return;
                 }
-                if (meData.subscription_status === 'none') {
+                if (!meData.has_access) {
                     window.location.href = '/cabinet/';
                     return;
                 }
@@ -204,6 +204,14 @@ async function apiFetch(path, opts = {}) {
     const url = `${API_BASE_URL}${path}`;
     const defaults = { credentials: "include" };
     let resp = await fetch(url, { ...defaults, ...opts });
+
+    if (resp.status === 403) {
+        var subStatus = resp.headers.get('X-Sub-Status');
+        if (subStatus) {
+            window.location.href = '/cabinet/';
+            return null;
+        }
+    }
 
     if (resp.status === 409) {
         const body = await resp.clone().json().catch(() => ({}));

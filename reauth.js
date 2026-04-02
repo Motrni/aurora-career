@@ -22,6 +22,14 @@ async function apiFetch(url, options = {}) {
     options.credentials = 'include';
     let resp = await fetch(url, options);
 
+    if (resp.status === 403) {
+        var subStatus = resp.headers.get('X-Sub-Status');
+        if (subStatus) {
+            window.location.href = '/cabinet/';
+            return null;
+        }
+    }
+
     if (resp.status === 401 && window.AuroraSession) {
         const ok = await AuroraSession.refreshNow();
         if (ok) {
@@ -65,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (!data.need_reauth) {
-            if (data.subscription_status === 'none') {
+            if (!data.has_access) {
                 window.location.href = '/cabinet/';
             } else {
                 window.location.href = '/settings/';
