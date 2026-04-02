@@ -19,6 +19,14 @@ async function apiFetch(url, options = {}) {
     options.credentials = 'include';
     let resp = await fetch(url, options);
 
+    if (resp.status === 403) {
+        const subStatus = resp.headers.get('X-Sub-Status');
+        if (subStatus) {
+            window.location.href = '/cabinet/';
+            return null;
+        }
+    }
+
     if (resp.status === 409) {
         const body = await resp.clone().json().catch(() => ({}));
         if (body.detail && body.detail.includes('re-authentication')) {
@@ -153,6 +161,7 @@ async function renderCabinet(user) {
     updateSubscriptionCard(user);
     updateNavAccess(user.subscription_status);
     updateTelegramCard(user.has_telegram);
+    applyTrialCardVisibility(user);
 
     if (user.subscription_status === 'none' || user.subscription_status === 'ended_trial' || user.subscription_status === 'ended_active') {
         await loadTariffs();
@@ -774,6 +783,29 @@ async function handleRevokeAll() {
 }
 
 // ============================================================================
+// TRIAL CARD (только status === 'none' на бэкенде)
+// ============================================================================
+
+function applyTrialCardVisibility(user) {
+    const trialCard = document.getElementById('trialCard');
+    if (!trialCard) return;
+    const show =
+        user.can_start_trial === true
+        || (user.can_start_trial === undefined && user.subscription_status === 'none');
+    trialCard.classList.toggle('hidden', !show);
+    trialCard.toggleAttribute('aria-hidden', !show);
+    if (!show) {
+        trialCard.removeAttribute('onclick');
+        trialCard.style.pointerEvents = 'none';
+        trialCard.style.cursor = 'default';
+    } else {
+        trialCard.setAttribute('onclick', 'handleActivateTrial()');
+        trialCard.style.pointerEvents = '';
+        trialCard.style.cursor = '';
+    }
+}
+
+// ============================================================================
 // ACTIONS
 // ============================================================================
 
@@ -888,6 +920,10 @@ async function handleActivateTrial() {
             const err = await resp.json().catch(() => ({}));
             if (resp.status === 409) {
                 window.location.href = '/onboarding/';
+                return;
+            }
+            if (resp.status === 403) {
+                alert(err.detail || 'Пробный период для этого аккаунта недоступен.');
                 return;
             }
             throw new Error(err.detail || 'Init failed');
