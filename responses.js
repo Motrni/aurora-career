@@ -47,12 +47,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             method: "GET",
             credentials: "include"
         });
-        if (meResponse.status === 401) {
-            const refreshResp = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-                method: "POST",
-                credentials: "include"
-            });
-            if (refreshResp.ok) {
+        if (meResponse.status === 401 && window.AuroraSession) {
+            const ok = await AuroraSession.refreshNow();
+            if (ok) {
                 meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
                     method: "GET",
                     credentials: "include"
@@ -206,12 +203,22 @@ function buildAuthParams() {
 async function apiFetch(path, opts = {}) {
     const url = `${API_BASE_URL}${path}`;
     const defaults = { credentials: "include" };
-    const resp = await fetch(url, { ...defaults, ...opts });
+    let resp = await fetch(url, { ...defaults, ...opts });
+
     if (resp.status === 409) {
         const body = await resp.clone().json().catch(() => ({}));
         if (body.detail && String(body.detail).includes('re-authentication')) {
             window.location.href = '/reauth/';
             return resp;
+        }
+    }
+
+    if (resp.status === 401 && authMode === 'jwt' && window.AuroraSession) {
+        const ok = await AuroraSession.refreshNow();
+        if (ok) {
+            resp = await fetch(url, { ...defaults, ...opts });
+        } else {
+            window.location.href = '/auth/';
         }
     }
     return resp;

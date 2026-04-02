@@ -34,9 +34,6 @@ let authMode = null; // 'jwt' or 'legacy'
 let legacyUserId = null;
 let legacySign = null;
 
-let _isRefreshing = false;
-let _refreshPromise = null;
-
 async function authFetch(url, options = {}) {
     options.credentials = 'include';
     let resp = await fetch(url, options);
@@ -49,19 +46,9 @@ async function authFetch(url, options = {}) {
         }
     }
 
-    if (resp.status === 401 && authMode === 'jwt') {
-        if (!_isRefreshing) {
-            _isRefreshing = true;
-            _refreshPromise = fetch(`${API_BASE_URL}/api/auth/refresh`, {
-                method: 'POST', credentials: 'include',
-            }).then(r => {
-                _isRefreshing = false;
-                return r.ok;
-            }).catch(() => { _isRefreshing = false; return false; });
-        }
-
-        const refreshed = await _refreshPromise;
-        if (refreshed) {
+    if (resp.status === 401 && authMode === 'jwt' && window.AuroraSession) {
+        const ok = await AuroraSession.refreshNow();
+        if (ok) {
             resp = await fetch(url, options);
         } else {
             window.location.href = '/auth/';
@@ -109,11 +96,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             method: "GET", credentials: "include",
         });
 
-        if (meResponse.status === 401) {
-            const refreshResp = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-                method: "POST", credentials: "include",
-            });
-            if (refreshResp.ok) {
+        if (meResponse.status === 401 && window.AuroraSession) {
+            const ok = await AuroraSession.refreshNow();
+            if (ok) {
                 meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
                     method: "GET", credentials: "include",
                 });

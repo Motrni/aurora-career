@@ -1,18 +1,26 @@
 /**
  * aurora-session.js — общий слой сессии для всех внутренних страниц Aurora.
- * Проактивный refresh JWT (POST /api/auth/refresh), пока вкладка открыта.
  *
- * Подключать ПЕРЕД page-скриптом (settings.js, responses.js):
- *   <script src="aurora-session.js?v=1"></script>
+ * Обязанности:
+ *  1. Проактивный refresh JWT пока вкладка открыта (ping каждые 2.5 мин).
+ *  2. При возврате на вкладку после >14 мин — немедленный refresh
+ *     без предварительного /api/auth/me (access TTL = 15 мин).
+ *  3. Экспорт refreshNow() — deduplicated Promise<boolean> для
+ *     использования в page-скриптах при 401.
+ *
+ * Подключать ПЕРЕД page-скриптом:
+ *   <script src="aurora-session.js?v=2"></script>
  * После успешной проверки JWT вызвать: AuroraSession.startPing();
  */
 (function (global) {
     'use strict';
 
     var SESSION_PING_MS = 2.5 * 60 * 1000;
+    var ACCESS_TTL_MS   = 14 * 60 * 1000;
     var _interval = null;
     var _visibilityBound = false;
     var _beforeUnloadBound = false;
+    var _lastSuccessfulPing = Date.now();
 
     function getApiBase() {
         var h = window.location.hostname;
@@ -22,27 +30,54 @@
         return 'https://api.aurora-career.ru';
     }
 
-    var _refreshLock = false;
+    var _refreshPromise = null;
+
+    /**
+     * Deduplicated refresh. Если refresh уже в полёте — возвращает тот же Promise.
+     * @returns {Promise<boolean>} true если новые cookies установлены.
+     */
+    function refreshNow() {
+        if (_refreshPromise) return _refreshPromise;
+
+        var base = getApiBase();
+        _refreshPromise = fetch(base + '/api/auth/refresh', {
+            method: 'POST', credentials: 'include',
+        })
+        .then(function (r) {
+            _refreshPromise = null;
+            if (r.ok) _lastSuccessfulPing = Date.now();
+            return r.ok;
+        })
+        .catch(function () {
+            _refreshPromise = null;
+            return false;
+        });
+
+        return _refreshPromise;
+    }
 
     function runPing() {
         if (document.hidden) return;
-        if (_refreshLock) return;
+        if (_refreshPromise) return;
         var base = getApiBase();
 
         fetch(base + '/api/auth/me', { method: 'GET', credentials: 'include' })
             .then(function (r) {
-                if (r.status === 401 && !_refreshLock) {
-                    _refreshLock = true;
-                    return fetch(base + '/api/auth/refresh', { method: 'POST', credentials: 'include' })
-                        .then(function () { _refreshLock = false; })
-                        .catch(function () { _refreshLock = false; });
+                if (r.ok) {
+                    _lastSuccessfulPing = Date.now();
+                } else if (r.status === 401) {
+                    refreshNow();
                 }
             })
             .catch(function () {});
     }
 
     function onVisibility() {
-        if (!document.hidden) {
+        if (document.hidden) return;
+        var gap = Date.now() - _lastSuccessfulPing;
+        if (gap > ACCESS_TTL_MS) {
+            refreshNow();
+        } else {
             runPing();
         }
     }
@@ -67,11 +102,12 @@
     }
 
     /**
-     * Запускает интервал ping + refresh при возврате на вкладку.
+     * Запускает интервал ping + proactive refresh при возврате на вкладку.
      * Вызывать только если у пользователя активна JWT-сессия (не legacy HMAC).
      */
     function startPing() {
         stopPing();
+        _lastSuccessfulPing = Date.now();
         _interval = setInterval(runPing, SESSION_PING_MS);
         document.addEventListener('visibilitychange', onVisibility);
         _visibilityBound = true;
@@ -83,6 +119,7 @@
         getApiBase: getApiBase,
         startPing: startPing,
         stopPing: stopPing,
-        refreshOnce: runPing
+        refreshNow: refreshNow,
+        refreshOnce: refreshNow,
     };
 }(typeof window !== 'undefined' ? window : this));

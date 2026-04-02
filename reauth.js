@@ -22,11 +22,9 @@ async function apiFetch(url, options = {}) {
     options.credentials = 'include';
     let resp = await fetch(url, options);
 
-    if (resp.status === 401) {
-        const refreshResp = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-            method: 'POST', credentials: 'include',
-        });
-        if (refreshResp.ok) {
+    if (resp.status === 401 && window.AuroraSession) {
+        const ok = await AuroraSession.refreshNow();
+        if (ok) {
             resp = await fetch(url, options);
         } else {
             window.location.href = '/auth/';
@@ -46,11 +44,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             method: 'GET', credentials: 'include',
         });
 
-        if (meResp.status === 401) {
-            const refreshResp = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-                method: 'POST', credentials: 'include',
-            });
-            if (refreshResp.ok) {
+        if (meResp.status === 401 && window.AuroraSession) {
+            const ok = await AuroraSession.refreshNow();
+            if (ok) {
                 meResp = await fetch(`${API_BASE_URL}/api/auth/me`, {
                     method: 'GET', credentials: 'include',
                 });
