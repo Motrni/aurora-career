@@ -1,4 +1,4 @@
-/* manual-search.js v4.5 — Ручной режим + корзина вакансий */
+/* manual-search.js v4.6 — Ручной режим + корзина вакансий */
 (function () {
     "use strict";
 
@@ -498,19 +498,19 @@
     function _syncCartFromServer(cartInfo) {
         if (!cartInfo) return;
 
-        if (cartInfo.removed_ids && cartInfo.removed_ids.length > 0) {
-            cartInfo.removed_ids.forEach((vid) => {
-                _cartSet.delete(vid);
-            });
-            _showToast(
-                cartInfo.removed_ids.length === 1
-                    ? "1 вакансия из корзины больше не актуальна"
-                    : `${cartInfo.removed_ids.length} вакансий из корзины больше не актуальны`
-            );
-        }
+        _cartSet = new Set(cartInfo.active_ids || []);
 
         if (typeof cartInfo.count === "number") {
             _cartCount = cartInfo.count;
+        }
+
+        if (cartInfo.removed_ids && cartInfo.removed_ids.length > 0) {
+            const n = cartInfo.removed_ids.length;
+            _showToast(
+                n === 1
+                    ? "1 вакансия из корзины больше не актуальна"
+                    : `${n} вакансий из корзины больше не актуальны`
+            );
         }
     }
 
