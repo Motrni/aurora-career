@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<base href="/">
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Резюме | Аврора</title>
+<link rel="icon" type="image/png" href="favicon.png?v=3">
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.aurora-career.ru" crossorigin>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "outline": "#938ea0",
+                "on-secondary-container": "#c7aaff",
+                "on-secondary": "#3e0c85",
+                "primary-container": "#5a30d0",
+                "on-secondary-fixed": "#250059",
+                "tertiary": "#ccbeff",
+                "tertiary-fixed": "#e7deff",
+                "on-surface": "#e7e0ef",
+                "surface-container-low": "#1d1a24",
+                "on-primary-container": "#cec0ff",
+                "surface-bright": "#3b3743",
+                "surface-variant": "#37333e",
+                "background": "#15121c",
+                "on-error": "#690005",
+                "on-background": "#e7e0ef",
+                "inverse-primary": "#653edb",
+                "on-tertiary-container": "#cec0ff",
+                "tertiary-container": "#5a30d0",
+                "on-tertiary-fixed": "#1e0060",
+                "on-tertiary": "#350097",
+                "on-tertiary-fixed-variant": "#4c1bc3",
+                "on-secondary-fixed-variant": "#552d9c",
+                "primary-fixed": "#e7deff",
+                "surface-dim": "#15121c",
+                "on-primary-fixed": "#1e0060",
+                "surface-container-lowest": "#100d17",
+                "secondary-fixed": "#ebddff",
+                "primary-fixed-dim": "#ccbeff",
+                "on-surface-variant": "#cac3d7",
+                "surface": "#15121c",
+                "secondary-fixed-dim": "#d3bbff",
+                "secondary-container": "#58309f",
+                "on-primary-fixed-variant": "#4c1bc3",
+                "primary": "#ccbeff",
+                "inverse-on-surface": "#322f3a",
+                "error-container": "#93000a",
+                "tertiary-fixed-dim": "#ccbeff",
+                "surface-container-highest": "#37333e",
+                "error": "#ffb4ab",
+                "surface-container": "#211e29",
+                "on-primary": "#350097",
+                "surface-tint": "#ccbeff",
+                "surface-container-high": "#2c2833",
+                "outline-variant": "#484455",
+                "inverse-surface": "#e7e0ef",
+                "on-error-container": "#ffdad6",
+                "secondary": "#d3bbff"
+            },
+            fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+        },
+    },
+}
+</script>
+<style>
+html { scroll-behavior: smooth; color-scheme: dark; scrollbar-gutter: stable; }
+body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0ef; min-width: 320px; overflow-x: hidden; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+
+.glass-panel {
+    background: rgba(55, 51, 62, 0.4);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+}
+
+.brand-logo-font {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+}
+
+.light-leak-tl { position: fixed; top: -10%; left: -5%; width: 40%; height: 40%; border-radius: 50%; background: rgba(204,190,255,0.05); filter: blur(120px); pointer-events: none; z-index: 0; }
+.light-leak-br { position: fixed; bottom: -10%; right: -5%; width: 30%; height: 30%; border-radius: 50%; background: rgba(211,187,255,0.05); filter: blur(100px); pointer-events: none; z-index: 0; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.skeleton {
+    background-color: #1e1e28;
+    background-image: linear-gradient(90deg, #1e1e28 0px, #2a2a35 40px, #1e1e28 80px);
+    background-size: 200px 100%;
+    background-repeat: no-repeat;
+    display: inline-block;
+    border-radius: 8px;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}
+.skeleton-block { width: 100%; display: block; }
+@keyframes skeleton-shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(100% + 200px) 0; } }
+
+.error-banner {
+    color: #f87171; font-size: 0.9rem; display: none; text-align: center;
+    background: rgba(248,113,113,0.08); padding: 10px; border-radius: 10px;
+    border: 1px solid rgba(248,113,113,0.2); margin-bottom: 16px;
+}
+
+.page-toast-host {
+    position: fixed;
+    left: 50%;
+    top: 1rem;
+    transform: translateX(-50%) translateY(-10px);
+    z-index: 100;
+    max-width: min(90vw, 22rem);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s;
+    pointer-events: none;
+}
+.page-toast-host.toast-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+.page-toast-inner {
+    pointer-events: auto;
+    border-radius: 0.875rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(44, 40, 51, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0.75rem 1.15rem;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #e7e0ef;
+    line-height: 1.4;
+}
+
+.burger-btn span { display: block; width: 24px; height: 2px; background: #e7e0ef; transition: all 0.3s ease; }
+.burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.burger-btn.active span:nth-child(2) { opacity: 0; }
+.burger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+.mobile-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+.mobile-menu.open { transform: translateX(0); }
+
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+
+.resume-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.resume-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 50px rgba(90,48,208,0.15);
+}
+
+.resume-card-animate {
+    animation: card-in 0.3s ease-out both;
+}
+
+.score-ring-track { stroke: #37333e; }
+.score-ring-value { transition: stroke-dashoffset 0.6s ease; }
+
+.analysis-report h1, .analysis-report h2, .analysis-report h3 {
+    font-weight: 700; color: #e7e0ef; margin-top: 1.25em; margin-bottom: 0.5em;
+}
+.analysis-report h1 { font-size: 1.25rem; }
+.analysis-report h2 { font-size: 1.125rem; }
+.analysis-report h3 { font-size: 1rem; }
+.analysis-report p { margin-bottom: 0.75em; line-height: 1.7; color: #cac3d7; }
+.analysis-report ul, .analysis-report ol { padding-left: 1.25em; margin-bottom: 0.75em; color: #cac3d7; }
+.analysis-report li { margin-bottom: 0.35em; line-height: 1.6; }
+.analysis-report strong, .analysis-report b { font-weight: 600; color: #e7e0ef; }
+.analysis-report em, .analysis-report i { color: #ccbeff; }
+.analysis-report code { background: rgba(90,48,208,0.15); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.875em; }
+.analysis-report blockquote {
+    border-left: 3px solid #5a30d0;
+    padding-left: 1em;
+    margin: 1em 0;
+    color: #cac3d7;
+    font-style: italic;
+}
+
+.luxury-gradient {
+    background: linear-gradient(135deg, #5a30d0 0%, #3e0c85 100%);
+}
+</style>
+</head>
+
+<body class="min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary">
+
+<div class="light-leak-tl"></div>
+<div class="light-leak-br"></div>
+
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+    <div class="h-full w-full px-5 md:px-12 lg:px-16 flex md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:gap-x-6">
+        <div class="flex items-center gap-2 md:gap-3 shrink-0 md:justify-self-start">
+            <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
+                <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
+                    <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </a>
+        </div>
+        <div class="hidden md:flex items-center justify-center gap-8 lg:gap-10 md:justify-self-center whitespace-nowrap">
+            <a href="/cabinet/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer">Кабинет</a>
+            <a href="/settings/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer">Настройки</a>
+            <a href="/responses/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer">Отклики</a>
+            <span class="text-[#e7e0ef] font-bold text-base border-b-2 border-[#5a30d0] pb-1">Резюме</span>
+        </div>
+        <div class="flex items-center gap-3 shrink-0 ml-auto md:ml-0 md:justify-self-end">
+            <button onclick="handleNavLogout()" class="hidden md:flex items-center gap-1.5 text-[#e7e0ef] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
+                <span class="material-symbols-outlined text-xl">logout</span>
+            </button>
+            <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div id="pageToast" class="page-toast-host" aria-live="polite" aria-atomic="true" role="status" aria-hidden="true">
+    <div class="page-toast-inner">
+        <span id="pageToastText"></span>
+    </div>
+</div>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
+    <a href="/cabinet/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Кабинет</a>
+    <a href="/settings/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Настройки</a>
+    <a href="/responses/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Отклики</a>
+    <span class="text-[#e7e0ef] text-base font-bold py-3.5 border-b border-white/5">Резюме</span>
+    <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">На главную</a>
+    <button onclick="handleNavLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
+</div>
+
+<main class="flex-grow pt-28 md:pt-32 pb-16 md:pb-24 px-4 md:px-8 lg:px-16 max-w-[1920px] mx-auto w-full relative z-10">
+
+    <div id="errorMsg" class="error-banner"></div>
+
+    <!-- Skeleton -->
+    <div id="globalSkeleton">
+        <div class="skeleton skeleton-block" style="height: 64px; margin-bottom: 20px; border-radius: 12px;"></div>
+        <div class="skeleton skeleton-block" style="height: 24px; width: 40%; margin-bottom: 32px; border-radius: 8px;"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+            <div class="skeleton skeleton-block" style="height: 380px; border-radius: 16px;"></div>
+            <div class="skeleton skeleton-block" style="height: 380px; border-radius: 16px;"></div>
+            <div class="skeleton skeleton-block hidden xl:block" style="height: 380px; border-radius: 16px;"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" style="display: none; animation: fadeIn 0.3s ease-in-out;">
+
+        <!-- Page Header -->
+        <div class="mb-10 md:mb-14">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tighter text-on-background mb-3">Ваши резюме</h1>
+            <p class="text-on-surface-variant text-base md:text-lg max-w-2xl">Анализируйте качество резюме с помощью ИИ и генерируйте улучшенные версии для повышения отклика работодателей.</p>
+        </div>
+
+        <!-- Limits Info Bar -->
+        <div id="limitsBar" class="glass-panel rounded-xl p-4 md:p-6 mb-8 md:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-outline-variant/10">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings:'FILL' 1">token</span>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-on-surface">Лимиты анализа</p>
+                    <p class="text-xs text-on-surface-variant">Осталось: <span id="analysisRemaining" class="text-primary font-bold">—</span> из <span id="analysisLimit">—</span> на сегодня</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-secondary-container/20 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-secondary text-xl" style="font-variation-settings:'FILL' 1">auto_awesome</span>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-on-surface">Улучшение резюме</p>
+                    <p class="text-xs text-on-surface-variant" id="improvementStatus">Доступно</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resume Cards Grid -->
+        <div id="resumeGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+            <!-- Cards are rendered dynamically by resume.js -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="resumeEmpty" class="hidden glass-panel p-10 md:p-16 rounded-xl text-center">
+            <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4" style="font-variation-settings: 'FILL' 1;">description</span>
+            <h3 class="text-xl font-bold text-on-surface mb-2">Резюме не найдены</h3>
+            <p class="text-on-surface-variant text-sm max-w-md mx-auto">Ваши резюме появятся здесь после авторизации через hh.ru. Если вы только что вошли — подождите пару минут.</p>
+        </div>
+
+        <!-- Return Button -->
+        <div class="mt-8 md:mt-12">
+            <button id="returnBtn" class="w-full md:w-auto px-8 py-3 md:py-4 rounded-xl text-on-surface-variant font-semibold hover:bg-surface-container-highest transition-all border border-outline-variant/10 text-sm md:text-base cursor-pointer">Вернуться в Аврору</button>
+        </div>
+
+    </div><!-- /mainContent -->
+</main>
+
+<!-- Analysis Report Modal -->
+<div id="analysisModal" class="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain p-4 md:p-6 opacity-0 transition-opacity duration-300 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="analysisModalTitle">
+    <div class="absolute inset-0 z-0 bg-[#100d17]/80 backdrop-blur-md" id="analysisModalBackdrop" tabindex="-1"></div>
+    <div id="analysisModalCard" class="relative z-10 my-auto w-full max-w-2xl shrink-0 glass-panel rounded-xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 scale-95 opacity-0 transition-all duration-300 ease-out max-h-[90vh] flex flex-col">
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-container/10 rounded-full blur-[80px] pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-secondary-container/8 rounded-full blur-[80px] pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="relative p-5 md:p-8 pb-0 flex items-start justify-between gap-4 shrink-0">
+            <div class="min-w-0">
+                <p class="text-xs text-on-surface-variant uppercase tracking-widest font-bold mb-1">Анализ резюме</p>
+                <h2 id="analysisModalTitle" class="text-lg md:text-xl font-bold text-on-surface leading-snug"></h2>
+            </div>
+            <button type="button" onclick="closeAnalysisModal()" class="p-2 -mr-2 -mt-1 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant shrink-0 cursor-pointer" aria-label="Закрыть">
+                <span class="material-symbols-outlined text-2xl">close</span>
+            </button>
+        </div>
+
+        <!-- Score Summary -->
+        <div id="analysisScoreSummary" class="relative px-5 md:px-8 pt-5 flex items-center gap-5 shrink-0">
+            <div class="relative w-16 h-16 flex items-center justify-center shrink-0">
+                <svg class="w-full h-full -rotate-90 block" viewBox="0 0 64 64">
+                    <circle class="score-ring-track" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="5"></circle>
+                    <circle id="analysisModalRing" class="score-ring-value text-primary" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="175.9" stroke-dashoffset="175.9" stroke-width="5"></circle>
+                </svg>
+                <span id="analysisModalScore" class="absolute text-sm font-black">—</span>
+            </div>
+            <div>
+                <p id="analysisModalScoreLabel" class="text-sm font-bold text-on-surface">Оценка качества</p>
+                <p id="analysisModalScoreDesc" class="text-xs text-on-surface-variant mt-0.5">Нажмите «Обновить анализ» для получения свежей оценки</p>
+            </div>
+        </div>
+
+        <!-- Report Content -->
+        <div class="relative flex-1 overflow-y-auto px-5 md:px-8 py-5 scrollbar-thin min-h-0">
+            <div id="analysisModalBody" class="analysis-report"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="relative shrink-0 p-5 md:px-8 md:py-5 border-t border-outline-variant/10 flex gap-2">
+            <button id="analysisModalRefreshBtn" onclick="requestAnalysis()" class="flex-1 px-4 py-3 rounded-lg bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-lg">refresh</span>
+                Обновить анализ
+            </button>
+            <button onclick="closeAnalysisModal()" class="px-6 py-3 rounded-lg bg-surface-container text-on-surface-variant font-semibold text-sm hover:bg-surface-container-high transition-colors cursor-pointer">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<!-- Improvement Wizard Modal -->
+<div id="improveModal" class="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain p-4 md:p-6 opacity-0 transition-opacity duration-300 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="improveModalTitle">
+    <div class="absolute inset-0 z-0 bg-[#100d17]/80 backdrop-blur-md" id="improveModalBackdrop" tabindex="-1"></div>
+    <div id="improveModalCard" class="relative z-10 my-auto w-full max-w-xl shrink-0 glass-panel rounded-xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 scale-95 opacity-0 transition-all duration-300 ease-out max-h-[90vh] flex flex-col">
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-container/10 rounded-full blur-[80px] pointer-events-none"></div>
+
+        <!-- Step 1: Interview -->
+        <div id="improveStepInterview">
+            <div class="relative p-6 md:p-8 flex justify-between items-start gap-4 shrink-0">
+                <div class="min-w-0">
+                    <p class="text-xs text-on-surface-variant uppercase tracking-widest font-bold mb-1">Улучшение резюме</p>
+                    <h2 id="improveModalTitle" class="text-xl md:text-2xl font-bold text-on-surface pr-2">Расскажите подробнее</h2>
+                </div>
+                <button type="button" onclick="closeImproveModal()" class="p-2 -mr-2 -mt-1 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant shrink-0 cursor-pointer" aria-label="Закрыть">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+            <div class="relative px-6 md:px-8 pb-2">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="flex gap-1" id="improveProgressDots">
+                        <div class="w-2 h-2 rounded-full bg-primary"></div>
+                        <div class="w-2 h-2 rounded-full bg-surface-container-highest"></div>
+                        <div class="w-2 h-2 rounded-full bg-surface-container-highest"></div>
+                    </div>
+                    <span class="text-xs text-on-surface-variant">Вопрос <span id="improveQuestionNum">1</span> из <span id="improveQuestionTotal">?</span></span>
+                </div>
+                <p id="improveQuestionText" class="text-on-surface-variant text-base leading-relaxed font-light">Загрузка вопроса...</p>
+            </div>
+            <div class="relative p-6 md:p-8 pt-4 space-y-4">
+                <textarea id="improveAnswerInput" rows="4" class="w-full bg-surface-container-high/50 border border-outline-variant/20 rounded-xl py-3 px-4 text-on-surface focus:ring-2 focus:ring-primary-container transition-all text-sm resize-none placeholder:text-on-surface-variant/40" placeholder="Ваш ответ..."></textarea>
+                <div class="flex gap-3">
+                    <button id="improveSkipBtn" onclick="skipImproveQuestion()" class="flex-1 px-4 py-3 rounded-xl bg-surface-container text-on-surface-variant font-semibold text-sm hover:bg-surface-container-high transition-colors cursor-pointer">Пропустить</button>
+                    <button id="improveNextBtn" onclick="submitImproveAnswer()" class="flex-1 px-4 py-3 rounded-xl bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer flex items-center justify-center gap-2">
+                        Далее
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Processing -->
+        <div id="improveStepProcessing" class="hidden">
+            <div class="relative p-8 md:p-12 text-center space-y-5">
+                <div class="w-20 h-20 mx-auto rounded-full bg-primary-container/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary text-4xl animate-spin">progress_activity</span>
+                </div>
+                <h2 class="text-xl font-bold text-on-surface">Генерация нового резюме</h2>
+                <p class="text-sm text-on-surface-variant max-w-sm mx-auto">ИИ анализирует ваши ответы и создает улучшенную версию резюме. Это может занять до 2 минут.</p>
+                <div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+                    <div id="improveProgressBar" class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 10%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div id="improveStepSuccess" class="hidden">
+            <div class="relative p-8 md:p-12 text-center space-y-5">
+                <div class="w-20 h-20 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-green-400 text-4xl" style="font-variation-settings:'FILL' 1">check_circle</span>
+                </div>
+                <h2 class="text-xl font-bold text-on-surface">Резюме готово</h2>
+                <p class="text-sm text-on-surface-variant max-w-sm mx-auto">Улучшенная версия сгенерирована. Вы можете скачать PDF или просмотреть изменения.</p>
+                <div class="space-y-3 pt-2">
+                    <a id="improvePdfLink" href="#" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-8 py-4 rounded-xl luxury-gradient text-white font-bold text-base shadow-[0_10px_30px_rgba(90,48,208,0.3)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-lg align-middle mr-1">picture_as_pdf</span>
+                        Скачать PDF
+                    </a>
+                    <button type="button" onclick="closeImproveModal()" class="w-full text-center px-8 py-3 rounded-xl text-on-surface-variant font-semibold hover:bg-white/5 transition-colors text-sm cursor-pointer">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Limit Reached Modal -->
+<div id="limitModal" class="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain p-4 md:p-6 opacity-0 transition-opacity duration-300 ease-out" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 z-0 bg-[#100d17]/80 backdrop-blur-md" id="limitModalBackdrop" tabindex="-1"></div>
+    <div id="limitModalCard" class="relative z-10 my-auto w-full max-w-md shrink-0 glass-panel rounded-xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 scale-95 opacity-0 transition-all duration-300 ease-out">
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-container/10 rounded-full blur-[80px] pointer-events-none"></div>
+        <div class="p-6 md:p-10 text-center space-y-5">
+            <div class="w-16 h-16 mx-auto rounded-full bg-amber-500/15 flex items-center justify-center">
+                <span class="material-symbols-outlined text-amber-400 text-3xl" style="font-variation-settings:'FILL' 1">lock_clock</span>
+            </div>
+            <h2 id="limitModalTitle" class="text-xl font-bold text-on-surface">Лимит исчерпан</h2>
+            <p id="limitModalDesc" class="text-sm text-on-surface-variant leading-relaxed">Вы использовали все доступные попытки анализа на сегодня. Лимиты обновятся завтра.</p>
+            <button type="button" onclick="closeLimitModal()" class="w-full px-8 py-3.5 rounded-xl bg-surface-container-high text-on-surface font-bold text-sm hover:bg-surface-variant transition-colors cursor-pointer">
+                Понятно
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="mt-auto w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
+    <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+        <div class="flex flex-col items-center md:items-start gap-2">
+            <div class="flex items-center gap-2 md:gap-3">
+                <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-base md:text-lg text-[#ccbeff]">Аврора</div>
+                    <div class="text-[8px] md:text-[9px] text-[#cac3d7]/70 font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </div>
+            <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Аврора</div>
+        </div>
+        <div class="flex gap-6 md:gap-8 font-['Inter'] text-[10px] md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em]">
+            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500" href="https://aurora-career.ru/" target="_blank">Главная</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+function toggleMobileMenu() {
+    document.getElementById('burger-btn').classList.toggle('active');
+    document.getElementById('mobile-menu').classList.toggle('open');
+    document.body.classList.toggle('overflow-hidden');
+}
+</script>
+
+<script src="aurora-session.js?v=2"></script>
+<script src="resume.js?v=1.0"></script>
+
+</body>
+</html>
