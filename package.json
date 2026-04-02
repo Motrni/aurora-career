@@ -2,8 +2,7 @@
   "name": "aurora-career",
   "version": "1.0.0",
   "scripts": {
-    "build": "mkdir -p dist && cp -r *.html *.js *.css *.json *.png *.jpg *.xml *.mp4 img auth cabinet onboarding responses resume reauth settings dist/ 2>/dev/null; echo 'Static files copied to dist/'",
-    "start": "serve -s dist -l 3000"
+    "start": "npx serve ."
   },
   "dependencies": {
     "serve": "^14.0.0"
