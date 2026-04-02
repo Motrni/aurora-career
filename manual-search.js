@@ -799,7 +799,17 @@
         $("cartLimitPayDesc").textContent = description;
         $("cartLimitPayPrice").textContent = Math.round(amount);
         $("cartLimitPaySendCount").textContent = sendCount;
-        $("cartLimitPayLink").href = paymentUrl;
+        const payLink = $("cartLimitPayLink");
+        payLink.href = paymentUrl;
+
+        payLink.onclick = function () {
+            if (_cartLimitPaymentId && !_cartLimitPollTimer) {
+                setTimeout(() => {
+                    _cartLimitShowStep3();
+                    _pollBoostPaymentStatus(_cartLimitPaymentId, 60);
+                }, 2000);
+            }
+        };
     }
 
     function _cartLimitShowStep3() {
