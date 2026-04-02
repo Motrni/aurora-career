@@ -80,13 +80,18 @@
             r.btnAutopilot.classList.add("active");
             r.btnManual.classList.remove("active");
             _stopHeartbeat();
+            _unbindSessionVisibility();
             _hideFloatingBar();
         } else {
             r.autopilot.style.display = "none";
             r.manual.style.display = "";
             r.btnAutopilot.classList.remove("active");
             r.btnManual.classList.add("active");
-            if (_searchActive) _startHeartbeat();
+            if (_searchActive) {
+                _startHeartbeat();
+                _bindSessionVisibility();
+                _checkSessionAlive();
+            }
             _updateFloatingBar();
         }
     };
@@ -124,12 +129,52 @@
 
     function _handleSessionExpired() {
         _stopHeartbeat();
+        _unbindSessionVisibility();
         _searchActive = false;
         _hasMore = false;
         _destroyObserver();
         const r = refs();
+        r.grid.innerHTML = "";
         r.sentinel.classList.add("hidden");
+        if (r.endOfResults) r.endOfResults.classList.add("hidden");
         if (r.sessionExpired) r.sessionExpired.classList.remove("hidden");
+        _hideFloatingBar();
+    }
+
+    // ==================================================================
+    // VISIBILITY CHECK (session alive on tab return)
+    // ==================================================================
+
+    let _sessionVisibilityBound = false;
+
+    function _onVisibilityForSession() {
+        if (document.hidden || !_searchActive) return;
+        _checkSessionAlive();
+    }
+
+    async function _checkSessionAlive() {
+        try {
+            const qs = buildAuthParams();
+            const resp = await apiFetch(`/api/manual-search/touch?${qs}`, {
+                method: "POST",
+            });
+            if (resp && resp.ok) {
+                const data = await resp.json();
+                if (!data.alive) _handleSessionExpired();
+            }
+        } catch (_) {}
+    }
+
+    function _bindSessionVisibility() {
+        if (_sessionVisibilityBound) return;
+        document.addEventListener("visibilitychange", _onVisibilityForSession);
+        _sessionVisibilityBound = true;
+    }
+
+    function _unbindSessionVisibility() {
+        if (!_sessionVisibilityBound) return;
+        document.removeEventListener("visibilitychange", _onVisibilityForSession);
+        _sessionVisibilityBound = false;
     }
 
     // ==================================================================
@@ -175,6 +220,7 @@
 
             _updateStats(data, r);
             _startHeartbeat();
+            _bindSessionVisibility();
 
             if (_hasMore) {
                 _initObserver(r);
