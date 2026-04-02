@@ -181,6 +181,47 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 .score-ring-track { stroke: #37333e; }
 .score-ring-value { transition: stroke-dashoffset 0.6s ease; }
 
+.card-processing-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(28, 27, 31, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    animation: fade-in 0.2s ease;
+}
+
+.processing-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(204, 190, 255, 0.2);
+    border-top-color: #ccbeff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.card-highlight {
+    animation: highlight-pulse 2s ease;
+}
+
+@keyframes highlight-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(90, 48, 208, 0.6); }
+    50%  { box-shadow: 0 0 24px 4px rgba(90, 48, 208, 0.3); }
+    100% { box-shadow: none; }
+}
+
 .analysis-report h1, .analysis-report h2, .analysis-report h3 {
     font-weight: 700; color: #e7e0ef; margin-top: 1.25em; margin-bottom: 0.5em;
 }
@@ -494,7 +535,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="resume.js?v=1.0"></script>
+<script src="resume.js?v=1.1"></script>
 
 </body>
 </html>

@@ -367,8 +367,10 @@ async function requestAnalysis() {
     if (!currentResumeId) return;
 
     const resumeId = currentResumeId;
-    const card = document.querySelector(`[data-resume-id="${resumeId}"]`);
 
+    closeAnalysisModal();
+
+    const card = document.querySelector(`[data-resume-id="${resumeId}"]`);
     setCardProcessing(card, true);
 
     try {
@@ -376,9 +378,19 @@ async function requestAnalysis() {
             `${API_BASE_URL}/api/resumes/analyze`,
             getFetchOpts('POST', { resume_id: resumeId })
         );
-        if (!resp) return;
+        if (!resp) {
+            setCardProcessing(card, false);
+            return;
+        }
 
         const data = await resp.json();
+
+        if (data.error === 'no_changes') {
+            setCardProcessing(card, false);
+            showToast('Резюме не изменилось на hh.ru. Новый анализ не требуется.', 5000);
+            scrollToCard(card);
+            return;
+        }
 
         if (!resp.ok) {
             setCardProcessing(card, false);
@@ -386,23 +398,26 @@ async function requestAnalysis() {
                 openLimitModal('Лимит анализов исчерпан', data.message || 'Попробуйте завтра.');
             } else if (data.error === 'cooldown') {
                 showToast(data.message || 'Подождите перед повторным запросом', 4000);
-            } else if (data.error === 'no_changes') {
-                showToast('Изменений на hh.ru не обнаружено. Новый анализ не требуется.', 5000);
             } else {
                 showToast(data.message || 'Ошибка при запуске анализа', 4000);
             }
+            scrollToCard(card);
             return;
         }
 
         if (data.status === 'queued') {
             showToast(`Анализ поставлен в очередь. Ожидание: ~${data.wait_minutes || 1} мин.`, 5000);
+            scrollToCard(card);
             startAnalysisPoll(resumeId);
         } else if (data.status === 'ready') {
+            setCardProcessing(card, false);
             updateResumeInList(resumeId, data);
             renderResumeCards();
             analysisLimits.used++;
             updateLimitsBar();
             showToast('Анализ завершен!', 3000);
+            const updatedCard = document.querySelector(`[data-resume-id="${resumeId}"]`);
+            scrollToCard(updatedCard);
         }
 
     } catch (e) {
@@ -422,6 +437,8 @@ function startAnalysisPoll(resumeId) {
         if (attempts > maxAttempts) {
             clearInterval(analysisPollTimer);
             analysisPollTimer = null;
+            const card = document.querySelector(`[data-resume-id="${resumeId}"]`);
+            setCardProcessing(card, false);
             showToast('Анализ занимает больше времени. Обновите страницу позже.', 5000);
             return;
         }
@@ -442,6 +459,8 @@ function startAnalysisPoll(resumeId) {
                 updateLimitsBar();
                 renderResumeCards();
                 showToast('Анализ резюме готов!', 3500);
+                const updatedCard = document.querySelector(`[data-resume-id="${resumeId}"]`);
+                scrollToCard(updatedCard);
             }
         } catch (e) {
             console.error("[Analysis] Poll error:", e);
@@ -474,11 +493,29 @@ function setCardProcessing(card, isProcessing) {
         }
     });
 
-    const statusEl = card.querySelector('.tracking-widest');
-    if (statusEl && isProcessing) {
-        statusEl.textContent = 'AI обрабатывает...';
-        statusEl.className = statusEl.className.replace('text-primary', 'text-secondary').replace('text-on-surface-variant', 'text-secondary');
+    let overlay = card.querySelector('.card-processing-overlay');
+    if (isProcessing) {
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'card-processing-overlay';
+            overlay.innerHTML = `
+                <div class="flex flex-col items-center gap-3">
+                    <div class="processing-spinner"></div>
+                    <span class="text-sm font-bold text-on-surface/80">AI анализирует…</span>
+                </div>`;
+            card.style.position = 'relative';
+            card.appendChild(overlay);
+        }
+    } else if (overlay) {
+        overlay.remove();
     }
+}
+
+function scrollToCard(card) {
+    if (!card) return;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.add('card-highlight');
+    setTimeout(() => card.classList.remove('card-highlight'), 2000);
 }
 
 // ============================================================================
