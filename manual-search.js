@@ -816,6 +816,8 @@
             clearTimeout(_cartLimitPollTimer);
             _cartLimitPollTimer = null;
         }
+        _cartLimitPaymentId = null;
+
         const modal = $("cartLimitModal");
         const card = $("cartLimitCard");
         if (!modal) return;
@@ -857,8 +859,6 @@
             if (!data.payment_url) throw new Error("Не удалось сформировать ссылку на оплату");
 
             _cartLimitPaymentId = data.payment_id;
-            sessionStorage.setItem("cart_boost_payment_id", String(data.payment_id));
-            sessionStorage.setItem("cart_boost_max_count", String(maxCount));
 
             _cartLimitShowStep2(data.payment_url, data.amount, data.description, maxCount);
         } catch (e) {
@@ -900,17 +900,12 @@
                     if (typeof currentDailyLimit !== "undefined") {
                         currentApplied = (currentApplied || 0) + (cr.sent_count || 0);
                     }
-
-                    sessionStorage.removeItem("cart_boost_payment_id");
-                    sessionStorage.removeItem("cart_boost_max_count");
                     return;
                 }
 
                 if (attempt >= maxAttempts) {
                     $("cartLimitProcessing").classList.add("hidden");
                     $("cartLimitTimeout").classList.remove("hidden");
-                    sessionStorage.removeItem("cart_boost_payment_id");
-                    sessionStorage.removeItem("cart_boost_max_count");
                     return;
                 }
 
@@ -931,7 +926,7 @@
 
     function _checkBoostPaymentOnLoad() {
         const params = new URLSearchParams(window.location.search);
-        const paymentId = params.get("boost_payment") || sessionStorage.getItem("cart_boost_payment_id");
+        const paymentId = params.get("boost_payment");
         if (!paymentId) return;
 
         window.history.replaceState({}, "", window.location.pathname + window.location.hash);
