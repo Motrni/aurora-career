@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "echo 'Static site'",
-    "start": "npx serve ."
+    "start": "npx serve -l 8080 ."
   },
   "dependencies": {
     "serve": "^14.0.0"
