@@ -434,6 +434,15 @@ async function requestAnalysis() {
         }
 
         if (data.status === 'queued') {
+            if (typeof data.analysis_used === 'number') {
+                analysisLimits.used = data.analysis_used;
+                if (typeof data.analysis_limit === 'number') {
+                    analysisLimits.limit = data.analysis_limit;
+                }
+            } else {
+                analysisLimits.used++;
+            }
+            updateLimitsBar();
             showToast(`Анализ поставлен в очередь. Ожидание: ~${data.wait_minutes || 1} мин.`, 5000);
             scrollToCard(card, { scroll: 'if-needed', highlight: false });
             startAnalysisPoll(resumeId);
@@ -441,7 +450,14 @@ async function requestAnalysis() {
             setCardProcessing(card, false);
             updateResumeInList(resumeId, data);
             renderResumeCards(false);
-            analysisLimits.used++;
+            if (typeof data.analysis_used === 'number') {
+                analysisLimits.used = data.analysis_used;
+                if (typeof data.analysis_limit === 'number') {
+                    analysisLimits.limit = data.analysis_limit;
+                }
+            } else {
+                analysisLimits.used++;
+            }
             updateLimitsBar();
             showToast('Анализ завершен!', 3000);
             const updatedCard = document.querySelector(`[data-resume-id="${resumeId}"]`);
@@ -483,8 +499,6 @@ function startAnalysisPoll(resumeId) {
                 clearInterval(analysisPollTimer);
                 analysisPollTimer = null;
                 updateResumeInList(resumeId, data);
-                analysisLimits.used++;
-                updateLimitsBar();
                 renderResumeCards(false);
                 showToast('Анализ резюме готов!', 3500);
                 const updatedCard = document.querySelector(`[data-resume-id="${resumeId}"]`);
@@ -524,8 +538,10 @@ function showCardNoChangesState(card, message) {
     toast.className = 'card-no-changes-toast';
     toast.setAttribute('role', 'status');
     toast.innerHTML = `
-        <span class="material-symbols-outlined card-no-changes-toast__icon" aria-hidden="true">info</span>
-        <p class="card-no-changes-toast__text">${escapeHtml(message)}</p>`;
+        <div class="card-no-changes-toast__panel">
+            <span class="material-symbols-outlined card-no-changes-toast__icon" aria-hidden="true">info</span>
+            <p class="card-no-changes-toast__text">${escapeHtml(message)}</p>
+        </div>`;
     card.insertBefore(toast, card.firstChild);
 
     requestAnimationFrame(() => {
