@@ -159,7 +159,6 @@ async function renderCabinet(user) {
     document.getElementById('userEmail').textContent = user.email || 'Без email';
 
     updateSubscriptionCard(user);
-    updateNavAccess(user.subscription_status);
     updateTelegramCard(user.has_telegram);
     applyTrialCardVisibility(user);
 
@@ -168,10 +167,14 @@ async function renderCabinet(user) {
     }
 
     const hasAccess = user.subscription_status === 'trial' || user.subscription_status === 'active';
+    let activeResumeHasProfile = true;
     if (hasAccess) {
         loadDailyStats();
-        await loadResumeSelector();
+        activeResumeHasProfile = await loadResumeSelector();
     }
+
+    // updateNavAccess вызывается ПОСЛЕ loadResumeSelector, уже зная статус профиля
+    updateNavAccess(user.subscription_status, activeResumeHasProfile);
 
     document.getElementById('loadingSkeleton').style.display = 'none';
     document.getElementById('mainContent').style.display = '';
@@ -187,18 +190,21 @@ let _resumesList = [];
 async function loadResumeSelector() {
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/resumes/list`);
-        if (!resp || !resp.ok) return;
+        if (!resp || !resp.ok) return true;
         const data = await resp.json();
         _resumesList = data.resumes || [];
-        if (_resumesList.length === 0) return;
+        if (_resumesList.length === 0) return true;
 
         const card = document.getElementById('resumeSelectCard');
         card.classList.remove('hidden');
 
         const active = _resumesList.find(r => r.is_active) || _resumesList[0];
         updateResumeDropdownUI(active);
+
+        return active.has_custom_query !== false;
     } catch (e) {
         console.error('[Cabinet] loadResumeSelector error:', e);
+        return true;
     }
 }
 
@@ -237,10 +243,8 @@ function updateResumeDropdownUI(activeResume) {
 
     if (activeResume.has_custom_query) {
         warning.classList.add('hidden');
-        setProfileLock(false);
     } else {
         warning.classList.remove('hidden');
-        setProfileLock(true);
     }
 }
 
@@ -328,6 +332,7 @@ async function handleSwitchResume(resumeId) {
         if (newActive) {
             newActive.has_custom_query = data.has_custom_query;
             updateResumeDropdownUI(newActive);
+            setProfileLock(!data.has_custom_query);
         }
     } catch (e) {
         console.error('[Cabinet] switchResume error:', e);
@@ -806,7 +811,7 @@ function initCabinetBoostModal() {
 // NAV ACCESS
 // ============================================================================
 
-function updateNavAccess(status) {
+function updateNavAccess(status, activeResumeHasProfile = true) {
     const hasAccess = status === 'trial' || status === 'active';
     const navSettings = document.getElementById('navSettings');
     const navResponses = document.getElementById('navResponses');
@@ -821,12 +826,23 @@ function updateNavAccess(status) {
         if (navObMob) navObMob.classList.remove('hidden');
     }
 
-    if (hasAccess && !hasOnboarding) {
+    // Снимаем subscription-блокировку только если есть доступ, нет онбординга
+    // И резюме с профилем — иначе карточки останутся заблокированы через profile-lock
+    if (hasAccess && !hasOnboarding && activeResumeHasProfile) {
         navSettings.classList.remove('nav-locked');
         navResponses.classList.remove('nav-locked');
         settingsLock.classList.add('hidden');
         responsesLock.classList.add('hidden');
         document.querySelectorAll('.nav-link-locked').forEach(el => el.classList.remove('nav-link-locked'));
+    } else if (hasAccess && !hasOnboarding && !activeResumeHasProfile) {
+        // Подписка есть, но профиля нет — бейджи убираем, nav-locked снимаем,
+        // но сразу вешаем profile-locked (без мигания)
+        navSettings.classList.remove('nav-locked');
+        navResponses.classList.remove('nav-locked');
+        settingsLock.classList.add('hidden');
+        responsesLock.classList.add('hidden');
+        document.querySelectorAll('.nav-link-locked').forEach(el => el.classList.remove('nav-link-locked'));
+        setProfileLock(true);
     }
 }
 
