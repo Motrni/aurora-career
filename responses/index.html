@@ -424,6 +424,12 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                     </button>
                 </div>
             </div>
+            <div class="relative z-10 w-full mt-6 md:mt-8 pt-6 md:pt-8 border-t border-outline-variant/20">
+                <p class="text-sm text-on-surface-variant m-0 text-center md:text-left leading-relaxed">
+                    Для откликов используется резюме:
+                    <span id="responsesResumeTitleAutopilot" class="font-semibold text-on-surface">—</span>
+                </p>
+            </div>
             <!-- Промо буста: только при исчерпанном дневном лимите и паузе до утра -->
             <div id="boostUpsellBlock" class="hidden relative z-10 w-full border-t border-outline-variant/20 pt-6 md:pt-8 space-y-4 md:space-y-5">
                 <p class="text-on-surface-variant text-sm md:text-base leading-relaxed max-w-3xl text-left">
@@ -600,6 +606,12 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                             <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
                         </span>
                     </button>
+                </div>
+                <div class="relative z-10 w-full mt-6 md:mt-8 pt-6 md:pt-8 border-t border-outline-variant/20">
+                    <p class="text-sm text-on-surface-variant m-0 text-center md:text-left leading-relaxed">
+                        Для откликов используется резюме:
+                        <span id="responsesResumeTitleManual" class="font-semibold text-on-surface">—</span>
+                    </p>
                 </div>
                 <!-- Stats bar -->
                 <div id="manualSearchStats" class="hidden relative z-10 mt-6 pt-6 border-t border-outline-variant/20 flex flex-wrap gap-4 md:gap-8 text-sm text-on-surface-variant">
@@ -901,7 +913,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=3"></script>
-<script src="responses.js?v=8.7"></script>
+<script src="responses.js?v=8.8"></script>
 <script src="manual-search.js?v=5.0"></script>
 
 </body>

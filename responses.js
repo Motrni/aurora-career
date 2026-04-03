@@ -342,6 +342,18 @@ function scrollLogToBottom() {
 // STATUS PANEL
 // ============================================================================
 
+function updateResponsesResumeTitles(data) {
+    const title =
+        data.selected_resume_title != null && String(data.selected_resume_title).trim() !== ""
+            ? String(data.selected_resume_title).trim()
+            : null;
+    const label = title || "не выбрано — укажите в настройках";
+    const autoEl = document.getElementById("responsesResumeTitleAutopilot");
+    const manualEl = document.getElementById("responsesResumeTitleManual");
+    if (autoEl) autoEl.textContent = label;
+    if (manualEl) manualEl.textContent = label;
+}
+
 function updateStatusPanel(data) {
     isAutopilotActive = data.is_active;
     isDailyPaused = !!data.autopilot_paused_daily_limit;
@@ -356,6 +368,7 @@ function updateStatusPanel(data) {
     renderProgress(currentApplied, currentDailyLimit);
     updateToggleButton();
     updateBoostUpsellVisibility();
+    updateResponsesResumeTitles(data);
 }
 
 function setProgressSpinnerVisible(visible) {
