@@ -179,7 +179,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 }
 
 .score-ring-track { stroke: #37333e; }
-.score-ring-value { transition: stroke-dashoffset 0.6s ease; }
+.score-ring-value { transition: stroke-dashoffset 0.6s ease, stroke 0.35s ease; }
 
 .card-processing-overlay {
     position: absolute;
@@ -212,7 +212,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     to   { opacity: 1; }
 }
 
-/* outline вместо box-shadow — не перебивает тень/рамку у .resume-card--no-changes */
+/* outline — не перебивает box-shadow карточки */
 .card-highlight {
     animation: highlight-ring 1.8s ease;
     outline-offset: 0;
@@ -224,36 +224,48 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     100% { outline: 2px solid transparent; }
 }
 
-.resume-card.resume-card--no-changes {
-    border-color: rgba(74, 112, 168, 0.55) !important;
-    box-shadow:
-        0 0 0 1px rgba(56, 88, 140, 0.35),
-        0 20px 50px rgba(90, 48, 208, 0.08);
-}
-
-.card-no-changes-banner {
+/* Тост «без изменений» — поверх верхней кромки карточки, без расширения layout */
+.card-no-changes-toast {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
     display: flex;
-    align-items: flex-start;
-    gap: 0.65rem;
-    margin-bottom: 1rem;
-    padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
-    background: rgba(36, 52, 82, 0.45);
-    border: 1px solid rgba(90, 120, 175, 0.35);
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1rem 0.6rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    background: rgba(24, 32, 52, 0.94);
+    border-bottom: 1px solid rgba(90, 130, 190, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.38s ease, transform 0.38s ease;
 }
-
-.card-no-changes-banner__icon {
-    font-size: 1.25rem;
+.card-no-changes-toast--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.card-no-changes-toast--hiding {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.42s ease, transform 0.42s ease;
+}
+.card-no-changes-toast__icon {
+    font-size: 1.125rem;
     color: #8eb4e8;
-    line-height: 1.2;
+    line-height: 1;
+    flex-shrink: 0;
 }
-
-.card-no-changes-banner__text {
+.card-no-changes-toast__text {
     margin: 0;
     font-size: 0.8125rem;
-    line-height: 1.45;
+    line-height: 1.4;
     font-weight: 600;
-    color: #b8cce8;
+    color: #d4e2f5;
 }
 
 .analysis-report h1, .analysis-report h2, .analysis-report h3 {
@@ -421,7 +433,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             <div class="relative w-16 h-16 flex items-center justify-center shrink-0">
                 <svg class="w-full h-full -rotate-90 block" viewBox="0 0 64 64">
                     <circle class="score-ring-track" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="5"></circle>
-                    <circle id="analysisModalRing" class="score-ring-value text-primary" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="175.9" stroke-dashoffset="175.9" stroke-width="5"></circle>
+                    <circle id="analysisModalRing" class="score-ring-value" cx="32" cy="32" fill="transparent" r="28" stroke="#3b82f6" stroke-dasharray="175.9" stroke-dashoffset="175.9" stroke-width="5"></circle>
                 </svg>
                 <span id="analysisModalScore" class="absolute text-sm font-black">—</span>
             </div>
@@ -569,7 +581,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=3"></script>
-<script src="resume.js?v=1.3"></script>
+<script src="resume.js?v=1.4"></script>
 
 </body>
 </html>

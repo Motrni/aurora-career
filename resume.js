@@ -271,6 +271,15 @@ function renderResumeCards(animateEntrance = false) {
     });
 }
 
+function getScoreTierStroke(score) {
+    if (score === null || score === undefined || Number.isNaN(score)) return '#49454f';
+    const s = Math.max(0, Math.min(100, Math.round(Number(score))));
+    if (s <= 25) return '#ef4444';
+    if (s <= 49) return '#fb923c';
+    if (s <= 74) return '#3b82f6';
+    return '#34d399';
+}
+
 function createResumeCard(resume, index, animateEntrance = false) {
     const hasReport = !!resume.resume_analysis_report;
     const score = hasReport ? extractScore(resume.resume_analysis_report) : null;
@@ -282,14 +291,16 @@ function createResumeCard(resume, index, animateEntrance = false) {
     const scorePercent = score !== null ? score : 0;
     const circumference = 2 * Math.PI * 28; // r=28
     const offset = circumference - (scorePercent / 100) * circumference;
+    const ringStroke = hasReport ? getScoreTierStroke(score) : '#49454f';
 
-    const statusIcon = hasReport ? 'sync' : 'schedule';
+    const statusIcon = hasReport ? 'check_circle' : 'schedule';
     const statusText = hasReport ? 'Анализ готов' : 'Анализ не проведен';
     const statusColor = hasReport ? 'text-primary' : 'text-on-surface-variant';
+    const statusIconFill = hasReport ? ` style="font-variation-settings:'FILL' 1"` : '';
 
     const card = document.createElement('div');
     card.className =
-        'glass-panel rounded-xl p-6 md:p-8 flex flex-col h-full resume-card cursor-default border border-outline-variant/10' +
+        'glass-panel rounded-xl p-6 md:p-8 flex flex-col h-full resume-card cursor-default border border-outline-variant/10 relative overflow-hidden' +
         (animateEntrance ? ' resume-card-animate' : '');
     card.style.animationDelay = animateEntrance ? (index * 0.08) + 's' : '';
     card.dataset.resumeId = resume.resume_id;
@@ -315,15 +326,15 @@ function createResumeCard(resume, index, animateEntrance = false) {
             <div class="relative w-14 h-14 flex items-center justify-center shrink-0">
                 <svg class="w-full h-full -rotate-90 block" viewBox="0 0 64 64">
                     <circle class="score-ring-track" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="4"></circle>
-                    <circle class="score-ring-value ${hasReport ? 'text-primary' : 'text-surface-container-highest'}" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${hasReport ? offset.toFixed(1) : circumference.toFixed(1)}" stroke-width="4"></circle>
+                    <circle class="score-ring-value" cx="32" cy="32" fill="transparent" r="28" stroke="${ringStroke}" stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${hasReport ? offset.toFixed(1) : circumference.toFixed(1)}" stroke-width="4"></circle>
                 </svg>
-                <span class="absolute text-xs font-black">${score !== null ? score + '%' : '—'}</span>
+                <span class="absolute text-xs font-black" style="color: ${hasReport ? ringStroke : 'inherit'}">${score !== null ? score + '%' : '—'}</span>
             </div>
         </div>
 
         <div class="mb-6 flex-grow">
             <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined ${statusColor} text-sm">${statusIcon}</span>
+                <span class="material-symbols-outlined ${statusColor} text-sm"${statusIconFill}>${statusIcon}</span>
                 <span class="text-[10px] uppercase tracking-widest ${statusColor} font-bold">${statusText}</span>
             </div>
             <div class="space-y-2.5">
@@ -498,24 +509,34 @@ function updateResumeInList(resumeId, data) {
 
 function clearCardNoChangesState(card) {
     if (!card) return;
-    card.classList.remove('resume-card--no-changes');
-    const banner = card.querySelector('.card-no-changes-banner');
-    if (banner) banner.remove();
+    const toast = card.querySelector('.card-no-changes-toast');
+    if (toast) toast.remove();
 }
+
+const NO_CHANGES_TOAST_SHOW_MS = 3600;
+const NO_CHANGES_TOAST_FADE_MS = 420;
 
 function showCardNoChangesState(card, message) {
     if (!card) return;
     clearCardNoChangesState(card);
-    card.classList.add('resume-card--no-changes');
-    const banner = document.createElement('div');
-    banner.className = 'card-no-changes-banner';
-    banner.innerHTML = `
-        <span class="material-symbols-outlined card-no-changes-banner__icon shrink-0">info</span>
-        <p class="card-no-changes-banner__text">${escapeHtml(message)}</p>
-    `;
-    const actions = card.querySelector('[data-card-actions]');
-    if (actions) card.insertBefore(banner, actions);
-    else card.appendChild(banner);
+
+    const toast = document.createElement('div');
+    toast.className = 'card-no-changes-toast';
+    toast.setAttribute('role', 'status');
+    toast.innerHTML = `
+        <span class="material-symbols-outlined card-no-changes-toast__icon" aria-hidden="true">info</span>
+        <p class="card-no-changes-toast__text">${escapeHtml(message)}</p>`;
+    card.insertBefore(toast, card.firstChild);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add('card-no-changes-toast--visible'));
+    });
+
+    window.setTimeout(() => {
+        toast.classList.remove('card-no-changes-toast--visible');
+        toast.classList.add('card-no-changes-toast--hiding');
+        window.setTimeout(() => toast.remove(), NO_CHANGES_TOAST_FADE_MS + 80);
+    }, NO_CHANGES_TOAST_SHOW_MS);
 }
 
 function setCardProcessing(card, isProcessing) {
@@ -593,13 +614,21 @@ function openAnalysisModal(resumeId) {
     if (score !== null) {
         const circumference = 2 * Math.PI * 28;
         const offset = circumference - (score / 100) * circumference;
-        document.getElementById('analysisModalScore').textContent = score + '%';
-        document.getElementById('analysisModalRing').setAttribute('stroke-dashoffset', offset.toFixed(1));
+        const stroke = getScoreTierStroke(score);
+        const ringEl = document.getElementById('analysisModalRing');
+        ringEl.setAttribute('stroke', stroke);
+        ringEl.setAttribute('stroke-dashoffset', offset.toFixed(1));
+        const scoreEl = document.getElementById('analysisModalScore');
+        scoreEl.textContent = score + '%';
+        scoreEl.style.color = stroke;
         document.getElementById('analysisModalScoreLabel').textContent = getScoreLabel(score);
         document.getElementById('analysisModalScoreDesc').textContent = getScoreDescription(score);
         document.getElementById('analysisScoreSummary').classList.remove('hidden');
     } else {
         document.getElementById('analysisScoreSummary').classList.add('hidden');
+        const ringEl = document.getElementById('analysisModalRing');
+        ringEl.setAttribute('stroke', '#49454f');
+        document.getElementById('analysisModalScore').style.color = '';
     }
 
     openModal('analysisModal', 'analysisModalCard');
