@@ -1,12 +1,14 @@
 /**
  * support-widget.js — Floating Support Chat Widget для Aurora.
- * Версия: 2.0
+ * Версия: 2.1
  *
  * - Кнопка справа внизу (как у Timeweb)
  * - Desktop: popup 380×520px над кнопкой
  * - Mobile: bottom-sheet на почти весь экран снизу
  * - Бейдж с количеством непрочитанных
+ * - Tooltip "Поддержка" при наведении
  * - SSE для real-time ответов
+ * - Галочки прочтения на сообщениях пользователя
  * - Не требует отдельной страницы
  */
 (function () {
@@ -84,23 +86,36 @@
         var style = document.createElement('style');
         style.id = 'aurora-support-styles';
         style.textContent = [
+            /* Кнопка-обёртка (для tooltip) */
+            '.asc-fab-wrap{position:fixed;bottom:24px;right:24px;z-index:' + Z_INDEX + ';',
+            'display:flex;flex-direction:column;align-items:center;}',
+            /* Tooltip */
+            '.asc-tooltip{position:absolute;bottom:calc(100% + 10px);right:0;',
+            'background:rgba(26,22,36,0.96);border:1px solid rgba(90,48,208,0.3);',
+            'color:#e7e0ef;font-size:12px;font-weight:500;white-space:nowrap;',
+            'padding:5px 10px;border-radius:8px;pointer-events:none;',
+            'opacity:0;transform:translateY(4px);',
+            'transition:opacity 0.18s ease,transform 0.18s ease;',
+            'box-shadow:0 4px 16px rgba(0,0,0,0.4);}',
+            '.asc-tooltip::after{content:"";position:absolute;top:100%;right:18px;',
+            'border:5px solid transparent;border-top-color:rgba(26,22,36,0.96);}',
+            '.asc-fab-wrap:hover .asc-tooltip{opacity:1;transform:translateY(0);}',
             /* Кнопка */
-            '.asc-btn{position:fixed;bottom:24px;right:24px;z-index:' + Z_INDEX + ';',
-            'width:56px;height:56px;border-radius:50%;border:none;',
-            'background:linear-gradient(135deg,#5a30d0,#7c4dda);',
+            '.asc-btn{position:relative;width:56px;height:56px;border-radius:50%;border:none;',
+            'background:linear-gradient(145deg,#6d3ad8,#5a30d0);',
             'color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;',
-            'box-shadow:0 4px 20px rgba(90,48,208,0.5),0 2px 8px rgba(0,0,0,0.3);',
+            'box-shadow:0 4px 24px rgba(90,48,208,0.55),0 2px 8px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.15);',
             'transition:transform 0.2s ease,box-shadow 0.2s ease;',
             'outline:none;}',
-            '.asc-btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(90,48,208,0.65),0 3px 12px rgba(0,0,0,0.3);}',
-            '.asc-btn:active{transform:scale(0.95);}',
+            '.asc-btn:hover{transform:scale(1.08);box-shadow:0 8px 32px rgba(90,48,208,0.7),0 3px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.18);}',
+            '.asc-btn:active{transform:scale(0.94);}',
             /* Бейдж */
             '.asc-badge{position:absolute;top:-4px;right:-4px;',
             'min-width:20px;height:20px;border-radius:10px;',
             'background:#ef4444;color:#fff;font-size:11px;font-weight:700;',
             'display:flex;align-items:center;justify-content:center;padding:0 5px;',
             'border:2px solid #15121c;',
-            'transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1);}',
+            'transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);}',
             '.asc-badge.hidden{transform:scale(0);}',
             /* Popup Desktop */
             '.asc-popup{position:fixed;bottom:92px;right:24px;z-index:' + (Z_INDEX + 1) + ';',
@@ -111,13 +126,6 @@
             'transform-origin:bottom right;',
             'transition:opacity 0.25s ease,transform 0.25s cubic-bezier(0.34,1.2,0.64,1);}',
             '.asc-popup.asc-hidden{opacity:0;transform:scale(0.85) translateY(16px);pointer-events:none;}',
-            /* Bottom Sheet Mobile */
-            '@media(max-width:640px){',
-            '.asc-btn{bottom:20px;right:16px;width:52px;height:52px;}',
-            '.asc-popup{width:100%;height:88dvh;bottom:0;right:0;border-radius:20px 20px 0 0;',
-            'transform-origin:bottom center;transition:opacity 0.3s ease,transform 0.3s cubic-bezier(0.34,1.1,0.64,1);}',
-            '.asc-popup.asc-hidden{opacity:0;transform:translateY(100%);}',
-            '}',
             /* Popup Header */
             '.asc-header{display:flex;align-items:center;gap:10px;',
             'padding:16px 20px;border-bottom:1px solid rgba(90,48,208,0.2);',
@@ -149,8 +157,9 @@
             'border-bottom-right-radius:4px;align-self:flex-end;}',
             '.asc-bubble.admin{background:#2c2436;color:#e7e0ef;',
             'border-bottom-left-radius:4px;align-self:flex-start;}',
-            '.asc-bubble-time{font-size:10px;margin-top:3px;opacity:0.45;text-align:right;}',
-            '.asc-bubble.admin .asc-bubble-time{text-align:left;}',
+            '.asc-bubble-time{font-size:10px;margin-top:3px;opacity:0.55;',
+            'display:flex;align-items:center;justify-content:flex-end;gap:2px;}',
+            '.asc-bubble.admin .asc-bubble-time{justify-content:flex-start;}',
             '.asc-bubble-row{display:flex;flex-direction:column;}',
             '.asc-bubble-row.user{align-items:flex-end;}',
             '.asc-bubble-row.admin{align-items:flex-start;}',
@@ -196,6 +205,20 @@
             'z-index:' + Z_INDEX + ';display:none;}',
             '.asc-overlay.visible{display:block;}',
             '@media(min-width:641px){.asc-overlay{display:none!important;}}',
+            /* Галочки прочтения */
+            '.asc-ticks{display:inline-flex;align-items:center;margin-left:3px;vertical-align:middle;',
+            'flex-shrink:0;}',
+            '.asc-tick-single{color:rgba(255,255,255,0.55);}',
+            '.asc-tick-double{color:#a78bfa;}',
+            '.asc-tick-read{color:#60d8ff;}',
+            /* Mobile size */
+            '@media(max-width:640px){',
+            '.asc-fab-wrap{bottom:20px;right:16px;}',
+            '.asc-btn{width:52px;height:52px;}',
+            '.asc-popup{width:100%;height:88dvh;bottom:0;right:0;border-radius:20px 20px 0 0;',
+            'transform-origin:bottom center;transition:opacity 0.3s ease,transform 0.3s cubic-bezier(0.34,1.1,0.64,1);}',
+            '.asc-popup.asc-hidden{opacity:0;transform:translateY(100%);}',
+            '}',
         ].join('');
         document.head.appendChild(style);
     }
@@ -207,24 +230,36 @@
         overlay.id = 'asc-overlay';
         overlay.addEventListener('click', closeWidget);
 
+        /* FAB wrapper (для tooltip) */
+        var wrap = document.createElement('div');
+        wrap.className = 'asc-fab-wrap';
+        wrap.id = 'asc-fab-wrap';
+
+        /* Tooltip */
+        var tooltip = document.createElement('span');
+        tooltip.className = 'asc-tooltip';
+        tooltip.textContent = 'Поддержка';
+
         /* FAB Button */
         var btn = document.createElement('button');
         btn.className = 'asc-btn';
         btn.id = 'asc-fab';
         btn.setAttribute('aria-label', 'Открыть поддержку');
-        btn.setAttribute('title', 'Поддержка');
         btn.innerHTML =
-            /* Chat icon SVG */
-            '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-            '<path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" fill="currentColor" opacity="0.9"/>' +
-            '<circle cx="8" cy="10" r="1.5" fill="white"/>' +
-            '<circle cx="12" cy="10" r="1.5" fill="white"/>' +
-            '<circle cx="16" cy="10" r="1.5" fill="white"/>' +
+            /* Chat bubble filled SVG — три точки внутри */
+            '<svg width="26" height="26" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+            '<path d="M28 4H4C2.346 4 1 5.346 1 7V22C1 23.654 2.346 25 4 25H7V30L15.5 25H28C29.654 25 31 23.654 31 22V7C31 5.346 29.654 4 28 4Z" fill="white"/>' +
+            '<circle cx="10" cy="14.5" r="2" fill="#6d3ad8"/>' +
+            '<circle cx="16" cy="14.5" r="2" fill="#6d3ad8"/>' +
+            '<circle cx="22" cy="14.5" r="2" fill="#6d3ad8"/>' +
             '</svg>' +
             /* Badge */
             '<span class="asc-badge hidden" id="asc-badge">0</span>';
 
         btn.addEventListener('click', toggleWidget);
+
+        wrap.appendChild(tooltip);
+        wrap.appendChild(btn);
 
         /* Popup */
         var popup = document.createElement('div');
@@ -236,8 +271,11 @@
             /* Header */
             '<div class="asc-header">' +
                 '<div class="asc-header-avatar">' +
-                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="white" aria-hidden="true">' +
-                    '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>' +
+                    '<svg width="18" height="18" viewBox="0 0 32 32" fill="none" aria-hidden="true">' +
+                    '<path d="M28 4H4C2.346 4 1 5.346 1 7V22C1 23.654 2.346 25 4 25H7V30L15.5 25H28C29.654 25 31 23.654 31 22V7C31 5.346 29.654 4 28 4Z" fill="white"/>' +
+                    '<circle cx="10" cy="14.5" r="2" fill="#6d3ad8"/>' +
+                    '<circle cx="16" cy="14.5" r="2" fill="#6d3ad8"/>' +
+                    '<circle cx="22" cy="14.5" r="2" fill="#6d3ad8"/>' +
                     '</svg>' +
                 '</div>' +
                 '<div class="asc-header-info">' +
@@ -263,7 +301,7 @@
             '</div>';
 
         document.body.appendChild(overlay);
-        document.body.appendChild(btn);
+        document.body.appendChild(wrap);
         document.body.appendChild(popup);
 
         /* Global close handler */
@@ -369,7 +407,22 @@
         container.appendChild(div);
     }
 
-    function renderMsg(msg, container) {
+    /* ticksHtml: null=без галочек, 'sent'=одна серая, 'delivered'=две фиолетовые, 'read'=две голубые */
+    function ticksSvg(state) {
+        if (!state) return '';
+        var single =
+            '<svg class="asc-ticks asc-tick-single" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-label="Отправлено">' +
+            '<path d="M1 5l4 4 8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '</svg>';
+        var double =
+            '<svg class="asc-ticks ' + (state === 'read' ? 'asc-tick-read' : 'asc-tick-double') + '" width="18" height="10" viewBox="0 0 18 10" fill="none" aria-label="' + (state === 'read' ? 'Прочитано' : 'Доставлено') + '">' +
+            '<path d="M1 5l4 4 8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<path d="M5 5l4 4 8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '</svg>';
+        return state === 'sent' ? single : double;
+    }
+
+    function renderMsg(msg, container, tickState) {
         if (knownIds.has(msg.id)) return;
         knownIds.add(msg.id);
 
@@ -390,14 +443,17 @@
                 'Поддержка' +
             '</div>';
 
+        var ticks = (isUser && tickState) ? ticksSvg(tickState) : '';
+
         row.innerHTML =
             labelHtml +
             '<div class="asc-bubble ' + (isUser ? 'user' : 'admin') + '">' +
                 esc(msg.message) +
-                '<div class="asc-bubble-time">' + fmtTime(msg.created_at) + '</div>' +
+                '<div class="asc-bubble-time">' + fmtTime(msg.created_at) + ticks + '</div>' +
             '</div>';
 
         container.appendChild(row);
+        return row;
     }
 
     function scrollBottom(smooth) {
@@ -447,7 +503,27 @@
             if (!r.ok) throw new Error('HTTP ' + r.status);
             var data = await r.json();
             var msgs = data.messages || [];
-            for (var i = 0; i < msgs.length; i++) renderMsg(msgs[i], container);
+            /* admin_unread_count — сколько последних user-сообщений ещё не прочитаны админом */
+            var adminUnread = data.admin_unread_count || 0;
+
+            /* Считаем user-сообщения с конца чтобы правильно расставить галочки */
+            var userMsgIndices = [];
+            for (var i = 0; i < msgs.length; i++) {
+                if (msgs[i].sender_type === 'user') userMsgIndices.push(i);
+            }
+            /* Последние adminUnread user-сообщений — 'sent', остальные — 'read' */
+            var unreadSet = new Set();
+            for (var j = userMsgIndices.length - adminUnread; j < userMsgIndices.length; j++) {
+                if (j >= 0) unreadSet.add(userMsgIndices[j]);
+            }
+
+            for (var i = 0; i < msgs.length; i++) {
+                var tick = null;
+                if (msgs[i].sender_type === 'user') {
+                    tick = unreadSet.has(i) ? 'sent' : 'read';
+                }
+                renderMsg(msgs[i], container, tick);
+            }
             scrollBottom(false);
             clearUnread();
             markRead();
@@ -486,7 +562,7 @@
             var data = await r.json();
             if (data.message) {
                 var container = document.getElementById('asc-messages');
-                renderMsg(data.message, container);
+                renderMsg(data.message, container, 'sent');
                 scrollBottom(true);
             }
             ta.value = '';
@@ -511,7 +587,18 @@
                 if (p.type !== 'message' || p.sender_type !== 'admin') return;
 
                 var container = document.getElementById('asc-messages');
-                if (container) renderMsg(p, container);
+                if (container) {
+                    /* Обновляем галочки у всех user-сообщений на "read" */
+                    var rows = container.querySelectorAll('.asc-bubble-row.user');
+                    rows.forEach(function (row) {
+                        var timeEl = row.querySelector('.asc-bubble-time');
+                        if (!timeEl) return;
+                        var oldTick = timeEl.querySelector('.asc-ticks');
+                        if (oldTick) oldTick.remove();
+                        timeEl.insertAdjacentHTML('beforeend', ticksSvg('read'));
+                    });
+                    renderMsg(p, container, null);
+                }
 
                 if (isOpen) {
                     scrollBottom(true);
