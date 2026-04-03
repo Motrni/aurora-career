@@ -22,6 +22,9 @@ let improvementReason = null;
 let analysisPollTimer = null;
 let toastHideTimer = null;
 let syncPollTimer = null;
+/** Момент времени (ms), когда снова можно синхронизировать список резюме; 0 — нет кулдауна */
+let resyncCooldownEndMs = 0;
+let resyncCooldownTimer = null;
 
 window.BOT_USERNAME = "Aurora_Career_Bot";
 
@@ -222,6 +225,7 @@ async function loadResumes() {
         improvementReason = data.improvement_reason || null;
 
         updateLimitsBar();
+        applyResyncCooldownFromSeconds(data.resync_seconds_left ?? 0);
         renderResumeCards(true);
         toggleGlobalLoading(false);
 
@@ -257,6 +261,69 @@ function updateLimitsBar() {
             elImprovement.style.color = 'rgba(255,180,171,0.7)';
         }
     }
+}
+
+// ============================================================================
+// RESYNC COOLDOWN (список с hh.ru, персистентно с сервера)
+// ============================================================================
+
+function formatResyncWait(totalSec) {
+    const s = Math.max(0, Math.ceil(totalSec));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    if (h > 0) return `${h} ч. ${m} мин.`;
+    if (m > 0) return `${m} мин.`;
+    return 'менее мин.';
+}
+
+function isResyncOnCooldown() {
+    return Date.now() < resyncCooldownEndMs;
+}
+
+function applyResyncCooldownFromSeconds(secondsLeft) {
+    const sec = Number(secondsLeft) || 0;
+    if (sec <= 0) {
+        resyncCooldownEndMs = 0;
+    } else {
+        resyncCooldownEndMs = Date.now() + sec * 1000;
+    }
+    if (resyncCooldownTimer) {
+        clearInterval(resyncCooldownTimer);
+        resyncCooldownTimer = null;
+    }
+    syncResyncRowUI();
+    if (resyncCooldownEndMs > Date.now()) {
+        resyncCooldownTimer = setInterval(() => {
+            syncResyncRowUI();
+            if (!isResyncOnCooldown()) {
+                clearInterval(resyncCooldownTimer);
+                resyncCooldownTimer = null;
+                syncResyncRowUI();
+            }
+        }, 15000);
+    }
+}
+
+function syncResyncRowUI() {
+    const btn = document.getElementById('syncBtn');
+    const statusText = document.getElementById('syncStatusText');
+    if (!btn || !statusText) return;
+
+    if (btn.classList.contains('syncing')) {
+        return;
+    }
+
+    const remainingSec = Math.ceil((resyncCooldownEndMs - Date.now()) / 1000);
+
+    if (resyncCooldownEndMs <= 0 || remainingSec <= 0) {
+        resyncCooldownEndMs = 0;
+        btn.disabled = false;
+        statusText.textContent = 'Обновить с hh.ru';
+        return;
+    }
+
+    btn.disabled = true;
+    statusText.textContent = `Доступно через ${formatResyncWait(remainingSec)}`;
 }
 
 // ============================================================================
@@ -978,6 +1045,10 @@ async function syncResumes() {
     // Guard: already syncing
     if (btn.classList.contains('syncing')) return;
 
+    if (isResyncOnCooldown() || btn.disabled) {
+        return;
+    }
+
     btn.classList.add('syncing');
     btn.disabled = true;
     const label = btn.querySelector('.sync-btn-label');
@@ -994,16 +1065,16 @@ async function syncResumes() {
             getFetchOpts('POST', {})
         );
         if (!resp) {
-            _syncDone(false, 'Нет соединения');
+            _syncDone('Нет соединения');
             return;
         }
         if (resp.status === 403) {
-            _syncDone(false, 'Нет доступа');
+            _syncDone('Нет доступа');
             showToast('Для синхронизации требуется авторизация через hh.ru.', 4000);
             return;
         }
         if (!resp.ok) {
-            _syncDone(false, 'Ошибка');
+            _syncDone('Ошибка');
             showToast('Не удалось запустить синхронизацию.', 4000);
             return;
         }
@@ -1011,16 +1082,14 @@ async function syncResumes() {
         const data = await resp.json();
 
         if (data.status === 'cooldown') {
-            _syncDone(false, 'Обновить с hh.ru');
+            if (grid) grid.classList.remove('sync-grid-overlay');
+            btn.classList.remove('syncing');
+            const btnLabel = btn.querySelector('.sync-btn-label');
+            if (btnLabel) btnLabel.textContent = 'Обновить';
             const left = data.seconds_left || 0;
-            const h = Math.floor(left / 3600);
-            const m = Math.floor((left % 3600) / 60);
-            const timeStr = h > 0 ? `${h} ч. ${m} мин.` : `${m} мин.`;
+            applyResyncCooldownFromSeconds(left);
+            const timeStr = formatResyncWait(left);
             showToast(`Синхронизация доступна раз в 2 часа. Следующая через: ${timeStr}`, 5000);
-            if (statusText) {
-                statusText.textContent = `Доступно через ${timeStr}`;
-                setTimeout(() => { if (statusText) statusText.textContent = 'Обновить с hh.ru'; }, 10000);
-            }
             return;
         }
 
@@ -1032,7 +1101,7 @@ async function syncResumes() {
 
     } catch (e) {
         console.error('[Sync] Error:', e);
-        _syncDone(false, 'Ошибка');
+        _syncDone('Ошибка');
     }
 }
 window.syncResumes = syncResumes;
@@ -1048,35 +1117,34 @@ function _pollSyncStatus(attempts = 0) {
                 getFetchOpts('GET')
             );
             if (!resp) {
-                _syncDone(false, 'Нет соединения');
+                _syncDone('Нет соединения');
                 return;
             }
             const data = await resp.json();
             const status = data.status || 'idle';
 
             if (status === 'complete') {
-                _syncDone(true, 'Обновлено');
                 showToast('Список резюме обновлён с hh.ru', 3000);
-                // Reload resume list without animation entrance
                 await loadResumes();
+                _syncDone(null);
                 return;
             }
 
             if (status === 'error_login') {
-                _syncDone(false, 'Ошибка входа');
+                _syncDone('Ошибка входа');
                 showToast('Сессия hh.ru истекла. Выполните повторную авторизацию.', 5000);
                 return;
             }
 
             if (status === 'error_generic') {
-                _syncDone(false, 'Ошибка');
+                _syncDone('Ошибка');
                 showToast('Синхронизация не удалась. Попробуйте позже.', 4000);
                 return;
             }
 
             // Still processing
             if (attempts >= maxAttempts) {
-                _syncDone(false, 'Таймаут');
+                _syncDone('Таймаут');
                 showToast('Синхронизация заняла слишком много времени. Попробуйте позже.', 4000);
                 return;
             }
@@ -1084,12 +1152,12 @@ function _pollSyncStatus(attempts = 0) {
             _pollSyncStatus(attempts + 1);
         } catch (e) {
             console.error('[Sync] Poll error:', e);
-            _syncDone(false, 'Ошибка');
+            _syncDone('Ошибка');
         }
     }, 2000);
 }
 
-function _syncDone(success, label) {
+function _syncDone(transientStatusText) {
     if (syncPollTimer) {
         clearTimeout(syncPollTimer);
         syncPollTimer = null;
@@ -1103,15 +1171,15 @@ function _syncDone(success, label) {
 
     if (btn) {
         btn.classList.remove('syncing');
-        btn.disabled = false;
         const btnLabel = btn.querySelector('.sync-btn-label');
         if (btnLabel) btnLabel.textContent = 'Обновить';
     }
 
-    if (statusText) {
-        statusText.textContent = label || 'Обновить с hh.ru';
+    syncResyncRowUI();
+    if (transientStatusText && statusText) {
+        statusText.textContent = transientStatusText;
         setTimeout(() => {
-            if (statusText) statusText.textContent = 'Обновить с hh.ru';
+            syncResyncRowUI();
         }, 4000);
     }
 }
