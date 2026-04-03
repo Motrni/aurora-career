@@ -98,6 +98,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     legacySign = urlParams.get('sign');
     messageId = urlParams.get('message_id'); // Optional
 
+    if (urlParams.get('profile_ready') === '1') {
+        const banner = document.getElementById('profileReadyBanner');
+        if (banner) banner.classList.remove('hidden');
+    }
+
     // 2. Hybrid Auth: Try JWT first, auto-refresh, fallback to legacy
     try {
         let meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
@@ -285,6 +290,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
 }); // End of DOMContentLoaded
+
+function dismissProfileReadyBanner() {
+    const banner = document.getElementById('profileReadyBanner');
+    if (banner) banner.classList.add('hidden');
+    const url = new URL(window.location);
+    url.searchParams.delete('profile_ready');
+    window.history.replaceState({}, '', url.toString());
+}
 
 // --- TAB SWITCHING LOGIC ---
 window.switchMainTab = function (tabName) {

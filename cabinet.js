@@ -170,10 +170,137 @@ async function renderCabinet(user) {
     const hasAccess = user.subscription_status === 'trial' || user.subscription_status === 'active';
     if (hasAccess) {
         loadDailyStats();
+        loadResumeSelector();
     }
 
     document.getElementById('loadingSkeleton').style.display = 'none';
     document.getElementById('mainContent').style.display = '';
+}
+
+// ============================================================================
+// RESUME SELECTOR
+// ============================================================================
+
+let _resumeDropdownOpen = false;
+let _resumesList = [];
+
+async function loadResumeSelector() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/resumes/list`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+        _resumesList = data.resumes || [];
+        if (_resumesList.length === 0) return;
+
+        const card = document.getElementById('resumeSelectCard');
+        card.classList.remove('hidden');
+
+        const active = _resumesList.find(r => r.is_active) || _resumesList[0];
+        updateResumeDropdownUI(active);
+    } catch (e) {
+        console.error('[Cabinet] loadResumeSelector error:', e);
+    }
+}
+
+function updateResumeDropdownUI(activeResume) {
+    const label = document.getElementById('resumeDropdownLabel');
+    const arrow = document.getElementById('resumeDropdownArrow');
+    const list = document.getElementById('resumeDropdownList');
+    const warning = document.getElementById('resumeWarning');
+
+    label.textContent = activeResume.resume_title;
+
+    if (_resumesList.length <= 1) {
+        arrow.style.display = 'none';
+        document.getElementById('resumeDropdownBtn').style.cursor = 'default';
+    } else {
+        arrow.style.display = '';
+        document.getElementById('resumeDropdownBtn').style.cursor = 'pointer';
+    }
+
+    list.innerHTML = '';
+    for (const r of _resumesList) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'w-full text-left px-4 py-3 text-sm transition-colors cursor-pointer hover:bg-surface-container-low flex items-center gap-2 first:rounded-t-xl last:rounded-b-xl'
+            + (r.resume_id === activeResume.resume_id ? ' text-primary font-medium' : ' text-on-surface');
+        item.textContent = r.resume_title;
+        if (r.resume_id === activeResume.resume_id) {
+            const check = document.createElement('span');
+            check.className = 'material-symbols-outlined text-primary text-lg ml-auto flex-shrink-0';
+            check.textContent = 'check';
+            item.appendChild(check);
+        }
+        item.addEventListener('click', () => handleSwitchResume(r.resume_id));
+        list.appendChild(item);
+    }
+
+    if (activeResume.has_custom_query) {
+        warning.classList.add('hidden');
+    } else {
+        warning.classList.remove('hidden');
+    }
+}
+
+function toggleResumeDropdown() {
+    if (_resumesList.length <= 1) return;
+    const list = document.getElementById('resumeDropdownList');
+    const arrow = document.getElementById('resumeDropdownArrow');
+    _resumeDropdownOpen = !_resumeDropdownOpen;
+    if (_resumeDropdownOpen) {
+        list.classList.remove('hidden');
+        arrow.style.transform = 'rotate(180deg)';
+    } else {
+        list.classList.add('hidden');
+        arrow.style.transform = '';
+    }
+}
+
+document.addEventListener('click', (e) => {
+    if (!_resumeDropdownOpen) return;
+    const wrap = document.getElementById('resumeDropdownWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        _resumeDropdownOpen = false;
+        document.getElementById('resumeDropdownList').classList.add('hidden');
+        document.getElementById('resumeDropdownArrow').style.transform = '';
+    }
+});
+
+async function handleSwitchResume(resumeId) {
+    _resumeDropdownOpen = false;
+    document.getElementById('resumeDropdownList').classList.add('hidden');
+    document.getElementById('resumeDropdownArrow').style.transform = '';
+
+    const current = _resumesList.find(r => r.is_active);
+    if (current && current.resume_id === resumeId) return;
+
+    const label = document.getElementById('resumeDropdownLabel');
+    label.textContent = 'Переключение...';
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/cabinet/switch-resume`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume_id: resumeId }),
+        });
+        if (!resp || !resp.ok) {
+            label.textContent = current ? current.resume_title : 'Ошибка';
+            return;
+        }
+        const data = await resp.json();
+
+        for (const r of _resumesList) {
+            r.is_active = r.resume_id === resumeId;
+        }
+        const newActive = _resumesList.find(r => r.resume_id === resumeId);
+        if (newActive) {
+            newActive.has_custom_query = data.has_custom_query;
+            updateResumeDropdownUI(newActive);
+        }
+    } catch (e) {
+        console.error('[Cabinet] switchResume error:', e);
+        label.textContent = current ? current.resume_title : 'Ошибка';
+    }
 }
 
 // ============================================================================

@@ -525,6 +525,24 @@ body.has-floating-save {
     <!-- MAIN CONTENT -->
     <div id="mainContent" style="display: none; animation: fadeIn 0.3s ease-in-out;">
 
+        <!-- Profile ready banner -->
+        <div id="profileReadyBanner" class="hidden mb-6" style="animation: fadeIn 0.3s ease;">
+            <div class="p-5 md:p-6 rounded-2xl border border-[#4ade80]/20" style="background: linear-gradient(135deg, rgba(33,30,41,0.95), rgba(74,222,128,0.06));">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(74,222,128,0.12);">
+                        <span class="material-symbols-outlined text-[#4ade80] text-2xl">check_circle</span>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-lg font-bold text-on-surface">Поисковый профиль настроен</h2>
+                        <p class="text-on-surface-variant text-sm mt-1">Теперь задайте параметры поиска для вашего резюме — регион, зарплату, отрасль и график.</p>
+                    </div>
+                    <button onclick="dismissProfileReadyBanner()" class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer flex-shrink-0 mt-1">
+                        <span class="material-symbols-outlined text-xl">close</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Page Header + Tabs -->
         <div class="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
@@ -1076,7 +1094,7 @@ function toggleMobileMenu() {
 <script src="aurora-session.js?v=3"></script>
 <script src="settings-tour-steps.js?v=1.2"></script>
 <script src="settings-tour.js?v=1.1"></script>
-<script src="settings.js?v=6.4"></script>
+<script src="settings.js?v=6.5"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

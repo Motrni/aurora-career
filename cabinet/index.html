@@ -455,6 +455,38 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             <!-- Right column -->
             <div class="lg:col-span-5 space-y-6 md:space-y-8">
 
+                <!-- Resume selector -->
+                <div id="resumeSelectCard" class="hidden p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
+                            <span class="material-symbols-outlined text-on-surface-variant">description</span>
+                        </div>
+                        <span class="text-sm font-medium text-on-surface">Резюме для откликов</span>
+                    </div>
+
+                    <div class="relative" id="resumeDropdownWrap">
+                        <button type="button" id="resumeDropdownBtn" onclick="toggleResumeDropdown()" class="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-surface-container-highest border border-outline-variant/10 text-left cursor-pointer hover:border-primary/30 transition-colors">
+                            <span id="resumeDropdownLabel" class="text-sm text-on-surface truncate">Загрузка...</span>
+                            <span class="material-symbols-outlined text-outline text-xl flex-shrink-0 transition-transform" id="resumeDropdownArrow">expand_more</span>
+                        </button>
+                        <div id="resumeDropdownList" class="hidden absolute left-0 right-0 top-full mt-1 rounded-xl bg-surface-container-highest border border-outline-variant/10 shadow-lg z-30 max-h-60 overflow-y-auto">
+                        </div>
+                    </div>
+
+                    <div id="resumeWarning" class="hidden mt-3 p-3 rounded-xl border border-[#ffb74d]/20" style="background: rgba(255,183,77,0.06);">
+                        <div class="flex items-start gap-2.5">
+                            <span class="material-symbols-outlined text-[#ffb74d] text-xl flex-shrink-0 mt-0.5">warning</span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-on-surface-variant text-xs leading-relaxed">Для этого резюме не настроен поисковый профиль. Автоотклики и ручной поиск недоступны.</p>
+                                <a href="/setup-profile/" class="inline-flex items-center gap-1.5 mt-2 text-primary text-xs font-semibold hover:underline">
+                                    <span class="material-symbols-outlined text-sm">tune</span>
+                                    Настроить профиль
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Navigation cards -->
                 <a href="/settings/" id="navSettings" class="block p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 nav-locked cursor-pointer hover:border-primary/20 transition-all group">
                     <div class="flex items-center gap-4">
@@ -664,6 +696,6 @@ function toggleMobileMenu() {
     </div>
 </div>
 
-<script src="cabinet.js?v=3.8"></script>
+<script src="cabinet.js?v=3.9"></script>
 </body>
 </html>
