@@ -219,7 +219,7 @@ async function loadResumes() {
         improvementAvailable = data.improvement_available !== false;
 
         updateLimitsBar();
-        renderResumeCards();
+        renderResumeCards(true);
         toggleGlobalLoading(false);
 
     } catch (e) {
@@ -251,7 +251,7 @@ function updateLimitsBar() {
 // RENDER CARDS
 // ============================================================================
 
-function renderResumeCards() {
+function renderResumeCards(animateEntrance = false) {
     const grid = document.getElementById('resumeGrid');
     const empty = document.getElementById('resumeEmpty');
 
@@ -266,12 +266,12 @@ function renderResumeCards() {
     grid.innerHTML = '';
 
     resumeList.forEach((r, idx) => {
-        const card = createResumeCard(r, idx);
+        const card = createResumeCard(r, idx, animateEntrance);
         grid.appendChild(card);
     });
 }
 
-function createResumeCard(resume, index) {
+function createResumeCard(resume, index, animateEntrance = false) {
     const hasReport = !!resume.resume_analysis_report;
     const score = hasReport ? extractScore(resume.resume_analysis_report) : null;
     const title = resume.resume_title || 'Резюме без названия';
@@ -288,9 +288,23 @@ function createResumeCard(resume, index) {
     const statusColor = hasReport ? 'text-primary' : 'text-on-surface-variant';
 
     const card = document.createElement('div');
-    card.className = 'glass-panel rounded-xl p-6 md:p-8 flex flex-col h-full resume-card resume-card-animate cursor-default border border-outline-variant/10';
-    card.style.animationDelay = (index * 0.08) + 's';
+    card.className =
+        'glass-panel rounded-xl p-6 md:p-8 flex flex-col h-full resume-card cursor-default border border-outline-variant/10' +
+        (animateEntrance ? ' resume-card-animate' : '');
+    card.style.animationDelay = animateEntrance ? (index * 0.08) + 's' : '';
     card.dataset.resumeId = resume.resume_id;
+
+    if (animateEntrance) {
+        card.addEventListener(
+            'animationend',
+            (ev) => {
+                if (ev.animationName !== 'card-in') return;
+                card.classList.remove('resume-card-animate');
+                card.style.animationDelay = '';
+            },
+            { once: true }
+        );
+    }
 
     card.innerHTML = `
         <div class="flex justify-between items-start mb-6">
@@ -392,7 +406,6 @@ async function requestAnalysis() {
                 data.message ||
                 'Резюме не изменилось на hh.ru. Новый анализ не требуется.';
             showCardNoChangesState(card, msg);
-            scrollToCard(card);
             return;
         }
 
@@ -405,23 +418,23 @@ async function requestAnalysis() {
             } else {
                 showToast(data.message || 'Ошибка при запуске анализа', 4000);
             }
-            scrollToCard(card);
+            scrollToCard(card, { scroll: 'if-needed', highlight: false });
             return;
         }
 
         if (data.status === 'queued') {
             showToast(`Анализ поставлен в очередь. Ожидание: ~${data.wait_minutes || 1} мин.`, 5000);
-            scrollToCard(card);
+            scrollToCard(card, { scroll: 'if-needed', highlight: false });
             startAnalysisPoll(resumeId);
         } else if (data.status === 'ready') {
             setCardProcessing(card, false);
             updateResumeInList(resumeId, data);
-            renderResumeCards();
+            renderResumeCards(false);
             analysisLimits.used++;
             updateLimitsBar();
             showToast('Анализ завершен!', 3000);
             const updatedCard = document.querySelector(`[data-resume-id="${resumeId}"]`);
-            scrollToCard(updatedCard);
+            scrollToCard(updatedCard, { scroll: 'if-needed', highlight: true });
         }
 
     } catch (e) {
@@ -461,10 +474,10 @@ function startAnalysisPoll(resumeId) {
                 updateResumeInList(resumeId, data);
                 analysisLimits.used++;
                 updateLimitsBar();
-                renderResumeCards();
+                renderResumeCards(false);
                 showToast('Анализ резюме готов!', 3500);
                 const updatedCard = document.querySelector(`[data-resume-id="${resumeId}"]`);
-                scrollToCard(updatedCard);
+                scrollToCard(updatedCard, { scroll: 'if-needed', highlight: true });
             }
         } catch (e) {
             console.error("[Analysis] Poll error:", e);
@@ -538,11 +551,27 @@ function setCardProcessing(card, isProcessing) {
     }
 }
 
-function scrollToCard(card) {
+function scrollToCard(card, opts = {}) {
+    const { scroll = 'if-needed', highlight = true } = opts;
     if (!card) return;
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.classList.add('card-highlight');
-    setTimeout(() => card.classList.remove('card-highlight'), 2000);
+
+    if (scroll !== 'none') {
+        const rect = card.getBoundingClientRect();
+        const margin = 96;
+        const vh = window.innerHeight;
+        const needs =
+            rect.top < margin ||
+            rect.bottom > vh - margin ||
+            rect.height > vh - margin * 2;
+        if (scroll === 'always' || (scroll === 'if-needed' && needs)) {
+            card.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+        }
+    }
+
+    if (highlight) {
+        card.classList.add('card-highlight');
+        window.setTimeout(() => card.classList.remove('card-highlight'), 1800);
+    }
 }
 
 // ============================================================================
