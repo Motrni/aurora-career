@@ -237,8 +237,35 @@ function updateResumeDropdownUI(activeResume) {
 
     if (activeResume.has_custom_query) {
         warning.classList.add('hidden');
+        setProfileLock(false);
     } else {
         warning.classList.remove('hidden');
+        setProfileLock(true);
+    }
+}
+
+function setProfileLock(locked) {
+    const navSettings = document.getElementById('navSettings');
+    const navResponses = document.getElementById('navResponses');
+    const navSettingsLink = document.getElementById('nav-settings');
+    const navResponsesLink = document.getElementById('nav-responses');
+    const navSettingsMob = document.getElementById('nav-settings-mobile');
+    const navResponsesMob = document.getElementById('nav-responses-mobile');
+
+    if (locked) {
+        if (navSettings) navSettings.classList.add('profile-locked');
+        if (navResponses) navResponses.classList.add('profile-locked');
+        if (navSettingsLink) navSettingsLink.classList.add('profile-link-locked');
+        if (navResponsesLink) navResponsesLink.classList.add('profile-link-locked');
+        if (navSettingsMob) navSettingsMob.classList.add('profile-link-locked');
+        if (navResponsesMob) navResponsesMob.classList.add('profile-link-locked');
+    } else {
+        if (navSettings) navSettings.classList.remove('profile-locked');
+        if (navResponses) navResponses.classList.remove('profile-locked');
+        if (navSettingsLink) navSettingsLink.classList.remove('profile-link-locked');
+        if (navResponsesLink) navResponsesLink.classList.remove('profile-link-locked');
+        if (navSettingsMob) navSettingsMob.classList.remove('profile-link-locked');
+        if (navResponsesMob) navResponsesMob.classList.remove('profile-link-locked');
     }
 }
 

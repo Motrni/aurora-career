@@ -137,6 +137,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
                 authMode = 'jwt';
                 window._currentStep = meData.current_step || null;
+
+                // Guard: если нет профиля у активного резюме — кидаем в кабинет
+                try {
+                    const resumesResp = await fetch(`${API_BASE_URL}/api/resumes/list`, { credentials: 'include' });
+                    if (resumesResp.ok) {
+                        const resumesData = await resumesResp.json();
+                        const active = (resumesData.resumes || []).find(r => r.is_active);
+                        if (active && !active.has_custom_query) {
+                            window.location.href = '/cabinet/';
+                            return;
+                        }
+                    }
+                } catch (_) {}
+
                 console.log("[Auth] JWT session active");
             }
         }

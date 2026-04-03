@@ -369,6 +369,26 @@ function updateStatusPanel(data) {
     updateToggleButton();
     updateBoostUpsellVisibility();
     updateResponsesResumeTitles(data);
+    applyNoProfileState(data.active_resume_has_profile !== false);
+}
+
+function applyNoProfileState(hasProfile) {
+    const banner = document.getElementById('noProfileBanner');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const resumeNowBtn = document.getElementById('resumeNowBtn');
+    const manualSearchBtn = document.getElementById('manualSearchBtn') || document.getElementById('startManualSearchBtn');
+
+    if (hasProfile) {
+        if (banner) banner.classList.add('hidden');
+        if (toggleBtn) toggleBtn.disabled = false;
+        if (resumeNowBtn) resumeNowBtn.disabled = false;
+        if (manualSearchBtn) manualSearchBtn.disabled = false;
+    } else {
+        if (banner) banner.classList.remove('hidden');
+        if (toggleBtn) { toggleBtn.disabled = true; toggleBtn.style.opacity = '0.35'; }
+        if (resumeNowBtn) { resumeNowBtn.disabled = true; resumeNowBtn.style.opacity = '0.35'; }
+        if (manualSearchBtn) { manualSearchBtn.disabled = true; manualSearchBtn.style.opacity = '0.35'; }
+    }
 }
 
 function setProgressSpinnerVisible(visible) {

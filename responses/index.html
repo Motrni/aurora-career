@@ -371,6 +371,21 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     <!-- Main Content -->
     <div id="mainContent" style="display: none; animation: fadeIn 0.3s ease-in-out;" class="space-y-8 md:space-y-12">
 
+        <!-- No-profile banner -->
+        <div id="noProfileBanner" class="hidden p-5 rounded-2xl border border-[#ffb74d]/25" style="background: rgba(255,183,77,0.07);">
+            <div class="flex items-start gap-3">
+                <span class="material-symbols-outlined text-[#ffb74d] text-2xl flex-shrink-0 mt-0.5">warning</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-on-surface font-semibold text-sm">Для активного резюме не настроен поисковый профиль</p>
+                    <p class="text-on-surface-variant text-sm mt-0.5">Автоотклики и ручной поиск недоступны до настройки профиля.</p>
+                    <a href="/cabinet/" class="inline-flex items-center gap-1.5 mt-3 text-primary text-sm font-semibold hover:underline">
+                        <span class="material-symbols-outlined text-base">tune</span>
+                        Настроить профиль в кабинете
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Page Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div class="space-y-2">
@@ -913,7 +928,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=3"></script>
-<script src="responses.js?v=8.8"></script>
+<script src="responses.js?v=8.9"></script>
 <script src="manual-search.js?v=5.0"></script>
 
 </body>
