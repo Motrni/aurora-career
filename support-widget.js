@@ -1,6 +1,6 @@
 /**
  * support-widget.js — Floating Support Chat Widget для Aurora.
- * Версия: 2.1
+ * Версия: 2.2
  *
  * - Кнопка справа внизу (как у Timeweb)
  * - Desktop: popup 380×520px над кнопкой
@@ -525,7 +525,6 @@
                 renderMsg(msgs[i], container, tick);
             }
             scrollBottom(false);
-            clearUnread();
             markRead();
             startSSE();
         } catch (err) {
@@ -536,9 +535,20 @@
     async function markRead() {
         if (!isAuthenticated) return;
         try {
-            await authFetch(API_BASE + '/api/support/read', { method: 'POST' });
+            var r = await authFetch(API_BASE + '/api/support/read', { method: 'POST' });
+            if (r.ok) clearUnread();
+        } catch (_) { /* сеть: бейдж не сбрасываем */ }
+    }
+
+    async function syncUnreadFromServer() {
+        if (!isAuthenticated) return;
+        try {
+            var r = await authFetch(API_BASE + '/api/support/unread');
+            if (!r.ok) return;
+            var d = await r.json();
+            unreadCount = parseInt(d.user_unread_count, 10) || 0;
+            updateBadge();
         } catch (_) {}
-        clearUnread();
     }
 
     /* ---- Send ---- */
@@ -628,9 +638,17 @@
 
         /* Если уже авторизован — запускаем SSE для подсчёта непрочитанных фоном */
         checkAuth().then(function (ok) {
-            if (ok && !sse) startSSE();
+            if (!ok) return;
+            syncUnreadFromServer();
+            if (!sse) startSSE();
         });
     }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible' && isAuthenticated) {
+            syncUnreadFromServer();
+        }
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
