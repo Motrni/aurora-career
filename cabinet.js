@@ -673,10 +673,10 @@ function renderDailyChart(days) {
 
     chart.innerHTML = days.map((d) => {
         const hPct = axisMax > 0 ? (d.count / axisMax) * 100 : 0;
-        return `<div class="stats-bar-slot flex flex-col items-center justify-end relative flex-1 min-w-0 mx-auto" style="max-width:2.5rem;">
+        return `<div class="stats-bar-slot" style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:0;">
             <div class="bar-tooltip">${d.count}</div>
-            <div class="stats-bar-track relative overflow-hidden shrink-0">
-                <div class="stats-bar-fill absolute bottom-0 left-0 right-0 w-full cursor-default" style="height: ${hPct}%;"></div>
+            <div class="stats-bar-track" style="position:relative;overflow:hidden;flex-shrink:0;width:100%;max-width:1.75rem;">
+                <div class="stats-bar-fill" style="position:absolute;bottom:0;left:0;right:0;width:100%;height:${hPct}%;"></div>
             </div>
         </div>`;
     }).join('');
@@ -684,9 +684,9 @@ function renderDailyChart(days) {
     labels.innerHTML = days.map((d) => {
         const dateLine = formatChartDayMonth(d.date);
         const wd = weekdayShortRu(d.date);
-        return `<div class="flex-1 min-w-0 text-center" style="padding:0 1px;overflow:hidden;">
-            <div class="stats-label-date font-semibold text-on-surface leading-tight" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${dateLine}</div>
-            <div class="stats-label-weekday text-on-surface-variant leading-snug" style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${wd}</div>
+        return `<div style="flex:1;min-width:0;text-align:center;overflow:hidden;">
+            <div class="stats-label-date" style="font-weight:600;color:#e7e0ef;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${dateLine}</div>
+            <div class="stats-label-weekday" style="color:#cac3d7;line-height:1.3;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${wd}</div>
         </div>`;
     }).join('');
 
