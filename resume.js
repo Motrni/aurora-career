@@ -1009,6 +1009,21 @@ async function syncResumes() {
         }
 
         const data = await resp.json();
+
+        if (data.status === 'cooldown') {
+            _syncDone(false, 'Обновить с hh.ru');
+            const left = data.seconds_left || 0;
+            const h = Math.floor(left / 3600);
+            const m = Math.floor((left % 3600) / 60);
+            const timeStr = h > 0 ? `${h} ч. ${m} мин.` : `${m} мин.`;
+            showToast(`Синхронизация доступна раз в 2 часа. Следующая через: ${timeStr}`, 5000);
+            if (statusText) {
+                statusText.textContent = `Доступно через ${timeStr}`;
+                setTimeout(() => { if (statusText) statusText.textContent = 'Обновить с hh.ru'; }, 10000);
+            }
+            return;
+        }
+
         if (data.status === 'already_running') {
             if (statusText) statusText.textContent = 'Уже выполняется...';
         }
