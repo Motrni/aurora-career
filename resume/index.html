@@ -309,6 +309,85 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 .luxury-gradient {
     background: linear-gradient(135deg, #5a30d0 0%, #3e0c85 100%);
 }
+
+/* Info button (?) */
+.info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(202,195,215,0.3);
+    color: rgba(202,195,215,0.55);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+    flex-shrink: 0;
+    background: transparent;
+    user-select: none;
+}
+.info-btn:hover {
+    border-color: rgba(204,190,255,0.7);
+    color: #ccbeff;
+    background: rgba(90,48,208,0.12);
+}
+
+/* Sync button */
+.sync-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 0.625rem;
+    border: 1.5px solid rgba(202,195,215,0.2);
+    color: rgba(202,195,215,0.7);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+    background: transparent;
+    white-space: nowrap;
+}
+.sync-btn:hover:not(:disabled) {
+    border-color: rgba(204,190,255,0.6);
+    color: #ccbeff;
+    background: rgba(90,48,208,0.1);
+}
+.sync-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.sync-btn .sync-icon {
+    transition: transform 0.4s ease;
+}
+.sync-btn.syncing .sync-icon {
+    animation: spin 0.9s linear infinite;
+}
+
+/* Sync grid overlay */
+.sync-grid-overlay {
+    position: relative;
+}
+.sync-grid-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(21,18,28,0.6);
+    backdrop-filter: blur(2px);
+    border-radius: 1rem;
+    z-index: 5;
+    animation: fade-in 0.25s ease;
+}
+
+/* Info modal (compact) */
+.info-modal-card {
+    background: rgba(33, 30, 41, 0.97);
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.55);
+}
 </style>
 </head>
 
@@ -387,24 +466,48 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
         </div>
 
         <!-- Limits Info Bar -->
-        <div id="limitsBar" class="glass-panel rounded-xl p-4 md:p-6 mb-8 md:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-outline-variant/10">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings:'FILL' 1">token</span>
+        <div id="limitsBar" class="glass-panel rounded-xl p-4 md:p-5 mb-8 md:mb-10 border border-outline-variant/10">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-0 sm:divide-x sm:divide-outline-variant/20">
+
+                <!-- Section 1: Analysis limits -->
+                <div class="flex items-center gap-3 sm:pr-5 md:pr-6 min-w-0">
+                    <div class="w-9 h-9 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings:'FILL' 1">token</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-bold text-on-surface leading-tight">Анализ резюме</p>
+                        <p class="text-xs text-on-surface-variant mt-0.5">Осталось: <span id="analysisRemaining" class="text-primary font-bold">—</span> из <span id="analysisLimit">—</span> на сегодня</p>
+                    </div>
+                    <button class="info-btn shrink-0" onclick="openAnalysisInfoModal()" aria-label="Что такое анализ резюме">?</button>
                 </div>
-                <div>
-                    <p class="text-sm font-bold text-on-surface">Лимиты анализа</p>
-                    <p class="text-xs text-on-surface-variant">Осталось: <span id="analysisRemaining" class="text-primary font-bold">—</span> из <span id="analysisLimit">—</span> на сегодня</p>
+
+                <!-- Section 2: Improvement -->
+                <div class="flex items-center gap-3 sm:px-5 md:px-6 min-w-0">
+                    <div class="w-9 h-9 rounded-full bg-secondary-container/20 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-secondary text-lg" style="font-variation-settings:'FILL' 1">auto_awesome</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-bold text-on-surface leading-tight">Улучшение резюме</p>
+                        <p class="text-xs text-on-surface-variant mt-0.5" id="improvementStatus">Доступно</p>
+                    </div>
+                    <button class="info-btn shrink-0" onclick="openImprovementInfoModal()" aria-label="Что такое улучшение резюме">?</button>
                 </div>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-full bg-secondary-container/20 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-secondary text-xl" style="font-variation-settings:'FILL' 1">auto_awesome</span>
+
+                <!-- Section 3: Sync -->
+                <div class="flex items-center gap-3 sm:pl-5 md:pl-6 min-w-0">
+                    <div class="w-9 h-9 rounded-full bg-[#37333e]/60 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-on-surface-variant text-lg">sync</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-bold text-on-surface leading-tight">Список резюме</p>
+                        <p class="text-xs text-on-surface-variant mt-0.5" id="syncStatusText">Обновить с hh.ru</p>
+                    </div>
+                    <button id="syncBtn" class="sync-btn shrink-0" onclick="syncResumes()" aria-label="Обновить список резюме с hh.ru">
+                        <span class="material-symbols-outlined text-base sync-icon">refresh</span>
+                        <span class="sync-btn-label">Обновить</span>
+                    </button>
                 </div>
-                <div>
-                    <p class="text-sm font-bold text-on-surface">Улучшение резюме</p>
-                    <p class="text-xs text-on-surface-variant" id="improvementStatus">Доступно</p>
-                </div>
+
             </div>
         </div>
 
@@ -571,6 +674,74 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     </div>
 </div>
 
+<!-- Analysis Info Modal -->
+<div id="analysisInfoModal" class="pointer-events-none fixed inset-0 z-[110] flex items-center justify-center p-4 opacity-0 transition-opacity duration-250 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="analysisInfoTitle">
+    <div class="absolute inset-0 z-0 bg-[#100d17]/75 backdrop-blur-sm" onclick="closeAnalysisInfoModal()"></div>
+    <div id="analysisInfoCard" class="info-modal-card relative z-10 w-full max-w-md rounded-2xl overflow-hidden scale-95 opacity-0 transition-all duration-250 ease-out">
+        <div class="absolute -top-20 -right-20 w-56 h-56 bg-primary-container/8 rounded-full blur-[70px] pointer-events-none"></div>
+        <div class="relative p-6 md:p-8">
+            <!-- Icon + close -->
+            <div class="flex items-start justify-between gap-4 mb-5">
+                <div class="w-12 h-12 rounded-2xl bg-primary-container/20 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1">token</span>
+                </div>
+                <button type="button" onclick="closeAnalysisInfoModal()" class="p-1.5 -mr-1.5 -mt-1 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant cursor-pointer" aria-label="Закрыть">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+            <h2 id="analysisInfoTitle" class="text-lg font-bold text-on-surface mb-3">Анализ резюме</h2>
+            <div class="space-y-3 text-sm text-on-surface-variant leading-relaxed">
+                <p>ИИ Аврора изучает ваше резюме и составляет подробный отчёт: что работает на вас, а что отпугивает рекрутеров.</p>
+                <p>Вы получаете <span class="text-on-surface font-semibold">оценку качества в процентах</span> и конкретные рекомендации — как усилить описание опыта, заполнить «О себе» и выделиться среди конкурентов.</p>
+                <p>Анализ запускается асинхронно: обычно готов через <span class="text-on-surface font-semibold">1–3 минуты</span>. Лимит обновляется ежедневно.</p>
+            </div>
+            <div class="mt-5 flex items-center gap-2 p-3 rounded-xl bg-primary-container/10 border border-primary-container/20">
+                <span class="material-symbols-outlined text-primary text-lg shrink-0" style="font-variation-settings:'FILL' 1">info</span>
+                <p class="text-xs text-on-surface-variant">Повторный анализ запускается, только если резюме изменилось с момента последней проверки.</p>
+            </div>
+            <button type="button" onclick="closeAnalysisInfoModal()" class="mt-5 w-full py-3 rounded-xl bg-primary-container text-white font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer">
+                Понятно
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Improvement Info Modal -->
+<div id="improvementInfoModal" class="pointer-events-none fixed inset-0 z-[110] flex items-center justify-center p-4 opacity-0 transition-opacity duration-250 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="improvementInfoTitle">
+    <div class="absolute inset-0 z-0 bg-[#100d17]/75 backdrop-blur-sm" onclick="closeImprovementInfoModal()"></div>
+    <div id="improvementInfoCard" class="info-modal-card relative z-10 w-full max-w-md rounded-2xl overflow-hidden scale-95 opacity-0 transition-all duration-250 ease-out">
+        <div class="absolute -top-20 -left-20 w-56 h-56 bg-secondary-container/8 rounded-full blur-[70px] pointer-events-none"></div>
+        <div class="relative p-6 md:p-8">
+            <!-- Icon + close -->
+            <div class="flex items-start justify-between gap-4 mb-5">
+                <div class="w-12 h-12 rounded-2xl bg-secondary-container/20 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-secondary text-2xl" style="font-variation-settings:'FILL' 1">auto_awesome</span>
+                </div>
+                <button type="button" onclick="closeImprovementInfoModal()" class="p-1.5 -mr-1.5 -mt-1 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant cursor-pointer" aria-label="Закрыть">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+            <h2 id="improvementInfoTitle" class="text-lg font-bold text-on-surface mb-3">Улучшение резюме</h2>
+            <div class="space-y-3 text-sm text-on-surface-variant leading-relaxed">
+                <p>Аврора проводит мини-интервью: задаёт <span class="text-on-surface font-semibold">3–6 точечных вопросов</span> о вашем опыте — туда, где резюме выглядит слабо.</p>
+                <p>Например, если в описании должности нет цифр, ИИ спросит: <em class="text-on-surface/80">"Каких конкретных результатов вы достигли?"</em>. Ваши ответы нужно описывать подробно — чем больше деталей, тем сильнее итоговый текст.</p>
+                <p>На основе ответов ИИ <span class="text-on-surface font-semibold">переписывает опыт работы и раздел «О себе»</span>, добавляет цифры, достижения и продающее summary. Готовый документ доступен для скачивания в PDF.</p>
+            </div>
+            <div class="mt-4 flex items-start gap-2 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20">
+                <span class="material-symbols-outlined text-amber-400 text-lg shrink-0 mt-px" style="font-variation-settings:'FILL' 1">schedule</span>
+                <p class="text-xs text-on-surface-variant">Доступно <span class="text-on-surface font-semibold">1 раз в 7 дней</span> на активной подписке Aurora Pro.</p>
+            </div>
+            <div id="improvementInfoCooldown" class="hidden mt-2 flex items-start gap-2 p-3 rounded-xl bg-surface-container border border-outline-variant/20">
+                <span class="material-symbols-outlined text-on-surface-variant text-lg shrink-0 mt-px">hourglass_bottom</span>
+                <p class="text-xs text-on-surface-variant">Следующее улучшение будет доступно через: <span id="improvementInfoCooldownText" class="text-on-surface font-semibold"></span></p>
+            </div>
+            <button type="button" onclick="closeImprovementInfoModal()" class="mt-5 w-full py-3 rounded-xl bg-secondary-container text-on-secondary-container font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all cursor-pointer">
+                Понятно
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Footer -->
 <footer class="mt-auto w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
     <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
@@ -599,7 +770,7 @@ function toggleMobileMenu() {
 </script>
 
 <script src="aurora-session.js?v=3"></script>
-<script src="resume.js?v=1.6"></script>
+<script src="resume.js?v=1.7"></script>
 
 </body>
 </html>

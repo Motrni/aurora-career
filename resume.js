@@ -17,9 +17,11 @@ let resumeList = [];
 let currentResumeId = null;
 let analysisLimits = { used: 0, limit: 5 };
 let improvementAvailable = true;
+let improvementReason = null;
 
 let analysisPollTimer = null;
 let toastHideTimer = null;
+let syncPollTimer = null;
 
 window.BOT_USERNAME = "Aurora_Career_Bot";
 
@@ -217,6 +219,7 @@ async function loadResumes() {
             limit: data.analysis_limit || 5
         };
         improvementAvailable = data.improvement_available !== false;
+        improvementReason = data.improvement_reason || null;
 
         updateLimitsBar();
         renderResumeCards(true);
@@ -242,8 +245,17 @@ function updateLimitsBar() {
     if (elRemaining) elRemaining.textContent = remaining;
     if (elLimit) elLimit.textContent = analysisLimits.limit;
     if (elImprovement) {
-        elImprovement.textContent = improvementAvailable ? 'Доступно' : 'Лимит исчерпан';
-        elImprovement.style.color = improvementAvailable ? '' : '#ffb4ab';
+        if (improvementAvailable) {
+            elImprovement.textContent = '1 улучшение · доступно';
+            elImprovement.style.color = '';
+        } else if (improvementReason && improvementReason !== 'PAYWALL') {
+            // Show cooldown e.g. "Доступно раз в неделю. Ждать осталось: 3 дн. 12 ч."
+            elImprovement.textContent = improvementReason;
+            elImprovement.style.color = 'rgba(202,195,215,0.6)';
+        } else {
+            elImprovement.textContent = 'Недоступно на вашем тарифе';
+            elImprovement.style.color = 'rgba(255,180,171,0.7)';
+        }
     }
 }
 
@@ -869,6 +881,225 @@ function closeLimitModal() {
     closeModal('limitModal', 'limitModalCard');
 }
 window.closeLimitModal = closeLimitModal;
+
+// ============================================================================
+// ANALYSIS INFO MODAL
+// ============================================================================
+
+function openAnalysisInfoModal() {
+    openInfoModal('analysisInfoModal', 'analysisInfoCard');
+}
+
+function closeAnalysisInfoModal() {
+    closeInfoModal('analysisInfoModal', 'analysisInfoCard');
+}
+
+window.openAnalysisInfoModal = openAnalysisInfoModal;
+window.closeAnalysisInfoModal = closeAnalysisInfoModal;
+
+// ============================================================================
+// IMPROVEMENT INFO MODAL
+// ============================================================================
+
+function openImprovementInfoModal() {
+    // Populate cooldown block if needed
+    const cooldownBlock = document.getElementById('improvementInfoCooldown');
+    const cooldownText = document.getElementById('improvementInfoCooldownText');
+    if (cooldownBlock && cooldownText) {
+        if (!improvementAvailable && improvementReason && improvementReason !== 'PAYWALL') {
+            const match = improvementReason.match(/Ждать осталось:\s*(.+)/);
+            if (match) {
+                cooldownText.textContent = match[1].trim();
+                cooldownBlock.classList.remove('hidden');
+            } else {
+                cooldownBlock.classList.add('hidden');
+            }
+        } else {
+            cooldownBlock.classList.add('hidden');
+        }
+    }
+    openInfoModal('improvementInfoModal', 'improvementInfoCard');
+}
+
+function closeImprovementInfoModal() {
+    closeInfoModal('improvementInfoModal', 'improvementInfoCard');
+}
+
+window.openImprovementInfoModal = openImprovementInfoModal;
+window.closeImprovementInfoModal = closeImprovementInfoModal;
+
+// ============================================================================
+// INFO MODAL HELPERS (compact modals without backdrop element ID)
+// ============================================================================
+
+function openInfoModal(modalId, cardId) {
+    const modal = document.getElementById(modalId);
+    const card = document.getElementById(cardId);
+    if (!modal || !card) return;
+
+    modal.classList.remove('pointer-events-none');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('overflow-hidden');
+
+    requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        modal.classList.add('opacity-100');
+        card.classList.remove('scale-95', 'opacity-0');
+        card.classList.add('scale-100', 'opacity-100');
+    });
+}
+
+function closeInfoModal(modalId, cardId) {
+    const modal = document.getElementById(modalId);
+    const card = document.getElementById(cardId);
+    if (!modal || !card) return;
+
+    card.classList.remove('scale-100', 'opacity-100');
+    card.classList.add('scale-95', 'opacity-0');
+    modal.classList.remove('opacity-100');
+    modal.classList.add('opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('pointer-events-none');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+    }, 250);
+}
+
+// ============================================================================
+// SYNC RESUMES
+// ============================================================================
+
+async function syncResumes() {
+    const btn = document.getElementById('syncBtn');
+    const statusText = document.getElementById('syncStatusText');
+    if (!btn) return;
+
+    // Guard: already syncing
+    if (btn.classList.contains('syncing')) return;
+
+    btn.classList.add('syncing');
+    btn.disabled = true;
+    const label = btn.querySelector('.sync-btn-label');
+    if (label) label.textContent = 'Синхронизация...';
+    if (statusText) statusText.textContent = 'Обновление...';
+
+    // Hide cards with subtle overlay while syncing
+    const grid = document.getElementById('resumeGrid');
+    if (grid) grid.classList.add('sync-grid-overlay');
+
+    try {
+        const resp = await authFetch(
+            `${API_BASE_URL}/api/resumes/sync`,
+            getFetchOpts('POST', {})
+        );
+        if (!resp) {
+            _syncDone(false, 'Нет соединения');
+            return;
+        }
+        if (resp.status === 403) {
+            _syncDone(false, 'Нет доступа');
+            showToast('Для синхронизации требуется авторизация через hh.ru.', 4000);
+            return;
+        }
+        if (!resp.ok) {
+            _syncDone(false, 'Ошибка');
+            showToast('Не удалось запустить синхронизацию.', 4000);
+            return;
+        }
+
+        const data = await resp.json();
+        if (data.status === 'already_running') {
+            if (statusText) statusText.textContent = 'Уже выполняется...';
+        }
+        // Start polling
+        _pollSyncStatus();
+
+    } catch (e) {
+        console.error('[Sync] Error:', e);
+        _syncDone(false, 'Ошибка');
+    }
+}
+window.syncResumes = syncResumes;
+
+function _pollSyncStatus(attempts = 0) {
+    if (syncPollTimer) clearTimeout(syncPollTimer);
+    const maxAttempts = 45; // 45 * 2s = 90s timeout
+
+    syncPollTimer = setTimeout(async () => {
+        try {
+            const resp = await authFetch(
+                `${API_BASE_URL}/api/resumes/sync/status`,
+                getFetchOpts('GET')
+            );
+            if (!resp) {
+                _syncDone(false, 'Нет соединения');
+                return;
+            }
+            const data = await resp.json();
+            const status = data.status || 'idle';
+
+            if (status === 'complete') {
+                _syncDone(true, 'Обновлено');
+                showToast('Список резюме обновлён с hh.ru', 3000);
+                // Reload resume list without animation entrance
+                await loadResumes();
+                return;
+            }
+
+            if (status === 'error_login') {
+                _syncDone(false, 'Ошибка входа');
+                showToast('Сессия hh.ru истекла. Выполните повторную авторизацию.', 5000);
+                return;
+            }
+
+            if (status === 'error_generic') {
+                _syncDone(false, 'Ошибка');
+                showToast('Синхронизация не удалась. Попробуйте позже.', 4000);
+                return;
+            }
+
+            // Still processing
+            if (attempts >= maxAttempts) {
+                _syncDone(false, 'Таймаут');
+                showToast('Синхронизация заняла слишком много времени. Попробуйте позже.', 4000);
+                return;
+            }
+
+            _pollSyncStatus(attempts + 1);
+        } catch (e) {
+            console.error('[Sync] Poll error:', e);
+            _syncDone(false, 'Ошибка');
+        }
+    }, 2000);
+}
+
+function _syncDone(success, label) {
+    if (syncPollTimer) {
+        clearTimeout(syncPollTimer);
+        syncPollTimer = null;
+    }
+
+    const btn = document.getElementById('syncBtn');
+    const statusText = document.getElementById('syncStatusText');
+    const grid = document.getElementById('resumeGrid');
+
+    if (grid) grid.classList.remove('sync-grid-overlay');
+
+    if (btn) {
+        btn.classList.remove('syncing');
+        btn.disabled = false;
+        const btnLabel = btn.querySelector('.sync-btn-label');
+        if (btnLabel) btnLabel.textContent = 'Обновить';
+    }
+
+    if (statusText) {
+        statusText.textContent = label || 'Обновить с hh.ru';
+        setTimeout(() => {
+            if (statusText) statusText.textContent = 'Обновить с hh.ru';
+        }, 4000);
+    }
+}
 
 // ============================================================================
 // GENERIC MODAL HELPERS
