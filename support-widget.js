@@ -1,6 +1,6 @@
 /**
  * support-widget.js — Floating Support Chat Widget для Aurora.
- * Версия: 2.2
+ * Версия: 2.3
  *
  * - Кнопка справа внизу (как у Timeweb)
  * - Desktop: popup 380×520px над кнопкой
@@ -211,6 +211,9 @@
             '.asc-tick-single{color:rgba(255,255,255,0.55);}',
             '.asc-tick-double{color:#a78bfa;}',
             '.asc-tick-read{color:#60d8ff;}',
+            /* Ошибка отправки */
+            '.asc-bubble-row.error .asc-bubble{opacity:0.6;border:1px solid #ef4444;}',
+            '.asc-err-hint{font-size:10px;color:#ef4444;margin-top:2px;cursor:pointer;}',
             /* Mobile size */
             '@media(max-width:640px){',
             '.asc-fab-wrap{bottom:20px;right:16px;}',
@@ -456,6 +459,19 @@
         return row;
     }
 
+    function upgradeAllUserTicks(state) {
+        var container = document.getElementById('asc-messages');
+        if (!container) return;
+        var rows = container.querySelectorAll('.asc-bubble-row.user');
+        rows.forEach(function (row) {
+            var timeEl = row.querySelector('.asc-bubble-time');
+            if (!timeEl) return;
+            var oldTick = timeEl.querySelector('.asc-ticks');
+            if (oldTick) oldTick.remove();
+            timeEl.insertAdjacentHTML('beforeend', ticksSvg(state));
+        });
+    }
+
     function scrollBottom(smooth) {
         var el = document.getElementById('asc-messages');
         if (!el) return;
@@ -551,16 +567,31 @@
         } catch (_) {}
     }
 
-    /* ---- Send ---- */
+    /* ---- Send (optimistic) ---- */
+    var _sendLock = false;
+
     async function sendMessage() {
+        if (_sendLock) return;
         var ta = document.getElementById('asc-input');
         var sb = document.getElementById('asc-send');
         if (!ta) return;
         var text = ta.value.trim();
         if (!text) return;
 
+        _sendLock = true;
         sb.disabled = true;
-        ta.disabled = true;
+
+        var tempId = '_tmp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        var now = new Date().toISOString();
+
+        var container = document.getElementById('asc-messages');
+        var tempMsg = { id: tempId, sender_type: 'user', message: text, created_at: now };
+        renderMsg(tempMsg, container, 'sent');
+        scrollBottom(true);
+
+        ta.value = '';
+        ta.style.height = 'auto';
+        sb.disabled = true;
 
         try {
             var r = await authFetch(API_BASE + '/api/support/send', {
@@ -568,19 +599,48 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: text }),
             });
-            if (!r.ok) throw new Error('HTTP ' + r.status);
+            var errText = null;
+            if (!r.ok) {
+                if (r.status === 429) {
+                    try { var ed = await r.json(); errText = ed.detail || 'Слишком часто'; } catch(_) { errText = 'Слишком часто'; }
+                }
+                throw new Error(errText || 'HTTP ' + r.status);
+            }
             var data = await r.json();
             if (data.message) {
-                var container = document.getElementById('asc-messages');
-                renderMsg(data.message, container, 'sent');
-                scrollBottom(true);
+                knownIds.delete(tempId);
+                knownIds.add(data.message.id);
+                var row = container.querySelector('[data-id="' + tempId + '"]');
+                if (row) {
+                    row.setAttribute('data-id', data.message.id);
+                    var timeEl = row.querySelector('.asc-bubble-time');
+                    if (timeEl) {
+                        var oldTick = timeEl.querySelector('.asc-ticks');
+                        if (oldTick) oldTick.remove();
+                        timeEl.insertAdjacentHTML('beforeend', ticksSvg('delivered'));
+                    }
+                }
             }
-            ta.value = '';
-            ta.style.height = 'auto';
         } catch (err) {
             console.error('[SupportWidget] send:', err);
+            var errRow = container.querySelector('[data-id="' + tempId + '"]');
+            if (errRow) {
+                errRow.classList.add('error');
+                var hint = document.createElement('div');
+                hint.className = 'asc-err-hint';
+                hint.textContent = (err.message || 'Ошибка отправки') + '. Нажмите, чтобы повторить';
+                hint.addEventListener('click', function retry() {
+                    hint.remove();
+                    errRow.classList.remove('error');
+                    knownIds.delete(tempId);
+                    errRow.remove();
+                    ta.value = text;
+                    sendMessage();
+                });
+                errRow.appendChild(hint);
+            }
         } finally {
-            ta.disabled = false;
+            _sendLock = false;
             ta.focus();
             sb.disabled = !ta.value.trim();
         }
@@ -598,15 +658,7 @@
 
                 var container = document.getElementById('asc-messages');
                 if (container) {
-                    /* Обновляем галочки у всех user-сообщений на "read" */
-                    var rows = container.querySelectorAll('.asc-bubble-row.user');
-                    rows.forEach(function (row) {
-                        var timeEl = row.querySelector('.asc-bubble-time');
-                        if (!timeEl) return;
-                        var oldTick = timeEl.querySelector('.asc-ticks');
-                        if (oldTick) oldTick.remove();
-                        timeEl.insertAdjacentHTML('beforeend', ticksSvg('read'));
-                    });
+                    upgradeAllUserTicks('read');
                     renderMsg(p, container, null);
                 }
 
