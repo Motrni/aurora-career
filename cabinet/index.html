@@ -77,8 +77,12 @@ tailwind.config = {
 };
 </script>
 <style>
-html { scroll-behavior: smooth; color-scheme: dark; scrollbar-gutter: stable; overflow-x: hidden; }
-body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0ef; min-width: 320px; overflow-x: hidden; max-width: 100%; }
+html { scroll-behavior: smooth; color-scheme: dark; overflow-x: hidden; width: 100%; max-width: 100%; }
+body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0ef; min-width: 0; width: 100%; max-width: 100%; overflow-x: hidden; }
+/* scrollbar-gutter: stable на html давал лишнюю ширину на части мобильных движков в связке с flex */
+@media (min-width: 768px) {
+    html { scrollbar-gutter: stable; }
+}
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
 
 .glass-panel {
@@ -139,6 +143,9 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     font-size: 0.875rem;
 }
 .sub-detail-row.hidden { display: none; }
+
+/* Длинные строки в карточке подписки (без принудительного overflow:hidden у предков) */
+.cabinet-text-wrap { overflow-wrap: anywhere; word-break: break-word; }
 
 .btn-primary {
     background: linear-gradient(135deg, #653edb 0%, #5a30d0 100%);
@@ -220,11 +227,11 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     position: absolute;
     top: 50%;
     left: 50%;
-    /* Используем квадрат 300% ширины родителя вместо inset:-120%
-       — transform-based позиционирование не расширяет scrollable area */
-    width: 300%;
+    /* Квадрат = ширина обёртки + scale: не задаём width:300% (на iOS давало лишнюю ширину документа) */
+    width: 100%;
     aspect-ratio: 1;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(2.75);
+    transform-origin: center center;
     background: conic-gradient(
         from 0deg,
         #10b981,
@@ -247,8 +254,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     -webkit-backdrop-filter: blur(40px);
 }
 @keyframes sub-aurora-spin {
-    /* translate держим в анимации, иначе сбрасывается при rotate */
-    to { transform: translate(-50%, -50%) rotate(360deg); }
+    to { transform: translate(-50%, -50%) scale(2.75) rotate(360deg); }
 }
 @media (prefers-reduced-motion: reduce) {
     .subscription-active-glow::before {
@@ -263,14 +269,14 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 </style>
 </head>
 
-<body class="min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary">
+<body class="min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary min-w-0">
 
 <div class="light-leak-tl"></div>
 <div class="light-leak-br"></div>
 
 <!-- Navigation -->
-<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
-    <div class="h-full w-full px-5 md:px-12 lg:px-16 flex md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:gap-x-6">
+<nav class="fixed top-0 left-0 right-0 w-full max-w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)] overflow-x-hidden">
+    <div class="h-full w-full min-w-0 max-w-full px-5 md:px-12 lg:px-16 flex md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:gap-x-6">
         <div class="flex items-center gap-2 md:gap-3 shrink-0 md:justify-self-start">
             <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
                 <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
@@ -309,12 +315,12 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     <button onclick="handleLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
 </div>
 
-<main class="flex-grow pt-28 md:pt-32 pb-16 md:pb-24 px-4 md:px-12 lg:px-16 max-w-[1400px] mx-auto w-full relative z-10 overflow-x-hidden">
+<main class="flex-grow pt-28 md:pt-32 pb-16 md:pb-24 px-4 md:px-12 lg:px-16 max-w-[1400px] mx-auto w-full min-w-0 relative z-10 overflow-x-hidden">
 
     <!-- Skeleton -->
     <div id="loadingSkeleton">
         <div class="skeleton skeleton-block" style="height: 48px; margin-bottom: 20px; border-radius: 12px;"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 min-w-0 w-full">
             <div class="lg:col-span-7 space-y-6">
                 <div class="skeleton skeleton-block" style="height: 180px; border-radius: 16px;"></div>
                 <div class="skeleton skeleton-block" style="height: 220px; border-radius: 16px;"></div>
@@ -328,7 +334,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     </div>
 
     <!-- Main content (hidden until loaded) -->
-    <div id="mainContent" style="display: none; animation: fadeIn 0.3s ease-in-out;">
+    <div id="mainContent" class="min-w-0 w-full max-w-full" style="display: none; animation: fadeIn 0.3s ease-in-out;">
 
         <!-- Payment success banner -->
         <div id="paymentSuccessBanner" class="hidden mb-6" style="animation: fadeIn 0.3s ease;">
@@ -337,7 +343,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                     <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(74,222,128,0.12);">
                         <span class="material-symbols-outlined text-[#4ade80] text-2xl">check_circle</span>
                     </div>
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <h2 class="text-lg font-bold text-on-surface">Оплата прошла успешно!</h2>
                         <p class="text-on-surface-variant text-sm mt-1" id="paymentSuccessDesc">Подписка активирована. Все функции доступны.</p>
                         <a href="/settings/" id="paymentSuccessLink" class="inline-flex items-center gap-2 mt-4 btn-primary text-white font-medium py-2.5 px-6 rounded-xl text-sm cursor-pointer">
@@ -366,10 +372,10 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
         </div>
 
         <!-- Two-column grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start cabinet-grid">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start cabinet-grid min-w-0 w-full max-w-full">
 
             <!-- Left column -->
-            <div class="lg:col-span-7 space-y-6 md:space-y-8">
+            <div class="lg:col-span-7 space-y-6 md:space-y-8 min-w-0">
 
                 <!-- Subscription card -->
                 <div id="subscriptionCardOuter" class="rounded-2xl overflow-hidden">
@@ -384,7 +390,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                                 <h2 class="text-lg font-bold tracking-tight text-on-surface" id="subTitle">Подписка не активна</h2>
                                 <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full hidden" id="subBadge"></span>
                             </div>
-                            <p class="text-on-surface-variant text-sm break-words" id="subDescription">
+                            <p class="text-on-surface-variant text-sm break-words cabinet-text-wrap" id="subDescription">
                                 Выберите тариф, чтобы получить доступ к автопилоту откликов и настройкам поиска.
                             </p>
                             <div id="subDetails" class="hidden mt-4 space-y-3">
@@ -394,7 +400,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                                 </div>
                                 <div class="sub-detail-row hidden" id="subDetailBilling">
                                     <span class="text-on-surface-variant">Следующее списание</span>
-                                    <span class="text-on-surface font-medium leading-snug break-words" id="subBillingValue">—</span>
+                                    <span class="text-on-surface font-medium leading-snug break-words cabinet-text-wrap" id="subBillingValue">—</span>
                                 </div>
                                 <div class="sub-detail-row hidden" id="subDetailAmount">
                                     <span class="text-on-surface-variant">Сумма к списанию</span>
@@ -476,7 +482,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             </div><!-- End left column -->
 
             <!-- Right column -->
-            <div class="lg:col-span-5 space-y-6 md:space-y-8">
+            <div class="lg:col-span-5 space-y-6 md:space-y-8 min-w-0">
 
                 <!-- Resume selector -->
                 <div id="resumeSelectCard" class="hidden p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
@@ -596,8 +602,8 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 </main>
 
 <!-- Footer -->
-<footer class="mt-auto w-full py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
-    <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+<footer class="mt-auto w-full min-w-0 py-8 md:py-12 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10 overflow-x-hidden">
+    <div class="max-w-[1400px] mx-auto w-full min-w-0 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
         <div class="flex flex-col items-center md:items-start gap-2">
             <div class="flex items-center gap-2 md:gap-3">
                 <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="favicon.png?v=3"/>
@@ -719,7 +725,7 @@ function toggleMobileMenu() {
     </div>
 </div>
 
-<script src="cabinet.js?v=4.4"></script>
+<script src="cabinet.js?v=4.5"></script>
 <script src="support-widget.js?v=1"></script>
 </body>
 </html>

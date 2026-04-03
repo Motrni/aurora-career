@@ -350,7 +350,7 @@ function resetSubscriptionCardState() {
     const icon = document.getElementById('subIcon');
     const badge = document.getElementById('subBadge');
 
-    outer.className = 'rounded-2xl';
+    outer.className = 'rounded-2xl overflow-hidden w-full min-w-0 max-w-full';
     card.className = 'glass-panel p-6 md:p-8 rounded-2xl border border-outline-variant/5 relative overflow-hidden';
     icon.style.fontVariationSettings = '';
 
