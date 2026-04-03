@@ -170,7 +170,7 @@ async function renderCabinet(user) {
     const hasAccess = user.subscription_status === 'trial' || user.subscription_status === 'active';
     if (hasAccess) {
         loadDailyStats();
-        loadResumeSelector();
+        await loadResumeSelector();
     }
 
     document.getElementById('loadingSkeleton').style.display = 'none';
@@ -222,7 +222,7 @@ function updateResumeDropdownUI(activeResume) {
     for (const r of _resumesList) {
         const item = document.createElement('button');
         item.type = 'button';
-        item.className = 'w-full text-left px-4 py-3 text-sm transition-colors cursor-pointer hover:bg-surface-container-low flex items-center gap-2 first:rounded-t-xl last:rounded-b-xl'
+        item.className = 'w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer hover:bg-surface-container-low flex items-center gap-2'
             + (r.resume_id === activeResume.resume_id ? ' text-primary font-medium' : ' text-on-surface');
         item.textContent = r.resume_title;
         if (r.resume_id === activeResume.resume_id) {
@@ -246,13 +246,16 @@ function toggleResumeDropdown() {
     if (_resumesList.length <= 1) return;
     const list = document.getElementById('resumeDropdownList');
     const arrow = document.getElementById('resumeDropdownArrow');
+    const btn = document.getElementById('resumeDropdownBtn');
     _resumeDropdownOpen = !_resumeDropdownOpen;
     if (_resumeDropdownOpen) {
         list.classList.remove('hidden');
         arrow.style.transform = 'rotate(180deg)';
+        btn.style.borderRadius = '10px 10px 0 0';
     } else {
         list.classList.add('hidden');
         arrow.style.transform = '';
+        btn.style.borderRadius = '10px';
     }
 }
 
@@ -263,6 +266,7 @@ document.addEventListener('click', (e) => {
         _resumeDropdownOpen = false;
         document.getElementById('resumeDropdownList').classList.add('hidden');
         document.getElementById('resumeDropdownArrow').style.transform = '';
+        document.getElementById('resumeDropdownBtn').style.borderRadius = '10px';
     }
 });
 
@@ -270,6 +274,7 @@ async function handleSwitchResume(resumeId) {
     _resumeDropdownOpen = false;
     document.getElementById('resumeDropdownList').classList.add('hidden');
     document.getElementById('resumeDropdownArrow').style.transform = '';
+    document.getElementById('resumeDropdownBtn').style.borderRadius = '10px';
 
     const current = _resumesList.find(r => r.is_active);
     if (current && current.resume_id === resumeId) return;
