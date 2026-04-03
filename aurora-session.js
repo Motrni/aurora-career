@@ -21,6 +21,9 @@
     var _visibilityBound = false;
     var _beforeUnloadBound = false;
     var _lastSuccessfulPing = Date.now();
+    var _sessionDead = false;
+    var _consecutiveRefreshFails = 0;
+    var MAX_REFRESH_FAILS = 2;
 
     function getApiBase() {
         var h = window.location.hostname;
@@ -30,13 +33,20 @@
         return 'https://api.aurora-career.ru';
     }
 
+    function handleSessionDeath() {
+        if (_sessionDead) return;
+        _sessionDead = true;
+        stopPing();
+        var p = window.location.pathname;
+        if (p !== '/auth/' && p !== '/auth') {
+            window.location.href = '/auth/';
+        }
+    }
+
     var _refreshPromise = null;
 
-    /**
-     * Deduplicated refresh. Если refresh уже в полёте — возвращает тот же Promise.
-     * @returns {Promise<boolean>} true если новые cookies установлены.
-     */
     function refreshNow() {
+        if (_sessionDead) return Promise.resolve(false);
         if (_refreshPromise) return _refreshPromise;
 
         var base = getApiBase();
@@ -45,8 +55,16 @@
         })
         .then(function (r) {
             _refreshPromise = null;
-            if (r.ok) _lastSuccessfulPing = Date.now();
-            return r.ok;
+            if (r.ok) {
+                _lastSuccessfulPing = Date.now();
+                _consecutiveRefreshFails = 0;
+                return true;
+            }
+            _consecutiveRefreshFails++;
+            if (_consecutiveRefreshFails >= MAX_REFRESH_FAILS) {
+                handleSessionDeath();
+            }
+            return false;
         })
         .catch(function () {
             _refreshPromise = null;
@@ -57,7 +75,7 @@
     }
 
     function runPing() {
-        if (document.hidden) return;
+        if (document.hidden || _sessionDead) return;
         if (_refreshPromise) return;
         var base = getApiBase();
 
@@ -65,9 +83,10 @@
             .then(function (r) {
                 if (r.ok) {
                     _lastSuccessfulPing = Date.now();
+                    _consecutiveRefreshFails = 0;
                     return r.json();
                 } else if (r.status === 401) {
-                    refreshNow();
+                    return refreshNow().then(function () { return null; });
                 }
                 return null;
             })
@@ -83,7 +102,7 @@
     }
 
     function onVisibility() {
-        if (document.hidden) return;
+        if (document.hidden || _sessionDead) return;
         var gap = Date.now() - _lastSuccessfulPing;
         if (gap > ACCESS_TTL_MS) {
             refreshNow();
@@ -111,11 +130,9 @@
         }
     }
 
-    /**
-     * Запускает интервал ping + proactive refresh при возврате на вкладку.
-     * Вызывать только если у пользователя активна JWT-сессия (не legacy HMAC).
-     */
     function startPing() {
+        _sessionDead = false;
+        _consecutiveRefreshFails = 0;
         stopPing();
         _lastSuccessfulPing = Date.now();
         _interval = setInterval(runPing, SESSION_PING_MS);
@@ -131,5 +148,6 @@
         stopPing: stopPing,
         refreshNow: refreshNow,
         refreshOnce: refreshNow,
+        isSessionDead: function () { return _sessionDead; },
     };
 }(typeof window !== 'undefined' ? window : this));
