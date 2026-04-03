@@ -325,7 +325,7 @@ function createResumeCard(resume, index) {
             </div>
         </div>
 
-        <div class="flex flex-col gap-2.5">
+        <div class="flex flex-col gap-2.5" data-card-actions>
             ${hasReport ? `
                 <button onclick="openAnalysisModal('${resume.resume_id}')" class="w-full py-3.5 bg-surface-container-highest text-on-surface rounded-xl font-bold hover:bg-surface-bright transition-all flex items-center justify-center gap-2 text-sm cursor-pointer active:scale-[0.97]">
                     <span class="material-symbols-outlined text-primary text-lg">analytics</span>
@@ -371,6 +371,7 @@ async function requestAnalysis() {
     closeAnalysisModal();
 
     const card = document.querySelector(`[data-resume-id="${resumeId}"]`);
+    clearCardNoChangesState(card);
     setCardProcessing(card, true);
 
     try {
@@ -387,7 +388,10 @@ async function requestAnalysis() {
 
         if (data.error === 'no_changes') {
             setCardProcessing(card, false);
-            showToast('Резюме не изменилось на hh.ru. Новый анализ не требуется.', 5000);
+            const msg =
+                data.message ||
+                'Резюме не изменилось на hh.ru. Новый анализ не требуется.';
+            showCardNoChangesState(card, msg);
             scrollToCard(card);
             return;
         }
@@ -479,8 +483,31 @@ function updateResumeInList(resumeId, data) {
     }
 }
 
+function clearCardNoChangesState(card) {
+    if (!card) return;
+    card.classList.remove('resume-card--no-changes');
+    const banner = card.querySelector('.card-no-changes-banner');
+    if (banner) banner.remove();
+}
+
+function showCardNoChangesState(card, message) {
+    if (!card) return;
+    clearCardNoChangesState(card);
+    card.classList.add('resume-card--no-changes');
+    const banner = document.createElement('div');
+    banner.className = 'card-no-changes-banner';
+    banner.innerHTML = `
+        <span class="material-symbols-outlined card-no-changes-banner__icon shrink-0">info</span>
+        <p class="card-no-changes-banner__text">${escapeHtml(message)}</p>
+    `;
+    const actions = card.querySelector('[data-card-actions]');
+    if (actions) card.insertBefore(banner, actions);
+    else card.appendChild(banner);
+}
+
 function setCardProcessing(card, isProcessing) {
     if (!card) return;
+    if (isProcessing) clearCardNoChangesState(card);
     const buttons = card.querySelectorAll('button');
     buttons.forEach(btn => {
         btn.disabled = isProcessing;
