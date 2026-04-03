@@ -611,6 +611,13 @@ function weekdayLongRu(isoDate) {
     return s.charAt(0).toLocaleUpperCase('ru-RU') + s.slice(1);
 }
 
+function weekdayShortRu(isoDate) {
+    const dt = new Date(`${isoDate}T12:00:00`);
+    const s = dt.toLocaleDateString('ru-RU', { weekday: 'short' });
+    if (!s) return '';
+    return s.charAt(0).toLocaleUpperCase('ru-RU') + s.slice(1);
+}
+
 async function loadDailyStats() {
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/cabinet/daily-stats`);
@@ -666,7 +673,7 @@ function renderDailyChart(days) {
 
     chart.innerHTML = days.map((d) => {
         const hPct = axisMax > 0 ? (d.count / axisMax) * 100 : 0;
-        return `<div class="stats-bar-slot flex flex-col items-center justify-end relative flex-1 min-w-0 max-w-[2.75rem] mx-auto">
+        return `<div class="stats-bar-slot flex flex-col items-center justify-end relative flex-1 min-w-0 mx-auto" style="max-width:2.5rem;">
             <div class="bar-tooltip">${d.count}</div>
             <div class="stats-bar-track relative overflow-hidden shrink-0">
                 <div class="stats-bar-fill absolute bottom-0 left-0 right-0 w-full cursor-default" style="height: ${hPct}%;"></div>
@@ -676,10 +683,10 @@ function renderDailyChart(days) {
 
     labels.innerHTML = days.map((d) => {
         const dateLine = formatChartDayMonth(d.date);
-        const wd = weekdayLongRu(d.date);
-        return `<div class="flex-1 min-w-0 text-center px-0.5">
-            <div class="stats-label-date text-[11px] md:text-xs font-semibold text-on-surface leading-tight">${dateLine}</div>
-            <div class="stats-label-weekday text-[9px] md:text-[10px] text-on-surface-variant leading-snug mt-0.5">${wd}</div>
+        const wd = weekdayShortRu(d.date);
+        return `<div class="flex-1 min-w-0 text-center" style="padding:0 1px;overflow:hidden;">
+            <div class="stats-label-date font-semibold text-on-surface leading-tight" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${dateLine}</div>
+            <div class="stats-label-weekday text-on-surface-variant leading-snug" style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${wd}</div>
         </div>`;
     }).join('');
 
