@@ -919,11 +919,17 @@ function showImproveSuccess(pdfUrl) {
     document.getElementById('improveStepProcessing').classList.add('hidden');
     document.getElementById('improveStepSuccess').classList.remove('hidden');
     if (pdfUrl) {
-        document.getElementById('improvePdfLink').href = pdfUrl;
+        const fullUrl = pdfUrl.startsWith('http') ? pdfUrl : `${API_BASE_URL}${pdfUrl}`;
+        document.getElementById('improvePdfLink').href = fullUrl;
         document.getElementById('improvePdfLink').classList.remove('hidden');
     } else {
         document.getElementById('improvePdfLink').classList.add('hidden');
     }
+
+    // Обновляем лимиты — улучшение использовано
+    improvementAvailable = false;
+    improvementReason = null;
+    updateLimitsBar();
 }
 
 function closeImproveModal() {
