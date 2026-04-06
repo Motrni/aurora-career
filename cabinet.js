@@ -651,7 +651,8 @@ function renderDailyStatsFooter() {
     gaEl.textContent = Number.isFinite(ga) ? String(ga) : '0';
     dlEl.textContent = Number.isFinite(dl) ? String(dl) : '20';
 
-    if (!Object.prototype.hasOwnProperty.call(u, 'has_active_boost')) {
+    const isTrial = u.subscription_status === 'trial';
+    if (isTrial || !Object.prototype.hasOwnProperty.call(u, 'has_active_boost')) {
         cta.classList.add('hidden');
     } else {
         cta.classList.toggle('hidden', u.has_active_boost === true);
