@@ -207,17 +207,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // 4. Return Button
-    document.getElementById("returnBtn").addEventListener("click", () => {
-        // Try to close webview if possible, otherwise redirect
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.close();
-        }
-        // Fallback redirection
-        window.location.href = `https://t.me/${window.BOT_USERNAME}`;
-    });
-
-    // 5. Load Data (Parallel)
+    // 4. Load Data (Parallel)
     loadIndustriesDict();
     loadAreasDict();
     loadSettings();

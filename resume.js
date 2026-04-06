@@ -95,12 +95,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     propagateAuthToNavLinks();
     await loadResumes();
 
-    document.getElementById("returnBtn").addEventListener("click", () => {
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.close();
-        }
-        window.location.href = `https://t.me/${window.BOT_USERNAME}`;
-    });
 });
 
 // ============================================================================

@@ -100,12 +100,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await initPage();
     initBoostModal();
 
-    document.getElementById("returnBtn").addEventListener("click", () => {
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.close();
-        }
-        window.location.href = `https://t.me/${window.BOT_USERNAME}`;
-    });
 });
 
 function propagateAuthToNavLinks() {
