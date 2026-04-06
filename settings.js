@@ -408,6 +408,24 @@ function updateSaveButtonState() {
     updateSaveBarFloatingState();
 }
 
+function _adjustSaveBarAboveFooter(actionBar) {
+    const footer = document.querySelector('footer');
+    if (!footer || !actionBar) return;
+
+    const footerRect = footer.getBoundingClientRect();
+    const barRect = actionBar.getBoundingClientRect();
+    const defaultBottom = window.innerWidth >= 768 ? 18 : 14;
+    const gap = 12;
+
+    // Footer is visible in viewport
+    if (footerRect.top < window.innerHeight) {
+        const needed = window.innerHeight - footerRect.top + gap;
+        actionBar.style.bottom = Math.max(defaultBottom, needed) + 'px';
+    } else {
+        actionBar.style.bottom = '';
+    }
+}
+
 function updateSaveBarFloatingState() {
     const actionBar = document.getElementById('searchActionBar');
     const hint = document.getElementById('onboardingSaveHint');
@@ -418,6 +436,7 @@ function updateSaveBarFloatingState() {
 
     if (!isSearchTabActive && !_isOnboardingMode) {
         actionBar.classList.remove('is-floating', 'is-docked');
+        actionBar.style.bottom = '';
         document.body.classList.remove('has-floating-save');
         return;
     }
@@ -427,6 +446,7 @@ function updateSaveBarFloatingState() {
         actionBar.classList.add('is-floating');
         actionBar.classList.remove('is-docked');
         document.body.classList.add('has-floating-save');
+        _adjustSaveBarAboveFooter(actionBar);
     } else if (_hasSearchChanges) {
         if (_saveBarBaseTop === null) {
             refreshSaveBarBaseTop();
@@ -445,9 +465,11 @@ function updateSaveBarFloatingState() {
         actionBar.classList.toggle('is-floating', !_saveBarDocked);
         actionBar.classList.toggle('is-docked', _saveBarDocked);
         document.body.classList.toggle('has-floating-save', !_saveBarDocked);
+        if (!_saveBarDocked) _adjustSaveBarAboveFooter(actionBar);
     } else {
         _saveBarDocked = false;
         actionBar.classList.remove('is-floating', 'is-docked');
+        actionBar.style.bottom = '';
         document.body.classList.remove('has-floating-save');
     }
 
@@ -2649,12 +2671,16 @@ function _lockNavForOnboarding() {
     const selectors = [
         'a[href="/cabinet/"]',
         'a[href="/responses/"]',
+        'a[href="/resume/"]',
         '#nav-responses',
-        '#nav-responses-mobile'
+        '#nav-responses-mobile',
+        '#nav-resume',
+        '#nav-resume-mobile'
     ];
     selectors.forEach(sel => {
         document.querySelectorAll(sel).forEach(link => {
-            link.dataset.originalHref = link.href;
+            if (link.dataset.originalHref) return; // already locked
+            link.dataset.originalHref = link.href || link.getAttribute('href') || '#';
             link.removeAttribute('href');
             link.style.opacity = '0.35';
             link.style.cursor = 'not-allowed';
