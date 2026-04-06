@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<base href="/">
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Поддержка | Аврора</title>
+<link rel="icon" type="image/png" href="favicon.png?v=3">
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "outline": "#938ea0",
+                "on-secondary-container": "#c7aaff",
+                "on-secondary": "#3e0c85",
+                "primary-container": "#5a30d0",
+                "on-secondary-fixed": "#250059",
+                "tertiary": "#ccbeff",
+                "tertiary-fixed": "#e7deff",
+                "on-surface": "#e7e0ef",
+                "surface-container-low": "#1d1a24",
+                "on-primary-container": "#cec0ff",
+                "surface-bright": "#3b3743",
+                "surface-variant": "#37333e",
+                "background": "#15121c",
+                "on-error": "#690005",
+                "on-background": "#e7e0ef",
+                "inverse-primary": "#653edb",
+                "on-tertiary-container": "#cec0ff",
+                "tertiary-container": "#5a30d0",
+                "on-tertiary-fixed": "#1e0060",
+                "on-tertiary": "#350097",
+                "on-tertiary-fixed-variant": "#4c1bc3",
+                "on-secondary-fixed-variant": "#552d9c",
+                "primary-fixed": "#e7deff",
+                "surface-dim": "#15121c",
+                "on-primary-fixed": "#1e0060",
+                "surface-container-lowest": "#100d17",
+                "secondary-fixed": "#ebddff",
+                "primary-fixed-dim": "#ccbeff",
+                "on-surface-variant": "#cac3d7",
+                "surface": "#15121c",
+                "secondary-fixed-dim": "#d3bbff",
+                "secondary-container": "#58309f",
+                "on-primary-fixed-variant": "#4c1bc3",
+                "primary": "#ccbeff",
+                "inverse-on-surface": "#322f3a",
+                "error-container": "#93000a",
+                "tertiary-fixed-dim": "#ccbeff",
+                "surface-container-highest": "#37333e",
+                "error": "#ffb4ab",
+                "surface-container": "#211e29",
+                "on-primary": "#350097",
+                "surface-tint": "#ccbeff",
+                "surface-container-high": "#2c2833",
+                "outline-variant": "#484455",
+                "inverse-surface": "#e7e0ef",
+                "on-error-container": "#ffdad6",
+                "secondary": "#d3bbff"
+            },
+            fontFamily: {"headline": ["Inter"], "body": ["Inter"], "label": ["Inter"]},
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+        },
+    },
+}
+</script>
+<style>
+html { scroll-behavior: smooth; color-scheme: dark; }
+body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0ef; min-width: 320px; overflow-x: hidden; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+.glass-panel { background: rgba(55, 51, 62, 0.4); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
+.brand-logo-font { font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(90,48,208,0.7), rgba(204,190,255,0.35)); border-radius: 10px; }
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(90,48,208,0.55) rgba(255,255,255,0.04); }
+.light-leak-tl { position: fixed; top: -180px; left: -120px; width: 420px; height: 420px; background: radial-gradient(ellipse at center, rgba(90,48,208,0.10) 0%, transparent 65%); pointer-events: none; z-index: 0; }
+.light-leak-br { position: fixed; bottom: -200px; right: -160px; width: 500px; height: 500px; background: radial-gradient(ellipse at center, rgba(204,190,255,0.06) 0%, transparent 65%); pointer-events: none; z-index: 0; }
+.burger-btn span { display: block; width: 22px; height: 2px; background: #e7e0ef; border-radius: 2px; transition: all 0.3s ease; }
+.burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.burger-btn.active span:nth-child(2) { opacity: 0; }
+.burger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+.mobile-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+.mobile-menu.open { transform: translateX(0); }
+
+/* Chat bubbles */
+.chat-bubble { max-width: 82%; word-break: break-word; white-space: pre-wrap; animation: bubbleIn 0.2s ease-out; }
+@keyframes bubbleIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .chat-bubble { animation: none !important; } }
+</style>
+</head>
+
+<body class="min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary">
+<div class="light-leak-tl"></div>
+<div class="light-leak-br"></div>
+
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased h-16 md:h-20 shadow-[0_20px_50px_rgba(90,48,208,0.05)]">
+    <div class="h-full w-full px-5 md:px-12 lg:px-16 flex md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:gap-x-6">
+        <div class="flex items-center gap-2 md:gap-3 shrink-0 md:justify-self-start">
+            <a href="/" class="flex items-center gap-2 md:gap-3 no-underline">
+                <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
+                <div class="flex flex-col leading-tight">
+                    <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
+                    <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+                </div>
+            </a>
+        </div>
+        <div class="hidden md:flex items-center justify-center gap-8 lg:gap-10 md:justify-self-center whitespace-nowrap">
+            <a href="/cabinet/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer">Кабинет</a>
+            <a href="/settings/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer">Настройки</a>
+            <a href="/responses/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer">Отклики</a>
+            <a href="/resume/" class="text-[#e7e0ef] hover:text-[#ccbeff] font-semibold text-base transition-colors cursor-pointer">Резюме</a>
+        </div>
+        <div class="flex items-center gap-3 shrink-0 ml-auto md:ml-0 md:justify-self-end">
+            <button onclick="handleNavLogout()" class="hidden md:flex items-center gap-1.5 text-[#e7e0ef] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
+                <span class="material-symbols-outlined text-xl">logout</span>
+            </button>
+            <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
+    <a href="/cabinet/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Кабинет</a>
+    <a href="/settings/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Настройки</a>
+    <a href="/responses/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Отклики</a>
+    <a href="/resume/" class="text-[#e7e0ef] text-base font-semibold py-3.5 border-b border-white/5">Резюме</a>
+    <a href="/" class="text-on-surface-variant text-base font-medium py-3.5 border-b border-white/5">На главную</a>
+    <button onclick="handleNavLogout()" class="text-left text-[#ffb4ab] text-base font-medium py-3.5 border-b border-white/5 cursor-pointer">Выйти</button>
+</div>
+
+<!-- Main: standalone chat for direct link access -->
+<main class="flex-grow pt-20 md:pt-24 relative z-10 flex flex-col">
+    <div class="flex-grow flex flex-col max-w-2xl w-full mx-auto px-4 md:px-6 pb-4">
+
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#5a30d0,#7c4dda)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-[#e7e0ef]">Поддержка Авроры</h1>
+                <p class="text-xs text-[#cac3d7]/60">Обычно отвечаем в течение дня</p>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="chatMessages"
+            class="flex-grow glass-panel rounded-2xl p-4 md:p-5 flex flex-col gap-2.5 overflow-y-auto custom-scrollbar"
+            style="min-height:320px;max-height:calc(100dvh - 280px);">
+        </div>
+
+        <!-- Input -->
+        <div class="mt-3 flex gap-2 items-end">
+            <textarea
+                id="chatInput"
+                class="flex-grow bg-[#211e29] border border-[#484455]/40 rounded-xl px-4 py-3 text-sm text-[#e7e0ef] placeholder-[#cac3d7]/30 resize-none focus:outline-none focus:border-[#5a30d0]/60 transition-colors custom-scrollbar"
+                placeholder="Напишите сообщение..."
+                rows="1"
+                maxlength="4000"
+                inputmode="text"
+            ></textarea>
+            <button
+                id="sendBtn"
+                class="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl text-white cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:brightness-110 active:scale-95"
+                style="background:linear-gradient(135deg,#5a30d0,#7c4dda)"
+                disabled
+                aria-label="Отправить"
+            >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="w-full py-6 md:py-8 px-5 md:px-12 lg:px-16 bg-[#100d17] border-t border-[#ccbeff]/10 relative z-10">
+    <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex flex-col items-center md:items-start gap-2">
+            <div class="flex items-center gap-2">
+                <img alt="Aurora Logo" class="w-5 h-5 invert brightness-150" src="favicon.png?v=3"/>
+                <div class="brand-logo-font text-base text-[#ccbeff]">Аврора</div>
+            </div>
+            <div class="text-[10px] uppercase tracking-widest text-[#cac3d7]/60">&copy; 2026 Аврора</div>
+        </div>
+        <div class="flex items-center gap-6 font-['Inter'] text-[10px] uppercase tracking-[0.15em]">
+            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity" href="https://aurora-career.ru/" target="_blank">Главная</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+function toggleMobileMenu() {
+    document.getElementById('burger-btn').classList.toggle('active');
+    document.getElementById('mobile-menu').classList.toggle('open');
+    document.body.classList.toggle('overflow-hidden');
+}
+</script>
+
+<script src="aurora-session.js?v=3"></script>
+<script src="support.js?v=2"></script>
+</body>
+</html>

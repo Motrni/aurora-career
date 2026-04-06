@@ -2,7 +2,8 @@
   "name": "aurora-career",
   "version": "1.0.0",
   "scripts": {
-    "start": "npx serve ."
+    "build": "echo 'Static site'",
+    "start": "npx serve -l 8080 ."
   },
   "dependencies": {
     "serve": "^14.0.0"

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary": "#ccbeff",
+              "on-error-container": "#ffdad6",
+              "surface-container-lowest": "#100d17",
+              "on-secondary-fixed": "#250059",
+              "on-background": "#e7e0ef",
+              "inverse-surface": "#e7e0ef",
+              "secondary-container": "#58309f",
+              "tertiary-fixed": "#e7deff",
+              "primary-fixed-dim": "#ccbeff",
+              "primary": "#ccbeff",
+              "inverse-on-surface": "#322f3a",
+              "secondary-fixed": "#ebddff",
+              "on-secondary": "#3e0c85",
+              "error": "#ffb4ab",
+              "on-error": "#690005",
+              "surface-container-low": "#1d1a24",
+              "secondary-fixed-dim": "#d3bbff",
+              "on-surface-variant": "#cac3d7",
+              "background": "#15121c",
+              "on-tertiary-fixed-variant": "#4c1bc3",
+              "error-container": "#93000a",
+              "tertiary-fixed-dim": "#ccbeff",
+              "on-surface": "#e7e0ef",
+              "on-primary-fixed": "#1e0060",
+              "on-primary-container": "#cec0ff",
+              "surface-variant": "#37333e",
+              "surface-tint": "#ccbeff",
+              "surface-container-high": "#2c2833",
+              "on-tertiary": "#350097",
+              "on-secondary-fixed-variant": "#552d9c",
+              "surface-dim": "#15121c",
+              "surface-bright": "#3b3743",
+              "outline": "#938ea0",
+              "on-primary": "#350097",
+              "on-secondary-container": "#c7aaff",
+              "tertiary-container": "#5a30d0",
+              "on-tertiary-container": "#cec0ff",
+              "surface": "#15121c",
+              "primary-fixed": "#e7deff",
+              "outline-variant": "#484455",
+              "on-tertiary-fixed": "#1e0060",
+              "surface-container-highest": "#37333e",
+              "secondary": "#d3bbff",
+              "on-primary-fixed-variant": "#4c1bc3",
+              "surface-container": "#211e29",
+              "inverse-primary": "#653edb",
+              "primary-container": "#5a30d0"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        background-color: #15121c;
+        color: #e7e0ef;
+      }
+      .aurora-glow {
+        background: radial-gradient(circle at 50% -20%, rgba(90, 48, 208, 0.15) 0%, rgba(21, 18, 28, 0) 60%);
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #100d17;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #37333e;
+        border-radius: 4px;
+      }
+    </style>
+</head>
+<body class="font-body selection:bg-primary/30">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-[#15121c]/40 backdrop-blur-3xl shadow-[0_20px_50px_rgba(90,48,208,0.05)] transition-colors duration-500 bg-[#1b1824]">
+<div class="flex justify-between items-center px-12 h-20 w-full">
+<div class="flex items-center gap-12">
+<span class="text-2xl font-black text-[#e7e0ef] tracking-tighter">Luminescent Archive</span>
+<nav class="hidden md:flex items-center gap-8 font-['Inter'] tracking-tight font-medium">
+<a class="text-[#cac3d7] pb-1 hover:text-[#e7e0ef] transition-all duration-300 active:scale-95 duration-200" href="#">Dashboard</a>
+<a class="text-[#ccbeff] border-b-2 border-[#5a30d0] pb-1 hover:text-[#e7e0ef] transition-all duration-300 active:scale-95 duration-200" href="#">Automation</a>
+<a class="text-[#cac3d7] pb-1 hover:text-[#e7e0ef] transition-all duration-300 active:scale-95 duration-200" href="#">Responses</a>
+<a class="text-[#cac3d7] pb-1 hover:text-[#e7e0ef] transition-all duration-300 active:scale-95 duration-200" href="#">Insights</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button class="material-symbols-outlined text-[#cac3d7] hover:text-[#e7e0ef] transition-colors">notifications</button>
+<button class="material-symbols-outlined text-[#cac3d7] hover:text-[#e7e0ef] transition-colors">settings</button>
+</div>
+<button class="bg-primary-container text-[#ccbeff] px-6 py-2 rounded-full font-medium hover:brightness-110 transition-all active:scale-95">Upgrade</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden">
+<img alt="User profile" data-alt="Close-up portrait of a professional man in a dark studio setting with soft purple ambient rim lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVczk2mLb19QMcvsnZGfX4yql6cnmZHwlj8ZlKpH-vAEZ0dT2XixJXwnQn3Bhp83NJx1hZJcJOedLdf6tEPVQjKyJxIUgSkvnGlEWdM03uS_oEUZmDMaMKC01zlIBTBtuEnd9_Iqnmpr_9LpWN6LvuKatyPyJX6suhYmVF_odQLM1Hc9Gg09ahDRwsDGj0Uhtxot3J2AS8kUrHzSAkIC5fGO8p9ds06kYve8fhTooAjnNX-A3pN7Em4EMrwHhy8B6MT7dxwbqywys"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Sticky Stats Bar -->
+<div class="fixed top-20 w-full z-40 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/10">
+<div class="max-w-screen-2xl mx-auto px-12 h-12 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-on-surface-variant text-sm font-medium tracking-wide">Сделано откликов:</span>
+<span class="text-primary font-bold text-sm tracking-widest">12 из 20</span>
+<div class="w-32 h-1 bg-surface-container-highest rounded-full ml-2 overflow-hidden">
+<div class="w-[60%] h-full bg-gradient-to-r from-primary to-secondary"></div>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-xs uppercase tracking-widest text-on-surface-variant/60">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span>Фильтры: Активны</span>
+</div>
+<div class="h-4 w-[1px] bg-outline-variant/30"></div>
+<div class="flex items-center gap-2 text-xs uppercase tracking-widest text-on-surface-variant/60">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>Обновлено 2м назад</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Area -->
+<main class="pt-40 pb-24 px-12 max-w-screen-2xl mx-auto aurora-glow">
+<header class="mb-12">
+<h1 class="text-display-lg text-5xl font-black tracking-tight mb-2">Ручной поиск</h1>
+<p class="text-on-surface-variant text-lg font-light">Просмотрите подобранные вакансии и выберите лучшие для отклика.</p>
+</header>
+<!-- Continuous Job Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+<!-- Job Card 1 -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img alt="Spotify Logo" class="w-full h-full object-contain" data-alt="Minimalist abstract tech logo with vibrant purple and white accents on dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXLOdCubmh7mybk09JOWk24zC9KclCeyJwItN4eNkPmc24N6ENnDZ162fO1EGTjYVVy1K4jLGuRVcWK38eCqIQ8Wsh5O_6UXk75xh9jXG7k-xHvc5poP3bfPqRgtxPPAvoPwpCJl9evvVclfhwLsUEoJD6hI2MUqHsdTA1SBk0oH4iTiLEKIPGcQ-bwbUl2nznbmak8ahYECcSeD5XeOF3L5cxQF_74wGasdSPsB-oqtap_7eocRzF6D5lVRNEkSprPa0kuYyS5ho"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors cursor-pointer">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">Senior Product Designer</h3>
+<p class="text-on-surface-variant text-sm mb-4">Spotify • Стокгольм</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Remote</span>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Figma</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+<!-- Job Card 2 -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img alt="Airbnb Logo" class="w-full h-full object-contain" data-alt="Elegant corporate logo design with soft gradients on a dark glass background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBF44cVzpjkNQIC_lEKWvxytqhmk7IP0daEHjDVbrW-T9Hvp-GgMmjEaQ8icccQSO51rNIfRThUHLwLuQcirE630aDSrRroOnGCAQvDas2-32FPeqJ2bf1OTV7yT23QCrlGqC8kQ5lHO6MZbM8u2tTYbAW_crDER2_8FrZGjyXK6Y7ZS8bNbVHaIUs-129Q_RSgrHRM83pQR4CX1IN9NNHSLxVeod0-nkmWPxyYNesAmvY6BCaIDEox-xBAsOMwkOkhbsn2PhVEB5I"/>
+</div>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">Frontend Developer</h3>
+<p class="text-on-surface-variant text-sm mb-4">Airbnb • Сан-Франциско</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">React</span>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">$180k+</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+<!-- Job Card 3 -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img alt="Discord Logo" class="w-full h-full object-contain" data-alt="Social media app logo displayed on a backlit screen with moody purple atmospheric lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKmAcHqAIVnz03IAGiTFXLnH9Ov8Q7NTlxRNmR5VwjjmbclW_J0XN7K0TcPsAg1-qzgTgHChqdfukp-qfPgBNgg8MSeNPd_D7RNbdh1JYa-qqup1Ajq_6vEirAQ6-xhv749-bDO4fx9sug0YEDMD-gxoWDivbr-yyJDMpkzacGrMuTvrmd3-D3O3Cse8rW-V43RwatoRNn51_l2tI0-GyTwpwQchSXsv786I5bDSdgQcMTAl78g1xL5T8DMCQIG8G_BnRDvsgkbv0"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors cursor-pointer">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">UX Researcher</h3>
+<p class="text-on-surface-variant text-sm mb-4">Discord • Лондон</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Full-time</span>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">B2C</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+<!-- Job Card 4 -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img alt="Abstract Logo" class="w-full h-full object-contain" data-alt="Geometric abstract logo with neon accents and deep shadow play on a metallic surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgvvoom8CLFPxomW_pkkJ1x0ezBAhDbTOMIezVz-PEtB0-ITLeWGTv0uBtKHL-kvVYTKPFW9vAgFaH5DlK9LPfqV2ynUdl92-Do_te1dNoh-34u1HXfvQjz8xBf2pxdQe0QgeVbTR6_UMy8PF7slmvrih1YeXwLoDVDNRAXEiWb5B5fgqOHcRonOw6pw8PsGSapX5RtWYHklGMTwvinql89D7LhqEwJ2AtDfgI1dXfLxW-U1CnJ7VlAqwMLTAVRnwMyYBuq-6HXSc"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors cursor-pointer">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">AI Engineering Lead</h3>
+<p class="text-on-surface-variant text-sm mb-4">Anthropic • Гибрид</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Python</span>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">LLM</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+<!-- Job Card 5 -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img alt="Generic Logo" class="w-full h-full object-contain" data-alt="Modern minimalist brand emblem with glowing edges and clean typography on obsidian base" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDmtBahlIaD0wBQlu2N5rhbKAX97Ah3PzCtZkanvd455yrGuNqSjjBYDYsqI8qwxbO20zhVPDMWQFpyp-1w-TlGF5KECIJPterPJKdoFOE7R-59Ns7lWl98vgan5FcGb_Ukctt-J9ds99n2VuXoRqltS-VlWx2WKX46_Bt2nwA04ccxmjSGzVtx_1ZH8Zgr-qroxkkvMeCoo12C7GJZFlFGjBp4WvNfd15PRyUsSXTGEtg6YWANbOTiL-Vl0nC7WTjWcg1UrffP9Y"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors cursor-pointer">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">Motion Designer</h3>
+<p class="text-on-surface-variant text-sm mb-4">Frame.io • Нью-Йорк</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">After Effects</span>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">3D</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+<!-- Repeated Rows for Scroll Effect -->
+<!-- Job Card 6 (Clone style) -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img class="w-full h-full object-contain" data-alt="Vibrant tech logo with magenta and cyan highlights on deep violet background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGsKi9UhaD57WzUDoo6BPnsy6Vc9HjffmjLIeRnjXbKQWvoCZgFk1LiQqSHlFz7R66ZQdg8e8KNSTD97-22-DMTIF9YEg-gH-m3DeZj34ZxkO0Z7asfbaMehYZDqfa7BIdzVqg3Qr0rvSVZgVq0ci7AB6M4Mqfe576GAIIDkHRT8GbKkrU5IFVJg6MWg_XEGaQCd3x8UUB51gyC3PR00DoNoW3oSKmQUH5i3hKrbYS8ABMmw1jMk3PpSRk6qeqOPi0bdMFomhUn6A"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors cursor-pointer">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">Staff UI Engineer</h3>
+<p class="text-on-surface-variant text-sm mb-4">Vercel • Remote</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Next.js</span>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Tailwind</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+<!-- Job Card 7 -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img class="w-full h-full object-contain" data-alt="Modern streaming company logo with sleek design elements and luxury lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCL9KcTJJlJAqdmNlB8QFDE227PEBlNe5oyD5lw6O1cO8POonVkWIjS1ch5g_YSEzopzGO_mzz_VGlAHUV_ixmxcR6hhGeUkud0LH8j4kygH1j9q_i0NrMNDOZL9EhQbC2QE8YHhiQXLyDd6Jle0s495E7ckF48Pp3YJ73rC0G6JKsrFaERxYMoLcP9DsUGlY0P_49JjyOjm9ip3mXjwhi0vqaomHMIjqRZ6NiLWmE5K001ZDN5BOvPpRAR5ozs1kkUogwvISv_KiE"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors cursor-pointer">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">Data Analyst</h3>
+<p class="text-on-surface-variant text-sm mb-4">Netflix • Амстердам</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">SQL</span>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Python</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+<!-- Job Card 8 -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img class="w-full h-full object-contain" data-alt="Social app branding with high-contrast neon lights and professional photography style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiEhNcz3iTLrPoqSyeGF8fC45e7neNHD9GDhPf4-dJmSqKFVxpUq6JWfE8mT737iCOcj0qoV7HglEgWxkW-rkM3yfGQcXOSWnTMRB_2kKHl4dIn0Nu2dvb7pT1aTXzFKVXB8TdC9Xips9NS_QWFk1wA5RBMkW3SMSlZRwBNoDTvcXrZ_1eH2c70UZbna8AwcRpNUiLVlLC6Fa4nFpECZJslAN56_Xc2ASl_W-lJLKvCYRVqQy5gOpzZ1TbtYDZkY8pSrb8LCtkz1k"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors cursor-pointer">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">Brand Designer</h3>
+<p class="text-on-surface-variant text-sm mb-4">Pinterest • Remote</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Visual Design</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+<!-- Job Card 9 -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img class="w-full h-full object-contain" data-alt="Corporate logo on a glass plaque with elegant soft focus background and violet hues" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBziXo2yCfPFo1Z5gytOPNBHZHKT-Ikf6dTRDRlTGCH3yZ44MqeC2640f5_5v45oaAiSnGZeSu50b09gtL2N56Wxz5kBFMwokv-f3UZdU2LLuRggWp6CTMy4dy2__kA_slq-AAWnyCHLMug4-CDaBf9WU6EawzPtjxH_2EwTNuwMxIq1pPwBuJVue8_Hl7Eu6rn7wFHnTscDKjkDAzRViaifYulfXN2UVW0D5BUkd4o_q0KVkggqyIIqfMfM0gyKuDF_pzZyPHESw4"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors cursor-pointer">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">QA Specialist</h3>
+<p class="text-on-surface-variant text-sm mb-4">JetBrains • Мюнхен</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Kotlin</span>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Automation</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+<!-- Job Card 10 -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-container-high hover:-translate-y-1 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center p-2">
+<img class="w-full h-full object-contain" data-alt="Abstract gradient shape representing a creative tech startup logo in high-end editorial style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0THdhrmx8AACWS65J4e2_yDJFYHOZ0cM3e4oJjWJN3GAetvi0QQNNNHsA6oT7d1tRz9jZUD03sHEQ4Iqu6OuSPxHeINx2mGgnRttybXHteog7zdQIGpLNEK_dshpNp_wgiXoTxxiAaTTZ7RlmnHRmynapsyv1W9A5UZ7m2nTDT4FHGGTWTSdkSCEIHpK3d1DN1ZGr8qPd05oSd4zoUYvwWkhfkBBWAWnNk5aKkmPalQCinGgNmTX0f5s3gOrfMLlYxJC8ZkAM5H8"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors cursor-pointer">bookmark</span>
+</div>
+<h3 class="text-on-surface font-bold text-lg mb-1 leading-tight">Creative Director</h3>
+<p class="text-on-surface-variant text-sm mb-4">Stripe • Берлин</p>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">Leadership</span>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-[10px] uppercase tracking-wider text-on-surface-variant">$220k+</span>
+</div>
+</div>
+<div class="flex gap-2 w-full">
+<button class="flex-1 py-3 rounded-full bg-primary/10 text-primary font-bold text-sm tracking-wide hover:bg-primary hover:text-on-primary transition-all active:scale-95 uppercase">Подробнее</button>
+<div class="relative group/tooltip">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Отправить</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination Suggestion (Subtle) -->
+<div class="mt-20 flex justify-center">
+<button class="flex items-center gap-4 text-on-surface-variant hover:text-primary transition-colors uppercase tracking-[0.3em] font-light text-sm">
+<span>Загрузить больше</span>
+<span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-[#100d17] bg-gradient-to-t from-[#15121c] to-transparent w-full py-12 px-12 mt-12">
+<div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto">
+<p class="font-['Inter'] text-sm font-light uppercase tracking-widest text-[#cac3d7]/60">© 2024 Luminescent Archive. All rights reserved.</p>
+<div class="flex gap-8 mt-6 md:mt-0">
+<a class="font-['Inter'] text-sm font-light uppercase tracking-widest text-[#cac3d7]/60 hover:text-[#ccbeff] transition-colors cursor-pointer" href="#">Privacy Policy</a>
+<a class="font-['Inter'] text-sm font-light uppercase tracking-widest text-[#cac3d7]/60 hover:text-[#ccbeff] transition-colors cursor-pointer" href="#">Terms of Service</a>
+<a class="font-['Inter'] text-sm font-light uppercase tracking-widest text-[#cac3d7]/60 hover:text-[#ccbeff] transition-colors cursor-pointer" href="#">Cookie Policy</a>
+</div>
+</div>
+</footer>
+</body></html>

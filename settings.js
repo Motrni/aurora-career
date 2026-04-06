@@ -3,9 +3,17 @@
    (c) 2024-2025 Aurora Career. All rights reserved.
 */
 
-const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.location.hostname.includes('aurora-develop'))
-    ? 'https://api.aurora-develop.ru'
-    : 'https://api.aurora-career.ru';
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+}
+
+const API_BASE_URL = window.AuroraSession
+    ? window.AuroraSession.getApiBase()
+    : ((window.location.hostname.includes('twc1.net') || window.location.hostname.includes('aurora-develop'))
+        ? 'https://api.aurora-develop.ru'
+        : 'https://api.aurora-career.ru');
 
 // State
 let initialSettings = {};
@@ -17,17 +25,55 @@ let currentSelectedAreaIds = new Set();
 let messageId = null;
 window.BOT_USERNAME = "Aurora_Career_Bot";
 window.USER_FIRST_NAME = "Кандидат";
+window.USER_CONTACT_TG = null;
+window.USER_PHONE = null;
+window.USER_ENRICHMENT_DONE = false;
 
 // Auth State (Hybrid: JWT or Legacy HMAC)
 let authMode = null; // 'jwt' or 'legacy'
 let legacyUserId = null;
 let legacySign = null;
 
+async function authFetch(url, options = {}) {
+    options.credentials = 'include';
+    let resp = await fetch(url, options);
+
+    if (resp.status === 403) {
+        var subStatus = resp.headers.get('X-Sub-Status');
+        if (subStatus) {
+            window.location.href = '/cabinet/';
+            return null;
+        }
+    }
+
+    if (resp.status === 409) {
+        const body = await resp.clone().json().catch(() => ({}));
+        if (body.detail && body.detail.includes('re-authentication')) {
+            window.location.href = '/reauth/';
+            return resp;
+        }
+    }
+
+    if (resp.status === 401 && authMode === 'jwt' && window.AuroraSession) {
+        const ok = await AuroraSession.refreshNow();
+        if (ok) {
+            resp = await fetch(url, options);
+        } else {
+            window.location.href = '/auth/';
+            return resp;
+        }
+    }
+    return resp;
+}
+
 // Loading Flags
 let isIndustriesLoaded = false;
 let isAreasLoaded = false;
 let isSettingsLoaded = false;
 let vacancyCheckTimeout = null;
+/** Debounce для /api/check_vacancies: обычные поля vs набор Boolean-строки. */
+const VACANCY_DEBOUNCE_DEFAULT_MS = 700;
+const VACANCY_DEBOUNCE_BOOLEAN_MS = 1600;
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Show Skeleton immediately
@@ -39,6 +85,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 1. Initialize UI Components (Tag Inputs)
     window.tagsInclude = new TagInput("tagsIncludeContainer", "keywordsIncludeInput", "keywordsIncludeConfirm");
     window.tagsExclude = new TagInput("tagsExcludeContainer", "keywordsExcludeInput", "keywordsExcludeConfirm");
+    window.ignoredEmployers = new IgnoredEmployersInput(
+        "ignoredEmployerInput",
+        "ignoredEmployerApplyBtn",
+        "ignoredEmployersChips",
+        "ignoredEmployersError"
+    );
 
     // 1. URL Params (Legacy auth fallback)
     const urlParams = new URLSearchParams(window.location.search);
@@ -46,33 +98,78 @@ document.addEventListener("DOMContentLoaded", async () => {
     legacySign = urlParams.get('sign');
     messageId = urlParams.get('message_id'); // Optional
 
-    // 2. Hybrid Auth: Try JWT first, fallback to legacy
+    if (urlParams.get('profile_ready') === '1') {
+        const banner = document.getElementById('profileReadyBanner');
+        if (banner) banner.classList.remove('hidden');
+    }
+
+    // 2. Hybrid Auth: Try JWT first, auto-refresh, fallback to legacy
     try {
-        const meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            method: "GET",
-            credentials: "include"
+        let meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+            method: "GET", credentials: "include",
         });
-        
+
+        if (meResponse.status === 401 && window.AuroraSession) {
+            const ok = await AuroraSession.refreshNow();
+            if (ok) {
+                meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    method: "GET", credentials: "include",
+                });
+            }
+        }
+
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
+                if (meData.need_reauth) {
+                    window.location.href = '/reauth/';
+                    return;
+                }
+                if (meData.current_step && meData.current_step.startsWith('onboarding_')
+                    && meData.current_step !== 'onboarding_settings'
+                    && meData.current_step !== 'onboarding_save_pending') {
+                    window.location.href = '/onboarding/';
+                    return;
+                }
+                if (!meData.has_access) {
+                    window.location.href = '/cabinet/';
+                    return;
+                }
                 authMode = 'jwt';
+                window._currentStep = meData.current_step || null;
+
+                // Guard: если нет профиля у активного резюме — кидаем в кабинет
+                try {
+                    const resumesResp = await fetch(`${API_BASE_URL}/api/resumes/list`, { credentials: 'include' });
+                    if (resumesResp.ok) {
+                        const resumesData = await resumesResp.json();
+                        const active = (resumesData.resumes || []).find(r => r.is_active);
+                        if (active && !active.has_custom_query) {
+                            window.location.href = '/cabinet/';
+                            return;
+                        }
+                    }
+                } catch (_) {}
+
                 console.log("[Auth] JWT session active");
             }
         }
     } catch (e) {
         console.log("[Auth] JWT check failed, will use legacy");
     }
-    
+
     // Fallback to legacy if JWT not available
     if (!authMode) {
         if (!legacyUserId || !legacySign) {
-            showError("Ошибка доступа. Ссылка не содержит необходимых параметров.");
-            toggleGlobalLoading(false);
+            window.location.href = '/auth/';
             return;
         }
         authMode = 'legacy';
         console.log("[Auth] Using legacy HMAC auth");
+    }
+
+    if (authMode === 'jwt' && window.AuroraSession) {
+        window.AuroraSession.startPing();
     }
 
     // 2. Salary Logic
@@ -80,6 +177,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
 
     noSalaryCheckbox.addEventListener("change", (e) => {
+        clearSalaryFieldValidation();
         if (e.target.checked) {
             salaryInput.value = "";
             salaryInput.disabled = true;
@@ -87,7 +185,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             salaryInput.style.borderColor = "#333";
         } else {
             salaryInput.disabled = false;
-            salaryInput.placeholder = "Например: 100000";
+            salaryInput.placeholder = "Сумма в ₽";
+            salaryInput.style.borderColor = "";
             salaryInput.focus();
         }
     });
@@ -125,11 +224,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 6. Save Logic (Search)
     document.getElementById("saveBtn").addEventListener("click", async () => {
-        try {
-            await saveSettings();
-        } catch (e) {
-            showError("Ошибка при сохранении. " + e.message);
+        if (_isOnboardingMode) {
+            await handleOnboardingSave();
+            return;
         }
+        await saveSettings();
     });
 
     // 6.1 Save Logic (Response)
@@ -159,13 +258,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             simpleEditor.style.display = 'none';
             advancedEditor.style.display = 'block';
         }
-        // [NEW] Trigger check logic on switch
+        updateSaveButtonState();
         checkVacancies();
     };
 
     // [NEW] 8. Bind Events for Vacancy Counter
     // Salary
-    salaryInput.addEventListener("input", () => checkVacancies());
+    salaryInput.addEventListener("input", () => {
+        clearSalaryFieldValidation();
+        checkVacancies();
+    });
     noSalaryCheckbox.addEventListener("change", () => checkVacancies());
 
     // Experience
@@ -175,14 +277,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelectorAll("#scheduleContainer input").forEach(cb => {
         cb.addEventListener("change", () => {
             checkVacancies();
+            syncScheduleVisualState();
             updateSaveButtonState();
         });
     });
 
-    // Boolean Input
-    document.getElementById("booleanQueryInput").addEventListener("input", () => checkVacancies());
+    // Boolean: сразу помечаем форму «грязной» (через initDirtyStateTracking на textarea),
+    // запрос счётчика к hh — с увеличенным debounce, не на каждый символ с тем же таймингом что у зарплаты.
+    document.getElementById("booleanQueryInput").addEventListener("input", () => {
+        checkVacancies(VACANCY_DEBOUNCE_BOOLEAN_MS);
+    });
+
+    // 9. Propagate auth params to Responses nav links
+    if (authMode === 'legacy' && legacyUserId && legacySign) {
+        const suffix = `?user_id=${legacyUserId}&sign=${legacySign}`;
+        const navResp = document.getElementById('nav-responses');
+        const navRespMob = document.getElementById('nav-responses-mobile');
+        if (navResp) navResp.href = `/responses/${suffix}`;
+        if (navRespMob) navRespMob.href = `/responses/${suffix}`;
+    }
+
+    window.addEventListener('scroll', requestSaveBarStateUpdate, { passive: true });
+    window.addEventListener('resize', () => {
+        refreshSaveBarBaseTop();
+        requestSaveBarStateUpdate();
+    });
 
 }); // End of DOMContentLoaded
+
+function dismissProfileReadyBanner() {
+    const banner = document.getElementById('profileReadyBanner');
+    if (banner) banner.classList.add('hidden');
+    const url = new URL(window.location);
+    url.searchParams.delete('profile_ready');
+    window.history.replaceState({}, '', url.toString());
+}
 
 // --- TAB SWITCHING LOGIC ---
 window.switchMainTab = function (tabName) {
@@ -198,13 +327,41 @@ window.switchMainTab = function (tabName) {
     } else {
         document.getElementById('responseSettingsTab').classList.add('active');
     }
+    updateSaveBarFloatingState();
 }
 
 // --- DIRTY STATE LOGIC ---
 let initialSearchState = null;
+const SEARCH_SAVE_LABEL_DIRTY = "Сохранить";
+const SEARCH_SAVE_LABEL_CLEAN = "Нет изменений";
+let _hasSearchChanges = false;
+let _saveBarBaseTop = null;
+let _saveBarDocked = false;
+let _saveBarRaf = null;
+
+/** Режим запроса: у кнопок нет data-mode, ориентируемся на класс active. */
+function getSearchQueryMode() {
+    const advancedBtn = document.getElementById("modeAdvancedBtn");
+    if (advancedBtn && advancedBtn.classList.contains("active")) {
+        return "advanced";
+    }
+    return "simple";
+}
 
 function serializeSearchForm() {
     // Collects all data from Search Tab inputs
+    let ignoredEmployersSerialized = "";
+    if (window.ignoredEmployers) {
+        const sortedPairs = Object.entries(window.ignoredEmployers.getEmployers())
+            .sort(([leftId], [rightId]) => leftId.localeCompare(rightId));
+        ignoredEmployersSerialized = sortedPairs
+            .map(([employerId, employerName]) => `${employerId}:${employerName}`)
+            .join("|");
+    }
+
+    const booleanEl = document.getElementById("booleanQueryInput");
+    const booleanQuery = booleanEl ? booleanEl.value : "";
+
     const data = {
         salary: document.getElementById('salaryInput').value,
         noSalary: document.getElementById('noSalaryCheckbox').checked,
@@ -216,11 +373,12 @@ function serializeSearchForm() {
         keywordsInclude: window.tagsInclude ? window.tagsInclude.getTags().sort().join(',') : '',
         keywordsExclude: window.tagsExclude ? window.tagsExclude.getTags().sort().join(',') : '',
 
-        // Query Mode
-        queryMode: document.querySelector('.mode-btn.active') ? document.querySelector('.mode-btn.active').dataset.mode : 'simple',
+        queryMode: getSearchQueryMode(),
+        booleanQuery,
 
         // Schedule
-        schedule: Array.from(document.querySelectorAll('#scheduleContainer input:checked')).map(el => el.value).sort().join(',')
+        schedule: Array.from(document.querySelectorAll('#scheduleContainer input:checked')).map(el => el.value).sort().join(','),
+        ignoredEmployers: ignoredEmployersSerialized
     };
     return JSON.stringify(data);
 }
@@ -230,15 +388,140 @@ function updateSaveButtonState() {
     if (!initialSearchState) return;
 
     const currentState = serializeSearchForm();
-    if (currentState !== initialSearchState) {
+    _hasSearchChanges = currentState !== initialSearchState;
+
+    if (_isOnboardingMode) {
+        _styleOnboardingSaveBtn();
+        updateSaveBarFloatingState();
+        return;
+    }
+
+    if (_hasSearchChanges) {
         saveBtn.disabled = false;
-        saveBtn.innerText = "Сохранить изменения";
+        saveBtn.innerText = SEARCH_SAVE_LABEL_DIRTY;
         saveBtn.style.opacity = "1";
     } else {
         saveBtn.disabled = true;
-        saveBtn.innerText = "Нет изменений";
+        saveBtn.innerText = SEARCH_SAVE_LABEL_CLEAN;
         saveBtn.style.opacity = "0.5";
     }
+    updateSaveBarFloatingState();
+}
+
+function _adjustSaveBarAboveFooter(actionBar) {
+    const footer = document.querySelector('footer');
+    if (!footer || !actionBar) return;
+
+    const footerRect = footer.getBoundingClientRect();
+    const barRect = actionBar.getBoundingClientRect();
+    const defaultBottom = window.innerWidth >= 768 ? 18 : 14;
+    const gap = 12;
+
+    // Footer is visible in viewport
+    if (footerRect.top < window.innerHeight) {
+        const needed = window.innerHeight - footerRect.top + gap;
+        actionBar.style.bottom = Math.max(defaultBottom, needed) + 'px';
+    } else {
+        actionBar.style.bottom = '';
+    }
+}
+
+function updateSaveBarFloatingState() {
+    const actionBar = document.getElementById('searchActionBar');
+    const hint = document.getElementById('onboardingSaveHint');
+    if (!actionBar) return;
+
+    const searchTab = document.getElementById('searchSettingsTab');
+    const isSearchTabActive = searchTab && searchTab.classList.contains('active');
+
+    if (!isSearchTabActive && !_isOnboardingMode) {
+        actionBar.classList.remove('is-floating', 'is-docked');
+        actionBar.style.bottom = '';
+        document.body.classList.remove('has-floating-save');
+        return;
+    }
+
+    if (_isOnboardingMode) {
+        _saveBarDocked = false;
+        actionBar.classList.add('is-floating');
+        actionBar.classList.remove('is-docked');
+        document.body.classList.add('has-floating-save');
+        _adjustSaveBarAboveFooter(actionBar);
+    } else if (_hasSearchChanges) {
+        if (_saveBarBaseTop === null) {
+            refreshSaveBarBaseTop();
+        }
+        const viewportBottom = window.scrollY + window.innerHeight;
+        if (_saveBarDocked) {
+            if (viewportBottom < (_saveBarBaseTop - 72)) {
+                _saveBarDocked = false;
+            }
+        } else {
+            if (viewportBottom >= (_saveBarBaseTop + 24)) {
+                _saveBarDocked = true;
+            }
+        }
+
+        actionBar.classList.toggle('is-floating', !_saveBarDocked);
+        actionBar.classList.toggle('is-docked', _saveBarDocked);
+        document.body.classList.toggle('has-floating-save', !_saveBarDocked);
+        if (!_saveBarDocked) _adjustSaveBarAboveFooter(actionBar);
+    } else {
+        _saveBarDocked = false;
+        actionBar.classList.remove('is-floating', 'is-docked');
+        actionBar.style.bottom = '';
+        document.body.classList.remove('has-floating-save');
+    }
+
+    if (hint) {
+        hint.classList.toggle('hidden', !_isOnboardingMode);
+    }
+}
+
+function refreshSaveBarBaseTop() {
+    const actionBar = document.getElementById('searchActionBar');
+    if (!actionBar) return;
+
+    const hadFloating = actionBar.classList.contains('is-floating');
+    const hadDocked = actionBar.classList.contains('is-docked');
+    if (hadFloating || hadDocked) {
+        actionBar.classList.remove('is-floating', 'is-docked');
+        document.body.classList.remove('has-floating-save');
+    }
+
+    const rect = actionBar.getBoundingClientRect();
+    _saveBarBaseTop = rect.top + window.scrollY;
+
+    if (hadDocked) {
+        actionBar.classList.add('is-docked');
+    } else if (hadFloating) {
+        actionBar.classList.add('is-floating');
+        document.body.classList.add('has-floating-save');
+    }
+}
+
+function requestSaveBarStateUpdate() {
+    if (_saveBarRaf !== null) return;
+    _saveBarRaf = requestAnimationFrame(() => {
+        _saveBarRaf = null;
+        updateSaveBarFloatingState();
+    });
+}
+
+function syncScheduleVisualState() {
+    document.querySelectorAll('#scheduleContainer input[type="checkbox"]').forEach(cb => {
+        const label = cb.closest('label');
+        if (!label) return;
+        if (cb.checked) {
+            label.style.background = 'rgba(90,48,208,0.1)';
+            label.style.borderColor = 'rgba(90,48,208,0.3)';
+            label.style.color = '#ccbeff';
+        } else {
+            label.style.background = '';
+            label.style.borderColor = '';
+            label.style.color = '';
+        }
+    });
 }
 
 function initDirtyStateTracking() {
@@ -354,13 +637,275 @@ class TagInput {
             const tag = document.createElement("div");
             tag.className = "tag";
             tag.innerHTML = `
-                <span>${tagText}</span>
+                <span>${escapeHtml(tagText)}</span>
                 <div class="tag-remove" onclick="this.parentNode.remove(); window.${this === window.tagsInclude ? 'tagsInclude' : 'tagsExclude'}.removeTag(${index})">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </div>
             `;
             // Insert before input
             this.container.insertBefore(tag, this.input);
+        });
+    }
+}
+
+class IgnoredEmployersInput {
+    constructor(inputId, applyBtnId, chipsContainerId, errorId) {
+        this.input = document.getElementById(inputId);
+        this.applyBtn = document.getElementById(applyBtnId);
+        this.chipsContainer = document.getElementById(chipsContainerId);
+        this.errorBox = document.getElementById(errorId);
+        this.errorRail = document.getElementById("ignoredEmployersErrorRail");
+        this.employers = {};
+        this.isResolving = false;
+        this._lastAddedId = null;
+        this._errorHideTimeout = null;
+        this._errorClearTimeout = null;
+        this._inputFlashTimeout = null;
+        this._transientErrorMs = 3800;
+        this._railCollapseMs = 450;
+
+        if (!this.input || !this.applyBtn || !this.chipsContainer || !this.errorBox) {
+            return;
+        }
+
+        this.applyBtn.addEventListener("click", () => this.applyInput());
+        this.input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                this.applyInput();
+            }
+        });
+
+        this.render();
+    }
+
+    getEmployers() {
+        return { ...this.employers };
+    }
+
+    _extractEmployerIdForDuplicateCheck(raw) {
+        const value = String(raw || "").trim();
+        if (!value) return null;
+        if (/^\d+$/.test(value)) return value;
+        const match = value.match(/(?:^|[/])employer\/(\d+)(?:[/?#]|$)/i);
+        return match ? match[1] : null;
+    }
+
+    _clearFeedbackTimers() {
+        if (this._errorHideTimeout) {
+            clearTimeout(this._errorHideTimeout);
+            this._errorHideTimeout = null;
+        }
+        if (this._errorClearTimeout) {
+            clearTimeout(this._errorClearTimeout);
+            this._errorClearTimeout = null;
+        }
+        if (this._inputFlashTimeout) {
+            clearTimeout(this._inputFlashTimeout);
+            this._inputFlashTimeout = null;
+        }
+    }
+
+    _flashInput(kind) {
+        if (!this.input) return;
+        this.input.classList.remove("ignored-input-flash-error", "ignored-input-flash-success");
+        void this.input.offsetWidth;
+        if (kind === "error") {
+            this.input.classList.add("ignored-input-flash-error");
+            // Класс снимается в одном кадре с закрытием рельсы (showTransientError / hideError), без отдельного таймера.
+        } else if (kind === "success") {
+            this.input.classList.add("ignored-input-flash-success");
+            this._inputFlashTimeout = setTimeout(() => {
+                this.input.classList.remove("ignored-input-flash-success");
+                this._inputFlashTimeout = null;
+            }, 2000);
+        }
+    }
+
+    showTransientError(message) {
+        if (!this.errorBox) return;
+        this._clearFeedbackTimers();
+
+        if (this.errorRail) {
+            this.errorRail.classList.remove("is-visible");
+            void this.errorRail.offsetHeight;
+        }
+
+        this.errorBox.textContent = message;
+        if (this.errorRail) {
+            this.errorRail.classList.add("is-visible");
+        } else {
+            this.errorBox.classList.remove("hidden");
+        }
+
+        this._flashInput("error");
+
+        this._errorHideTimeout = setTimeout(() => {
+            this._errorHideTimeout = null;
+            if (this.input) {
+                this.input.classList.remove("ignored-input-flash-error");
+            }
+            if (this.errorRail) {
+                this.errorRail.classList.remove("is-visible");
+                this._errorClearTimeout = setTimeout(() => {
+                    this._errorClearTimeout = null;
+                    if (this.errorRail && !this.errorRail.classList.contains("is-visible")) {
+                        this.errorBox.textContent = "";
+                    }
+                }, this._railCollapseMs);
+            } else {
+                this.errorBox.textContent = "";
+                this.errorBox.classList.add("hidden");
+            }
+        }, this._transientErrorMs);
+    }
+
+    setEmployers(rawEmployers) {
+        this.employers = {};
+        if (rawEmployers && typeof rawEmployers === "object" && !Array.isArray(rawEmployers)) {
+            Object.entries(rawEmployers).forEach(([employerId, employerName]) => {
+                const normalizedId = String(employerId).trim();
+                if (!normalizedId) return;
+                this.employers[normalizedId] = employerName == null ? "" : String(employerName).trim();
+            });
+        }
+        this.hideError();
+        this.render();
+    }
+
+    async applyInput() {
+        if (this.isResolving || !this.input || !this.applyBtn) return;
+
+        const value = this.input.value.trim();
+        if (!value) {
+            this.showTransientError("Введите ID или ссылку на работодателя.");
+            return;
+        }
+
+        if (Object.keys(this.employers).length >= 20) {
+            this.showTransientError("Достигнут лимит: не более 20 работодателей.");
+            return;
+        }
+
+        const duplicateId = this._extractEmployerIdForDuplicateCheck(value);
+        if (duplicateId && Object.prototype.hasOwnProperty.call(this.employers, duplicateId)) {
+            this.showTransientError("Работодатель уже есть в списке");
+            return;
+        }
+
+        this.isResolving = true;
+        const originalBtnText = this.applyBtn.textContent;
+        this.applyBtn.disabled = true;
+        this.applyBtn.textContent = "Проверяю...";
+
+        try {
+            const payload = { value };
+            if (authMode === "legacy" && legacyUserId && legacySign) {
+                payload.user_id = parseInt(legacyUserId);
+                payload.sign = legacySign;
+            }
+
+            const response = await authFetch(`${API_BASE_URL}/api/ignored-employers/resolve`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.status !== "ok") {
+                const message = data.detail || data.error || "Не удалось проверить работодателя.";
+                throw new Error(message);
+            }
+
+            const employerId = String(data.id || "").trim();
+            const employerName = String(data.name || "").trim();
+            if (!employerId) {
+                throw new Error("Некорректный ID работодателя.");
+            }
+
+            if (Object.prototype.hasOwnProperty.call(this.employers, employerId)) {
+                this.showTransientError("Работодатель уже есть в списке");
+                return;
+            }
+
+            this.hideError();
+            this.employers[employerId] = employerName || employerId;
+            this._lastAddedId = employerId;
+            this.input.value = "";
+            this._flashInput("success");
+            this.render();
+            updateSaveButtonState();
+        } catch (error) {
+            this.showTransientError(error.message || "Ошибка проверки работодателя.");
+        } finally {
+            this.isResolving = false;
+            this.applyBtn.disabled = false;
+            this.applyBtn.textContent = originalBtnText || "Применить";
+        }
+    }
+
+    removeEmployer(employerId) {
+        delete this.employers[employerId];
+        this.render();
+        updateSaveButtonState();
+    }
+
+    hideError() {
+        this._clearFeedbackTimers();
+        if (this.input) {
+            this.input.classList.remove("ignored-input-flash-error", "ignored-input-flash-success");
+        }
+        if (!this.errorBox) return;
+        if (this.errorRail) {
+            this.errorRail.classList.remove("is-visible");
+            this.errorBox.textContent = "";
+        } else {
+            this.errorBox.textContent = "";
+            this.errorBox.classList.add("hidden");
+        }
+    }
+
+    render() {
+        if (!this.chipsContainer) return;
+        const lastAdded = this._lastAddedId;
+        this._lastAddedId = null;
+
+        this.chipsContainer.innerHTML = "";
+
+        const entries = Object.entries(this.employers).sort(([leftId], [rightId]) => leftId.localeCompare(rightId));
+        if (entries.length === 0) {
+            const placeholder = document.createElement("span");
+            placeholder.className = "text-xs text-on-surface-variant/70";
+            placeholder.textContent = "Исключений пока нет";
+            this.chipsContainer.appendChild(placeholder);
+            return;
+        }
+
+        entries.forEach(([employerId, employerName]) => {
+            const chip = document.createElement("div");
+            chip.className = "tag";
+            if (lastAdded && employerId === lastAdded) {
+                chip.classList.add("tag--ignored-enter");
+                chip.addEventListener(
+                    "animationend",
+                    () => chip.classList.remove("tag--ignored-enter"),
+                    { once: true }
+                );
+            }
+
+            const text = document.createElement("span");
+            text.textContent = employerName || employerId;
+            chip.appendChild(text);
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.className = "tag-remove";
+            removeButton.innerHTML = "&times;";
+            removeButton.setAttribute("aria-label", `Удалить ${employerName || employerId}`);
+            removeButton.onclick = () => this.removeEmployer(employerId);
+            chip.appendChild(removeButton);
+
+            this.chipsContainer.appendChild(chip);
         });
     }
 }
@@ -431,7 +976,7 @@ function extractWords(innerStr) {
 // ----------------------------------
 
 // [NEW] VACANCY COUNTER LOGIC
-function checkVacancies() {
+function checkVacancies(debounceMs = VACANCY_DEBOUNCE_DEFAULT_MS) {
     // Debounce
     if (vacancyCheckTimeout) clearTimeout(vacancyCheckTimeout);
 
@@ -441,6 +986,11 @@ function checkVacancies() {
 
     const counterPanel = document.getElementById("vacancyCounterPanel");
     if (counterPanel) counterPanel.style.display = "block";
+
+    const statusDot = document.getElementById("vacancyStatusDot");
+    const statusText = document.getElementById("vacancyStatusText");
+    if (statusDot) { statusDot.className = "flex h-2 w-2 rounded-full bg-amber-400 animate-pulse"; }
+    if (statusText) { statusText.innerText = "Обновление"; }
 
     vacancyCheckTimeout = setTimeout(async () => {
         try {
@@ -517,36 +1067,46 @@ function checkVacancies() {
                 payload.sign = legacySign;
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/check_vacancies`, {
+            const response = await authFetch(`${API_BASE_URL}/api/check_vacancies`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include",  // Send JWT cookies
                 body: JSON.stringify(payload)
             });
 
             const data = await response.json();
 
             if (data.status === "ok") {
-                // Update UI
                 if (countSpan) countSpan.innerText = data.found.toLocaleString('ru-RU');
 
                 const linkBtn = document.getElementById("vacancyLink");
                 if (linkBtn) {
                     linkBtn.href = data.url;
-                    // Ensure it is visible
                     linkBtn.style.display = "inline-block";
                 }
+
+                const sDot = document.getElementById("vacancyStatusDot");
+                const sText = document.getElementById("vacancyStatusText");
+                if (sDot) { sDot.className = "flex h-2 w-2 rounded-full bg-emerald-400"; }
+                if (sText) { sText.innerText = "Обновлено"; }
             } else {
                 console.error("Check vacancies error:", data.message);
                 if (countSpan) countSpan.innerText = "?";
+                const sDot = document.getElementById("vacancyStatusDot");
+                const sText = document.getElementById("vacancyStatusText");
+                if (sDot) { sDot.className = "flex h-2 w-2 rounded-full bg-red-400"; }
+                if (sText) { sText.innerText = "Ошибка"; }
             }
 
         } catch (e) {
             console.error(e);
             const countSpan = document.getElementById("vacancyCountValue");
-            if (countSpan) countSpan.innerText = "Error";
+            if (countSpan) countSpan.innerText = "—";
+            const sDot = document.getElementById("vacancyStatusDot");
+            const sText = document.getElementById("vacancyStatusText");
+            if (sDot) { sDot.className = "flex h-2 w-2 rounded-full bg-red-400"; }
+            if (sText) { sText.innerText = "Ошибка"; }
         }
-    }, 700); // 700ms debounce
+    }, debounceMs);
 }
 
 function toggleGlobalLoading(isLoading) {
@@ -584,10 +1144,9 @@ async function loadSettings() {
             url += `?user_id=${legacyUserId}&sign=${legacySign}`;
         }
         
-        const response = await fetch(url, {
+        const response = await authFetch(url, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
-            credentials: "include"  // Send JWT cookies
         });
 
         const data = await response.json();
@@ -601,6 +1160,12 @@ async function loadSettings() {
         if (data.first_name) {
             window.USER_FIRST_NAME = data.first_name;
         }
+
+        // Contact data
+        window.USER_CONTACT_TG = data.contact_tg || null;
+        window.USER_PHONE = data.phone || null;
+        window.USER_ENRICHMENT_DONE = data.contact_enrichment_done || false;
+        _applyContactDataUI();
 
         const settings = data.settings;
 
@@ -619,6 +1184,7 @@ async function loadSettings() {
             noSalaryCheckbox.checked = false;
             salaryInput.value = settings.salary;
             salaryInput.disabled = false;
+            salaryInput.placeholder = "Сумма в ₽";
         }
 
         // Experience
@@ -649,6 +1215,9 @@ async function loadSettings() {
 
         // Schedule (Work Formats)
         let scheduleData = settings.work_formats || settings.search_schedule;
+        document.querySelectorAll('#scheduleContainer input[type="checkbox"]').forEach(cb => {
+            cb.checked = false;
+        });
 
         if (scheduleData) {
             let sched = [];
@@ -664,6 +1233,7 @@ async function loadSettings() {
                 if (cb) cb.checked = true;
             });
         }
+        syncScheduleVisualState();
 
         // Query Mode & Boolean Logic
         const mode = settings.query_mode || 'simple';
@@ -681,6 +1251,9 @@ async function loadSettings() {
         const keys = keywordsData || { included: [], excluded: [] };
         if (window.tagsInclude) window.tagsInclude.setTags(keys.included || []);
         if (window.tagsExclude) window.tagsExclude.setTags(keys.excluded || []);
+        if (window.ignoredEmployers) {
+            window.ignoredEmployers.setEmployers(settings.ignored_employers || {});
+        }
 
         // Load Boolean Draft or Custom Query
         let boolVal = settings.boolean_draft || settings.custom_query || "";
@@ -771,9 +1344,17 @@ function tryInitTree() {
         initAreaTree();
         toggleGlobalLoading(false);
         setTimeout(() => {
+            refreshSaveBarBaseTop();
             initDirtyStateTracking();
             checkVacancies();
+            if (window._currentStep === 'onboarding_settings') {
+                activateOnboardingMode();
+            } else if (window._currentStep === 'onboarding_save_pending') {
+                activateOnboardingSavePending();
+            }
+            requestSaveBarStateUpdate();
         }, 100);
+        initAccountSection();
     }
 }
 
@@ -997,26 +1578,77 @@ function finalizeIdsFromSet() {
     return result;
 }
 
+function clearSalaryFieldValidation() {
+    const salarySection = document.getElementById("salarySection");
+    const salaryInput = document.getElementById("salaryInput");
+    const inline = document.getElementById("salaryFieldError");
+    const errDiv = document.getElementById("errorMsg");
+    if (salarySection) salarySection.classList.remove("salary-field-error");
+    if (salaryInput) {
+        salaryInput.classList.remove("salary-input-error");
+    }
+    if (inline) {
+        inline.classList.add("hidden");
+        inline.textContent = "";
+    }
+    if (errDiv) errDiv.style.display = "none";
+}
+
+function scrollToSalarySection() {
+    const el = document.getElementById("salarySection");
+    if (!el) return;
+    const headerOffset = window.matchMedia("(min-width: 768px)").matches ? 128 : 104;
+    const y = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+}
+
+function showSalaryValidationError(msg) {
+    showError(msg);
+    const salarySection = document.getElementById("salarySection");
+    const salaryInput = document.getElementById("salaryInput");
+    const inline = document.getElementById("salaryFieldError");
+    if (inline) {
+        inline.textContent = msg;
+        inline.classList.remove("hidden");
+    }
+    if (salarySection) salarySection.classList.add("salary-field-error");
+    if (salaryInput && !salaryInput.disabled) {
+        salaryInput.classList.add("salary-input-error");
+    }
+    scrollToSalarySection();
+    window.setTimeout(() => {
+        if (salaryInput && !salaryInput.disabled) {
+            try {
+                salaryInput.focus({ preventScroll: true });
+            } catch (_) {
+                salaryInput.focus();
+            }
+        }
+    }, 350);
+}
+
 async function saveSettings() {
     const salaryInput = document.getElementById("salaryInput");
     const noSalaryCheckbox = document.getElementById("noSalaryCheckbox");
+
+    clearSalaryFieldValidation();
 
     let salary = null;
 
     if (!noSalaryCheckbox.checked) {
         let val = salaryInput.value.trim();
         if (val === "") {
-            showError("Введите сумму или поставьте галочку 'Не указывать'");
-            return;
+            showSalaryValidationError("Введите сумму или поставьте галочку 'Не указывать'");
+            return false;
         }
         salary = parseInt(val);
         if (isNaN(salary) || salary < 0) {
-            showError("Зарплата должна быть положительным числом!");
-            return;
+            showSalaryValidationError("Зарплата должна быть положительным числом!");
+            return false;
         }
         if (salary > 100000000) {
-            showError("Зарплата не может превышать 100 млн ₽");
-            return;
+            showSalaryValidationError("Зарплата не может превышать 100 млн ₽");
+            return false;
         }
     }
 
@@ -1061,6 +1693,7 @@ async function saveSettings() {
         keywords: keywordsData,
         boolean_draft: booleanDraft,
         custom_query: finalQuery,
+        ignored_employers: window.ignoredEmployers ? window.ignoredEmployers.getEmployers() : {},
         message_id: messageId ? parseInt(messageId) : null
     };
     
@@ -1070,42 +1703,69 @@ async function saveSettings() {
         payload.sign = legacySign;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/settings/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",  // Send JWT cookies
-        body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-    if (data.status !== "ok") {
-        throw new Error(data.error || "Ошибка сервера");
+    const saveBtn = document.getElementById("saveBtn");
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Сохраняю...";
+        saveBtn.style.background = "";
     }
 
-    const saveBtn = document.getElementById("saveBtn");
-    const originalText = "Сохранить изменения"; // Reset to default text
-    saveBtn.innerText = "Сохранено! ✅";
-    saveBtn.style.background = "#4caf50";
+    try {
+        const response = await authFetch(`${API_BASE_URL}/api/settings/update`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
-    // [FIX] Update initial state to current state so button gets disabled
-    initialSearchState = serializeSearchForm();
-    updateSaveButtonState(); // Should disable the button now
+        const data = await response.json();
+        if (data.status !== "ok") {
+            throw new Error(data.error || "Ошибка сервера");
+        }
 
-    setTimeout(() => {
-        saveBtn.innerText = originalText;
-        saveBtn.style.background = "linear-gradient(45deg, #a962ff, #6247aa)";
-        // Re-check state just in case user changed something during timeout
-        updateSaveButtonState();
-    }, 2000);
+        if (saveBtn) {
+            saveBtn.textContent = "Сохранено!";
+            saveBtn.style.background = "#4caf50";
+        }
 
-    initialSettings = {
-        salary: salary,
-        experience: experience,
-        industry: selectedIndustries,
-        work_formats: selectedSchedule
-    };
+        initialSearchState = serializeSearchForm();
+        _hasSearchChanges = false;
 
-    document.getElementById("errorMsg").style.display = "none";
+        initialSettings = {
+            salary: salary,
+            experience: experience,
+            industry: selectedIndustries,
+            work_formats: selectedSchedule
+        };
+
+        const errDiv = document.getElementById("errorMsg");
+        if (errDiv) errDiv.style.display = "none";
+
+        setTimeout(() => {
+            if (saveBtn) saveBtn.style.background = "";
+            if (!_isOnboardingMode) {
+                updateSaveButtonState();
+            }
+        }, 2000);
+
+        return true;
+    } catch (e) {
+        console.error(e);
+        if (saveBtn) {
+            saveBtn.textContent = "Ошибка";
+            saveBtn.style.background = "#ff4d4d";
+            saveBtn.disabled = false;
+            setTimeout(() => {
+                saveBtn.style.background = "";
+                if (_isOnboardingMode) {
+                    saveBtn.textContent = "Сохранить и начать поиск";
+                } else {
+                    updateSaveButtonState();
+                }
+            }, 3000);
+        }
+        showError(e.message || "Ошибка при сохранении.");
+        return false;
+    }
 }
 
 // (Duplicate code removed)
@@ -1356,11 +2016,14 @@ async function saveResponseSettings() {
         saveBtn.innerText = "Сохраняю...";
 
         // Collect Data — Hybrid auth
+        const hideContacts = document.getElementById("contactHideCheckbox").checked;
         const payload = {
             cl_use_default: document.getElementById("clUseDefaultCheckbox").checked,
             cl_header: document.getElementById("clHeaderInput").value.trim(),
             cl_footer: document.getElementById("clFooterInput").value.trim(),
-            cl_style: document.getElementById("clStyleSelect").value
+            cl_style: document.getElementById("clStyleSelect").value,
+            contact_tg: hideContacts ? "" : (document.getElementById("contactTgInput").value.trim() || ""),
+            phone: hideContacts ? "" : (document.getElementById("contactPhoneInput").value.trim() || ""),
         };
         
         // Add legacy auth if needed
@@ -1369,10 +2032,9 @@ async function saveResponseSettings() {
             payload.sign = legacySign;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/save_response_settings`, {
+        const response = await authFetch(`${API_BASE_URL}/api/save_response_settings`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            credentials: "include",  // Send JWT cookies
             body: JSON.stringify(payload)
         });
 
@@ -1410,6 +2072,55 @@ function toggleCLFields(show) {
     }
 }
 
+// --- CONTACT DATA UI ---
+function _applyContactDataUI() {
+    const tgInput = document.getElementById("contactTgInput");
+    const phoneInput = document.getElementById("contactPhoneInput");
+    const hideCheckbox = document.getElementById("contactHideCheckbox");
+    const sourceHint = document.getElementById("contactSourceHint");
+    const notFoundHint = document.getElementById("contactNotFoundHint");
+
+    if (!tgInput || !phoneInput) return;
+
+    if (window.USER_CONTACT_TG) {
+        tgInput.value = window.USER_CONTACT_TG;
+    }
+    if (window.USER_PHONE) {
+        phoneInput.value = window.USER_PHONE;
+    }
+
+    // Hints
+    if (sourceHint) {
+        const hasData = window.USER_CONTACT_TG || window.USER_PHONE;
+        sourceHint.classList.toggle("hidden", !hasData);
+    }
+    if (notFoundHint) {
+        const showNotFound = window.USER_ENRICHMENT_DONE && !window.USER_CONTACT_TG;
+        notFoundHint.classList.toggle("hidden", !showNotFound);
+    }
+
+    // Toggle fields on hide checkbox
+    if (hideCheckbox) {
+        hideCheckbox.addEventListener("change", () => {
+            const disabled = hideCheckbox.checked;
+            tgInput.disabled = disabled;
+            phoneInput.disabled = disabled;
+            if (disabled) {
+                tgInput.style.opacity = "0.4";
+                phoneInput.style.opacity = "0.4";
+            } else {
+                tgInput.style.opacity = "1";
+                phoneInput.style.opacity = "1";
+            }
+            updateCLPreview();
+        });
+    }
+
+    // Live preview on input change
+    tgInput.addEventListener("input", updateCLPreview);
+    phoneInput.addEventListener("input", updateCLPreview);
+}
+
 // [NEW] Cover Letter Preview Update
 function updateCLPreview() {
     const shouldUseDefault = document.getElementById("clUseDefaultCheckbox").checked;
@@ -1440,6 +2151,17 @@ function updateCLPreview() {
         bodyEl.innerHTML = `Увидел вашу вакансию QA Engineer. Мой опыт в тестировании финтех-продуктов хорошо ложится на ваши задачи, особенно в части автоматизации на Python и Selenium.<br><br>На прошлых проектах плотно работал с PostgreSQL, писал интеграционные тесты и настраивал CI/CD пайплайны. Знаю, как выстроить процесс регрессионного тестирования с нуля.<br><br>Буду рад пообщаться и обсудить детали.`;
     }
 
+    // Build footer text from contact fields
+    const hideContacts = document.getElementById("contactHideCheckbox")?.checked;
+    const tgVal = hideContacts ? "" : (document.getElementById("contactTgInput")?.value.trim() || "");
+    const phoneVal = hideContacts ? "" : (document.getElementById("contactPhoneInput")?.value.trim() || "");
+    let contactFooterLines = [];
+    if (tgVal) contactFooterLines.push(`ТГ: ${tgVal}`);
+    if (phoneVal) contactFooterLines.push(`Номер: ${phoneVal}`);
+    const contactFooterText = contactFooterLines.length > 0
+        ? contactFooterLines.join("\n")
+        : (hideContacts ? "(Контакты скрыты)" : "ТГ: @username\nНомер: +7 (999) 000-00-00");
+
     if (shouldUseDefault) {
         // Default Mode
         headerEl.innerText = `Здравствуйте, меня зовут ${window.USER_FIRST_NAME}.`;
@@ -1447,7 +2169,7 @@ function updateCLPreview() {
         headerEl.style.color = "#888";
         headerEl.style.fontWeight = "normal";
 
-        footerEl.innerText = "ТГ: @username\nНомер: +7 (999) 000-00-00";
+        footerEl.innerText = contactFooterText;
         footerEl.style.fontStyle = "italic";
         footerEl.style.color = "#888";
         footerEl.style.fontWeight = "normal";
@@ -1527,12 +2249,368 @@ function updateThemeIcons(isDark) {
     const moonIcon = document.getElementById("moonIcon");
     
     if (isDark) {
-        // In dark mode, show sun icon (to switch to light)
         if (sunIcon) sunIcon.style.display = "block";
         if (moonIcon) moonIcon.style.display = "none";
     } else {
-        // In light mode, show moon icon (to switch to dark)
         if (sunIcon) sunIcon.style.display = "none";
         if (moonIcon) moonIcon.style.display = "block";
     }
 }
+
+
+// ============================================================================
+// ACCOUNT: TELEGRAM LINK + SESSIONS
+// ============================================================================
+
+async function initAccountSection() {
+    if (authMode !== 'jwt') {
+        const section = document.getElementById('accountSection');
+        if (section) section.classList.add('hidden');
+        return;
+    }
+
+    try {
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/me`, {
+            method: 'GET',
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            const statusEl = document.getElementById('tgLinkStatus');
+            const btn = document.getElementById('tgLinkBtn');
+
+            if (data.has_telegram) {
+                statusEl.textContent = 'Привязан';
+                statusEl.classList.add('text-green-400');
+            } else {
+                statusEl.textContent = 'Не привязан';
+                btn.classList.remove('hidden');
+                btn.addEventListener('click', handleLinkTelegram);
+            }
+
+            if (typeof checkRegModal === 'function') {
+                checkRegModal(data);
+            }
+        }
+    } catch (_) {}
+
+    loadSessions();
+}
+
+async function handleLinkTelegram() {
+    const btn = document.getElementById('tgLinkBtn');
+    btn.disabled = true;
+    btn.textContent = 'Генерация...';
+
+    try {
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/link-telegram`, {
+            method: 'POST',
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.link) {
+            const container = document.getElementById('tgDeepLink');
+            const linkEl = document.getElementById('tgDeepLinkUrl');
+            linkEl.href = data.link;
+            linkEl.textContent = data.link;
+            container.classList.remove('hidden');
+            btn.classList.add('hidden');
+        } else {
+            btn.textContent = data.detail || 'Ошибка';
+            setTimeout(() => { btn.textContent = 'Привязать'; btn.disabled = false; }, 3000);
+        }
+    } catch (_) {
+        btn.textContent = 'Ошибка сети';
+        setTimeout(() => { btn.textContent = 'Привязать'; btn.disabled = false; }, 3000);
+    }
+}
+
+async function loadSessions() {
+    const container = document.getElementById('sessionsList');
+    const revokeAllBtn = document.getElementById('revokeAllBtn');
+
+    try {
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/sessions`, {
+            method: 'GET',
+        });
+        if (!resp.ok) { container.innerHTML = '<p class="text-on-surface-variant text-xs">Не удалось загрузить</p>'; return; }
+        const data = await resp.json();
+        const sessions = data.sessions || [];
+
+        if (sessions.length === 0) {
+            container.innerHTML = '<p class="text-on-surface-variant text-xs">Нет активных сессий</p>';
+            return;
+        }
+
+        if (sessions.length > 1) revokeAllBtn.classList.remove('hidden');
+
+        container.innerHTML = sessions.map(s => {
+            const lastUsed = s.last_used_at ? new Date(s.last_used_at).toLocaleString('ru-RU') : 'Недавно';
+            const currentBadge = s.is_current
+                ? '<span class="text-[10px] bg-primary-container/30 text-primary px-2 py-0.5 rounded-full">Текущая</span>'
+                : `<button onclick="revokeSession(${s.id})" class="text-error text-[10px] hover:underline">Завершить</button>`;
+
+            return `
+                <div class="flex items-center justify-between py-2.5 border-b border-outline-variant/10 last:border-0">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-on-surface-variant text-lg">devices</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium">${escapeHtml(s.device_name || 'Устройство')}</p>
+                            <p class="text-outline text-[10px]">${escapeHtml(s.ip_address || '')} &middot; ${lastUsed}</p>
+                        </div>
+                    </div>
+                    ${currentBadge}
+                </div>`;
+        }).join('');
+
+    } catch (_) {
+        container.innerHTML = '<p class="text-on-surface-variant text-xs">Ошибка загрузки</p>';
+    }
+}
+
+async function revokeSession(sessionId) {
+    try {
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/sessions/${sessionId}`, {
+            method: 'DELETE',
+        });
+        if (resp.ok) loadSessions();
+    } catch (_) {}
+}
+
+async function revokeAllSessions() {
+    try {
+        const resp = await authFetch(`${API_BASE_URL}/api/auth/sessions`, {
+            method: 'DELETE',
+        });
+        if (resp.ok) loadSessions();
+    } catch (_) {}
+}
+
+async function handleLogout() {
+    try {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: 'POST', credentials: 'include'
+        });
+    } catch (_) {}
+    window.location.href = '/auth/';
+}
+
+
+// regModal logic moved to shared reg-modal.js
+
+async function handleNavLogout() {
+    try {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: 'POST', credentials: 'include',
+        });
+    } catch (_) {}
+    window.location.href = '/auth/';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ONBOARDING MODE & GUIDED TOUR
+   ═══════════════════════════════════════════════════════════════ */
+
+let _isOnboardingMode = false;
+let _originalSaveFn = null;
+let _onboardingCompleting = false;
+
+function _lockNavForOnboarding() {
+    const selectors = [
+        'a[href="/cabinet/"]',
+        'a[href="/responses/"]',
+        'a[href="/resume/"]',
+        '#nav-responses',
+        '#nav-responses-mobile',
+        '#nav-resume',
+        '#nav-resume-mobile'
+    ];
+    selectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(link => {
+            if (link.dataset.originalHref) return; // already locked
+            link.dataset.originalHref = link.href || link.getAttribute('href') || '#';
+            link.removeAttribute('href');
+            link.style.opacity = '0.35';
+            link.style.cursor = 'not-allowed';
+            link.style.pointerEvents = 'auto';
+            link.addEventListener('click', _blockNavClick);
+        });
+    });
+}
+
+function _unlockNav() {
+    document.querySelectorAll('[data-original-href]').forEach(link => {
+        link.href = link.dataset.originalHref;
+        delete link.dataset.originalHref;
+        link.style.opacity = '';
+        link.style.cursor = '';
+        link.style.pointerEvents = '';
+        link.removeEventListener('click', _blockNavClick);
+    });
+}
+
+function _blockNavClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function _styleOnboardingSaveBtn() {
+    const saveBtn = document.getElementById('saveBtn');
+    if (!saveBtn) return;
+    saveBtn.textContent = 'Сохранить и начать поиск';
+    saveBtn.disabled = false;
+    saveBtn.style.opacity = '1';
+    saveBtn.style.background = 'linear-gradient(135deg, #5a30d0, #653edb)';
+    saveBtn.style.color = '#fff';
+    saveBtn.classList.remove('disabled:opacity-40');
+    updateSaveBarFloatingState();
+}
+
+function activateOnboardingMode() {
+    _isOnboardingMode = true;
+
+    const stepper = document.getElementById('onboardingStepper');
+    if (stepper) stepper.classList.remove('hidden');
+
+    _styleOnboardingSaveBtn();
+    _lockNavForOnboarding();
+    updateSaveBarFloatingState();
+
+    setTimeout(() => {
+        if (window.SettingsTour && window.SETTINGS_TOUR_STEPS) {
+            const tour = new SettingsTour(window.SETTINGS_TOUR_STEPS, {
+                mode: 'onboarding',
+                onComplete: async function () {
+                    console.log('[Tour] Onboarding tour completed → onboarding_save_pending');
+                    try {
+                        await authFetch(`${API_BASE_URL}/api/onboarding/tour-done`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include'
+                        });
+                        window._currentStep = 'onboarding_save_pending';
+                    } catch (e) {
+                        console.error('[Tour] tour-done API error:', e);
+                    }
+                }
+            });
+            tour.start();
+        }
+    }, 600);
+}
+
+function activateOnboardingSavePending() {
+    _isOnboardingMode = true;
+
+    const stepper = document.getElementById('onboardingStepper');
+    if (stepper) stepper.classList.remove('hidden');
+
+    _styleOnboardingSaveBtn();
+    _lockNavForOnboarding();
+    updateSaveBarFloatingState();
+}
+
+async function handleOnboardingSave() {
+    if (_onboardingCompleting) return;
+    _onboardingCompleting = true;
+
+    const saveBtn = document.getElementById('saveBtn');
+
+    const saved = await saveSettings();
+    if (!saved) {
+        _onboardingCompleting = false;
+        return;
+    }
+
+    try {
+        const resp = await authFetch(`${API_BASE_URL}/api/onboarding/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!resp.ok) {
+            throw new Error('Не удалось завершить онбординг');
+        }
+
+        window._currentStep = null;
+        _isOnboardingMode = false;
+        _hasSearchChanges = false;
+        _onboardingCompleting = false;
+
+        _unlockNav();
+        updateSaveBarFloatingState();
+        showCongratsPopup();
+
+    } catch (e) {
+        _onboardingCompleting = false;
+        console.error('[Onboarding] Complete error:', e);
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Сохранить и начать поиск';
+            saveBtn.style.background = 'linear-gradient(135deg, #5a30d0, #653edb)';
+        }
+        showError(e.message || 'Не удалось завершить онбординг');
+    }
+}
+
+function showCongratsPopup() {
+    const existing = document.getElementById('congratsOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'congratsOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);animation:tourPopIn 0.3s ease-out';
+    overlay.innerHTML = `
+        <div style="
+            max-width: 420px; width: calc(100% - 32px);
+            background: rgba(33, 30, 41, 0.97);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(204, 190, 255, 0.12);
+            border-radius: 20px;
+            padding: 36px 28px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            font-family: 'Inter', system-ui, sans-serif;
+        ">
+            <div style="font-size:48px;margin-bottom:16px">🎉</div>
+            <h2 style="font-size:22px;font-weight:800;color:#e7e0ef;margin-bottom:10px;line-height:1.3">Поздравляем!</h2>
+            <p style="font-size:14px;color:#cac3d7;line-height:1.6;margin-bottom:8px">
+                Вы сделали все необходимые настройки.
+            </p>
+            <p style="font-size:12px;color:#938ea0;line-height:1.5;margin-bottom:24px">
+                Если появятся вопросы — нажмите кнопку помощи внизу страницы.
+            </p>
+            <button id="congratsDismissBtn" style="
+                background: linear-gradient(to right, #5a30d0, #58309f);
+                color: #fff; border: none; border-radius: 12px;
+                padding: 12px 36px; font-size: 15px; font-weight: 700;
+                cursor: pointer; font-family: inherit;
+                transition: filter 0.2s;
+            ">Начать</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document.getElementById('congratsDismissBtn').addEventListener('click', () => {
+        overlay.remove();
+        const stepper = document.getElementById('onboardingStepper');
+        if (stepper) stepper.classList.add('hidden');
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn) {
+            saveBtn.style.background = '';
+            saveBtn.style.color = '';
+        }
+        initDirtyStateTracking();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const helpBtn = document.getElementById('helpBtn');
+    if (helpBtn) {
+        helpBtn.addEventListener('click', () => {
+            if (window.SettingsTour && window.SETTINGS_TOUR_STEPS) {
+                new SettingsTour(window.SETTINGS_TOUR_STEPS, { mode: 'help' }).start();
+            }
+        });
+    }
+});
