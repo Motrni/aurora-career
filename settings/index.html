@@ -380,6 +380,7 @@ input[type="number"] { -moz-appearance: textfield; }
     width: min(760px, calc(100% - 24px));
     transform: translateX(-50%);
     margin-top: 0 !important;
+    overflow: hidden;
     background: rgba(22, 19, 30, 0.96);
     border-color: rgba(204, 190, 255, 0.22);
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
@@ -759,7 +760,7 @@ body.has-floating-save {
             </div><!-- End grid -->
 
             <!-- Action Bar -->
-            <div id="searchActionBar" class="mt-10 md:mt-16 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 p-6 md:p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
+            <div id="searchActionBar" class="mt-10 md:mt-16 flex flex-col md:flex-row md:flex-wrap items-center justify-between gap-4 md:gap-6 p-6 md:p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
                 <p id="onboardingSaveHint" class="hidden w-full text-center text-xs md:text-sm font-semibold -mt-1">
                     Сохрани настройки и сможешь приступить к поиску
                 </p>
