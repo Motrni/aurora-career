@@ -106,6 +106,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.AuroraSession.startPing();
         }
 
+        if (typeof checkRegModal === 'function') {
+            checkRegModal(data);
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const paymentResult = urlParams.get('payment');
         const hasOnboarding = data.current_step && data.current_step.startsWith('onboarding_');

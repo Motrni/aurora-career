@@ -76,6 +76,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     return;
                 }
                 authMode = 'jwt';
+                if (typeof checkRegModal === 'function') checkRegModal(meData);
             }
         }
     } catch (e) {

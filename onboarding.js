@@ -99,6 +99,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         currentUser = data;
 
+        if (typeof checkRegModal === 'function') {
+            checkRegModal(data);
+        }
+
         if (data.need_reauth) {
             window.location.href = '/reauth/';
             return;
