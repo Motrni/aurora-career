@@ -1061,6 +1061,8 @@ async function handlePurchase(planCode) {
         card.style.pointerEvents = 'none';
     }
 
+    _showPaymentRedirectOverlay();
+
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/subscribe/purchase`, {
             method: 'POST',
@@ -1075,16 +1077,97 @@ async function handlePurchase(planCode) {
 
         const data = await resp.json();
         if (data.payment_url) {
-            window.location.href = data.payment_url;
+            window.open(data.payment_url, '_blank', 'noopener');
+            _updatePaymentOverlayOpened();
+        } else {
+            _hidePaymentRedirectOverlay();
         }
 
     } catch (e) {
         console.error('[Purchase] Error:', e);
+        _hidePaymentRedirectOverlay();
         if (card) {
             card.style.opacity = '1';
             card.style.pointerEvents = 'auto';
         }
     }
+}
+
+function _showPaymentRedirectOverlay() {
+    let overlay = document.getElementById('paymentRedirectOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'paymentRedirectOverlay';
+        overlay.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
+                <div class="payment-redirect-spinner"></div>
+                <p id="paymentRedirectText" style="color:#e7e0ef;font-size:16px;font-weight:600;text-align:center;">
+                    Перенаправление на страницу оплаты…
+                </p>
+            </div>`;
+        Object.assign(overlay.style, {
+            position: 'fixed', inset: '0', zIndex: '9999',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(21,18,28,0.92)', backdropFilter: 'blur(8px)',
+            opacity: '0', transition: 'opacity 0.25s ease',
+        });
+        document.body.appendChild(overlay);
+
+        if (!document.getElementById('paymentRedirectSpinnerStyle')) {
+            const style = document.createElement('style');
+            style.id = 'paymentRedirectSpinnerStyle';
+            style.textContent = `
+                .payment-redirect-spinner {
+                    width:44px;height:44px;border:3px solid rgba(204,190,255,0.15);
+                    border-top-color:#ccbeff;border-radius:50%;
+                    animation:paymentSpin 0.7s linear infinite;
+                }
+                @keyframes paymentSpin { to { transform:rotate(360deg); } }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+}
+
+function _updatePaymentOverlayOpened() {
+    const text = document.getElementById('paymentRedirectText');
+    if (text) {
+        text.innerHTML = 'Оплата открыта в новой вкладке.<br><span style="font-weight:400;font-size:14px;color:#cac3d7;margin-top:4px;display:inline-block;">После оплаты эта страница обновится автоматически.</span>';
+    }
+    setTimeout(() => _pollPaymentStatus(), 3000);
+}
+
+function _hidePaymentRedirectOverlay() {
+    const overlay = document.getElementById('paymentRedirectOverlay');
+    if (!overlay) return;
+    overlay.style.opacity = '0';
+    setTimeout(() => { overlay.style.display = 'none'; }, 260);
+}
+
+function _pollPaymentStatus() {
+    let attempts = 0;
+    const maxAttempts = 60;
+    const interval = setInterval(async () => {
+        attempts++;
+        if (attempts > maxAttempts) {
+            clearInterval(interval);
+            _hidePaymentRedirectOverlay();
+            window.location.reload();
+            return;
+        }
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/auth/me`, { credentials: 'include' });
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.has_access && data.subscription_status === 'active') {
+                    clearInterval(interval);
+                    window.location.reload();
+                }
+            }
+        } catch (_) {}
+    }, 5000);
 }
 
 async function handleActivateTrial() {
