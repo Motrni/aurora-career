@@ -1094,7 +1094,7 @@ async function handleActivateTrial() {
     }
 
     try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/init-trial`, {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/activate-trial-free`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
@@ -1108,44 +1108,14 @@ async function handleActivateTrial() {
                 alert(err.detail || 'Пробный период для этого аккаунта недоступен.');
                 return;
             }
-            throw new Error(err.detail || 'Init failed');
+            if (resp.status === 410) {
+                alert(err.detail || 'Свободные места на пробный период закончились.');
+                return;
+            }
+            throw new Error(err.detail || 'Activation failed');
         }
 
-        const data = await resp.json();
-        const widget = new cp.CloudPayments();
-
-        const widgetOpts = {
-            publicId: data.public_id,
-            description: 'Верификация карты (1 руб. вернётся)',
-            amount: 1,
-            currency: 'RUB',
-            accountId: data.account_id,
-            invoiceId: String(data.payment_id),
-            skin: 'mini',
-            data: {
-                trial: true,
-                source: 'web',
-            },
-        };
-
-        if (data.email) {
-            widgetOpts.email = data.email;
-        }
-
-        widget.pay('auth', widgetOpts, {
-            onSuccess: function () {
-                window.location.href = '/onboarding/';
-            },
-            onFail: function (reason) {
-                console.error('[CP Widget] Fail:', reason);
-                if (trialCard) {
-                    trialCard.style.opacity = '1';
-                    trialCard.style.pointerEvents = 'auto';
-                }
-            },
-            onComplete: function () {},
-        });
-
+        window.location.href = '/onboarding/';
     } catch (e) {
         console.error('[Trial] Error:', e);
         if (trialCard) {
