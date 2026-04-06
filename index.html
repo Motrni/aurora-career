@@ -232,7 +232,7 @@
         <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#archive" data-section="archive">Стоимость</a>
     </div>
     <div class="hidden md:flex gap-3 items-center">
-        <a href="/auth/" class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-[#ccbeff]/10 transition-all duration-300 active:scale-95 ease-out">Попробовать бесплатно</a>
+        <button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-[#ccbeff]/10 transition-all duration-300 active:scale-95 ease-out" onclick="toggleModal('join-modal')">Попробовать бесплатно</button>
         <a id="authBtn" href="/auth/" class="text-[#cac3d7] border border-white/10 px-5 py-2.5 rounded-full text-sm font-semibold hover:text-[#e7e0ef] hover:border-[#ccbeff]/30 hover:bg-[#ccbeff]/5 transition-all duration-300 active:scale-95 ease-out">Вход</a>
     </div>
     <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
@@ -242,7 +242,7 @@
 
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
-    <a href="/auth/" onclick="toggleMobileMenu();" class="w-full bg-gradient-to-tr from-primary-container to-secondary-container text-white py-4 rounded-xl text-base font-bold mt-4 mb-2 text-center block">Попробовать бесплатно</a>
+    <button onclick="toggleMobileMenu(); toggleModal('join-modal');" class="w-full bg-gradient-to-tr from-primary-container to-secondary-container text-white py-4 rounded-xl text-base font-bold mt-4 mb-2 text-center">Попробовать бесплатно</button>
     <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()" class="w-full text-center border border-white/10 text-[#cac3d7] py-3.5 rounded-xl text-base font-semibold mb-2 hover:text-[#e7e0ef] transition-colors">Вход</a>
     <a href="#opportunities" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Возможности</a>
     <a href="#insights" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Проблемы поиска</a>
@@ -267,9 +267,9 @@
                 Система, которая сама ищет вакансии, адаптирует резюме и отправляет отклики, пока вы отдыхаете.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 md:gap-6 pt-4 md:pt-8">
-                <a href="/auth/" class="bg-gradient-to-tr from-primary-container to-secondary-container text-white px-8 md:px-12 py-4 md:py-5 rounded-xl text-base md:text-lg font-bold shadow-[0_30px_60px_rgba(90,48,208,0.2)] hover:scale-[1.02] transition-transform duration-300 text-center">
+                <button onclick="toggleModal('join-modal')" class="bg-gradient-to-tr from-primary-container to-secondary-container text-white px-8 md:px-12 py-4 md:py-5 rounded-xl text-base md:text-lg font-bold shadow-[0_30px_60px_rgba(90,48,208,0.2)] hover:scale-[1.02] transition-transform duration-300 text-center cursor-pointer">
                     Попробовать бесплатно
-                </a>
+                </button>
                 <a href="#insights" class="glass-card text-on-surface px-8 md:px-12 py-4 md:py-5 rounded-xl text-base md:text-lg font-semibold border border-white/10 hover:bg-white/10 transition-colors text-center">
                     Как это работает
                 </a>
@@ -449,9 +449,9 @@
             <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter">Доверьте рутину системе.</h2>
             <p class="text-base sm:text-lg md:text-2xl text-on-surface-variant font-light max-w-2xl mx-auto">Начните получать приглашения на работу мечты уже на этой неделе.</p>
             <div class="pt-4 md:pt-8">
-                <a href="/auth/" class="bg-on-surface text-background px-10 md:px-16 py-4 md:py-6 rounded-xl text-base md:text-xl font-bold hover:scale-105 transition-transform duration-300 inline-block text-center">
+                <button onclick="toggleModal('join-modal')" class="bg-on-surface text-background px-10 md:px-16 py-4 md:py-6 rounded-xl text-base md:text-xl font-bold hover:scale-105 transition-transform duration-300 inline-block text-center cursor-pointer">
                     Попробовать бесплатно
-                </a>
+                </button>
             </div>
         </div>
     </div>
@@ -489,13 +489,13 @@
             <div class="w-14 h-14 md:w-16 md:h-16 bg-primary-container/20 rounded-2xl flex items-center justify-center mx-auto text-primary">
                 <span class="material-symbols-outlined text-2xl md:text-3xl">rocket_launch</span>
             </div>
-            <h3 class="text-xl md:text-2xl font-bold">Присоединиться к сообществу</h3>
+            <h3 class="text-xl md:text-2xl font-bold">Начните прямо сейчас</h3>
             <p class="text-on-surface-variant leading-relaxed text-sm md:text-lg">
-                Запустите бота для автоматизации поиска работы или присоединитесь к сообществу Авроры, где мы делимся полезными знаниями и лучшими практиками.
+                Зарегистрируйтесь и получите 10 бесплатных откликов, или присоединяйтесь к нашему сообществу в Telegram.
             </p>
             <div class="pt-2 md:pt-4 flex flex-col gap-3">
-                <a class="inline-block bg-gradient-to-tr from-primary-container to-secondary-container text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base hover:scale-105 transition-transform" href="https://t.me/FindNewJob_hhBot?start=from_website" target="_blank">
-                    Запустить бота
+                <a class="inline-block bg-gradient-to-tr from-primary-container to-secondary-container text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base hover:scale-105 transition-transform" href="/auth/">
+                    Попробовать 10 откликов бесплатно
                 </a>
                 <a class="inline-block bg-surface-container-high text-on-surface px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold text-sm md:text-base border border-white/10 hover:bg-white/10 transition-colors" href="https://t.me/AuroraCareer" target="_blank">
                     Присоединиться к сообществу
