@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.6 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.7 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  */
 
@@ -165,6 +165,10 @@ async function renderCabinet(user) {
     updateSubscriptionCard(user);
     updateTelegramCard(user.has_telegram);
     applyTrialCardVisibility(user);
+
+    if (user.has_access && !user.hh_linked) {
+        document.getElementById('hhLinkBanner').classList.remove('hidden');
+    }
 
     if (user.subscription_status === 'none' || user.subscription_status === 'ended_trial' || user.subscription_status === 'ended_active') {
         await loadTariffs();
@@ -1327,5 +1331,35 @@ function daysUntil(isoStr) {
         return diff;
     } catch (_) {
         return null;
+    }
+}
+
+// ============================================================================
+// HH LINKING (for users with active subscription but no hh.ru account)
+// ============================================================================
+
+async function startHhLinking() {
+    const banner = document.getElementById('hhLinkBanner');
+    const btn = banner ? banner.querySelector('button') : null;
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+    }
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/start-linking`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (!resp || !resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            alert(err.detail || 'Не удалось начать привязку');
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+            return;
+        }
+        window.location.href = '/onboarding/';
+    } catch (e) {
+        console.error('[HH Linking] Error:', e);
+        alert('Произошла ошибка. Попробуйте ещё раз.');
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     }
 }
