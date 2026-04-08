@@ -1,5 +1,5 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v1.1 — сессия + refresh, блокировка для залогиненных
+// v1.3 — немедленный переход на loading после submit + retry + indeterminate bar
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
@@ -16,6 +16,7 @@ let selectedFile = null;
 let turnstileToken = null;
 let userEmail = '';
 let turnstileReady = false;
+let _phaseTimer = null;
 
 // ============================================================================
 // INIT
@@ -65,14 +66,8 @@ function loadCounter() {
 function initDragDrop() {
     const zone = document.getElementById('dropZone');
     if (!zone) return;
-
-    zone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        zone.classList.add('dragover');
-    });
-    zone.addEventListener('dragleave', () => {
-        zone.classList.remove('dragover');
-    });
+    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => { zone.classList.remove('dragover'); });
     zone.addEventListener('drop', (e) => {
         e.preventDefault();
         zone.classList.remove('dragover');
@@ -109,7 +104,6 @@ function handleFile(file) {
     selectedFile = file;
     nameEl.textContent = file.name;
     nameEl.classList.remove('hidden');
-
     openEmailModal();
 }
 
@@ -130,8 +124,6 @@ function closeEmailModal() {
 function initTurnstile() {
     if (!TURNSTILE_SITE_KEY || turnstileReady) return;
     turnstileReady = true;
-
-    // Блокируем кнопку до прохождения капчи
     document.getElementById('btnGetResult').disabled = true;
 
     const script = document.createElement('script');
@@ -143,7 +135,6 @@ function initTurnstile() {
 window.renderTurnstile = function () {
     const container = document.getElementById('turnstileContainer');
     if (!container || !window.turnstile) return;
-
     window.turnstile.render(container, {
         sitekey: TURNSTILE_SITE_KEY,
         theme: 'dark',
@@ -155,7 +146,7 @@ window.renderTurnstile = function () {
 };
 
 // ============================================================================
-// SUBMIT
+// SUBMIT — сразу показывает loading, fetch идёт в фоне
 // ============================================================================
 
 async function submitAudit() {
@@ -173,121 +164,173 @@ async function submitAudit() {
     }
 
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>';
 
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('email', userEmail);
     if (turnstileToken) formData.append('captcha_token', turnstileToken);
 
-    try {
-        const resp = await fetch(`${apiBase()}/api/audit/analyze`, {
-            method: 'POST',
-            body: formData,
-        });
+    // Сразу закрываем модалку и показываем экран загрузки
+    closeEmailModal();
+    showLoadingScreen();
 
-        let data = {};
-        const rawText = await resp.text();
-        try {
-            data = rawText ? JSON.parse(rawText) : {};
-        } catch (_) {
-            data = {};
+    // Fetch в фоне с ретраями
+    const result = await fetchAuditWithRetry(formData, 2);
+    stopLoadingPhases();
+
+    if (result.type === 'conflict') {
+        document.getElementById('stepLoading').classList.add('hidden');
+        const code = result.data.error;
+        if (code === 'email_already_used') {
+            showAlreadyUsed(result.data);
+        } else {
+            showRegisteredEmail(result.data);
         }
-
-        if (resp.status === 409) {
-            const code = data.error;
-            if (code === 'email_already_used') {
-                showAlreadyUsed(data);
-                return;
-            }
-            if (code === 'email_already_registered') {
-                showRegisteredEmail(data);
-                return;
-            }
-            if (typeof data.cta_url === 'string') {
-                if (data.cta_url.includes('/cabinet')) {
-                    showRegisteredEmail(data);
-                    return;
-                }
-                if (data.cta_url.includes('/auth')) {
-                    showAlreadyUsed(data);
-                    return;
-                }
-            }
-            if (data.message) {
-                if (/получили бесплатный|10 откликов/i.test(String(data.message))) {
-                    showAlreadyUsed({
-                        ...data,
-                        cta_url: data.cta_url || '/auth/?source=audit',
-                    });
-                    return;
-                }
-                showRegisteredEmail({
-                    message: data.message,
-                    cta_url: data.cta_url || '/cabinet/',
-                    cta_text: data.cta_text || 'Перейти в кабинет',
-                });
-                return;
-            }
-            showRegisteredEmail({
-                message: 'Этот email уже связан с аккаунтом Авроры или ранее использовался. Откройте кабинет или войдите.',
-                cta_url: '/cabinet/',
-                cta_text: 'Личный кабинет',
-            });
-            return;
-        }
-
-        if (!resp.ok) {
-            const msg = data.detail || data.message || 'Произошла ошибка';
-            emailErr.textContent = typeof msg === 'string' ? msg : 'Произошла ошибка';
-            emailErr.classList.remove('hidden');
-            btn.disabled = false;
-            btn.textContent = 'Получить разбор';
-            return;
-        }
-
-        closeEmailModal();
-        showLoading(data);
-
-    } catch (e) {
-        emailErr.textContent = 'Ошибка сети. Попробуйте ещё раз.';
-        emailErr.classList.remove('hidden');
-        btn.disabled = false;
-        btn.textContent = 'Получить разбор';
+        return;
     }
+
+    if (result.type === 'error') {
+        showLoadingError(result.message);
+        return;
+    }
+
+    // Успех — показываем результат
+    document.getElementById('stepLoading').classList.add('hidden');
+    showResult(result.data.result, result.data.total_audits);
 }
 
 // ============================================================================
-// LOADING ANIMATION
+// FETCH С РЕТРАЯМИ
 // ============================================================================
 
-function showLoading(data) {
-    document.getElementById('stepUpload').classList.add('hidden');
-    document.getElementById('stepLoading').classList.remove('hidden');
+async function fetchAuditWithRetry(formData, maxRetries) {
+    let lastError = 'Что-то пошло не так. Попробуйте позже.';
 
-    const phases = [
-        { text: 'Анализируем структуру резюме...', pct: 15 },
-        { text: 'Проверяем ключевые слова для алгоритма hh.ru...', pct: 40 },
-        { text: 'Оцениваем первое впечатление рекрутера...', pct: 70 },
-        { text: 'Готовим рекомендации...', pct: 90 },
-    ];
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        if (attempt > 0) {
+            // Пауза перед ретраем
+            await new Promise(r => setTimeout(r, 2000));
+        }
+
+        try {
+            const resp = await fetch(`${apiBase()}/api/audit/analyze`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            let data = {};
+            const rawText = await resp.text();
+            try { data = rawText ? JSON.parse(rawText) : {}; } catch (_) { data = {}; }
+
+            // 409 — не ретраим, специальная обработка
+            if (resp.status === 409) {
+                return { type: 'conflict', data };
+            }
+
+            // 4xx — не ретраим, ошибка валидации/логики
+            if (resp.status >= 400 && resp.status < 500) {
+                return { type: 'error', message: data.detail || data.message || 'Произошла ошибка' };
+            }
+
+            // 5xx — ретраим
+            if (!resp.ok) {
+                lastError = data.detail || data.message || `Ошибка сервера (${resp.status})`;
+                continue;
+            }
+
+            // Успех
+            return { type: 'success', data };
+
+        } catch (_) {
+            // Сетевая ошибка — ретраим
+            lastError = 'Ошибка сети. Проверьте соединение.';
+        }
+    }
+
+    return { type: 'error', message: lastError };
+}
+
+// ============================================================================
+// LOADING SCREEN
+// ============================================================================
+
+const LOADING_PHASES = [
+    'Анализируем структуру резюме...',
+    'Проверяем ключевые слова для алгоритма hh.ru...',
+    'Оцениваем первое впечатление рекрутера...',
+    'Готовим рекомендации...',
+];
+
+function showLoadingScreen() {
+    document.getElementById('stepUpload').classList.add('hidden');
+    const el = document.getElementById('stepLoading');
+    el.classList.remove('hidden');
 
     const textEl = document.getElementById('loadingText');
-    const barEl = document.getElementById('progressBar');
-    const interval = 2500;
+    if (textEl) textEl.textContent = LOADING_PHASES[0];
 
-    phases.forEach((phase, i) => {
+    let idx = 0;
+    _phaseTimer = setInterval(() => {
+        idx = (idx + 1) % LOADING_PHASES.length;
+        if (!textEl) return;
+        textEl.style.opacity = '0';
         setTimeout(() => {
-            textEl.textContent = phase.text;
-            barEl.style.width = phase.pct + '%';
-        }, i * interval);
-    });
+            textEl.textContent = LOADING_PHASES[idx];
+            textEl.style.opacity = '1';
+        }, 200);
+    }, 3500);
+}
 
-    const minDelay = phases.length * interval;
-    setTimeout(() => {
-        barEl.style.width = '100%';
-        setTimeout(() => showResult(data.result, data.total_audits), 500);
-    }, minDelay);
+function stopLoadingPhases() {
+    if (_phaseTimer) {
+        clearInterval(_phaseTimer);
+        _phaseTimer = null;
+    }
+}
+
+function showLoadingError(message) {
+    const textEl = document.getElementById('loadingText');
+    const errEl = document.getElementById('loadingError');
+    const retryBtn = document.getElementById('loadingRetryBtn');
+    const barEl = document.getElementById('loadingBarWrap');
+
+    if (textEl) textEl.textContent = 'Что-то пошло не так';
+    if (errEl) {
+        errEl.textContent = message || 'Попробуйте позже';
+        errEl.classList.remove('hidden');
+    }
+    if (retryBtn) retryBtn.classList.remove('hidden');
+    // Останавливаем бегущую полосу
+    if (barEl) barEl.classList.add('hidden');
+}
+
+function retryAudit() {
+    // Сбрасываем состояние и возвращаем на экран загрузки файла
+    selectedFile = null;
+    turnstileToken = null;
+    userEmail = '';
+    turnstileReady = false;
+
+    document.getElementById('stepLoading').classList.add('hidden');
+    document.getElementById('stepUpload').classList.remove('hidden');
+
+    const nameEl = document.getElementById('fileName');
+    if (nameEl) { nameEl.textContent = ''; nameEl.classList.add('hidden'); }
+
+    const errEl = document.getElementById('loadingError');
+    if (errEl) errEl.classList.add('hidden');
+
+    const retryBtn = document.getElementById('loadingRetryBtn');
+    if (retryBtn) retryBtn.classList.add('hidden');
+
+    const barEl = document.getElementById('loadingBarWrap');
+    if (barEl) barEl.classList.remove('hidden');
+
+    // Сбрасываем Turnstile для следующей попытки
+    if (window.turnstile) {
+        const container = document.getElementById('turnstileContainer');
+        if (container) window.turnstile.remove(container);
+    }
 }
 
 // ============================================================================
@@ -295,21 +338,17 @@ function showLoading(data) {
 // ============================================================================
 
 function showResult(result, totalAudits) {
-    document.getElementById('stepLoading').classList.add('hidden');
     document.getElementById('stepResult').classList.remove('hidden');
 
-    // Score
     document.getElementById('scoreValue').textContent = result.score || '?';
     document.getElementById('verdictText').textContent = result.verdict || '';
 
-    // Recruiter impression
     if (result.recruiter_first_impression) {
         const block = document.getElementById('impressionBlock');
         block.classList.remove('hidden');
         document.getElementById('impressionText').textContent = result.recruiter_first_impression;
     }
 
-    // Critical issues
     const container = document.getElementById('issuesBlock');
     container.innerHTML = '';
     (result.critical_issues || []).forEach(issue => {
@@ -327,14 +366,12 @@ function showResult(result, totalAudits) {
         container.appendChild(card);
     });
 
-    // HH Algorithm
     if (result.hh_algo_problems) {
         const block = document.getElementById('algoBlock');
         block.classList.remove('hidden');
         document.getElementById('algoText').textContent = result.hh_algo_problems;
     }
 
-    // Update counter
     if (totalAudits) {
         const el = document.getElementById('counterValue');
         if (el) el.textContent = totalAudits.toLocaleString('ru-RU');
@@ -354,7 +391,6 @@ function resetEmailModalButton() {
 }
 
 function showAlreadyUsed(data) {
-    closeEmailModal();
     resetEmailModalButton();
     document.getElementById('stepUpload').classList.add('hidden');
 
@@ -377,7 +413,6 @@ function showAlreadyUsed(data) {
 }
 
 function showRegisteredEmail(data) {
-    closeEmailModal();
     resetEmailModalButton();
     document.getElementById('stepUpload').classList.add('hidden');
 

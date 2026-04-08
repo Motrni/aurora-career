@@ -62,11 +62,32 @@ body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; }
 }
 .btn-primary:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.spinner { border: 2px solid rgba(204,190,255,0.2); border-top-color: #ccbeff;
-           border-radius: 50%; width: 18px; height: 18px; animation: spin 0.6s linear infinite; display: inline-block; }
-@keyframes spin { to{transform:rotate(360deg)} }
 .fade-in { animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* Indeterminate progress bar — две полосы с разной скоростью (Material Design style) */
+.progress-track {
+    position: relative; width: 100%; height: 4px;
+    background: rgba(147,142,160,0.15); border-radius: 2px; overflow: hidden;
+}
+.progress-seg {
+    position: absolute; top: 0; bottom: 0;
+    background: linear-gradient(90deg, rgba(204,190,255,0.2), #ccbeff, #7b61ff, #ccbeff, rgba(204,190,255,0.2));
+    border-radius: 2px;
+}
+.progress-seg-1 { animation: seg1 2.0s cubic-bezier(0.65,0.815,0.735,0.395) infinite; }
+.progress-seg-2 { animation: seg2 2.0s cubic-bezier(0.165,0.84,0.44,1) infinite; animation-delay: 1.05s; }
+@keyframes seg1 {
+    0%   { left:-35%;  right:100%; }
+    60%  { left: 100%; right:-90%; }
+    100% { left: 100%; right:-90%; }
+}
+@keyframes seg2 {
+    0%   { left:-200%; right:100%; }
+    60%  { left:-8%;   right:107%; }
+    100% { left: 107%; right:-8%;  }
+}
+#loadingText { transition: opacity 0.2s ease; }
 .drop-zone { border: 2px dashed rgba(147,142,160,0.3); transition: all 0.2s; }
 .drop-zone.dragover { border-color: #ccbeff; background: rgba(101,62,219,0.08); }
 .score-ring { width: 120px; height: 120px; }
@@ -159,11 +180,18 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
     <!-- STEP 2: Loading animation -->
     <div id="stepLoading" class="hidden fade-in">
         <div class="glass-card rounded-2xl p-8 shadow-2xl text-center">
-            <div class="spinner mx-auto mb-4" style="width:40px;height:40px;border-width:3px;"></div>
-            <p id="loadingText" class="text-on-surface font-medium text-lg">Анализируем структуру резюме...</p>
-            <div class="w-full bg-surface-container-highest rounded-full h-1.5 mt-6">
-                <div id="progressBar" class="bg-primary h-1.5 rounded-full transition-all duration-1000" style="width:0%"></div>
+            <p id="loadingText" class="text-on-surface font-medium text-base mb-6">
+                Анализируем структуру резюме...
+            </p>
+            <div id="loadingBarWrap" class="progress-track">
+                <div class="progress-seg progress-seg-1"></div>
+                <div class="progress-seg progress-seg-2"></div>
             </div>
+            <p id="loadingError" class="text-error text-sm mt-5 hidden"></p>
+            <button id="loadingRetryBtn" onclick="retryAudit()"
+                    class="btn-primary mt-4 px-6 py-2.5 rounded-xl text-white text-sm font-semibold hidden">
+                Попробовать ещё раз
+            </button>
         </div>
     </div>
 
@@ -222,6 +250,6 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=1.2"></script>
+<script src="audit.js?v=1.3"></script>
 </body>
 </html>
