@@ -1,13 +1,13 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
 // v1.0
 
-const API_BASE_URL = window.location.hostname === 'localhost'
-    ? 'http://localhost:8000'
+const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.location.hostname.includes('aurora-develop'))
+    ? 'https://api.aurora-develop.ru'
     : 'https://api.aurora-career.ru';
 
 // Turnstile site key — заменить на реальный после создания в Cloudflare Dashboard.
 // Пока пустой — капча не показывается, кнопка сразу активна.
-const TURNSTILE_SITE_KEY = '0x4AAAAAAC2GxGcQ1mSylGca';
+const TURNSTILE_SITE_KEY = '';
 
 let selectedFile = null;
 let turnstileToken = null;
