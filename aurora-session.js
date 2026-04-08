@@ -150,4 +150,18 @@
         refreshOnce: refreshNow,
         isSessionDead: function () { return _sessionDead; },
     };
+
+    // Устраняет FOUT для Material Symbols.
+    // Инжектим <style> с visibility:hidden для иконок, пока шрифт не загружен.
+    // После fonts.ready — удаляем стиль, иконки появляются без мигания букв.
+    if (typeof document !== 'undefined' && document.fonts) {
+        var _foutStyle = document.createElement('style');
+        _foutStyle.textContent = '.material-symbols-outlined,.material-symbols-rounded,.material-symbols-sharp{visibility:hidden}';
+        (document.head || document.documentElement).appendChild(_foutStyle);
+        document.fonts.ready.then(function () {
+            if (_foutStyle && _foutStyle.parentNode) {
+                _foutStyle.parentNode.removeChild(_foutStyle);
+            }
+        });
+    }
 }(typeof window !== 'undefined' ? window : this));
