@@ -1,9 +1,14 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v1.0
+// v1.1 — сессия + refresh, блокировка для залогиненных
 
-const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.location.hostname.includes('aurora-develop'))
-    ? 'https://api.aurora-develop.ru'
-    : 'https://api.aurora-career.ru';
+function apiBase() {
+    if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
+        return window.AuroraSession.getApiBase();
+    }
+    return (window.location.hostname.includes('twc1.net') || window.location.hostname.includes('aurora-develop'))
+        ? 'https://api.aurora-develop.ru'
+        : 'https://api.aurora-career.ru';
+}
 
 const TURNSTILE_SITE_KEY = '0x4AAAAAAC2GxGcQ1mSylGca';
 
@@ -16,14 +21,30 @@ let turnstileReady = false;
 // INIT
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkLoggedInUser();
     loadCounter();
     initDragDrop();
     initFileInput();
 });
 
+async function checkLoggedInUser() {
+    let r = await fetch(`${apiBase()}/api/auth/me`, { method: 'GET', credentials: 'include' });
+    if (r.status === 401 && window.AuroraSession) {
+        const ok = await AuroraSession.refreshNow();
+        if (ok) {
+            r = await fetch(`${apiBase()}/api/auth/me`, { method: 'GET', credentials: 'include' });
+        }
+    }
+    if (!r.ok) return;
+    const data = await r.json();
+    if (data.status !== 'ok') return;
+    document.getElementById('stepUpload').classList.add('hidden');
+    document.getElementById('stepLoggedIn').classList.remove('hidden');
+}
+
 function loadCounter() {
-    fetch(`${API_BASE_URL}/api/audit/counter`, { method: 'GET' })
+    fetch(`${apiBase()}/api/audit/counter`, { method: 'GET' })
         .then(r => { if (r.ok) return r.json(); throw new Error(r.status); })
         .then(data => {
             const el = document.getElementById('counterValue');
@@ -160,15 +181,20 @@ async function submitAudit() {
     if (turnstileToken) formData.append('captcha_token', turnstileToken);
 
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/audit/analyze`, {
+        const resp = await fetch(`${apiBase()}/api/audit/analyze`, {
             method: 'POST',
             body: formData,
         });
 
-        const data = await resp.json();
+        const data = await resp.json().catch(() => ({}));
 
         if (resp.status === 409 && data.error === 'email_already_used') {
             showAlreadyUsed(data);
+            return;
+        }
+
+        if (resp.status === 409 && data.error === 'email_already_registered') {
+            showRegisteredEmail(data);
             return;
         }
 
@@ -279,8 +305,17 @@ function showResult(result, totalAudits) {
 // ALREADY USED / CTA
 // ============================================================================
 
+function resetEmailModalButton() {
+    const btn = document.getElementById('btnGetResult');
+    if (btn) {
+        btn.disabled = !!TURNSTILE_SITE_KEY;
+        btn.textContent = 'Получить разбор';
+    }
+}
+
 function showAlreadyUsed(data) {
     closeEmailModal();
+    resetEmailModalButton();
     document.getElementById('stepUpload').classList.add('hidden');
 
     const stepResult = document.getElementById('stepResult');
@@ -296,6 +331,31 @@ function showAlreadyUsed(data) {
             <a href="${data.cta_url || '/auth/?source=audit'}"
                class="btn-primary block mt-6 py-3.5 rounded-xl text-white font-semibold text-center text-sm">
                 Попробовать 10 откликов бесплатно
+            </a>
+        </div>
+    `;
+}
+
+function showRegisteredEmail(data) {
+    closeEmailModal();
+    resetEmailModalButton();
+    document.getElementById('stepUpload').classList.add('hidden');
+
+    const stepResult = document.getElementById('stepResult');
+    stepResult.classList.remove('hidden');
+    const msg = data.message || 'Этот email уже привязан к аккаунту.';
+    const cta = data.cta_url || '/cabinet/';
+    const ctaText = data.cta_text || 'Перейти в кабинет';
+    stepResult.innerHTML = `
+        <div class="glass-card rounded-2xl p-8 shadow-2xl text-center fade-in">
+            <span class="material-symbols-outlined text-4xl text-primary mb-3" style="display:block">login</span>
+            <h2 class="text-lg font-bold text-on-surface">${esc(msg)}</h2>
+            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed">
+                Войдите в кабинет, чтобы пользоваться сервисом.
+            </p>
+            <a href="${cta.replace(/"/g, '')}"
+               class="btn-primary block mt-6 py-3.5 rounded-xl text-white font-semibold text-center text-sm">
+                ${esc(ctaText)}
             </a>
         </div>
     `;

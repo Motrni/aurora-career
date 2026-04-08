@@ -85,6 +85,24 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
 
 <div class="w-full max-w-lg relative z-10">
 
+    <!-- Уже авторизован: без лид-магнита -->
+    <div id="stepLoggedIn" class="hidden fade-in">
+        <div class="text-center mb-8">
+            <a href="/" class="text-primary text-2xl font-bold">Aurora Career</a>
+        </div>
+        <div class="glass-card rounded-2xl p-8 shadow-2xl text-center">
+            <span class="material-symbols-outlined text-4xl text-primary mb-3" style="display:block">account_circle</span>
+            <h1 class="text-xl font-bold text-on-surface">Вы уже вошли в Аврору</h1>
+            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed">
+                Бесплатный аудит резюме — для новых пользователей. Откройте кабинет или настройки поиска.
+            </p>
+            <div class="flex flex-col gap-3 mt-6">
+                <a href="/cabinet/" class="btn-primary block py-3 rounded-xl text-white font-semibold text-center text-sm">Личный кабинет</a>
+                <a href="/settings/" class="block py-3 rounded-xl border border-outline text-on-surface font-medium text-center text-sm hover:bg-surface-container transition-colors">Настройки поиска</a>
+            </div>
+        </div>
+    </div>
+
     <!-- STEP 1: Upload -->
     <div id="stepUpload" class="fade-in">
         <div class="text-center mb-8">
@@ -203,6 +221,7 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
 
 </div>
 
-<script src="audit.js?v=1.0"></script>
+<script src="aurora-session.js?v=2"></script>
+<script src="audit.js?v=1.1"></script>
 </body>
 </html>
