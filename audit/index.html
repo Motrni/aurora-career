@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<base href="/">
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Бесплатный аудит резюме | Aurora Career</title>
+<meta name="description" content="ИИ-анализ резюме за 30 секунд. Узнай почему рекрутеры игнорируют твоё резюме на hh.ru.">
+<link rel="icon" type="image/png" href="favicon.png?v=3">
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "primary": "#ccbeff",
+                "primary-container": "#5a30d0",
+                "on-surface": "#e7e0ef",
+                "surface": "#15121c",
+                "surface-container-low": "#1d1a24",
+                "surface-container": "#211e29",
+                "surface-container-highest": "#37333e",
+                "surface-variant": "#37333e",
+                "on-surface-variant": "#cac3d7",
+                "background": "#15121c",
+                "on-background": "#e7e0ef",
+                "outline": "#938ea0",
+                "error": "#ffb4ab",
+                "error-container": "#93000a",
+                "inverse-primary": "#653edb",
+            },
+            fontFamily: { inter: ["Inter", "system-ui", "sans-serif"] },
+        },
+    },
+};
+</script>
+<style>
+body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; }
+.aurora-glow {
+    position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(123,97,255,0.2) 0%, rgba(0,212,255,0.1) 50%, transparent 70%);
+    filter: blur(100px); z-index: 0; pointer-events: none;
+    animation: pulse 8s infinite alternate;
+}
+@keyframes pulse { 0%{opacity:.5;transform:translateX(-50%) scale(1)} 100%{opacity:.8;transform:translateX(-50%) scale(1.1)} }
+.glass-card {
+    background: linear-gradient(145deg, rgba(33,30,41,0.95) 0%, rgba(21,18,28,0.98) 100%);
+    border: 1px solid rgba(147,142,160,0.15);
+    backdrop-filter: blur(20px);
+}
+.btn-primary {
+    background: linear-gradient(135deg, #653edb 0%, #5a30d0 100%);
+    transition: all 0.2s;
+}
+.btn-primary:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.spinner { border: 2px solid rgba(204,190,255,0.2); border-top-color: #ccbeff;
+           border-radius: 50%; width: 18px; height: 18px; animation: spin 0.6s linear infinite; display: inline-block; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.fade-in { animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.drop-zone { border: 2px dashed rgba(147,142,160,0.3); transition: all 0.2s; }
+.drop-zone.dragover { border-color: #ccbeff; background: rgba(101,62,219,0.08); }
+.score-ring { width: 120px; height: 120px; }
+.score-ring circle { fill: none; stroke-width: 8; stroke-linecap: round; }
+.score-ring .bg { stroke: rgba(147,142,160,0.15); }
+.score-ring .fg { stroke: #ccbeff; transition: stroke-dashoffset 1.5s ease-out; }
+.issue-card { border-left: 3px solid #f59e0b; background: rgba(245,158,11,0.06); }
+input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0 2px rgba(204,190,255,0.15); }
+
+/* Modal overlay */
+.modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-4 pt-8 md:pt-16">
+<div class="aurora-glow"></div>
+
+<div class="w-full max-w-lg relative z-10">
+
+    <!-- STEP 1: Upload -->
+    <div id="stepUpload" class="fade-in">
+        <div class="text-center mb-8">
+            <a href="/" class="text-primary text-2xl font-bold">Aurora Career</a>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 md:p-8 shadow-2xl">
+            <h1 class="text-xl md:text-2xl font-bold text-on-surface text-center leading-snug">
+                Узнай почему рекрутеры<br>игнорируют твоё резюме
+            </h1>
+            <p class="text-on-surface-variant text-sm text-center mt-2">
+                ИИ-анализ за 30 секунд. Бесплатно.
+            </p>
+
+            <div id="dropZone" class="drop-zone rounded-xl mt-6 p-8 text-center cursor-pointer"
+                 onclick="document.getElementById('fileInput').click()">
+                <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2" style="display:block">upload_file</span>
+                <p class="text-on-surface font-medium">Загрузите резюме</p>
+                <p class="text-on-surface-variant text-xs mt-1">PDF или DOCX, до 5 МБ</p>
+                <input type="file" id="fileInput" accept=".pdf,.docx" class="hidden">
+            </div>
+
+            <p id="fileName" class="text-on-surface-variant text-xs text-center mt-3 hidden"></p>
+            <p id="uploadError" class="text-error text-xs text-center mt-2 hidden"></p>
+
+            <div id="socialProof" class="text-center mt-5">
+                <p class="text-on-surface-variant text-xs">
+                    <span class="text-primary font-semibold" id="counterValue">...</span> резюме уже проверено
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- EMAIL MODAL -->
+    <div id="emailModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0" onclick="closeEmailModal()"></div>
+        <div class="glass-card rounded-2xl p-6 md:p-8 w-full max-w-md relative z-10 fade-in shadow-2xl">
+            <h2 class="text-lg font-bold text-on-surface text-center">На какой email прислать разбор?</h2>
+            <p class="text-on-surface-variant text-sm text-center mt-1">Результат также появится на экране</p>
+            <div class="mt-5">
+                <input type="email" id="emailInput" placeholder="your@email.com"
+                       class="w-full px-4 py-3 rounded-xl bg-surface-container border border-surface-variant
+                              text-on-surface placeholder-outline text-sm">
+                <p id="emailError" class="text-error text-xs mt-1 hidden"></p>
+            </div>
+            <div class="cf-turnstile mt-4" data-sitekey="TURNSTILE_SITE_KEY_PLACEHOLDER" data-theme="dark" data-callback="onTurnstileSuccess"></div>
+            <button id="btnGetResult" onclick="submitAudit()" disabled
+                    class="btn-primary w-full mt-4 py-3 rounded-xl text-white font-semibold text-sm">
+                Получить разбор
+            </button>
+        </div>
+    </div>
+
+    <!-- STEP 2: Loading animation -->
+    <div id="stepLoading" class="hidden fade-in">
+        <div class="glass-card rounded-2xl p-8 shadow-2xl text-center">
+            <div class="spinner mx-auto mb-4" style="width:40px;height:40px;border-width:3px;"></div>
+            <p id="loadingText" class="text-on-surface font-medium text-lg">Анализируем структуру резюме...</p>
+            <div class="w-full bg-surface-container-highest rounded-full h-1.5 mt-6">
+                <div id="progressBar" class="bg-primary h-1.5 rounded-full transition-all duration-1000" style="width:0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 3: Result -->
+    <div id="stepResult" class="hidden fade-in">
+        <div class="text-center mb-6">
+            <a href="/" class="text-primary text-2xl font-bold">Aurora Career</a>
+        </div>
+
+        <!-- Score -->
+        <div class="glass-card rounded-2xl p-6 shadow-2xl text-center mb-4">
+            <p class="text-on-surface-variant text-sm mb-3">Ваше резюме</p>
+            <div class="flex items-center justify-center gap-2">
+                <span id="scoreValue" class="text-5xl font-bold text-primary">0</span>
+                <span class="text-2xl text-outline"> / 10</span>
+            </div>
+            <p id="verdictText" class="text-on-surface-variant text-sm mt-3"></p>
+        </div>
+
+        <!-- Recruiter impression -->
+        <div id="impressionBlock" class="glass-card rounded-2xl p-5 shadow-xl mb-4 hidden">
+            <h3 class="text-sm font-semibold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-base" style="font-size:18px">visibility</span>
+                Первое впечатление рекрутера
+            </h3>
+            <p id="impressionText" class="text-on-surface-variant text-sm mt-2 leading-relaxed"></p>
+        </div>
+
+        <!-- Critical issues -->
+        <div id="issuesBlock" class="space-y-3 mb-4"></div>
+
+        <!-- HH Algorithm -->
+        <div id="algoBlock" class="glass-card rounded-2xl p-5 shadow-xl mb-4 hidden">
+            <h3 class="text-sm font-semibold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-base" style="font-size:18px">query_stats</span>
+                Алгоритм hh.ru
+            </h3>
+            <p id="algoText" class="text-on-surface-variant text-sm mt-2 leading-relaxed"></p>
+        </div>
+
+        <!-- CTA -->
+        <div class="glass-card rounded-2xl p-6 shadow-2xl text-center mt-6">
+            <p class="text-on-surface font-semibold mb-1">Что Аврора делает автоматически:</p>
+            <div class="text-on-surface-variant text-sm text-left space-y-1.5 my-4 mx-auto max-w-xs">
+                <p>&#10003; Пишет сопроводительное письмо под каждую вакансию</p>
+                <p>&#10003; Отправляет до 20 откликов в день пока вы занимаетесь жизнью</p>
+                <p>&#10003; Подбирает вакансии под ваш профиль</p>
+            </div>
+            <button id="ctaButton" onclick="goToRegister()"
+                    class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold">
+                Попробовать бесплатно — 10 откликов в подарок
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script src="audit.js?v=1.0"></script>
+</body>
+</html>

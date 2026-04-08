@@ -8,6 +8,11 @@ const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.lo
     : 'https://api.aurora-career.ru';
 
 let currentOtpEmail = '';
+let auditSource = null;
+
+function _getUrlParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+}
 
 async function redirectBySubscription() {
     try {
@@ -239,7 +244,10 @@ async function handleRegister(e) {
     setLoading('regBtn', 'regBtnText', true);
 
     try {
-        const { ok, status, data } = await apiCall('/api/auth/register', { email, password });
+        const payload = { email, password };
+        if (auditSource) payload.source = 'audit';
+
+        const { ok, status, data } = await apiCall('/api/auth/register', payload);
 
         if (ok || status === 201) {
             currentOtpEmail = email;
@@ -247,6 +255,14 @@ async function handleRegister(e) {
             document.getElementById('otpEmailDisplay').textContent = email;
             switchTab('otp');
             startResendTimer();
+            return;
+        }
+
+        if (status === 409 && auditSource) {
+            switchTab('login');
+            const loginEmail = document.getElementById('loginEmail');
+            if (loginEmail) loginEmail.value = email;
+            showMessage('Вы уже в Авроре — войдите, чтобы продолжить', 'info');
             return;
         }
 
@@ -419,6 +435,20 @@ function startResendTimer() {
 document.addEventListener('DOMContentLoaded', async () => {
     const regEmail = document.getElementById('regEmail');
     if (regEmail) regEmail.addEventListener('input', updateRegPasswordChecks);
+
+    // Pre-fill from audit
+    const urlEmail = _getUrlParam('email');
+    const urlSource = _getUrlParam('source');
+    if (urlSource === 'audit') {
+        auditSource = 'audit';
+        if (urlEmail && regEmail) {
+            regEmail.value = decodeURIComponent(urlEmail);
+            switchTab('register');
+            const regPwd = document.getElementById('regPassword');
+            if (regPwd) regPwd.focus();
+            updateRegPasswordChecks();
+        }
+    }
 
     try {
         let resp = await fetch(`${API_BASE_URL}/api/auth/me`, {

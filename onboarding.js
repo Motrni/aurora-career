@@ -14,6 +14,7 @@ const API_BASE_URL = window.AuroraSession
 
 let currentUser = null;
 let selectedResumeId = null;
+let isAuditUser = false;
 let pollInterval = null;
 let analysisInterval = null;
 let textRotateInterval = null;
@@ -98,6 +99,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         currentUser = data;
+        isAuditUser = data.registration_source === 'audit';
+
+        if (isAuditUser) {
+            const dot5 = document.getElementById('stepDot5');
+            const line4 = document.getElementById('stepLine4');
+            if (dot5) dot5.style.display = 'none';
+            if (line4) line4.style.display = 'none';
+        }
 
         if (typeof checkRegModal === 'function') {
             checkRegModal(data);
@@ -133,21 +142,24 @@ function initOnboarding(step) {
     document.getElementById('loadingSkeleton').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
 
+    // Audit users: profile steps are step 3 (not 4), no analysis step
+    const profileStepNum = isAuditUser ? 3 : 4;
+
     if (step === 'onboarding_settings') {
         window.location.href = '/settings/';
         return;
     } else if (step === 'onboarding_profile_complete') {
-        showStep(4);
+        showStep(profileStepNum);
         showProfileComplete();
     } else if (step === 'onboarding_query_generating') {
-        showStep(4);
+        showStep(profileStepNum);
         showQueryGenerating();
         startProfilePolling();
     } else if (step === 'onboarding_roles_ready') {
-        showStep(4);
+        showStep(profileStepNum);
         loadRolesFromServer();
     } else if (step === 'onboarding_search_profile') {
-        showStep(4);
+        showStep(profileStepNum);
         startRolesPolling();
         startRolesTextRotation();
     } else if (step === 'onboarding_analysis_complete') {
@@ -169,6 +181,8 @@ function initOnboarding(step) {
 // ============================================================================
 
 function showStep(stepNum) {
+    const visibleDotCount = isAuditUser ? 4 : 5;
+    const visibleLineCount = isAuditUser ? 3 : 4;
     const dots = [1, 2, 3, 4, 5].map(i => document.getElementById(`stepDot${i}`));
     const lines = [1, 2, 3, 4].map(i => document.getElementById(`stepLine${i}`));
     const steps = [1, 2, 3, 4].map(i => document.getElementById(`step${i}`));
@@ -177,15 +191,20 @@ function showStep(stepNum) {
 
     steps.forEach(el => { if (el) el.classList.add('hidden'); });
 
+    // For audit users visual step 3 → content div step4 (skip analysis)
+    let contentIdx = stepNum - 1;
+    if (isAuditUser && stepNum >= 3) contentIdx = 3; // step4 div = search profile
+
     if (wrapper) {
         if (stepNum <= 2) wrapper.style.maxWidth = '480px';
-        else if (stepNum === 3) wrapper.style.maxWidth = '640px';
+        else if (!isAuditUser && stepNum === 3) wrapper.style.maxWidth = '640px';
         else wrapper.style.maxWidth = '960px';
     }
 
     dots.forEach((dot, i) => {
         if (!dot) return;
         const num = i + 1;
+        if (num > visibleDotCount) return;
         if (num < stepNum) {
             dot.className = 'stepper-dot completed';
             dot.innerHTML = checkIcon;
@@ -200,10 +219,11 @@ function showStep(stepNum) {
 
     lines.forEach((line, i) => {
         if (!line) return;
+        if (i + 1 > visibleLineCount) return;
         line.className = (i + 1) < stepNum ? 'stepper-line active' : 'stepper-line pending';
     });
 
-    if (steps[stepNum - 1]) steps[stepNum - 1].classList.remove('hidden');
+    if (steps[contentIdx]) steps[contentIdx].classList.remove('hidden');
 
     if (stepNum === 2) loadResumes();
 }
