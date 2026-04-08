@@ -13,7 +13,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<!-- Turnstile загружается динамически из audit.js, только если SITE_KEY задан -->
 <script>
 tailwind.config = {
     darkMode: "class",
@@ -130,8 +130,8 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
                               text-on-surface placeholder-outline text-sm">
                 <p id="emailError" class="text-error text-xs mt-1 hidden"></p>
             </div>
-            <div class="cf-turnstile mt-4" data-sitekey="TURNSTILE_SITE_KEY_PLACEHOLDER" data-theme="dark" data-callback="onTurnstileSuccess"></div>
-            <button id="btnGetResult" onclick="submitAudit()" disabled
+            <div id="turnstileContainer" class="mt-4"></div>
+            <button id="btnGetResult" onclick="submitAudit()"
                     class="btn-primary w-full mt-4 py-3 rounded-xl text-white font-semibold text-sm">
                 Получить разбор
             </button>

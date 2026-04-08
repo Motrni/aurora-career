@@ -5,9 +5,14 @@ const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:8000'
     : 'https://api.aurora-career.ru';
 
+// Turnstile site key — заменить на реальный после создания в Cloudflare Dashboard.
+// Пока пустой — капча не показывается, кнопка сразу активна.
+const TURNSTILE_SITE_KEY = '0x4AAAAAAC2GxGcQ1mSylGca';
+
 let selectedFile = null;
 let turnstileToken = null;
 let userEmail = '';
+let turnstileReady = false;
 
 // ============================================================================
 // INIT
@@ -21,14 +26,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadCounter() {
     fetch(`${API_BASE_URL}/api/audit/counter`, { method: 'GET' })
-        .then(r => r.json())
+        .then(r => { if (r.ok) return r.json(); throw new Error(r.status); })
         .then(data => {
             const el = document.getElementById('counterValue');
             if (el && data.total_audits) {
                 el.textContent = data.total_audits.toLocaleString('ru-RU');
             }
         })
-        .catch(() => {});
+        .catch(() => {
+            const el = document.getElementById('counterValue');
+            if (el) el.textContent = '1 400+';
+        });
 }
 
 // ============================================================================
@@ -93,16 +101,39 @@ function handleFile(file) {
 function openEmailModal() {
     document.getElementById('emailModal').classList.remove('hidden');
     setTimeout(() => document.getElementById('emailInput').focus(), 100);
+    initTurnstile();
 }
 
 function closeEmailModal() {
     document.getElementById('emailModal').classList.add('hidden');
 }
 
-function onTurnstileSuccess(token) {
-    turnstileToken = token;
-    document.getElementById('btnGetResult').disabled = false;
+function initTurnstile() {
+    if (!TURNSTILE_SITE_KEY || turnstileReady) return;
+    turnstileReady = true;
+
+    // Блокируем кнопку до прохождения капчи
+    document.getElementById('btnGetResult').disabled = true;
+
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=renderTurnstile';
+    script.async = true;
+    document.head.appendChild(script);
 }
+
+window.renderTurnstile = function () {
+    const container = document.getElementById('turnstileContainer');
+    if (!container || !window.turnstile) return;
+
+    window.turnstile.render(container, {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: 'dark',
+        callback: function (token) {
+            turnstileToken = token;
+            document.getElementById('btnGetResult').disabled = false;
+        },
+    });
+};
 
 // ============================================================================
 // SUBMIT
