@@ -5,9 +5,7 @@ const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.lo
     ? 'https://api.aurora-develop.ru'
     : 'https://api.aurora-career.ru';
 
-// Turnstile site key — заменить на реальный после создания в Cloudflare Dashboard.
-// Пока пустой — капча не показывается, кнопка сразу активна.
-const TURNSTILE_SITE_KEY = '';
+const TURNSTILE_SITE_KEY = '0x4AAAAAAC2GxGcQ1mSylGca';
 
 let selectedFile = null;
 let turnstileToken = null;
