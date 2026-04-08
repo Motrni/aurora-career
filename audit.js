@@ -186,20 +186,60 @@ async function submitAudit() {
             body: formData,
         });
 
-        const data = await resp.json().catch(() => ({}));
-
-        if (resp.status === 409 && data.error === 'email_already_used') {
-            showAlreadyUsed(data);
-            return;
+        let data = {};
+        const rawText = await resp.text();
+        try {
+            data = rawText ? JSON.parse(rawText) : {};
+        } catch (_) {
+            data = {};
         }
 
-        if (resp.status === 409 && data.error === 'email_already_registered') {
-            showRegisteredEmail(data);
+        if (resp.status === 409) {
+            const code = data.error;
+            if (code === 'email_already_used') {
+                showAlreadyUsed(data);
+                return;
+            }
+            if (code === 'email_already_registered') {
+                showRegisteredEmail(data);
+                return;
+            }
+            if (typeof data.cta_url === 'string') {
+                if (data.cta_url.includes('/cabinet')) {
+                    showRegisteredEmail(data);
+                    return;
+                }
+                if (data.cta_url.includes('/auth')) {
+                    showAlreadyUsed(data);
+                    return;
+                }
+            }
+            if (data.message) {
+                if (/получили бесплатный|10 откликов/i.test(String(data.message))) {
+                    showAlreadyUsed({
+                        ...data,
+                        cta_url: data.cta_url || '/auth/?source=audit',
+                    });
+                    return;
+                }
+                showRegisteredEmail({
+                    message: data.message,
+                    cta_url: data.cta_url || '/cabinet/',
+                    cta_text: data.cta_text || 'Перейти в кабинет',
+                });
+                return;
+            }
+            showRegisteredEmail({
+                message: 'Этот email уже связан с аккаунтом Авроры или ранее использовался. Откройте кабинет или войдите.',
+                cta_url: '/cabinet/',
+                cta_text: 'Личный кабинет',
+            });
             return;
         }
 
         if (!resp.ok) {
-            emailErr.textContent = data.detail || 'Произошла ошибка';
+            const msg = data.detail || data.message || 'Произошла ошибка';
+            emailErr.textContent = typeof msg === 'string' ? msg : 'Произошла ошибка';
             emailErr.classList.remove('hidden');
             btn.disabled = false;
             btn.textContent = 'Получить разбор';
