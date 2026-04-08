@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script>
 tailwind.config = {
     darkMode: "class",
@@ -70,15 +70,16 @@ tailwind.config = {
 
     .tab-track .tab-btn {
         flex: 1; padding: 12px 16px; font-size: 14px; font-weight: 600; font-family: inherit;
-        border: none; border-radius: 9999px;
-        transition: color 0.2s, box-shadow 0.2s, filter 0.2s, background 0.2s;
-        cursor: pointer; background: transparent; color: rgba(255, 255, 255, 0.55);
+        border: 1.5px solid rgba(255,255,255,0.18); border-radius: 9999px;
+        transition: all 0.2s;
+        cursor: pointer; background: rgba(255,255,255,0.06); color: rgba(255, 255, 255, 0.88);
     }
     .tab-track .tab-btn.active {
         background: linear-gradient(to right, #5a30d0, #58309f); color: #ffffff;
+        border-color: transparent;
         font-weight: 700; box-shadow: 0 4px 24px rgba(90, 48, 208, 0.45);
     }
-    .tab-track .tab-btn:not(.active):hover { color: rgba(255, 255, 255, 0.92); }
+    .tab-track .tab-btn:not(.active):hover { color: #ffffff; border-color: rgba(255,255,255,0.38); }
 
     .hh-form-input { outline: none !important; border-style: none; }
     .hh-form-input:focus { outline: none !important; --tw-ring-shadow: 0 0 #0000; --tw-ring-offset-shadow: 0 0 #0000; box-shadow: 0 0 30px rgba(90,48,208,0.2); }
@@ -182,15 +183,21 @@ tailwind.config = {
                 <div class="space-y-3">
                     <h1 class="text-3xl font-bold tracking-tight text-on-surface">Привяжите аккаунт hh.ru</h1>
                     <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
-                        Для синхронизации вашего резюме и откликов нам необходим доступ к вашему профилю HeadHunter.
+                        Аврора отправляет отклики от вашего имени на hh.ru. Ваш пароль мы не видим и не храним — только рабочую сессию.
+                    </p>
+                    <p id="hhConnectedCount" class="text-on-surface-variant/60 text-xs hidden">
+                        Уже подключили <span id="hhConnectedNum">...</span> пользователей
                     </p>
                 </div>
 
-                <div id="hhLoginForm" class="w-full space-y-5">
+                <div id="hhLoginForm" class="w-full space-y-4">
                     <div class="tab-track bg-surface-container-lowest p-1.5 rounded-full flex gap-1">
                         <button type="button" id="tabPhone" class="tab-btn active" onclick="switchTab('phone')">Телефон</button>
                         <button type="button" id="tabEmail" class="tab-btn" onclick="switchTab('email')">Почта</button>
                     </div>
+                    <p class="text-on-surface-variant/60 text-xs text-center -mt-1">
+                        Не помните? Попробуйте оба варианта — hh примет тот, который привязан к вашему аккаунту.
+                    </p>
                     <div id="inputPhone" class="relative">
                         <input type="tel" id="hhPhoneInput" class="hh-form-input w-full bg-surface-container-high border-none rounded-xl py-5 px-6 text-on-surface transition-shadow placeholder:text-on-surface-variant/50 font-medium text-[15px]" placeholder="+7 900 123 45 67" autocomplete="tel" inputmode="tel">
                     </div>
@@ -199,6 +206,9 @@ tailwind.config = {
                     </div>
                     <div id="hhLoginError" class="text-error text-xs hidden"></div>
                     <button onclick="handleHhLogin()" id="hhLoginBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer">Далее</button>
+                    <p class="text-on-surface-variant/50 text-xs text-center">
+                        После подключения Аврора найдёт подходящие вакансии и сегодня же отправит первые отклики
+                    </p>
                 </div>
 
                 <div id="hhWaitingCode" class="w-full py-4 hidden slide-in">
@@ -209,17 +219,21 @@ tailwind.config = {
                     </div>
                 </div>
 
-                <div id="hhOtpForm" class="w-full space-y-6 hidden slide-in">
+                    <div id="hhOtpForm" class="w-full space-y-5 hidden slide-in">
                     <div class="text-center space-y-2">
                         <span class="material-symbols-outlined text-primary text-4xl">pin</span>
                         <p class="text-on-surface text-sm font-medium" id="otpMessage">Введите код подтверждения</p>
                     </div>
                     <div class="relative">
                         <input type="text" id="otpCodeInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code" class="hh-form-input w-full bg-surface-container-high border-none rounded-xl py-5 px-6 text-on-surface text-center text-2xl font-bold tracking-[0.4em] transition-shadow placeholder:text-on-surface-variant/40" placeholder="&#8226;&#8226;&#8226;&#8226;">
+                        <p class="text-on-surface-variant/50 text-xs text-center mt-2">Код из SMS вводится только здесь и нигде не сохраняется 🔒</p>
                     </div>
                     <div id="otpError" class="text-error text-xs text-center hidden"></div>
                     <button onclick="handleHhCode()" id="otpSubmitBtn" class="btn-primary w-full py-5 text-white font-bold text-lg rounded-xl cursor-pointer" disabled>Подтвердить</button>
-                    <button onclick="resetHhLogin()" class="w-full text-on-surface-variant text-xs text-center py-2 cursor-pointer hover:text-primary transition-colors">Ввести другой номер / email</button>
+                    <button onclick="resetHhLogin()" class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-high/40 text-on-surface-variant text-sm font-medium cursor-pointer hover:border-outline hover:text-on-surface transition-all">
+                        <span class="material-symbols-outlined text-base" style="font-size:18px">arrow_back</span>
+                        Не тот номер / email — начать заново
+                    </button>
                 </div>
 
                 <div id="hhProcessing" class="w-full hidden slide-in">
@@ -438,7 +452,7 @@ tailwind.config = {
 
 <script src="aurora-session.js?v=3"></script>
 <script src="reg-modal.js?v=1"></script>
-<script src="onboarding.js?v=5.1"></script>
+<script src="onboarding.js?v=5.2"></script>
 <script src="support-widget.js?v=1"></script>
 </body>
 </html>

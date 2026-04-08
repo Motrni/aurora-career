@@ -131,12 +131,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         initOnboarding(data.current_step);
+        loadHhConnectedCount();
 
     } catch (e) {
         console.error('[Onboarding] Init error:', e);
         window.location.href = '/auth/';
     }
 });
+
+function loadHhConnectedCount() {
+    fetch(`${API_BASE_URL}/api/hh/connected-count`, { method: 'GET', credentials: 'include' })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+            if (!data || !data.count) return;
+            const numEl = document.getElementById('hhConnectedNum');
+            const wrapEl = document.getElementById('hhConnectedCount');
+            if (numEl) numEl.textContent = data.count.toLocaleString('ru-RU');
+            if (wrapEl) wrapEl.classList.remove('hidden');
+        })
+        .catch(() => {});
+}
 
 function initOnboarding(step) {
     document.getElementById('loadingSkeleton').classList.add('hidden');

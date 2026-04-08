@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('loadingSkeleton').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
         showStep(1);
+        loadHhConnectedCount();
 
     } catch (e) {
         console.error('[Reauth] Init error:', e);
@@ -418,6 +419,19 @@ function stopPolling() {
         clearInterval(pollInterval);
         pollInterval = null;
     }
+}
+
+function loadHhConnectedCount() {
+    fetch(`${API_BASE_URL}/api/hh/connected-count`, { method: 'GET', credentials: 'include' })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+            if (!data || !data.count) return;
+            const numEl = document.getElementById('hhConnectedNum');
+            const wrapEl = document.getElementById('hhConnectedCount');
+            if (numEl) numEl.textContent = data.count.toLocaleString('ru-RU');
+            if (wrapEl) wrapEl.classList.remove('hidden');
+        })
+        .catch(() => {});
 }
 
 // ============================================================================
