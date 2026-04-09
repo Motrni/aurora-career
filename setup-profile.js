@@ -13,6 +13,8 @@ const API_BASE_URL = window.AuroraSession
 let currentRoles = [];
 let _rolesPollingId = null;
 let _queryPollingId = null;
+let _pollingStartedAt = null;
+const POLLING_TIMEOUT_MS = 5 * 60 * 1000;
 
 async function apiFetch(url, options = {}) {
     options.credentials = 'include';
@@ -178,7 +180,14 @@ function stopRotatingText() {
 // ============================================================================
 
 function startRolesPolling() {
+    _pollingStartedAt = Date.now();
     _rolesPollingId = setInterval(async () => {
+        if (Date.now() - _pollingStartedAt > POLLING_TIMEOUT_MS) {
+            stopRolesPolling();
+            stopRotatingText();
+            showRetryError();
+            return;
+        }
         try {
             const resp = await apiFetch(`${API_BASE_URL}/api/profile-setup/roles-status`);
             if (!resp || !resp.ok) return;
@@ -188,6 +197,10 @@ function startRolesPolling() {
                 stopRolesPolling();
                 stopRotatingText();
                 renderRoles(data.roles);
+            } else if (data.status === 'stale') {
+                stopRolesPolling();
+                stopRotatingText();
+                await startClustering();
             }
         } catch (_) {}
     }, 3000);
@@ -324,7 +337,13 @@ function showQueryGenerating() {
 }
 
 function startQueryPolling() {
+    _pollingStartedAt = Date.now();
     _queryPollingId = setInterval(async () => {
+        if (Date.now() - _pollingStartedAt > POLLING_TIMEOUT_MS) {
+            stopQueryPolling();
+            showRetryError();
+            return;
+        }
         try {
             const resp = await apiFetch(`${API_BASE_URL}/api/profile-setup/query-status`);
             if (!resp || !resp.ok) return;
@@ -333,6 +352,9 @@ function startQueryPolling() {
             if (data.status === 'complete') {
                 stopQueryPolling();
                 window.location.href = '/settings/?profile_ready=1';
+            } else if (data.status === 'stale') {
+                stopQueryPolling();
+                showRetryError();
             }
         } catch (_) {}
     }, 3000);
@@ -343,6 +365,52 @@ function stopQueryPolling() {
         clearInterval(_queryPollingId);
         _queryPollingId = null;
     }
+}
+
+// ============================================================================
+// RETRY / ERROR UI
+// ============================================================================
+
+function showRetryError() {
+    const loading = document.getElementById('clusteringLoading');
+    const queryGen = document.getElementById('queryGenerating');
+    if (loading) loading.classList.add('hidden');
+    if (queryGen) queryGen.classList.add('hidden');
+
+    let errorEl = document.getElementById('setupError');
+    if (!errorEl) {
+        errorEl = document.createElement('div');
+        errorEl.id = 'setupError';
+        errorEl.className = 'fade-in';
+        document.getElementById('contentWrapper').appendChild(errorEl);
+    }
+    errorEl.innerHTML = `
+        <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+            <div class="flex flex-col items-center text-center space-y-6 py-4">
+                <div class="w-16 h-16 rounded-full bg-error/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-error text-3xl">error</span>
+                </div>
+                <div class="space-y-3">
+                    <h2 class="text-2xl font-bold tracking-tight text-on-surface">Что-то пошло не так</h2>
+                    <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                        Анализ занял слишком много времени. Попробуйте запустить заново.
+                    </p>
+                </div>
+                <button onclick="retrySetup()" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold text-base cursor-pointer">
+                    Попробовать снова
+                </button>
+            </div>
+        </div>`;
+}
+
+async function retrySetup() {
+    const errorEl = document.getElementById('setupError');
+    if (errorEl) errorEl.remove();
+
+    const loading = document.getElementById('clusteringLoading');
+    if (loading) loading.classList.remove('hidden');
+
+    await startClustering();
 }
 
 // ============================================================================
