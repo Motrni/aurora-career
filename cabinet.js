@@ -10,6 +10,7 @@ const API_BASE_URL = window.AuroraSession
         : 'https://api.aurora-career.ru');
 
 let currentUser = null;
+let _loadedTariffs = [];
 
 // ============================================================================
 // API HELPER
@@ -140,6 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         loadSessions();
         initCabinetBoostModal();
+        initTariffModal();
 
     } catch (e) {
         console.error('[Cabinet] Init error:', e);
@@ -1019,6 +1021,7 @@ async function loadTariffs() {
 
         const data = await resp.json();
         const tariffs = data.tariffs || [];
+        _loadedTariffs = tariffs;
 
         if (tariffs.length === 0) {
             container.innerHTML = '';
@@ -1036,7 +1039,7 @@ async function loadTariffs() {
 
             return `
             <div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/5 cursor-pointer hover:border-primary/20 transition-all ${isPopular ? 'tariff-popular' : ''}"
-                 onclick="handlePurchase('${escapeHtml(t.plan_code)}')" data-plan="${escapeHtml(t.plan_code)}">
+                 onclick="showTariffModal('${escapeHtml(t.plan_code)}')" data-plan="${escapeHtml(t.plan_code)}">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
@@ -1099,6 +1102,91 @@ async function handlePurchase(planCode) {
             card.style.pointerEvents = 'auto';
         }
     }
+}
+
+// ============================================================================
+// TARIFF MODAL — транзитное окно перед оплатой тарифа
+// ============================================================================
+
+function showTariffModal(planCode) {
+    const t = _loadedTariffs.find((x) => x.plan_code === planCode);
+    if (!t) {
+        handlePurchase(planCode);
+        return;
+    }
+
+    const modal = document.getElementById('tariffModal');
+    const card = document.getElementById('tariffModalCard');
+    if (!modal) return;
+
+    const pricePerDay = Math.round(t.price / t.duration_days);
+    const months = Math.round(t.duration_days / 30);
+
+    const titleEl = document.getElementById('tariffModalTitle');
+    const priceEl = document.getElementById('tariffModalPrice');
+    const metaEl = document.getElementById('tariffModalMeta');
+    const daysEl = document.getElementById('tariffModalDaysFeature');
+    const payBtn = document.getElementById('tariffModalPayBtn');
+
+    if (titleEl) titleEl.textContent = t.name;
+    if (priceEl) priceEl.textContent = t.price.toLocaleString('ru-RU');
+    if (metaEl) metaEl.textContent = `${t.duration_days} дней · ${pricePerDay}\u00a0₽/день`;
+    if (daysEl) {
+        daysEl.innerHTML = `<strong>${t.duration_days} дней</strong> доступа — нашли работу раньше? Просто отмените, без штрафов`;
+    }
+    if (payBtn) payBtn.dataset.plan = planCode;
+
+    modal.classList.remove('pointer-events-none');
+    modal.setAttribute('aria-hidden', 'false');
+    lockBodyScroll();
+
+    requestAnimationFrame(() => {
+        modal.classList.add('opacity-100');
+        modal.classList.remove('opacity-0');
+        card.classList.add('scale-100', 'opacity-100');
+        card.classList.remove('scale-95', 'opacity-0');
+    });
+}
+
+function closeTariffModal() {
+    const modal = document.getElementById('tariffModal');
+    const card = document.getElementById('tariffModalCard');
+    if (!modal) return;
+
+    modal.classList.remove('opacity-100');
+    modal.classList.add('opacity-0');
+    card.classList.remove('scale-100', 'opacity-100');
+    card.classList.add('scale-95', 'opacity-0');
+
+    const onDone = () => {
+        modal.classList.add('pointer-events-none');
+        modal.setAttribute('aria-hidden', 'true');
+        unlockBodyScroll();
+        modal.removeEventListener('transitionend', onDone);
+    };
+    modal.addEventListener('transitionend', onDone, { once: true });
+}
+
+function initTariffModal() {
+    const modal = document.getElementById('tariffModal');
+    const backdrop = document.getElementById('tariffModalBackdrop');
+    const closeBtn = document.getElementById('tariffModalClose');
+    const payBtn = document.getElementById('tariffModalPayBtn');
+
+    closeBtn?.addEventListener('click', closeTariffModal);
+
+    backdrop?.addEventListener('click', closeTariffModal);
+
+    payBtn?.addEventListener('click', () => {
+        const planCode = payBtn.dataset.plan;
+        closeTariffModal();
+        handlePurchase(planCode);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || !modal || modal.getAttribute('aria-hidden') === 'true') return;
+        closeTariffModal();
+    });
 }
 
 function _showPaymentRedirectOverlay() {

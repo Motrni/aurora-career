@@ -735,7 +735,76 @@ function toggleMobileMenu() {
     </div>
 </div>
 
-<script src="cabinet.js?v=4.6"></script>
+<!-- Транзитная модалка тарифа -->
+<div id="tariffModal" class="pointer-events-none fixed inset-0 z-[150] flex items-center justify-center overflow-y-auto overscroll-contain p-4 md:p-6 opacity-0 transition-opacity duration-300 ease-out" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="tariffModalTitle">
+    <div class="absolute inset-0 z-0 bg-[#100d17]/82 backdrop-blur-md" id="tariffModalBackdrop" tabindex="-1"></div>
+    <div id="tariffModalCard" class="relative z-10 my-auto w-full max-w-md shrink-0 glass-panel rounded-2xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.55)] border border-white/5 scale-95 opacity-0 transition-all duration-300 ease-out">
+        <div class="absolute -top-20 -right-20 w-56 h-56 bg-primary-container/20 rounded-full blur-[70px] pointer-events-none"></div>
+        <div class="absolute -bottom-20 -left-20 w-56 h-56 bg-secondary-container/10 rounded-full blur-[70px] pointer-events-none"></div>
+
+        <!-- Хедер -->
+        <div class="relative px-6 pt-6 pb-4 flex justify-between items-start gap-3">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-widest text-primary mb-1">Тариф</p>
+                <h2 id="tariffModalTitle" class="text-2xl font-black tracking-tight text-on-surface leading-tight"></h2>
+            </div>
+            <button type="button" id="tariffModalClose" class="inline-flex items-center justify-center size-10 shrink-0 rounded-full hover:bg-white/10 transition-colors text-on-surface-variant mt-0.5" aria-label="Закрыть">
+                <span class="material-symbols-outlined text-2xl leading-none">close</span>
+            </button>
+        </div>
+
+        <!-- Продающий блок -->
+        <div class="relative px-6 pb-5">
+            <p class="text-on-surface-variant text-sm leading-relaxed">
+                Пока вы занимаетесь делами — <strong class="text-on-surface">Аврора откликается на вакансии за вас</strong>. Каждый день, без выходных, без пропусков.
+            </p>
+        </div>
+
+        <!-- Цена -->
+        <div class="relative mx-6 mb-5 px-4 py-3 rounded-xl bg-primary/8 border border-primary/15 flex items-baseline justify-between gap-2">
+            <div class="flex items-baseline gap-1.5">
+                <span id="tariffModalPrice" class="text-3xl font-black text-on-surface"></span>
+                <span class="text-on-surface-variant text-base">₽</span>
+            </div>
+            <span id="tariffModalMeta" class="text-xs text-on-surface-variant/70 text-right leading-snug"></span>
+        </div>
+
+        <!-- Что входит -->
+        <div class="relative px-6 pb-2 space-y-3">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant/60">Что вы получаете</p>
+            <div class="space-y-2.5">
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                    <p class="text-sm text-on-surface leading-snug"><strong>До 20 откликов в день</strong> — автопилот или ручной режим на ваш выбор</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                    <p class="text-sm text-on-surface leading-snug"><strong>Анализ резюме</strong> — Аврора найдёт слабые места и объяснит, почему вас могут не звать на интервью</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                    <p class="text-sm text-on-surface leading-snug"><strong>Улучшение резюме</strong> — умные подсказки, которые повышают шанс попасть в ответ работодателя</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                    <p id="tariffModalDaysFeature" class="text-sm text-on-surface leading-snug"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="relative px-6 pt-5 pb-6 space-y-3">
+            <button type="button" id="tariffModalPayBtn" class="w-full px-8 py-4 rounded-xl luxury-gradient text-white font-bold text-base shadow-[0_10px_30px_rgba(90,48,208,0.35)] hover:brightness-110 active:scale-[0.98] transition-all">
+                Перейти к оплате
+            </button>
+            <p class="text-center text-[11px] text-on-surface-variant/50 leading-relaxed">
+                Безопасная оплата через CloudPayments. Отменить подписку можно в любой момент в личном кабинете.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script src="cabinet.js?v=4.7"></script>
 <script src="support-widget.js?v=1"></script>
 </body>
 </html>
