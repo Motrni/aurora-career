@@ -1117,10 +1117,10 @@ function showTariffModal(planCode) {
 
     const modal = document.getElementById('tariffModal');
     const card = document.getElementById('tariffModalCard');
+    const backdrop = document.getElementById('tariffModalBackdrop');
     if (!modal) return;
 
     const pricePerDay = Math.round(t.price / t.duration_days);
-    const months = Math.round(t.duration_days / 30);
 
     const titleEl = document.getElementById('tariffModalTitle');
     const priceEl = document.getElementById('tariffModalPrice');
@@ -1140,9 +1140,11 @@ function showTariffModal(planCode) {
     modal.setAttribute('aria-hidden', 'false');
     lockBodyScroll();
 
+    // Бэкдроп и карточка анимируются независимо — никаких родительских opacity,
+    // поэтому нет момента «каши» из двух полупрозрачных слоёв одновременно.
     requestAnimationFrame(() => {
-        modal.classList.add('opacity-100');
-        modal.classList.remove('opacity-0');
+        backdrop.classList.add('opacity-100');
+        backdrop.classList.remove('opacity-0');
         card.classList.add('scale-100', 'opacity-100');
         card.classList.remove('scale-95', 'opacity-0');
     });
@@ -1151,20 +1153,21 @@ function showTariffModal(planCode) {
 function closeTariffModal() {
     const modal = document.getElementById('tariffModal');
     const card = document.getElementById('tariffModalCard');
+    const backdrop = document.getElementById('tariffModalBackdrop');
     if (!modal) return;
 
-    modal.classList.remove('opacity-100');
-    modal.classList.add('opacity-0');
+    backdrop.classList.remove('opacity-100');
+    backdrop.classList.add('opacity-0');
     card.classList.remove('scale-100', 'opacity-100');
     card.classList.add('scale-95', 'opacity-0');
 
+    // transitionend теперь слушаем на карточке (родитель больше не анимируется)
     const onDone = () => {
         modal.classList.add('pointer-events-none');
         modal.setAttribute('aria-hidden', 'true');
         unlockBodyScroll();
-        modal.removeEventListener('transitionend', onDone);
     };
-    modal.addEventListener('transitionend', onDone, { once: true });
+    card.addEventListener('transitionend', onDone, { once: true });
 }
 
 function initTariffModal() {
