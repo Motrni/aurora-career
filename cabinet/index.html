@@ -437,6 +437,31 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                 </section>
                 </div>
 
+                <!-- Все тарифы включают -->
+                <div id="tariffFeatures" class="hidden p-5 rounded-2xl bg-surface-container-low/50 border border-outline-variant/5 space-y-2.5">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant/60 mb-3">Все тарифы включают</p>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        <p class="text-sm text-on-surface leading-snug">До 20 откликов в день — автопилот или ручной режим на ваш выбор</p>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        <p class="text-sm text-on-surface leading-snug">Сопроводительное письмо под каждую вакансию</p>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        <p class="text-sm text-on-surface leading-snug">Анализ резюме</p>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        <p class="text-sm text-on-surface leading-snug">Улучшение резюме через AI-интервью</p>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        <p class="text-sm text-on-surface leading-snug">Нашли работу раньше срока — отмените подписку в один клик, новых списаний не будет</p>
+                    </div>
+                </div>
+
                 <!-- Tariff grid -->
                 <div id="tariffGrid" class="hidden space-y-3">
                     <div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/5 cursor-pointer hover:border-[#653edb]/40 transition-all" onclick="handleActivateTrial()" id="trialCard">
@@ -753,11 +778,15 @@ function toggleMobileMenu() {
             </button>
         </div>
 
-        <!-- Продающий блок -->
-        <div class="relative px-6 pb-5">
-            <p class="text-on-surface-variant text-sm leading-relaxed">
-                Пока вы занимаетесь делами — <strong class="text-on-surface">Аврора откликается на вакансии за вас</strong>. Каждый день, без выходных, без пропусков.
-            </p>
+        <!-- Описание тарифа (из card_description) -->
+        <div class="relative px-6 pb-5" id="tariffModalDescWrap">
+            <p id="tariffModalDesc" class="text-on-surface-variant text-sm leading-relaxed"></p>
+        </div>
+
+        <!-- Бейдж буста (показывается если included_boost) -->
+        <div id="tariffModalBoostBadge" class="hidden relative mx-6 mb-4 px-4 py-2.5 rounded-xl bg-[#653edb]/10 border border-[#653edb]/20 flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings:'FILL' 1;">bolt</span>
+            <p id="tariffModalBoostText" class="text-sm text-on-surface font-medium"></p>
         </div>
 
         <!-- Цена -->
@@ -767,29 +796,6 @@ function toggleMobileMenu() {
                 <span class="text-on-surface-variant text-base">₽</span>
             </div>
             <span id="tariffModalMeta" class="text-xs text-on-surface-variant/70 text-right leading-snug"></span>
-        </div>
-
-        <!-- Что входит -->
-        <div class="relative px-6 pb-2 space-y-3">
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant/60">Что вы получаете</p>
-            <div class="space-y-2.5">
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
-                    <p class="text-sm text-on-surface leading-snug"><strong>До 20 откликов в день</strong> — автопилот или ручной режим на ваш выбор</p>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
-                    <p class="text-sm text-on-surface leading-snug"><strong>Анализ резюме</strong> — Аврора найдёт слабые места и объяснит, почему вас могут не звать на интервью</p>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
-                    <p class="text-sm text-on-surface leading-snug"><strong>Улучшение резюме</strong> — умные подсказки, которые повышают шанс попасть в ответ работодателя</p>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
-                    <p id="tariffModalDaysFeature" class="text-sm text-on-surface leading-snug"></p>
-                </div>
-            </div>
         </div>
 
         <!-- CTA -->
@@ -804,7 +810,7 @@ function toggleMobileMenu() {
     </div>
 </div>
 
-<script src="cabinet.js?v=4.7"></script>
+<script src="cabinet.js?v=4.8"></script>
 <script src="support-widget.js?v=1"></script>
 </body>
 </html>

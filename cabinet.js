@@ -172,8 +172,13 @@ async function renderCabinet(user) {
         document.getElementById('hhLinkBanner').classList.remove('hidden');
     }
 
-    if (user.subscription_status === 'none' || user.subscription_status === 'ended_trial' || user.subscription_status === 'ended_active') {
+    const showTariffs = user.subscription_status === 'none' || user.subscription_status === 'ended_trial' || user.subscription_status === 'ended_active';
+    const featuresBlock = document.getElementById('tariffFeatures');
+    if (showTariffs) {
         await loadTariffs();
+        if (featuresBlock) featuresBlock.classList.remove('hidden');
+    } else {
+        if (featuresBlock) featuresBlock.classList.add('hidden');
     }
 
     const hasAccess = user.subscription_status === 'trial' || user.subscription_status === 'active';
@@ -1029,13 +1034,13 @@ async function loadTariffs() {
             return;
         }
 
-        const popularIdx = tariffs.length > 1 ? 1 : 0;
-
-        container.innerHTML = tariffs.map((t, i) => {
+        container.innerHTML = tariffs.map((t) => {
             const pricePerDay = (t.price / t.duration_days).toFixed(0);
-            const isPopular = i === popularIdx;
+            const isPopular = !!t.is_popular;
             const months = Math.round(t.duration_days / 30);
             const monthLabel = 'мес';
+            const hasBoost = t.included_boost_20 || t.included_boost_40;
+            const boostAmount = t.included_boost_40 ? 40 : (t.included_boost_20 ? 20 : 0);
 
             return `
             <div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/5 cursor-pointer hover:border-primary/20 transition-all ${isPopular ? 'tariff-popular' : ''}"
@@ -1048,6 +1053,7 @@ async function loadTariffs() {
                         <div>
                             <span class="text-sm font-semibold text-on-surface">${escapeHtml(t.name)}</span>
                             <p class="text-on-surface-variant text-xs mt-0.5">${t.duration_days} дней &#8226; ${pricePerDay} ₽/день</p>
+                            ${hasBoost ? `<p class="text-xs text-primary font-medium mt-0.5">Буст +${boostAmount} включён</p>` : ''}
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0 ml-3">
@@ -1123,17 +1129,29 @@ function showTariffModal(planCode) {
     const pricePerDay = Math.round(t.price / t.duration_days);
 
     const titleEl = document.getElementById('tariffModalTitle');
+    const descEl = document.getElementById('tariffModalDesc');
     const priceEl = document.getElementById('tariffModalPrice');
     const metaEl = document.getElementById('tariffModalMeta');
-    const daysEl = document.getElementById('tariffModalDaysFeature');
+    const boostBadge = document.getElementById('tariffModalBoostBadge');
+    const boostText = document.getElementById('tariffModalBoostText');
     const payBtn = document.getElementById('tariffModalPayBtn');
 
     if (titleEl) titleEl.textContent = t.name;
+    if (descEl) descEl.textContent = t.card_description || '';
     if (priceEl) priceEl.textContent = t.price.toLocaleString('ru-RU');
     if (metaEl) metaEl.textContent = `${t.duration_days} дней · ${pricePerDay}\u00a0₽/день`;
-    if (daysEl) {
-        daysEl.innerHTML = `<strong>${t.duration_days} дней</strong> доступа — нашли работу раньше? Просто отмените, без штрафов`;
+
+    const hasBoost = t.included_boost_20 || t.included_boost_40;
+    if (boostBadge) {
+        if (hasBoost) {
+            const amt = t.included_boost_40 ? 40 : 20;
+            boostText.textContent = `Буст +${amt} откликов включён в тариф`;
+            boostBadge.classList.remove('hidden');
+        } else {
+            boostBadge.classList.add('hidden');
+        }
     }
+
     if (payBtn) payBtn.dataset.plan = planCode;
 
     modal.classList.remove('pointer-events-none');
