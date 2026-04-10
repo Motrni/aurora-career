@@ -241,8 +241,6 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 /* Активная подписка: переливающаяся изумрудно-фиолетовая обводка */
 .subscription-active-glow {
     position: relative;
-    padding: 2px;
-    margin: -2px;
     border-radius: 1.25rem;
     overflow: hidden;
     /* contain: layout paint — ключевой фикс для мобилок:
@@ -250,12 +248,12 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     contain: layout paint;
     isolation: isolate;
 }
+/* Псевдоэлемент — анимированный conic-градиент под карточкой */
 .subscription-active-glow::before {
     content: '';
     position: absolute;
     top: 50%;
     left: 50%;
-    /* Квадрат = ширина обёртки + scale: не задаём width:300% (на iOS давало лишнюю ширину документа) */
     width: 100%;
     aspect-ratio: 1;
     transform: translate(-50%, -50%) scale(2.75);
@@ -273,13 +271,22 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     animation: sub-aurora-spin 5s linear infinite;
     z-index: 0;
 }
+/* Карточка лежит поверх градиента с зазором 2px через inset shadow */
 .subscription-active-glow #subscriptionCard {
     position: relative;
     z-index: 1;
+    /* Отступ от краёв обёртки — создаёт видимую 2px полоску glow */
+    margin: 2px;
+    border-radius: calc(1.25rem - 3px);
     border-color: transparent;
     background: rgba(29, 26, 36, 0.97);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
+}
+/* Компенсируем 2px margin чтобы обёртка не была выше соседней колонки */
+#subscriptionCardOuter.subscription-active-glow {
+    margin-top: -2px;
+    margin-bottom: -2px;
 }
 @keyframes sub-aurora-spin {
     to { transform: translate(-50%, -50%) scale(2.75) rotate(360deg); }
@@ -838,7 +845,7 @@ function toggleMobileMenu() {
     </div>
 </div>
 
-<script src="cabinet.js?v=4.9"></script>
+<script src="cabinet.js?v=5.0"></script>
 <script src="support-widget.js?v=1"></script>
 </body>
 </html>
