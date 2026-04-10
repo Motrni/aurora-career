@@ -505,21 +505,21 @@ function updateSubscriptionCard(user) {
             break;
         }
         case 'ended_trial': {
-            card.className = 'p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5 relative overflow-hidden';
+            card.className = 'cab-card p-6 md:p-8 rounded-2xl relative overflow-hidden';
             icon.textContent = 'timer_off';
             title.textContent = 'Пробный период закончился';
             desc.textContent = 'Выберите тариф ниже, чтобы продолжить пользоваться сервисом.';
             break;
         }
         case 'ended_active': {
-            card.className = 'p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5 relative overflow-hidden';
+            card.className = 'cab-card p-6 md:p-8 rounded-2xl relative overflow-hidden';
             icon.textContent = 'event_busy';
             title.textContent = 'Подписка истекла';
             desc.textContent = 'Продлите подписку, чтобы вернуть доступ к настройкам поиска и автопилоту.';
             break;
         }
         default: {
-            card.className = 'p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5 relative overflow-hidden';
+            card.className = 'cab-card p-6 md:p-8 rounded-2xl relative overflow-hidden';
             icon.textContent = 'credit_card_off';
             iconWrap.style.background = 'rgba(101,62,219,0.15)';
             title.textContent = 'Подписка не активна';
@@ -1043,12 +1043,12 @@ async function loadTariffs() {
             const boostAmount = t.included_boost_40 ? 40 : (t.included_boost_20 ? 20 : 0);
 
             return `
-            <div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/5 cursor-pointer hover:border-primary/20 transition-all ${isPopular ? 'tariff-popular' : ''}"
+            <div class="p-5 rounded-2xl cab-card cursor-pointer transition-all ${isPopular ? 'tariff-popular' : ''}"
                  onclick="showTariffModal('${escapeHtml(t.plan_code)}')" data-plan="${escapeHtml(t.plan_code)}">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
-                            <span class="material-symbols-outlined text-on-surface-variant">${months <= 1 ? 'bolt' : months <= 2 ? 'speed' : 'workspace_premium'}</span>
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(101,62,219,0.12);">
+                            <span class="material-symbols-outlined text-primary">${months <= 1 ? 'bolt' : months <= 2 ? 'speed' : 'workspace_premium'}</span>
                         </div>
                         <div>
                             <span class="text-sm font-semibold text-on-surface">${escapeHtml(t.name)}</span>

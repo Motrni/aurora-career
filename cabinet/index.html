@@ -170,6 +170,33 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 }
 .price-per-day { font-size: 11px; color: #938ea0; }
 
+.cab-card {
+    background: rgba(29, 26, 36, 0.65);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(72, 68, 85, 0.18);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cab-card:hover {
+    border-color: rgba(101, 62, 219, 0.3);
+    box-shadow: 0 0 20px rgba(101, 62, 219, 0.06);
+}
+
+.cab-nav-card {
+    position: relative;
+    overflow: hidden;
+}
+.cab-nav-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: linear-gradient(135deg, rgba(101, 62, 219, 0.04), transparent 60%);
+    transition: opacity 0.25s;
+    pointer-events: none;
+}
+.cab-nav-card:hover::after { opacity: 1; }
+
 /* Daily stats: Y-axis + narrow capsule bars */
 .stats-chart-area {
     --stats-chart-h: 9rem;
@@ -215,6 +242,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 .subscription-active-glow {
     position: relative;
     padding: 2px;
+    margin: -2px;
     border-radius: 1.25rem;
     overflow: hidden;
     /* contain: layout paint — ключевой фикс для мобилок:
@@ -438,7 +466,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                 </div>
 
                 <!-- Все тарифы включают -->
-                <div id="tariffFeatures" class="hidden p-5 rounded-2xl bg-surface-container-low/50 border border-outline-variant/5 space-y-2.5">
+                <div id="tariffFeatures" class="hidden p-5 rounded-2xl glass-panel border border-outline-variant/5 space-y-2.5">
                     <p class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant/60 mb-3">Все тарифы включают</p>
                     <div class="flex items-start gap-2.5">
                         <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
@@ -464,7 +492,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 
                 <!-- Tariff grid -->
                 <div id="tariffGrid" class="hidden space-y-3">
-                    <div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/5 cursor-pointer hover:border-[#653edb]/40 transition-all" onclick="handleActivateTrial()" id="trialCard">
+                    <div class="p-5 rounded-2xl cab-card cursor-pointer transition-all" onclick="handleActivateTrial()" id="trialCard">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-[#653edb]/15 flex items-center justify-center flex-shrink-0">
                                 <span class="material-symbols-outlined text-primary">rocket_launch</span>
@@ -484,7 +512,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                 </div>
 
                 <!-- Daily stats dashboard -->
-                <section id="dailyStatsCard" class="hidden p-4 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5 overflow-hidden">
+                <section id="dailyStatsCard" class="hidden p-4 md:p-8 rounded-2xl cab-card overflow-hidden">
                     <div class="mb-4 md:mb-6">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Отклики за неделю</h2>
                         <p class="text-on-surface-variant text-xs mt-0.5">Последние 7 дней</p>
@@ -516,13 +544,13 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             </div><!-- End left column -->
 
             <!-- Right column -->
-            <div class="lg:col-span-5 space-y-6 md:space-y-8 min-w-0">
+            <div class="lg:col-span-5 space-y-6 md:space-y-8 min-w-0 lg:sticky lg:top-6 lg:self-start">
 
                 <!-- Resume selector -->
-                <div id="resumeSelectCard" class="hidden p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                <div id="resumeSelectCard" class="hidden p-5 md:p-6 rounded-2xl cab-card">
                     <div class="flex items-center gap-4 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
-                            <span class="material-symbols-outlined text-on-surface-variant">description</span>
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(101,62,219,0.10);">
+                            <span class="material-symbols-outlined text-primary/70">description</span>
                         </div>
                         <span class="text-sm font-medium text-on-surface">Резюме для откликов</span>
                     </div>
@@ -551,10 +579,10 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                 </div>
 
                 <!-- Navigation cards -->
-                <a href="/settings/" id="navSettings" class="block p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 nav-locked cursor-pointer hover:border-primary/20 transition-all group">
+                <a href="/settings/" id="navSettings" class="block p-5 md:p-6 rounded-2xl cab-card cab-nav-card nav-locked cursor-pointer transition-all group">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
-                            <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">tune</span>
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(101,62,219,0.10);">
+                            <span class="material-symbols-outlined text-primary/70 group-hover:text-primary transition-colors">tune</span>
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2">
@@ -567,10 +595,10 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                     </div>
                 </a>
 
-                <a href="/responses/" id="navResponses" class="block p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 nav-locked cursor-pointer hover:border-primary/20 transition-all group">
+                <a href="/responses/" id="navResponses" class="block p-5 md:p-6 rounded-2xl cab-card cab-nav-card nav-locked cursor-pointer transition-all group">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
-                            <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">send</span>
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(101,62,219,0.10);">
+                            <span class="material-symbols-outlined text-primary/70 group-hover:text-primary transition-colors">send</span>
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2">
@@ -584,10 +612,10 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                 </a>
 
                 <!-- Telegram -->
-                <div class="p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 hidden" id="telegramCard">
+                <div class="p-5 md:p-6 rounded-2xl cab-card hidden" id="telegramCard">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center flex-shrink-0">
-                            <span class="material-symbols-outlined text-on-surface-variant">link</span>
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(101,62,219,0.10);">
+                            <span class="material-symbols-outlined text-primary/70">link</span>
                         </div>
                         <div class="flex-1 min-w-0">
                             <span class="text-sm font-medium text-on-surface">Привязать Telegram</span>
@@ -599,7 +627,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                     </div>
                 </div>
 
-                <div class="p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 hidden" id="telegramLinkedCard">
+                <div class="p-5 md:p-6 rounded-2xl cab-card hidden" id="telegramLinkedCard">
                     <div class="flex items-center gap-4">
                         <div class="w-10 h-10 rounded-xl bg-primary-container/20 flex items-center justify-center flex-shrink-0">
                             <span class="material-symbols-outlined text-primary">check_circle</span>
@@ -612,7 +640,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                 </div>
 
                 <!-- Sessions -->
-                <div class="p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10">
+                <div class="p-5 md:p-6 rounded-2xl cab-card">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-2xl">devices</span>
@@ -810,7 +838,7 @@ function toggleMobileMenu() {
     </div>
 </div>
 
-<script src="cabinet.js?v=4.8"></script>
+<script src="cabinet.js?v=4.9"></script>
 <script src="support-widget.js?v=1"></script>
 </body>
 </html>
