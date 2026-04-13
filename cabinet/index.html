@@ -858,9 +858,12 @@ function toggleMobileMenu() {
 
         <!-- Цена -->
         <div class="relative mx-6 mb-5 px-4 py-3 rounded-xl bg-primary/8 border border-primary/15 flex items-baseline justify-between gap-2">
-            <div class="flex items-baseline gap-1.5">
-                <span id="tariffModalPrice" class="text-3xl font-black text-on-surface"></span>
-                <span class="text-on-surface-variant text-base">₽</span>
+            <div>
+                <span id="tariffModalOldPrice" class="hidden text-sm text-on-surface-variant/60 line-through"></span>
+                <div class="flex items-baseline gap-1.5">
+                    <span id="tariffModalPrice" class="text-3xl font-black text-on-surface"></span>
+                    <span class="text-on-surface-variant text-base">₽</span>
+                </div>
             </div>
             <span id="tariffModalMeta" class="text-xs text-on-surface-variant/70 text-right leading-snug"></span>
         </div>
@@ -877,7 +880,7 @@ function toggleMobileMenu() {
     </div>
 </div>
 
-<script src="cabinet.js?v=5.1"></script>
+<script src="cabinet.js?v=5.2"></script>
 <script src="support-widget.js?v=1"></script>
 </body>
 </html>

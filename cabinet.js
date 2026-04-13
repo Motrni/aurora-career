@@ -1038,6 +1038,8 @@ async function applyPromoCode() {
             document.getElementById('promoAppliedCode').textContent = `Промокод ${code} применён`;
             document.getElementById('promoAppliedMentor').textContent =
                 [data.mentor_name, data.benefit].filter(Boolean).join(' — ');
+
+            loadTariffs();
         } else {
             errEl.textContent = data.detail || 'Не удалось применить промокод';
             errEl.classList.remove('hidden');
@@ -1119,12 +1121,19 @@ async function loadTariffs() {
         }
 
         container.innerHTML = tariffs.map((t) => {
-            const pricePerDay = (t.price / t.duration_days).toFixed(0);
+            const hasDiscount = t.discounted_price != null && t.discounted_price < t.price;
+            const showPrice = hasDiscount ? t.discounted_price : t.price;
+            const pricePerDay = (showPrice / t.duration_days).toFixed(0);
             const isPopular = !!t.is_popular;
             const months = Math.round(t.duration_days / 30);
             const monthLabel = 'мес';
             const hasBoost = t.included_boost_20 || t.included_boost_40;
             const boostAmount = t.included_boost_40 ? 40 : (t.included_boost_20 ? 20 : 0);
+
+            const priceHtml = hasDiscount
+                ? `<div class="text-xs text-on-surface-variant/60 line-through">${t.price.toLocaleString('ru-RU')} ₽</div>
+                   <div class="text-lg font-bold text-primary">${showPrice.toLocaleString('ru-RU')} ₽</div>`
+                : `<div class="text-lg font-bold text-on-surface">${t.price.toLocaleString('ru-RU')} ₽</div>`;
 
             return `
             <div class="p-5 rounded-2xl cab-card cursor-pointer transition-all ${isPopular ? 'tariff-popular' : ''}"
@@ -1141,7 +1150,7 @@ async function loadTariffs() {
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0 ml-3">
-                        <div class="text-lg font-bold text-on-surface">${t.price.toLocaleString('ru-RU')} ₽</div>
+                        ${priceHtml}
                         <div class="price-per-day">${months} ${monthLabel}</div>
                     </div>
                 </div>
@@ -1210,11 +1219,14 @@ function showTariffModal(planCode) {
     const backdrop = document.getElementById('tariffModalBackdrop');
     if (!modal) return;
 
-    const pricePerDay = Math.round(t.price / t.duration_days);
+    const hasDiscount = t.discounted_price != null && t.discounted_price < t.price;
+    const showPrice = hasDiscount ? t.discounted_price : t.price;
+    const pricePerDay = Math.round(showPrice / t.duration_days);
 
     const titleEl = document.getElementById('tariffModalTitle');
     const descEl = document.getElementById('tariffModalDesc');
     const priceEl = document.getElementById('tariffModalPrice');
+    const oldPriceEl = document.getElementById('tariffModalOldPrice');
     const metaEl = document.getElementById('tariffModalMeta');
     const boostBadge = document.getElementById('tariffModalBoostBadge');
     const boostText = document.getElementById('tariffModalBoostText');
@@ -1222,7 +1234,15 @@ function showTariffModal(planCode) {
 
     if (titleEl) titleEl.textContent = t.name;
     if (descEl) descEl.textContent = t.card_description || '';
-    if (priceEl) priceEl.textContent = t.price.toLocaleString('ru-RU');
+    if (priceEl) priceEl.textContent = showPrice.toLocaleString('ru-RU');
+    if (oldPriceEl) {
+        if (hasDiscount) {
+            oldPriceEl.textContent = t.price.toLocaleString('ru-RU') + ' ₽';
+            oldPriceEl.classList.remove('hidden');
+        } else {
+            oldPriceEl.classList.add('hidden');
+        }
+    }
     if (metaEl) metaEl.textContent = `${t.duration_days} дней · ${pricePerDay}\u00a0₽/день`;
 
     const hasBoost = t.included_boost_20 || t.included_boost_40;
