@@ -11,6 +11,7 @@ const API_BASE_URL = window.AuroraSession
 
 let currentUser = null;
 let _loadedTariffs = [];
+let _paymentRedirectPollTimer = null;
 
 // ============================================================================
 // API HELPER
@@ -1314,17 +1315,38 @@ function initTariffModal() {
     });
 }
 
+function _restoreTariffCardsAfterPaymentDismiss() {
+    document.querySelectorAll('[data-plan]').forEach((el) => {
+        el.style.opacity = '';
+        el.style.pointerEvents = '';
+    });
+}
+
+function _stopPaymentRedirectPoll() {
+    if (_paymentRedirectPollTimer !== null) {
+        clearInterval(_paymentRedirectPollTimer);
+        _paymentRedirectPollTimer = null;
+    }
+}
+
 function _showPaymentRedirectOverlay() {
     let overlay = document.getElementById('paymentRedirectOverlay');
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'paymentRedirectOverlay';
         overlay.innerHTML = `
-            <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
-                <div class="payment-redirect-spinner"></div>
-                <p id="paymentRedirectText" style="color:#e7e0ef;font-size:16px;font-weight:600;text-align:center;">
-                    Перенаправление на страницу оплаты…
-                </p>
+            <div style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:24px;">
+                <button type="button" id="paymentRedirectClose" aria-label="Закрыть"
+                    class="payment-redirect-close"
+                    style="position:absolute;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));width:44px;height:44px;border-radius:12px;border:1px solid rgba(204,190,255,0.25);background:rgba(33,30,41,0.9);color:#e7e0ef;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s;z-index:2;">
+                    ×
+                </button>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:20px;max-width:min(100%,360px);">
+                    <div class="payment-redirect-spinner"></div>
+                    <p id="paymentRedirectText" style="color:#e7e0ef;font-size:16px;font-weight:600;text-align:center;margin:0;">
+                        Перенаправление на страницу оплаты…
+                    </p>
+                </div>
             </div>`;
         Object.assign(overlay.style, {
             position: 'fixed', inset: '0', zIndex: '9999',
@@ -1333,6 +1355,21 @@ function _showPaymentRedirectOverlay() {
             opacity: '0', transition: 'opacity 0.25s ease',
         });
         document.body.appendChild(overlay);
+
+        const closeBtn = overlay.querySelector('#paymentRedirectClose');
+        if (closeBtn) {
+            closeBtn.addEventListener('mouseenter', () => {
+                closeBtn.style.background = 'rgba(101,62,219,0.25)';
+                closeBtn.style.borderColor = 'rgba(204,190,255,0.45)';
+            });
+            closeBtn.addEventListener('mouseleave', () => {
+                closeBtn.style.background = 'rgba(33,30,41,0.9)';
+                closeBtn.style.borderColor = 'rgba(204,190,255,0.25)';
+            });
+            closeBtn.addEventListener('click', () => {
+                _hidePaymentRedirectOverlay();
+            });
+        }
 
         if (!document.getElementById('paymentRedirectSpinnerStyle')) {
             const style = document.createElement('style');
@@ -1361,6 +1398,8 @@ function _updatePaymentOverlayOpened() {
 }
 
 function _hidePaymentRedirectOverlay() {
+    _stopPaymentRedirectPoll();
+    _restoreTariffCardsAfterPaymentDismiss();
     const overlay = document.getElementById('paymentRedirectOverlay');
     if (!overlay) return;
     overlay.style.opacity = '0';
@@ -1368,12 +1407,13 @@ function _hidePaymentRedirectOverlay() {
 }
 
 function _pollPaymentStatus() {
+    _stopPaymentRedirectPoll();
     let attempts = 0;
     const maxAttempts = 60;
-    const interval = setInterval(async () => {
+    _paymentRedirectPollTimer = setInterval(async () => {
         attempts++;
         if (attempts > maxAttempts) {
-            clearInterval(interval);
+            _stopPaymentRedirectPoll();
             _hidePaymentRedirectOverlay();
             window.location.reload();
             return;
@@ -1383,7 +1423,7 @@ function _pollPaymentStatus() {
             if (resp.ok) {
                 const data = await resp.json();
                 if (data.has_access && data.subscription_status === 'active') {
-                    clearInterval(interval);
+                    _stopPaymentRedirectPoll();
                     window.location.reload();
                 }
             }
