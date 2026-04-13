@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         loadSessions();
+        loadPromoStatus();
         initCabinetBoostModal();
         initTariffModal();
 
@@ -967,6 +968,89 @@ async function revokeSession(sessionId) {
             }
         }
     } catch (_) {}
+}
+
+// ============================================================================
+// PROMO CODE (MENTOR)
+// ============================================================================
+
+async function loadPromoStatus() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/mentor/my-promo`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+
+        if (data.applied) {
+            document.getElementById('promoNotApplied').classList.add('hidden');
+            const appliedEl = document.getElementById('promoApplied');
+            appliedEl.classList.remove('hidden');
+            document.getElementById('promoAppliedCode').textContent = `Промокод ${data.promo_code} применён`;
+            const mentorInfo = data.mentor_name || '';
+            const benefitInfo = data.benefit_type === 'discount' ? `Скидка ${data.benefit_value}%` : '';
+            document.getElementById('promoAppliedMentor').textContent =
+                [mentorInfo, benefitInfo].filter(Boolean).join(' — ');
+        }
+    } catch (_) {}
+
+    const pendingCode = localStorage.getItem('aurora_ref_code');
+    if (pendingCode) {
+        const promoInput = document.getElementById('promoInput');
+        if (promoInput && !promoInput.value) {
+            promoInput.value = pendingCode;
+            applyPromoCode();
+        }
+    }
+}
+
+async function applyPromoCode() {
+    const input = document.getElementById('promoInput');
+    const btn = document.getElementById('promoApplyBtn');
+    const errEl = document.getElementById('promoError');
+    errEl.classList.add('hidden');
+
+    const code = input.value.trim();
+    if (!code) {
+        errEl.textContent = 'Введите промокод';
+        errEl.classList.remove('hidden');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/mentor/apply-promo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ promo_code: code }),
+        });
+
+        if (!resp) { btn.disabled = false; btn.textContent = 'Применить'; return; }
+
+        const data = await resp.json();
+
+        if (resp.ok && data.ok) {
+            localStorage.removeItem('aurora_ref_code');
+
+            document.getElementById('promoNotApplied').classList.add('hidden');
+            const appliedEl = document.getElementById('promoApplied');
+            appliedEl.classList.remove('hidden');
+            document.getElementById('promoAppliedCode').textContent = `Промокод ${code} применён`;
+            document.getElementById('promoAppliedMentor').textContent =
+                [data.mentor_name, data.benefit].filter(Boolean).join(' — ');
+        } else {
+            errEl.textContent = data.detail || 'Не удалось применить промокод';
+            errEl.classList.remove('hidden');
+            input.classList.add('shake');
+            setTimeout(() => input.classList.remove('shake'), 500);
+        }
+    } catch (e) {
+        errEl.textContent = 'Ошибка сети';
+        errEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Применить';
+    }
 }
 
 async function handleRevokeAll() {

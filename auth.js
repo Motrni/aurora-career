@@ -9,6 +9,7 @@ const API_BASE_URL = (window.location.hostname.includes('twc1.net') || window.lo
 
 let currentOtpEmail = '';
 let auditSource = null;
+let pendingRefCode = null;
 
 function _getUrlParam(name) {
     return new URLSearchParams(window.location.search).get(name);
@@ -406,6 +407,17 @@ async function handleResetPassword(e) {
 // RESEND TIMER
 // ============================================================================
 
+function _showRefBadge(code) {
+    const registerForm = document.getElementById('registerForm');
+    if (!registerForm || document.getElementById('refBadge')) return;
+    const badge = document.createElement('div');
+    badge.id = 'refBadge';
+    badge.className = 'mx-0 mb-1 rounded-lg px-4 py-2.5 text-sm fade-in';
+    badge.style.cssText = 'background:rgba(101,62,219,0.12);border:1px solid rgba(204,190,255,0.18);color:#ccbeff;display:flex;align-items:center;gap:8px;';
+    badge.innerHTML = '<span style="font-size:18px;line-height:1">&#10003;</span> Промокод <strong>' + code + '</strong> будет применён';
+    registerForm.insertBefore(badge, registerForm.firstChild);
+}
+
 function startResendTimer() {
     const btn = document.getElementById('resendBtn');
     const timerEl = document.getElementById('resendTimer');
@@ -435,6 +447,21 @@ function startResendTimer() {
 document.addEventListener('DOMContentLoaded', async () => {
     const regEmail = document.getElementById('regEmail');
     if (regEmail) regEmail.addEventListener('input', updateRegPasswordChecks);
+
+    // Capture ref code from URL
+    const urlRef = _getUrlParam('ref');
+    if (urlRef) {
+        pendingRefCode = urlRef.trim();
+        localStorage.setItem('aurora_ref_code', pendingRefCode);
+        _showRefBadge(pendingRefCode);
+        switchTab('register');
+    } else {
+        const storedRef = localStorage.getItem('aurora_ref_code');
+        if (storedRef) {
+            pendingRefCode = storedRef;
+            _showRefBadge(pendingRefCode);
+        }
+    }
 
     // Pre-fill from audit
     const urlEmail = _getUrlParam('email');
