@@ -1033,6 +1033,11 @@ async function applyPromoCode() {
         if (resp.ok && data.ok) {
             localStorage.removeItem('aurora_ref_code');
 
+            if (data.access_granted) {
+                _showAccessActivationOverlay(data.access_days || 0);
+                return;
+            }
+
             document.getElementById('promoNotApplied').classList.add('hidden');
             const appliedEl = document.getElementById('promoApplied');
             appliedEl.classList.remove('hidden');
@@ -1054,6 +1059,54 @@ async function applyPromoCode() {
         btn.disabled = false;
         btn.textContent = 'Применить';
     }
+}
+
+function _showAccessActivationOverlay(days) {
+    const overlay = document.createElement('div');
+    overlay.id = 'accessActivationOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px)';
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--md-sys-color-surface-container-highest,#1e1e2e);border-radius:20px;padding:36px 32px;text-align:center;max-width:380px;width:90%';
+
+    const spinner = document.createElement('div');
+    spinner.style.cssText = 'width:48px;height:48px;border:4px solid rgba(255,255,255,0.15);border-top-color:var(--md-sys-color-primary,#a78bfa);border-radius:50%;margin:0 auto 20px;animation:spin 0.8s linear infinite';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:18px;font-weight:700;color:var(--md-sys-color-on-surface,#e2e8f0);margin-bottom:8px';
+    title.textContent = 'Активируем подписку...';
+
+    const sub = document.createElement('div');
+    sub.style.cssText = 'font-size:14px;color:var(--md-sys-color-on-surface-variant,#94a3b8)';
+    sub.textContent = 'Настраиваем ваш доступ';
+
+    card.appendChild(spinner);
+    card.appendChild(title);
+    card.appendChild(sub);
+    overlay.appendChild(card);
+
+    const styleTag = document.createElement('style');
+    styleTag.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(styleTag);
+    document.body.appendChild(overlay);
+
+    const daysLabel = days > 0 ? ` на ${days} дней` : '';
+
+    setTimeout(() => {
+        spinner.style.display = 'none';
+        const check = document.createElement('div');
+        check.style.cssText = 'font-size:48px;margin-bottom:16px';
+        check.textContent = '\u2705';
+        card.insertBefore(check, title);
+        title.textContent = 'Подписка активирована!';
+        sub.textContent = `Полный доступ${daysLabel}. Добро пожаловать!`;
+
+        const btn = document.createElement('button');
+        btn.style.cssText = 'margin-top:24px;padding:12px 32px;background:var(--md-sys-color-primary,#a78bfa);color:var(--md-sys-color-on-primary,#1e1e2e);border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer';
+        btn.textContent = 'Продолжить';
+        btn.onclick = () => window.location.reload();
+        card.appendChild(btn);
+    }, 1500);
 }
 
 async function handleRevokeAll() {
