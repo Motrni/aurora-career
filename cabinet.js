@@ -146,6 +146,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         initCabinetBoostModal();
         initTariffModal();
 
+        if (window.DiscountBanner && data.discount) {
+            window.DiscountBanner.init(data.discount, { onCabinet: true });
+        }
+
     } catch (e) {
         console.error('[Cabinet] Init error:', e);
         window.location.href = '/auth/';
@@ -198,6 +202,13 @@ async function renderCabinet(user) {
 
     document.getElementById('loadingSkeleton').style.display = 'none';
     document.getElementById('mainContent').style.display = '';
+
+    if (window.location.hash === '#tariffGrid') {
+        requestAnimationFrame(function () {
+            var grid = document.getElementById('tariffGrid');
+            if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }
 }
 
 // ============================================================================

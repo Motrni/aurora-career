@@ -77,6 +77,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
                 authMode = 'jwt';
                 if (typeof checkRegModal === 'function') checkRegModal(meData);
+                if (window.DiscountBanner && meData.discount) {
+                    window.DiscountBanner.init(meData.discount, { onCabinet: false });
+                }
             }
         }
     } catch (e) {

@@ -212,10 +212,19 @@
         const employerEl = _el("clResultEmployer");
         const vacancyEl = _el("clResultVacancy");
         const textEl = _el("clResultText");
+        const metaRow = _el("clResultMetaRow");
 
-        if (employerEl) employerEl.textContent = data.employer_name || "";
-        if (vacancyEl) vacancyEl.textContent = data.vacancy_title || "";
+        const emp = (data.employer_name && String(data.employer_name).trim()) || "";
+        const vac = (data.vacancy_title && String(data.vacancy_title).trim()) || "";
+
+        if (employerEl) employerEl.textContent = emp;
+        if (vacancyEl) vacancyEl.textContent = vac;
         if (textEl) textEl.textContent = data.cover_text || "";
+
+        if (metaRow) {
+            if (emp || vac) metaRow.classList.remove("hidden");
+            else metaRow.classList.add("hidden");
+        }
 
         section.classList.remove("hidden");
         section.scrollIntoView({ behavior: "smooth", block: "start" });
