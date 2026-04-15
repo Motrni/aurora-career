@@ -838,6 +838,7 @@ function initCabinetBoostModal() {
 
 function updateNavAccess(status, activeResumeHasProfile = true) {
     const hasAccess = status === 'trial' || status === 'active';
+    const hhLinked = !!(currentUser && currentUser.hh_linked);
     const navSettings = document.getElementById('navSettings');
     const navResponses = document.getElementById('navResponses');
     const settingsLock = document.getElementById('settingsLock');
@@ -851,17 +852,21 @@ function updateNavAccess(status, activeResumeHasProfile = true) {
         if (navObMob) navObMob.classList.remove('hidden');
     }
 
-    // Снимаем subscription-блокировку только если есть доступ, нет онбординга
-    // И резюме с профилем — иначе карточки останутся заблокированы через profile-lock
-    if (hasAccess && !hasOnboarding && activeResumeHasProfile) {
+    // Обновляем текст бейджа: если подписка есть, но hh не привязан — другой текст
+    if (hasAccess && !hhLinked) {
+        if (settingsLock) settingsLock.textContent = 'Нужен hh.ru';
+        if (responsesLock) responsesLock.textContent = 'Нужен hh.ru';
+    }
+
+    // Разблокируем навигацию только если: есть подписка + hh.ru привязан + нет онбординга
+    if (hasAccess && hhLinked && !hasOnboarding && activeResumeHasProfile) {
         navSettings.classList.remove('nav-locked');
         navResponses.classList.remove('nav-locked');
         settingsLock.classList.add('hidden');
         responsesLock.classList.add('hidden');
         document.querySelectorAll('.nav-link-locked').forEach(el => el.classList.remove('nav-link-locked'));
-    } else if (hasAccess && !hasOnboarding && !activeResumeHasProfile) {
-        // Подписка есть, но профиля нет — бейджи убираем, nav-locked снимаем,
-        // но сразу вешаем profile-locked (без мигания)
+    } else if (hasAccess && hhLinked && !hasOnboarding && !activeResumeHasProfile) {
+        // Подписка есть, hh привязан, но профиль резюме не настроен
         navSettings.classList.remove('nav-locked');
         navResponses.classList.remove('nav-locked');
         settingsLock.classList.add('hidden');
@@ -869,6 +874,7 @@ function updateNavAccess(status, activeResumeHasProfile = true) {
         document.querySelectorAll('.nav-link-locked').forEach(el => el.classList.remove('nav-link-locked'));
         setProfileLock(true);
     }
+    // Если !hhLinked — nav-locked остаётся (класс стоит в HTML по умолчанию)
 }
 
 function updateTelegramCard(hasTelegram) {
