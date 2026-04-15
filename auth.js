@@ -407,15 +407,38 @@ async function handleResetPassword(e) {
 // RESEND TIMER
 // ============================================================================
 
-function _showRefBadge(code) {
+async function _showRefBadge(code) {
     const registerForm = document.getElementById('registerForm');
     if (!registerForm || document.getElementById('refBadge')) return;
-    const badge = document.createElement('div');
-    badge.id = 'refBadge';
-    badge.className = 'mx-0 mb-1 rounded-lg px-4 py-2.5 text-sm fade-in';
-    badge.style.cssText = 'background:rgba(101,62,219,0.12);border:1px solid rgba(204,190,255,0.18);color:#ccbeff;display:flex;align-items:center;gap:8px;';
-    badge.innerHTML = '<span style="font-size:18px;line-height:1">&#10003;</span> Промокод <strong>' + code + '</strong> будет применён';
-    registerForm.insertBefore(badge, registerForm.firstChild);
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/mentor/check-promo?code=${encodeURIComponent(code)}`);
+        const data = resp.ok ? await resp.json() : { valid: false };
+
+        const badge = document.createElement('div');
+        badge.id = 'refBadge';
+        badge.className = 'mx-0 mb-1 rounded-lg px-4 py-2.5 text-sm fade-in';
+
+        if (data.valid) {
+            badge.style.cssText = 'background:rgba(101,62,219,0.12);border:1px solid rgba(204,190,255,0.18);color:#ccbeff;display:flex;align-items:center;gap:8px;';
+            badge.innerHTML = '<span style="font-size:18px;line-height:1">&#10003;</span> Промокод <strong>' + code + '</strong> будет применён';
+        } else {
+            badge.style.cssText = 'background:rgba(248,113,113,0.10);border:1px solid rgba(248,113,113,0.20);color:#f87171;display:flex;align-items:center;gap:8px;';
+            const reason = data.reason === 'used' ? 'уже использован' : 'не найден или неактивен';
+            badge.innerHTML = '<span style="font-size:18px;line-height:1">&#10007;</span> Промокод <strong>' + code + '</strong> ' + reason;
+            localStorage.removeItem('aurora_ref_code');
+            pendingRefCode = null;
+        }
+        registerForm.insertBefore(badge, registerForm.firstChild);
+    } catch (_) {
+        // На случай сетевой ошибки — показываем как раньше (оптимистично)
+        const badge = document.createElement('div');
+        badge.id = 'refBadge';
+        badge.className = 'mx-0 mb-1 rounded-lg px-4 py-2.5 text-sm fade-in';
+        badge.style.cssText = 'background:rgba(101,62,219,0.12);border:1px solid rgba(204,190,255,0.18);color:#ccbeff;display:flex;align-items:center;gap:8px;';
+        badge.innerHTML = '<span style="font-size:18px;line-height:1">&#10003;</span> Промокод <strong>' + code + '</strong> будет применён';
+        registerForm.insertBefore(badge, registerForm.firstChild);
+    }
 }
 
 function startResendTimer() {
@@ -453,13 +476,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (urlRef) {
         pendingRefCode = urlRef.trim();
         localStorage.setItem('aurora_ref_code', pendingRefCode);
-        _showRefBadge(pendingRefCode);
+        await _showRefBadge(pendingRefCode);
         switchTab('register');
     } else {
         const storedRef = localStorage.getItem('aurora_ref_code');
         if (storedRef) {
             pendingRefCode = storedRef;
-            _showRefBadge(pendingRefCode);
+            await _showRefBadge(pendingRefCode);
         }
     }
 

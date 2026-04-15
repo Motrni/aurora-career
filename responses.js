@@ -345,8 +345,10 @@ function updateResponsesResumeTitles(data) {
     const label = title || "не выбрано — укажите в настройках";
     const autoEl = document.getElementById("responsesResumeTitleAutopilot");
     const manualEl = document.getElementById("responsesResumeTitleManual");
+    const clEl = document.getElementById("responsesResumeTitleCL");
     if (autoEl) autoEl.textContent = label;
     if (manualEl) manualEl.textContent = label;
+    if (clEl) clEl.textContent = label;
 }
 
 function updateStatusPanel(data) {

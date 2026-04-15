@@ -394,8 +394,9 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             </div>
             <!-- Mode Toggle -->
             <div class="flex bg-surface-container rounded-xl p-1 shrink-0">
-                <button id="modeAutopilot" onclick="switchMode('autopilot')" class="mode-toggle-btn active px-5 md:px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200">Автопилот</button>
-                <button id="modeManual" onclick="switchMode('manual')" class="mode-toggle-btn px-5 md:px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200">Ручной режим</button>
+                <button id="modeAutopilot" onclick="switchMode('autopilot')" class="mode-toggle-btn active px-4 md:px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200">Автопилот</button>
+                <button id="modeManual" onclick="switchMode('manual')" class="mode-toggle-btn px-4 md:px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200">Ручной режим</button>
+                <button id="modeCoverLetter" onclick="switchMode('coverletter')" class="mode-toggle-btn px-4 md:px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200">Сопровод</button>
             </div>
         </div>
 
@@ -683,6 +684,125 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             </div>
         </div><!-- /manualContent -->
 
+        <!-- ========== COVER LETTER CONTENT ========== -->
+        <div id="coverLetterContent" style="display: none;" class="space-y-6 md:space-y-8">
+
+            <!-- Quota Panel -->
+            <section class="glass-panel p-6 md:p-10 rounded-xl relative overflow-hidden">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-primary-container/10 rounded-full blur-[100px]"></div>
+                <div class="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10 w-full">
+                    <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10 w-full md:w-auto">
+                        <!-- Quota Ring -->
+                        <div class="relative w-24 h-24 md:w-28 md:h-28 flex items-center justify-center shrink-0">
+                            <svg class="w-full h-full -rotate-90 block" viewBox="0 0 128 128">
+                                <circle class="text-surface-container-highest" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                                <circle id="clProgressCircle" class="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-width="8" style="transition: stroke-dashoffset 0.6s ease;"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span id="clUsedCount" class="text-xl md:text-2xl font-bold text-on-surface">0</span>
+                                <span class="text-[9px] md:text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Из <span id="clLimitCount">5</span></span>
+                            </div>
+                        </div>
+                        <div class="text-center md:text-left">
+                            <h3 class="text-xl md:text-2xl font-bold text-on-surface mb-1">Генератор сопроводительных</h3>
+                            <p class="text-on-surface-variant text-sm md:text-base max-w-md">Вставьте ссылку на вакансию или текст — ИИ составит персональное сопроводительное на основе вашего резюме.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative z-10 w-full mt-0 pt-4 md:pt-5 border-t border-outline-variant/20">
+                    <p class="text-sm text-on-surface-variant m-0 text-center md:text-left leading-relaxed">
+                        Для генерации используется резюме:
+                        <span id="responsesResumeTitleCL" class="font-semibold text-on-surface">—</span>
+                    </p>
+                </div>
+            </section>
+
+            <!-- Input Section -->
+            <section class="glass-panel p-6 md:p-8 rounded-xl relative overflow-hidden">
+                <div class="absolute -left-16 -bottom-16 w-48 h-48 bg-secondary-container/10 rounded-full blur-[80px] pointer-events-none"></div>
+                <div class="relative z-10 space-y-5">
+                    <!-- Input Type Tabs -->
+                    <div class="flex bg-surface-container-low p-1 rounded-full w-fit shadow-inner">
+                        <button id="clTabUrl" onclick="window.clSwitchInputTab('url')" class="rej-tab active flex-none text-xs font-bold py-2 px-5 rounded-full transition-all whitespace-nowrap">Ссылка на вакансию</button>
+                        <button id="clTabText" onclick="window.clSwitchInputTab('text')" class="rej-tab flex-none text-xs font-bold py-2 px-5 rounded-full transition-all whitespace-nowrap">Текст вакансии</button>
+                    </div>
+
+                    <!-- URL Input -->
+                    <div id="clUrlInputBlock" class="space-y-2">
+                        <label for="clUrlInput" class="text-sm font-semibold text-on-surface-variant">Ссылка hh.ru</label>
+                        <div class="flex gap-3">
+                            <input id="clUrlInput" type="url" placeholder="https://hh.ru/vacancy/123456789" class="flex-1 bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-3.5 text-on-surface text-sm placeholder:text-on-surface-variant/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-colors" autocomplete="off" />
+                            <button id="clGenerateBtn" onclick="window.generateCoverLetter()" class="shrink-0 px-6 md:px-8 py-3.5 rounded-xl bg-primary-container text-white font-bold text-sm transition-all duration-200 active:scale-95 shadow-[0_0_30px_rgba(90,48,208,0.25)] hover:shadow-[0_0_50px_rgba(90,48,208,0.4)] hover:brightness-110 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none" aria-label="Сгенерировать">
+                                <span id="clBtnText">Сгенерировать</span>
+                                <span id="clBtnIcon" class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">auto_awesome</span>
+                                <span id="clBtnSpinner" class="hidden ms-cart-spinner"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Text Input -->
+                    <div id="clTextInputBlock" class="hidden space-y-2">
+                        <label for="clTextInput" class="text-sm font-semibold text-on-surface-variant">Текст вакансии</label>
+                        <textarea id="clTextInput" rows="6" maxlength="15000" placeholder="Скопируйте и вставьте описание вакансии сюда..." class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-3.5 text-on-surface text-sm placeholder:text-on-surface-variant/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-colors resize-y min-h-[120px]"></textarea>
+                        <div class="flex items-center justify-between">
+                            <span id="clCharCount" class="text-xs text-on-surface-variant/50">0 / 15 000</span>
+                            <button id="clGenerateBtnText" onclick="window.generateCoverLetter()" class="px-6 md:px-8 py-3.5 rounded-xl bg-primary-container text-white font-bold text-sm transition-all duration-200 active:scale-95 shadow-[0_0_30px_rgba(90,48,208,0.25)] hover:shadow-[0_0_50px_rgba(90,48,208,0.4)] hover:brightness-110 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none" aria-label="Сгенерировать">
+                                <span id="clBtnText2">Сгенерировать</span>
+                                <span id="clBtnIcon2" class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">auto_awesome</span>
+                                <span id="clBtnSpinner2" class="hidden ms-cart-spinner"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Error -->
+                    <div id="clError" class="hidden text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-3 text-center"></div>
+                </div>
+            </section>
+
+            <!-- Result Section (hidden until generated) -->
+            <section id="clResultSection" class="hidden space-y-4">
+                <div class="flex items-center justify-between px-1 md:px-4">
+                    <h2 class="text-xl md:text-2xl font-bold flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">description</span>
+                        Результат
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.clCopyResult()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface-variant text-xs font-bold transition-colors cursor-pointer" title="Скопировать">
+                            <span id="clCopyIcon" class="material-symbols-outlined text-base">content_copy</span>
+                            <span id="clCopyLabel">Копировать</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-xl border border-primary-container/20 overflow-hidden">
+                    <div class="px-5 py-3 border-b border-outline-variant/10 flex items-center justify-between">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="material-symbols-outlined text-primary text-base">apartment</span>
+                            <span id="clResultEmployer" class="text-sm font-semibold text-on-surface truncate"></span>
+                        </div>
+                        <span id="clResultVacancy" class="text-xs text-on-surface-variant truncate ml-3 max-w-[40%] text-right"></span>
+                    </div>
+                    <div id="clResultText" class="p-5 md:p-8 text-on-surface text-sm md:text-base leading-relaxed whitespace-pre-wrap select-all" style="font-family: 'Inter', sans-serif;"></div>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section id="clHistorySection" class="hidden space-y-4">
+                <div class="flex items-center justify-between px-1 md:px-4">
+                    <h2 class="text-xl md:text-2xl font-bold flex items-center gap-3">
+                        <span class="material-symbols-outlined text-on-surface-variant">history</span>
+                        История
+                    </h2>
+                    <span id="clHistoryBadge" class="bg-surface-container-highest px-3 py-1 rounded-full text-xs font-bold text-on-surface-variant">0</span>
+                </div>
+                <div id="clHistoryList" class="space-y-3"></div>
+                <div id="clHistoryEmpty" class="hidden glass-panel p-8 rounded-xl text-center text-on-surface-variant/50 text-sm">
+                    <span class="material-symbols-outlined text-3xl mb-2 block">draft</span>
+                    Здесь появятся ваши сопроводительные письма
+                </div>
+            </section>
+
+        </div><!-- /coverLetterContent -->
+
     </div><!-- /mainContent -->
 </main>
 
@@ -926,6 +1046,7 @@ function toggleMobileMenu() {
 <script src="reg-modal.js?v=1"></script>
 <script src="responses.js?v=9.0"></script>
 <script src="manual-search.js?v=5.0"></script>
+<script src="cover-letter.js?v=1.0"></script>
 <script src="support-widget.js?v=1"></script>
 
 </body>

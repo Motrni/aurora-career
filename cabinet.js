@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         loadSessions();
         loadPromoStatus();
+        loadReferralCodes();
         initCabinetBoostModal();
         initTariffModal();
 
@@ -172,6 +173,8 @@ async function renderCabinet(user) {
 
     if (user.has_access && !user.hh_linked) {
         document.getElementById('hhLinkBanner').classList.remove('hidden');
+        const mob = document.getElementById('hhLinkBannerMobile');
+        if (mob) mob.classList.remove('hidden');
     }
 
     const showTariffs = user.subscription_status === 'none' || user.subscription_status === 'ended_trial' || user.subscription_status === 'ended_active';
@@ -1009,6 +1012,89 @@ async function loadPromoStatus() {
     }
 }
 
+// ============================================================================
+// REFERRAL CODES
+// ============================================================================
+
+async function loadReferralCodes() {
+    const card = document.getElementById('referralCard');
+    if (!card) return;
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/referral/my-codes`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+
+        if (!data.available) return;
+
+        card.classList.remove('hidden');
+        const slotsEl = document.getElementById('referralSlots');
+        const siteBase = window.location.hostname.includes('aurora-develop')
+            ? 'https://aurora-develop.ru'
+            : 'https://aurora-career.ru';
+
+        slotsEl.innerHTML = data.slots.map(function(slot, i) {
+            const num = i + 1;
+            if (slot.used) {
+                return `<div class="p-3 rounded-xl border border-outline-variant/10" style="background:rgba(74,222,128,0.04)">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#4ade80] text-lg" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        <span class="text-sm text-on-surface font-medium">Код #${num}</span>
+                        <span class="text-xs text-[#4ade80] font-semibold ml-auto">Использован</span>
+                    </div>
+                    <code class="block mt-1.5 text-xs text-outline break-all line-through">${slot.code}</code>
+                </div>`;
+            }
+            const link = `${siteBase}/auth/?ref=${encodeURIComponent(slot.code)}`;
+            return `<div class="p-3 rounded-xl border border-outline-variant/10" style="background:rgba(204,190,255,0.03)">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-outlined text-primary text-lg">link</span>
+                    <span class="text-sm text-on-surface font-medium">Код #${num}</span>
+                    <span class="text-xs text-on-surface-variant ml-auto">Свободен</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <code class="flex-1 text-xs text-primary break-all cursor-pointer hover:underline" onclick="navigator.clipboard.writeText('${link}')" title="Нажмите, чтобы скопировать">${link}</code>
+                    <button onclick="copyRefLink(this, '${link}')" class="flex-shrink-0 text-xs text-on-surface-variant hover:text-primary transition-colors cursor-pointer" title="Скопировать">
+                        <span class="material-symbols-outlined text-base">content_copy</span>
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+
+        const bonusEl = document.getElementById('referralBonus');
+        if (data.bonus_description) {
+            bonusEl.classList.remove('hidden');
+            document.getElementById('referralBonusText').textContent = data.bonus_description;
+        }
+
+        if (data.updated_at) {
+            const d = new Date(data.updated_at);
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            const nextDate = new Date(d);
+            nextDate.setDate(nextDate.getDate() + 30);
+            const nd = String(nextDate.getDate()).padStart(2, '0');
+            const nm = String(nextDate.getMonth() + 1).padStart(2, '0');
+            const ny = nextDate.getFullYear();
+            document.getElementById('referralUpdatedAt').textContent =
+                `Обновлено: ${dd}.${mm}.${yyyy} · Коды обновятся: ${nd}.${nm}.${ny}`;
+        }
+    } catch (e) {
+        console.error('[Cabinet] loadReferralCodes error:', e);
+    }
+}
+
+function copyRefLink(btn, link) {
+    navigator.clipboard.writeText(link).then(function() {
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) {
+            icon.textContent = 'check';
+            setTimeout(function() { icon.textContent = 'content_copy'; }, 2000);
+        }
+    });
+}
+
 async function applyPromoCode() {
     const input = document.getElementById('promoInput');
     const btn = document.getElementById('promoApplyBtn');
@@ -1651,12 +1737,11 @@ function daysUntil(isoStr) {
 // ============================================================================
 
 async function startHhLinking() {
-    const banner = document.getElementById('hhLinkBanner');
-    const btn = banner ? banner.querySelector('button') : null;
-    if (btn) {
-        btn.disabled = true;
-        btn.style.opacity = '0.6';
-    }
+    ['hhLinkBanner', 'hhLinkBannerMobile'].forEach(function(id) {
+        const el = document.getElementById(id);
+        const btn = el ? el.querySelector('button') : null;
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    });
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/start-linking`, {
             method: 'POST',
