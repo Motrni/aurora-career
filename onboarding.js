@@ -21,6 +21,10 @@ let textRotateInterval = null;
 let rolesInterval = null;
 let profileInterval = null;
 let rolesTextInterval = null;
+let rolesPollingStartedAt = null;
+let rolesRetryCount = 0;
+const ROLES_MAX_RETRIES = 3;
+const ROLES_STALE_TIMEOUT_MS = 5 * 60 * 1000;
 let activeTab = 'phone';
 let currentRoles = [];
 
@@ -176,6 +180,9 @@ function initOnboarding(step) {
         showStep(profileStepNum);
         startRolesPolling();
         startRolesTextRotation();
+    } else if (step === 'onboarding_cluster_error') {
+        showStep(profileStepNum);
+        loadRolesFromServer();
     } else if (step === 'onboarding_analysis_complete') {
         showStep(3);
         loadAnalysisResult();
@@ -803,6 +810,7 @@ function stopRolesTextRotation() {
 
 function startRolesPolling() {
     stopRolesPolling();
+    if (!rolesPollingStartedAt) rolesPollingStartedAt = Date.now();
     rolesInterval = setInterval(pollRolesStatus, 3000);
 }
 
@@ -815,6 +823,12 @@ function stopRolesPolling() {
 
 async function pollRolesStatus() {
     try {
+        if (rolesPollingStartedAt && Date.now() - rolesPollingStartedAt > ROLES_STALE_TIMEOUT_MS) {
+            console.warn('[Roles Poll] Timeout reached, attempting auto-retry');
+            await attemptRolesRetry();
+            return;
+        }
+
         const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/roles-status`);
         if (!resp || !resp.ok) return;
         const data = await resp.json();
@@ -822,10 +836,99 @@ async function pollRolesStatus() {
         if (data.status === 'ready') {
             stopRolesPolling();
             stopRolesTextRotation();
+            rolesRetryCount = 0;
             renderRoles(data.roles);
+        } else if (data.status === 'error') {
+            console.warn('[Roles Poll] Error status:', data.detail);
+            await attemptRolesRetry();
         }
     } catch (e) {
         console.error('[Roles Poll] Error:', e);
+    }
+}
+
+async function attemptRolesRetry() {
+    if (rolesRetryCount >= ROLES_MAX_RETRIES) {
+        stopRolesPolling();
+        stopRolesTextRotation();
+        showRolesError();
+        return;
+    }
+    rolesRetryCount++;
+    console.log(`[Roles Retry] Attempt ${rolesRetryCount}/${ROLES_MAX_RETRIES}`);
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/onboarding/retry-profile`, { method: 'POST' });
+        if (resp && resp.ok) {
+            rolesPollingStartedAt = Date.now();
+            const el = document.getElementById('rolesRotatingText');
+            if (el) el.textContent = `Повторная попытка (${rolesRetryCount}/${ROLES_MAX_RETRIES})...`;
+        } else {
+            stopRolesPolling();
+            stopRolesTextRotation();
+            showRolesError();
+        }
+    } catch (e) {
+        console.error('[Roles Retry] Error:', e);
+        stopRolesPolling();
+        stopRolesTextRotation();
+        showRolesError();
+    }
+}
+
+function showRolesError() {
+    const loading = document.getElementById('rolesLoading');
+    if (loading) {
+        loading.innerHTML = `
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 py-4">
+                    <div class="space-y-3">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Не удалось проанализировать рынок</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            Произошла ошибка при анализе вакансий. Попробуйте ещё раз — обычно со второй попытки всё работает.
+                        </p>
+                    </div>
+                    <span class="material-symbols-outlined text-error text-5xl">error_outline</span>
+                    <button onclick="handleManualRolesRetry()" class="btn-primary text-white px-8 py-3 rounded-xl font-bold text-base shadow-[0_0_30px_rgba(90,48,208,0.3)] hover:shadow-[0_0_50px_rgba(90,48,208,0.5)] transition-all active:scale-95 cursor-pointer">
+                        Попробовать снова
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+async function handleManualRolesRetry() {
+    rolesRetryCount = 0;
+    const loading = document.getElementById('rolesLoading');
+    if (loading) {
+        loading.innerHTML = `
+            <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
+                <div class="flex flex-col items-center text-center space-y-6 py-4">
+                    <div class="space-y-3">
+                        <h1 class="text-3xl font-bold tracking-tight text-on-surface">Анализируем рынок</h1>
+                        <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
+                            AI изучает вакансии и формирует категории ролей под ваш профиль
+                        </p>
+                    </div>
+                    <div class="relative w-28 h-28 flex items-center justify-center">
+                        <svg class="w-full h-full" viewBox="0 0 128 128" style="transform: rotate(-90deg)">
+                            <circle class="gauge-circle-bg" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+                            <circle class="analyze-ring" cx="64" cy="64" fill="transparent" r="58" stroke="#5a30d0" stroke-width="8" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-3xl">category</span>
+                        </div>
+                    </div>
+                    <p class="text-on-surface text-sm font-medium h-5" id="rolesRotatingText">Повторный анализ...</p>
+                </div>
+            </div>
+        `;
+    }
+    await attemptRolesRetry();
+    if (rolesRetryCount <= ROLES_MAX_RETRIES) {
+        startRolesPolling();
+        startRolesTextRotation();
     }
 }
 
@@ -836,6 +939,12 @@ async function loadRolesFromServer() {
         const data = await resp.json();
         if (data.status === 'ready') {
             renderRoles(data.roles);
+        } else if (data.status === 'error') {
+            await attemptRolesRetry();
+            if (rolesRetryCount <= ROLES_MAX_RETRIES) {
+                startRolesPolling();
+                startRolesTextRotation();
+            }
         } else {
             startRolesPolling();
             startRolesTextRotation();

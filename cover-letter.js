@@ -229,12 +229,9 @@
 
         try {
             await navigator.clipboard.writeText(text);
-            const label = _el("clCopyLabel");
-            const icon = _el("clCopyIcon");
-            if (label) label.textContent = "Скопировано!";
+            const icon = _el("clCopyFloatingIcon");
             if (icon) icon.textContent = "check";
             setTimeout(() => {
-                if (label) label.textContent = "Копировать";
                 if (icon) icon.textContent = "content_copy";
             }, 2000);
         } catch {
@@ -305,7 +302,7 @@
 
     function _createHistoryCard(item, idx) {
         const card = document.createElement("div");
-        card.className = "glass-panel rounded-xl overflow-hidden transition-all duration-200 group";
+        card.className = "glass-panel rounded-[12px] overflow-hidden transition-all duration-200 group";
 
         const header = document.createElement("button");
         header.type = "button";
@@ -371,8 +368,18 @@
             link.href = item.vacancy_url;
             link.target = "_blank";
             link.rel = "noopener noreferrer";
-            link.className = "inline-flex items-center gap-1 text-xs text-primary hover:underline mb-3";
-            link.innerHTML = '<span class="material-symbols-outlined text-sm">open_in_new</span> Открыть вакансию';
+            link.className =
+                "cl-vacancy-link inline-flex items-center gap-1.5 text-xs font-semibold text-primary mb-3 " +
+                "border-b border-transparent hover:border-primary pb-0.5 transition-colors cursor-pointer " +
+                "no-underline decoration-0";
+            const ic = document.createElement("span");
+            ic.className = "material-symbols-outlined text-sm shrink-0 leading-none";
+            ic.textContent = "open_in_new";
+            const tx = document.createElement("span");
+            tx.className = "leading-snug";
+            tx.textContent = "Открыть вакансию";
+            link.appendChild(ic);
+            link.appendChild(tx);
             body.appendChild(link);
         }
 
