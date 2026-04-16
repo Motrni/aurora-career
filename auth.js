@@ -254,7 +254,14 @@ async function handleRegister(e) {
     setLoading('regBtn', 'regBtnText', true);
 
     try {
-        const payload = { email, password };
+        const payload = {
+            email,
+            password,
+            consent_privacy: true,
+            consent_offer: true,
+            consent_privacy_version: (window.AURORA_LEGAL_VERSIONS && window.AURORA_LEGAL_VERSIONS.privacy) || null,
+            consent_offer_version: (window.AURORA_LEGAL_VERSIONS && window.AURORA_LEGAL_VERSIONS.offer) || null,
+        };
         if (auditSource) payload.source = 'audit';
 
         const { ok, status, data } = await apiCall('/api/auth/register', payload);

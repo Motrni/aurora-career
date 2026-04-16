@@ -101,7 +101,9 @@ tailwind.config = {
     @keyframes spin { to{transform:rotate(360deg)} }
 </style>
 <link rel="stylesheet" href="cookie-consent.css">
-<script src="cookie-consent.js"></script>
+<link rel="stylesheet" href="legal-modal.css">
+<script src="legal-modal.js?v=1.0"></script>
+<script src="cookie-consent.js?v=1.1"></script>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 <div class="aurora-glow"></div>
@@ -205,14 +207,14 @@ tailwind.config = {
                 <input type="checkbox" id="regConsentPrivacy" class="consent-check" oninput="updateRegPasswordChecks()">
                 <span class="text-xs text-on-surface-variant leading-relaxed">
                     Я даю согласие на обработку персональных данных в соответствии с
-                    <a href="/privacy/" target="_blank" rel="noopener">Политикой конфиденциальности</a>
+                    <a href="#" onclick="event.preventDefault();event.stopPropagation();openLegalModal('privacy');return false;">Политикой конфиденциальности</a>
                 </span>
             </label>
             <label class="flex items-start gap-2.5 cursor-pointer consent-label">
                 <input type="checkbox" id="regConsentOffer" class="consent-check" oninput="updateRegPasswordChecks()">
                 <span class="text-xs text-on-surface-variant leading-relaxed">
                     Я принимаю условия
-                    <a href="/offer/" target="_blank" rel="noopener">Публичной оферты</a>
+                    <a href="#" onclick="event.preventDefault();event.stopPropagation();openLegalModal('offer');return false;">Публичной оферты</a>
                 </span>
             </label>
         </div>
@@ -292,13 +294,13 @@ tailwind.config = {
     <!-- Footer -->
     <div class="px-8 pb-6 text-center">
         <p class="text-outline text-xs leading-relaxed">
-            <a href="/privacy/" target="_blank" rel="noopener" class="hover:text-primary transition-colors">Конфиденциальность</a>
+            <a href="#" onclick="event.preventDefault();openLegalModal('privacy');return false;" class="hover:text-primary transition-colors">Конфиденциальность</a>
             <span class="mx-2">·</span>
-            <a href="/offer/" target="_blank" rel="noopener" class="hover:text-primary transition-colors">Оферта</a>
+            <a href="#" onclick="event.preventDefault();openLegalModal('offer');return false;" class="hover:text-primary transition-colors">Оферта</a>
         </p>
     </div>
 </div>
 
-<script src="auth.js?v=1.2"></script>
+<script src="auth.js?v=1.3"></script>
 </body>
 </html>

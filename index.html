@@ -199,7 +199,9 @@
 </style>
 
 <link rel="stylesheet" href="cookie-consent.css">
-<script src="cookie-consent.js"></script>
+<link rel="stylesheet" href="legal-modal.css">
+<script src="legal-modal.js?v=1.0"></script>
+<script src="cookie-consent.js?v=1.1"></script>
 </head>
 <body class="text-on-surface selection:bg-primary/30 selection:text-primary overflow-x-hidden">
 
@@ -468,20 +470,20 @@
 
         <!-- Legal links -->
         <nav class="flex flex-col sm:flex-row gap-6 md:gap-10 font-['Inter'] text-sm order-1 md:order-2">
-            <a href="/privacy/" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group">
+            <button type="button" onclick="openLegalModal('privacy')" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group cursor-pointer bg-transparent border-0 p-0 font-inherit text-left">
                 <span>Политика конфиденциальности</span>
                 <svg class="w-3.5 h-3.5 text-[#ccbeff]/60 group-hover:text-[#ccbeff] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="7" y1="17" x2="17" y2="7"/>
                     <polyline points="7 7 17 7 17 17"/>
                 </svg>
-            </a>
-            <a href="/offer/" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group">
+            </button>
+            <button type="button" onclick="openLegalModal('offer')" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group cursor-pointer bg-transparent border-0 p-0 font-inherit text-left">
                 <span>Оферта</span>
                 <svg class="w-3.5 h-3.5 text-[#ccbeff]/60 group-hover:text-[#ccbeff] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="7" y1="17" x2="17" y2="7"/>
                     <polyline points="7 7 17 7 17 17"/>
                 </svg>
-            </a>
+            </button>
         </nav>
 
     </div>
