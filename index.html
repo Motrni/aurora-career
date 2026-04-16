@@ -5,7 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
 <meta name="yandex-verification" content="6bf79d6d3fa4dfd5" />
 
-<title>Аврора Карьерный ИИ-Ассистент | Автоотклики на вакансии hh, Автоматизация поиска работы</title>
+<title>Автоотклик на вакансии и поиск работы | Аврора — Aurora Career</title>
 <meta name="description" content="IT-система, которая ищет работу за вас. Заменяет карьерного консультанта: автоотклик 24/7, умное улучшение резюме и генерация писем. Получайте предложения о работе, а не отказы.">
 <meta name="keywords" content="автопоиск работы, автоотклик hh, автоотклик hh.ru, автоотклик хх, отклики на hh, отклики на hh.ru, отклики на хх, автоотклики на hh, автоотклики на hh.ru, автоотклики на хх, автоматизация поиска работы, бот для поиска работы, карьерный консультант цена, аудит резюме онлайн, генератор сопроводительных писем, работа в IT, поиск работы за деньги, ATS фильтры, прохождение ATS, Aurora Career, Аврора">
 
@@ -198,22 +198,8 @@
     }
 </style>
 
-<script type="text/javascript">
-   (function(m,e,t,r,i,k,a){
-       m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-       m[i].l=1*new Date();
-       for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-       k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-   })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=106455919', 'ym');
-
-   ym(106455919, 'init', {
-        clickmap:true,
-        trackLinks:true,
-        accurateTrackBounce:true,
-        webvisor:true
-   });
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/106455919" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<link rel="stylesheet" href="cookie-consent.css">
+<script src="cookie-consent.js"></script>
 </head>
 <body class="text-on-surface selection:bg-primary/30 selection:text-primary overflow-x-hidden">
 
@@ -234,7 +220,7 @@
     </div>
     <div class="hidden md:flex gap-3 items-center">
         <button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-[#ccbeff]/10 transition-all duration-300 active:scale-95 ease-out" onclick="toggleModal('join-modal')">Попробовать бесплатно</button>
-        <a id="authBtn" href="/auth/" class="text-[#cac3d7] border border-white/10 px-5 py-2.5 rounded-full text-sm font-semibold hover:text-[#e7e0ef] hover:border-[#ccbeff]/30 hover:bg-[#ccbeff]/5 transition-all duration-300 active:scale-95 ease-out">Вход</a>
+        <a id="authBtn" href="/auth/" class="text-[#cac3d7] border border-white/10 px-5 py-2.5 rounded-full text-sm font-semibold hover:text-[#e7e0ef] hover:border-[#ccbeff]/30 hover:bg-[#ccbeff]/5 transition-all duration-300 active:scale-95 ease-out opacity-0" style="min-width:90px;text-align:center">Вход</a>
     </div>
     <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
         <span></span><span></span><span></span>
@@ -244,7 +230,7 @@
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
     <button onclick="toggleMobileMenu(); toggleModal('join-modal');" class="w-full bg-gradient-to-tr from-primary-container to-secondary-container text-white py-4 rounded-xl text-base font-bold mt-4 mb-2 text-center">Попробовать бесплатно</button>
-    <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()" class="w-full text-center border border-white/10 text-[#cac3d7] py-3.5 rounded-xl text-base font-semibold mb-2 hover:text-[#e7e0ef] transition-colors">Вход</a>
+    <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()" class="w-full text-center border border-white/10 text-[#cac3d7] py-3.5 rounded-xl text-base font-semibold mb-2 hover:text-[#e7e0ef] transition-colors opacity-0">Вход</a>
     <a href="#opportunities" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Возможности</a>
     <a href="#insights" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Проблемы поиска</a>
     <a href="#network" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Как это работает?</a>
@@ -637,10 +623,14 @@
             var apiBase = (h.indexOf('twc1.net') !== -1 || h.indexOf('aurora-develop') !== -1)
                 ? 'https://api.aurora-develop.ru'
                 : 'https://api.aurora-career.ru';
+            var btn = document.getElementById('authBtn');
+            var btnMobile = document.getElementById('authBtnMobile');
 
+            function reveal() {
+                if (btn) { btn.style.transition = 'opacity 0.25s ease'; btn.style.opacity = '1'; }
+                if (btnMobile) { btnMobile.style.transition = 'opacity 0.25s ease'; btnMobile.style.opacity = '1'; }
+            }
             function setLoggedIn() {
-                var btn = document.getElementById('authBtn');
-                var btnMobile = document.getElementById('authBtnMobile');
                 if (btn) { btn.textContent = 'Кабинет'; btn.href = '/cabinet/'; }
                 if (btnMobile) { btnMobile.textContent = 'Кабинет'; btnMobile.href = '/cabinet/'; }
             }
@@ -661,7 +651,8 @@
                 .then(function(data) {
                     if (data && data.status === 'ok') setLoggedIn();
                 })
-                .catch(function() {});
+                .catch(function() {})
+                .finally(reveal);
         })();
     });
 </script>
