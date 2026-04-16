@@ -60,7 +60,7 @@
         '<div class="ccb-content">' +
           '<p class="ccb-text">' +
             'Мы используем файлы cookie для аналитики и улучшения сайта. ' +
-            'Подробнее в <a href="javascript:void(0)" class="ccb-link" id="ccb-privacy-link">Политике конфиденциальности</a>.' +
+            'Подробнее в <a href="/privacy/" class="ccb-link" target="_blank" rel="noopener">Политике конфиденциальности</a>.' +
           '</p>' +
         '</div>' +
         '<div class="ccb-actions">' +
@@ -88,16 +88,6 @@
     document.getElementById('ccb-decline').addEventListener('click', function () {
       setConsent('declined');
       hideBanner(banner, backdrop);
-    });
-
-    var privacyLink = document.getElementById('ccb-privacy-link');
-    privacyLink.addEventListener('click', function (e) {
-      e.preventDefault();
-      if (typeof openInfoModal === 'function') {
-        openInfoModal('privacy');
-      } else {
-        window.location.href = '/#privacy';
-      }
     });
   }
 

@@ -218,8 +218,10 @@ function updateRegPasswordChecks() {
     });
     const confirm = document.getElementById('regPasswordConfirm')?.value;
     const email = document.getElementById('regEmail')?.value?.trim();
+    const consentPrivacy = document.getElementById('regConsentPrivacy')?.checked;
+    const consentOffer = document.getElementById('regConsentOffer')?.checked;
     const btn = document.getElementById('regBtn');
-    if (btn) btn.disabled = !(allPassed && email && pwd === confirm);
+    if (btn) btn.disabled = !(allPassed && email && pwd === confirm && consentPrivacy && consentOffer);
 }
 
 async function handleRegister(e) {
@@ -229,6 +231,8 @@ async function handleRegister(e) {
     const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
     const confirm = document.getElementById('regPasswordConfirm').value;
+    const consentPrivacy = document.getElementById('regConsentPrivacy')?.checked;
+    const consentOffer = document.getElementById('regConsentOffer')?.checked;
 
     if (!email || !password || !confirm) return;
 
@@ -239,6 +243,11 @@ async function handleRegister(e) {
 
     if (password.length < 8 || !/[A-ZА-ЯЁ]/.test(password) || !/[0-9]/.test(password)) {
         showMessage('Пароль не соответствует требованиям');
+        return;
+    }
+
+    if (!consentPrivacy || !consentOffer) {
+        showMessage('Необходимо согласие с Политикой конфиденциальности и Офертой');
         return;
     }
 

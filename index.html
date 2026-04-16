@@ -5,7 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
 <meta name="yandex-verification" content="6bf79d6d3fa4dfd5" />
 
-<title>Аврора Карьерный ИИ-Ассистент | Автоотклики на вакансии hh, Автоматизация поиска работы</title>
+<title>Автоотклик на вакансии и поиск работы | Аврора — Aurora Career</title>
 <meta name="description" content="IT-система, которая ищет работу за вас. Заменяет карьерного консультанта: автоотклик 24/7, умное улучшение резюме и генерация писем. Получайте предложения о работе, а не отказы.">
 <meta name="keywords" content="автопоиск работы, автоотклик hh, автоотклик hh.ru, автоотклик хх, отклики на hh, отклики на hh.ru, отклики на хх, автоотклики на hh, автоотклики на hh.ru, автоотклики на хх, автоматизация поиска работы, бот для поиска работы, карьерный консультант цена, аудит резюме онлайн, генератор сопроводительных писем, работа в IT, поиск работы за деньги, ATS фильтры, прохождение ATS, Aurora Career, Аврора">
 
@@ -447,9 +447,11 @@
 </main>
 
 <!-- Footer -->
-<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-8 md:py-12 px-5 md:px-16 lg:px-24">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 w-full">
-        <div class="flex flex-col items-center md:items-start gap-2">
+<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-10 md:py-14 px-5 md:px-16 lg:px-24">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-10 w-full">
+
+        <!-- Brand + Legal entity -->
+        <div class="flex flex-col gap-5 order-2 md:order-1">
             <div class="flex items-center gap-2 md:gap-3">
                 <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="favicon.png?v=3"/>
                 <div class="flex flex-col leading-tight">
@@ -457,12 +459,31 @@
                     <div class="text-[8px] md:text-[9px] text-[#cac3d7]/70 font-light tracking-wide">Карьерный ИИ-Ассистент</div>
                 </div>
             </div>
+            <div class="text-[11px] md:text-xs text-[#cac3d7]/50 leading-relaxed font-['Inter'] space-y-0.5">
+                <div>ИП Клепов Вадим Сергеевич</div>
+                <div>ОГРНИП 326220200010610, ИНН 220415989252</div>
+            </div>
             <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Аврора</div>
         </div>
-        <div class="grid grid-cols-2 md:flex gap-x-6 gap-y-3 md:gap-8 font-['Inter'] text-[10px] md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em] text-center md:text-left">
-            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('terms')">Условия</a>
-            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('privacy')">Конфиденц.</a>
-        </div>
+
+        <!-- Legal links -->
+        <nav class="flex flex-col sm:flex-row gap-6 md:gap-10 font-['Inter'] text-sm order-1 md:order-2">
+            <a href="/privacy/" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group">
+                <span>Политика конфиденциальности</span>
+                <svg class="w-3.5 h-3.5 text-[#ccbeff]/60 group-hover:text-[#ccbeff] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"/>
+                    <polyline points="7 7 17 7 17 17"/>
+                </svg>
+            </a>
+            <a href="/offer/" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group">
+                <span>Оферта</span>
+                <svg class="w-3.5 h-3.5 text-[#ccbeff]/60 group-hover:text-[#ccbeff] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"/>
+                    <polyline points="7 7 17 7 17 17"/>
+                </svg>
+            </a>
+        </nav>
+
     </div>
 </footer>
 
@@ -522,36 +543,6 @@
     }
 
     const infoContent = {
-        terms: {
-            title: 'Условия использования',
-            body: `
-                <p><strong>1. Общие положения</strong></p>
-                <p>Настоящие Условия использования регулируют порядок доступа и использования сервиса Аврора (далее — «Сервис»). Используя Сервис, вы соглашаетесь с данными условиями в полном объёме.</p>
-                <p><strong>2. Описание сервиса</strong></p>
-                <p>Аврора — это система автоматизации поиска работы, которая помогает пользователям: адаптировать резюме под конкретные вакансии, генерировать персонализированные сопроводительные письма и автоматически отправлять отклики на подходящие позиции.</p>
-                <p><strong>3. Ответственность</strong></p>
-                <p>Сервис предоставляется в текущем виде. Мы не гарантируем трудоустройство и не несём ответственности за решения работодателей. Аврора не является кадровым агентством и не выступает посредником в трудовых отношениях.</p>
-                <p><strong>4. Оплата и возврат</strong></p>
-                <p>Тарифы и условия оплаты указаны в боте. Возврат средств осуществляется в течение 7 дней с момента оплаты, если услуга не была использована. Для возврата свяжитесь с поддержкой.</p>
-                <p><strong>5. Изменение условий</strong></p>
-                <p>Мы оставляем за собой право изменять настоящие условия. Актуальная версия всегда доступна на сайте aurora-career.ru.</p>
-            `
-        },
-        privacy: {
-            title: 'Политика конфиденциальности',
-            body: `
-                <p><strong>1. Какие данные мы собираем</strong></p>
-                <p>Для работы сервиса мы запрашиваем: имя и контактную информацию, данные резюме (опыт работы, навыки, образование), предпочтения по поиску работы. Мы <strong>не собираем</strong> пароли от сторонних сервисов.</p>
-                <p><strong>2. Как мы используем данные</strong></p>
-                <p>Ваши данные используются исключительно для: адаптации резюме и генерации сопроводительных писем, подбора релевантных вакансий, отправки откликов от вашего имени и улучшения качества сервиса.</p>
-                <p><strong>3. Хранение и защита</strong></p>
-                <p>Данные хранятся на защищённых серверах с шифрованием. Доступ к персональным данным строго ограничен. Мы не передаём и не продаём ваши данные третьим лицам.</p>
-                <p><strong>4. Удаление данных</strong></p>
-                <p>Вы можете запросить полное удаление всех ваших данных в любой момент, обратившись в поддержку. Удаление производится в течение 30 дней.</p>
-                <p><strong>5. Cookies и аналитика</strong></p>
-                <p>Сайт использует Яндекс.Метрику для анализа посещаемости. Данные аналитики обезличены и не позволяют идентифицировать пользователя.</p>
-            `
-        },
         editorial: {
             title: 'Редакция',
             body: `
