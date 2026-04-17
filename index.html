@@ -198,22 +198,10 @@
     }
 </style>
 
-<script type="text/javascript">
-   (function(m,e,t,r,i,k,a){
-       m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-       m[i].l=1*new Date();
-       for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-       k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-   })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=106455919', 'ym');
-
-   ym(106455919, 'init', {
-        clickmap:true,
-        trackLinks:true,
-        accurateTrackBounce:true,
-        webvisor:true
-   });
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/106455919" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<link rel="stylesheet" href="cookie-consent.css">
+<link rel="stylesheet" href="legal-modal.css">
+<script src="legal-modal.js?v=1.0"></script>
+<script src="cookie-consent.js?v=1.1"></script>
 </head>
 <body class="text-on-surface selection:bg-primary/30 selection:text-primary overflow-x-hidden">
 
@@ -234,7 +222,7 @@
     </div>
     <div class="hidden md:flex gap-3 items-center">
         <button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-[#ccbeff]/10 transition-all duration-300 active:scale-95 ease-out" onclick="toggleModal('join-modal')">Попробовать бесплатно</button>
-        <a id="authBtn" href="/auth/" class="text-[#cac3d7] border border-white/10 px-5 py-2.5 rounded-full text-sm font-semibold hover:text-[#e7e0ef] hover:border-[#ccbeff]/30 hover:bg-[#ccbeff]/5 transition-all duration-300 active:scale-95 ease-out">Вход</a>
+        <a id="authBtn" href="/auth/" class="text-[#cac3d7] border border-white/10 px-5 py-2.5 rounded-full text-sm font-semibold hover:text-[#e7e0ef] hover:border-[#ccbeff]/30 hover:bg-[#ccbeff]/5 transition-all duration-300 active:scale-95 ease-out opacity-0" style="min-width:90px;text-align:center">Вход</a>
     </div>
     <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
         <span></span><span></span><span></span>
@@ -244,7 +232,7 @@
 <!-- Mobile Menu -->
 <div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
     <button onclick="toggleMobileMenu(); toggleModal('join-modal');" class="w-full bg-gradient-to-tr from-primary-container to-secondary-container text-white py-4 rounded-xl text-base font-bold mt-4 mb-2 text-center">Попробовать бесплатно</button>
-    <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()" class="w-full text-center border border-white/10 text-[#cac3d7] py-3.5 rounded-xl text-base font-semibold mb-2 hover:text-[#e7e0ef] transition-colors">Вход</a>
+    <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()" class="w-full text-center border border-white/10 text-[#cac3d7] py-3.5 rounded-xl text-base font-semibold mb-2 hover:text-[#e7e0ef] transition-colors opacity-0">Вход</a>
     <a href="#opportunities" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Возможности</a>
     <a href="#insights" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Проблемы поиска</a>
     <a href="#network" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Как это работает?</a>
@@ -461,9 +449,11 @@
 </main>
 
 <!-- Footer -->
-<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-8 md:py-12 px-5 md:px-16 lg:px-24">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 w-full">
-        <div class="flex flex-col items-center md:items-start gap-2">
+<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-10 md:py-14 px-5 md:px-16 lg:px-24">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-10 w-full">
+
+        <!-- Brand + Legal entity -->
+        <div class="flex flex-col gap-5 order-2 md:order-1">
             <div class="flex items-center gap-2 md:gap-3">
                 <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="favicon.png?v=3"/>
                 <div class="flex flex-col leading-tight">
@@ -471,12 +461,31 @@
                     <div class="text-[8px] md:text-[9px] text-[#cac3d7]/70 font-light tracking-wide">Карьерный ИИ-Ассистент</div>
                 </div>
             </div>
+            <div class="text-[11px] md:text-xs text-[#cac3d7]/50 leading-relaxed font-['Inter'] space-y-0.5">
+                <div>ИП Клепов Вадим Сергеевич</div>
+                <div>ОГРНИП 326220200010610, ИНН 220415989252</div>
+            </div>
             <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Аврора</div>
         </div>
-        <div class="grid grid-cols-2 md:flex gap-x-6 gap-y-3 md:gap-8 font-['Inter'] text-[10px] md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em] text-center md:text-left">
-            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('terms')">Условия</a>
-            <a class="text-[#cac3d7]/60 hover:text-[#ccbeff] transition-opacity duration-500 cursor-pointer" onclick="openInfoModal('privacy')">Конфиденц.</a>
-        </div>
+
+        <!-- Legal links -->
+        <nav class="flex flex-col sm:flex-row gap-6 md:gap-10 font-['Inter'] text-sm order-1 md:order-2">
+            <button type="button" onclick="openLegalModal('privacy')" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group cursor-pointer bg-transparent border-0 p-0 font-inherit text-left">
+                <span>Политика конфиденциальности</span>
+                <svg class="w-3.5 h-3.5 text-[#ccbeff]/60 group-hover:text-[#ccbeff] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"/>
+                    <polyline points="7 7 17 7 17 17"/>
+                </svg>
+            </button>
+            <button type="button" onclick="openLegalModal('offer')" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group cursor-pointer bg-transparent border-0 p-0 font-inherit text-left">
+                <span>Оферта</span>
+                <svg class="w-3.5 h-3.5 text-[#ccbeff]/60 group-hover:text-[#ccbeff] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"/>
+                    <polyline points="7 7 17 7 17 17"/>
+                </svg>
+            </button>
+        </nav>
+
     </div>
 </footer>
 
@@ -536,36 +545,6 @@
     }
 
     const infoContent = {
-        terms: {
-            title: 'Условия использования',
-            body: `
-                <p><strong>1. Общие положения</strong></p>
-                <p>Настоящие Условия использования регулируют порядок доступа и использования сервиса Аврора (далее — «Сервис»). Используя Сервис, вы соглашаетесь с данными условиями в полном объёме.</p>
-                <p><strong>2. Описание сервиса</strong></p>
-                <p>Аврора — это система автоматизации поиска работы, которая помогает пользователям: адаптировать резюме под конкретные вакансии, генерировать персонализированные сопроводительные письма и автоматически отправлять отклики на подходящие позиции.</p>
-                <p><strong>3. Ответственность</strong></p>
-                <p>Сервис предоставляется в текущем виде. Мы не гарантируем трудоустройство и не несём ответственности за решения работодателей. Аврора не является кадровым агентством и не выступает посредником в трудовых отношениях.</p>
-                <p><strong>4. Оплата и возврат</strong></p>
-                <p>Тарифы и условия оплаты указаны в боте. Возврат средств осуществляется в течение 7 дней с момента оплаты, если услуга не была использована. Для возврата свяжитесь с поддержкой.</p>
-                <p><strong>5. Изменение условий</strong></p>
-                <p>Мы оставляем за собой право изменять настоящие условия. Актуальная версия всегда доступна на сайте aurora-career.ru.</p>
-            `
-        },
-        privacy: {
-            title: 'Политика конфиденциальности',
-            body: `
-                <p><strong>1. Какие данные мы собираем</strong></p>
-                <p>Для работы сервиса мы запрашиваем: имя и контактную информацию, данные резюме (опыт работы, навыки, образование), предпочтения по поиску работы. Мы <strong>не собираем</strong> пароли от сторонних сервисов.</p>
-                <p><strong>2. Как мы используем данные</strong></p>
-                <p>Ваши данные используются исключительно для: адаптации резюме и генерации сопроводительных писем, подбора релевантных вакансий, отправки откликов от вашего имени и улучшения качества сервиса.</p>
-                <p><strong>3. Хранение и защита</strong></p>
-                <p>Данные хранятся на защищённых серверах с шифрованием. Доступ к персональным данным строго ограничен. Мы не передаём и не продаём ваши данные третьим лицам.</p>
-                <p><strong>4. Удаление данных</strong></p>
-                <p>Вы можете запросить полное удаление всех ваших данных в любой момент, обратившись в поддержку. Удаление производится в течение 30 дней.</p>
-                <p><strong>5. Cookies и аналитика</strong></p>
-                <p>Сайт использует Яндекс.Метрику для анализа посещаемости. Данные аналитики обезличены и не позволяют идентифицировать пользователя.</p>
-            `
-        },
         editorial: {
             title: 'Редакция',
             body: `
@@ -637,10 +616,14 @@
             var apiBase = (h.indexOf('twc1.net') !== -1 || h.indexOf('aurora-develop') !== -1)
                 ? 'https://api.aurora-develop.ru'
                 : 'https://api.aurora-career.ru';
+            var btn = document.getElementById('authBtn');
+            var btnMobile = document.getElementById('authBtnMobile');
 
+            function reveal() {
+                if (btn) { btn.style.transition = 'opacity 0.25s ease'; btn.style.opacity = '1'; }
+                if (btnMobile) { btnMobile.style.transition = 'opacity 0.25s ease'; btnMobile.style.opacity = '1'; }
+            }
             function setLoggedIn() {
-                var btn = document.getElementById('authBtn');
-                var btnMobile = document.getElementById('authBtnMobile');
                 if (btn) { btn.textContent = 'Кабинет'; btn.href = '/cabinet/'; }
                 if (btnMobile) { btnMobile.textContent = 'Кабинет'; btnMobile.href = '/cabinet/'; }
             }
@@ -661,7 +644,8 @@
                 .then(function(data) {
                     if (data && data.status === 'ok') setLoggedIn();
                 })
-                .catch(function() {});
+                .catch(function() {})
+                .finally(reveal);
         })();
     });
 </script>

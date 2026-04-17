@@ -1,0 +1,182 @@
+/* =============================================
+   Cookie Consent Banner — Aurora Design System
+   ============================================= */
+
+#cookie-consent-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(16, 13, 23, 0);
+  transition: background 0.4s ease;
+  pointer-events: none;
+}
+
+#cookie-consent-backdrop.ccb-backdrop-visible {
+  background: rgba(16, 13, 23, 0.4);
+  pointer-events: auto;
+}
+
+#cookie-consent-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding: 0 16px 16px;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+#cookie-consent-banner.ccb-visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#cookie-consent-banner.ccb-hiding {
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease;
+}
+
+.ccb-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: rgba(33, 30, 41, 0.85);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(204, 190, 255, 0.12);
+  border-radius: 16px;
+  box-shadow:
+    0 -4px 32px rgba(90, 48, 208, 0.08),
+    0 8px 48px rgba(0, 0, 0, 0.4);
+  font-family: 'Inter', sans-serif;
+}
+
+.ccb-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(90, 48, 208, 0.12);
+  border-radius: 12px;
+}
+
+.ccb-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ccb-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #cac3d7;
+  margin: 0;
+}
+
+.ccb-link {
+  color: #ccbeff;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(204, 190, 255, 0.3);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.ccb-link:hover {
+  color: #e7deff;
+  border-color: rgba(204, 190, 255, 0.6);
+}
+
+.ccb-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+}
+
+.ccb-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 10px 20px;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.ccb-btn:active {
+  transform: scale(0.96);
+}
+
+.ccb-btn-accept {
+  background: linear-gradient(135deg, #5a30d0, #58309f);
+  color: #e7deff;
+  box-shadow: 0 4px 16px rgba(90, 48, 208, 0.3);
+}
+
+.ccb-btn-accept:hover {
+  background: linear-gradient(135deg, #6838e0, #6438b0);
+  box-shadow: 0 6px 24px rgba(90, 48, 208, 0.45);
+}
+
+.ccb-btn-decline {
+  background: transparent;
+  color: #938ea0;
+  padding: 10px 16px;
+}
+
+.ccb-btn-decline:hover {
+  color: #cac3d7;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* =============================================
+   Mobile (< 640px)
+   ============================================= */
+@media (max-width: 639px) {
+  #cookie-consent-banner {
+    padding: 0 12px 12px;
+  }
+
+  .ccb-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .ccb-icon {
+    display: none;
+  }
+
+  .ccb-text {
+    font-size: 12.5px;
+    text-align: center;
+  }
+
+  .ccb-actions {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .ccb-btn {
+    flex: 1;
+    text-align: center;
+    padding: 12px 16px;
+  }
+
+  .ccb-btn-decline {
+    flex: 0 0 auto;
+  }
+}

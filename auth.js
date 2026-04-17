@@ -218,8 +218,10 @@ function updateRegPasswordChecks() {
     });
     const confirm = document.getElementById('regPasswordConfirm')?.value;
     const email = document.getElementById('regEmail')?.value?.trim();
+    const consentPrivacy = document.getElementById('regConsentPrivacy')?.checked;
+    const consentOffer = document.getElementById('regConsentOffer')?.checked;
     const btn = document.getElementById('regBtn');
-    if (btn) btn.disabled = !(allPassed && email && pwd === confirm);
+    if (btn) btn.disabled = !(allPassed && email && pwd === confirm && consentPrivacy && consentOffer);
 }
 
 async function handleRegister(e) {
@@ -229,6 +231,8 @@ async function handleRegister(e) {
     const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
     const confirm = document.getElementById('regPasswordConfirm').value;
+    const consentPrivacy = document.getElementById('regConsentPrivacy')?.checked;
+    const consentOffer = document.getElementById('regConsentOffer')?.checked;
 
     if (!email || !password || !confirm) return;
 
@@ -242,10 +246,22 @@ async function handleRegister(e) {
         return;
     }
 
+    if (!consentPrivacy || !consentOffer) {
+        showMessage('Необходимо согласие с Политикой конфиденциальности и Офертой');
+        return;
+    }
+
     setLoading('regBtn', 'regBtnText', true);
 
     try {
-        const payload = { email, password };
+        const payload = {
+            email,
+            password,
+            consent_privacy: true,
+            consent_offer: true,
+            consent_privacy_version: (window.AURORA_LEGAL_VERSIONS && window.AURORA_LEGAL_VERSIONS.privacy) || null,
+            consent_offer_version: (window.AURORA_LEGAL_VERSIONS && window.AURORA_LEGAL_VERSIONS.offer) || null,
+        };
         if (auditSource) payload.source = 'audit';
 
         const { ok, status, data } = await apiCall('/api/auth/register', payload);
