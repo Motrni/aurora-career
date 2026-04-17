@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#15121c">
+<title>Готовим оплату — Aurora Career</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #15121c;
+    color: #e7e0ef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .glow-1, .glow-2 {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-1 {
+    top: -240px; right: -240px;
+    width: 540px; height: 540px;
+    background: rgba(101, 62, 219, 0.22);
+  }
+  .glow-2 {
+    bottom: -240px; left: -240px;
+    width: 540px; height: 540px;
+    background: rgba(123, 77, 255, 0.14);
+  }
+
+  .brand {
+    position: absolute;
+    top: max(28px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #7d7589;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+    z-index: 2;
+  }
+
+  .card {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    width: 100%;
+    max-width: 440px;
+    padding: 40px 24px;
+  }
+
+  .spinner-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 32px;
+    position: relative;
+  }
+  .spinner-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(204, 190, 255, 0.18), transparent 70%);
+    filter: blur(8px);
+  }
+  .spinner {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border: 4px solid rgba(204, 190, 255, 0.14);
+    border-top-color: #ccbeff;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    z-index: 1;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 1.8s; }
+  }
+
+  .title {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    color: #f1ecfa;
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: #cac3d7;
+    line-height: 1.55;
+    margin: 0;
+    min-height: 46px;
+    transition: opacity 0.3s ease;
+    font-weight: 400;
+  }
+
+  .secure-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(204, 190, 255, 0.06);
+    border: 1px solid rgba(204, 190, 255, 0.12);
+    font-size: 12px;
+    color: #938ea0;
+    letter-spacing: 0.01em;
+  }
+  .secure-line svg { flex-shrink: 0; }
+
+  .error-block {
+    display: none;
+    margin-top: 8px;
+    padding: 24px;
+    background: linear-gradient(180deg, rgba(255, 176, 71, 0.08), rgba(255, 176, 71, 0.02));
+    border: 1px solid rgba(255, 176, 71, 0.22);
+    border-radius: 16px;
+    text-align: left;
+  }
+  .error-block.visible { display: block; }
+
+  .error-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 176, 71, 0.15);
+    color: #ffb047;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .error-title {
+    color: #f1ecfa;
+    font-weight: 700;
+    font-size: 16px;
+    margin: 0 0 6px;
+  }
+  .error-text {
+    color: #a8a0b8;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0 0 16px;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #7b4dff 0%, #5a30d0 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: filter 0.2s, transform 0.1s;
+    box-shadow: 0 10px 30px rgba(90, 48, 208, 0.32);
+    font-family: inherit;
+  }
+  .btn:hover { filter: brightness(1.1); }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-secondary {
+    margin-top: 10px;
+    background: transparent;
+    border: 1px solid rgba(204, 190, 255, 0.18);
+    color: #cac3d7;
+    box-shadow: none;
+    font-weight: 600;
+  }
+  .btn-secondary:hover {
+    background: rgba(204, 190, 255, 0.06);
+    filter: none;
+  }
+</style>
+</head>
+<body>
+  <div class="glow-1" aria-hidden="true"></div>
+  <div class="glow-2" aria-hidden="true"></div>
+  <div class="brand">AURORA CAREER</div>
+
+  <div class="card">
+    <div id="loadingState">
+      <div class="spinner-wrap">
+        <div class="spinner" aria-hidden="true"></div>
+      </div>
+      <h1 class="title" id="titleEl">Готовим страницу оплаты</h1>
+      <p class="subtitle" id="subtitleEl">Это займёт пару секунд</p>
+      <div class="secure-line">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Безопасное соединение CloudPayments
+      </div>
+    </div>
+
+    <div class="error-block" id="errorBlock" role="alert">
+      <div class="error-icon" aria-hidden="true">!</div>
+      <p class="error-title" id="errorTitleEl">Не получилось открыть оплату</p>
+      <p class="error-text" id="errorTextEl">
+        Возможно, проблема с подключением. Счёт также продублирован на вашу почту — оплата с ссылки в письме сработает гарантированно.
+      </p>
+      <a href="#" class="btn" id="retryBtn" target="_self" rel="noopener" style="display:none;">Перейти к оплате</a>
+      <button type="button" class="btn btn-secondary" id="closeBtn">Закрыть это окно</button>
+    </div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- Конфиг ----------
+  // Допустимые origins для postMessage. Жёстко отсекаем чужие сообщения.
+  var ALLOWED_ORIGINS = [
+    'https://aurora-career.ru',
+    'https://aurora-develop.ru',
+    location.origin
+  ];
+
+  var STAGES = [
+    { delay: 2500, text: 'Подключаемся к платёжному шлюзу CloudPayments' },
+    { delay: 6000, text: 'Ещё чуть-чуть, не закрывайте окно' },
+    { delay: 10000, text: 'Соединение медленное — продолжаем попытку' }
+  ];
+  var TIMEOUT_MS = 15000;
+  var STORAGE_KEY = 'aurora_pending_payment';
+
+  // ---------- DOM ----------
+  var subtitleEl = document.getElementById('subtitleEl');
+  var titleEl    = document.getElementById('titleEl');
+  var loadingEl  = document.getElementById('loadingState');
+  var errorBlock = document.getElementById('errorBlock');
+  var errorText  = document.getElementById('errorTextEl');
+  var errorTitle = document.getElementById('errorTitleEl');
+  var retryBtn   = document.getElementById('retryBtn');
+  var closeBtn   = document.getElementById('closeBtn');
+
+  // ---------- State ----------
+  var redirected = false;
+  var stageTimers = [];
+  var timeoutTimer = null;
+
+  // ---------- Helpers ----------
+  function isAllowedOrigin(origin) {
+    return ALLOWED_ORIGINS.indexOf(origin) !== -1;
+  }
+
+  function isValidUrl(url) {
+    if (typeof url !== 'string') return false;
+    if (url.indexOf('https://') !== 0) return false;
+    return url.length < 2048;
+  }
+
+  function setSubtitle(text) {
+    if (redirected || !subtitleEl) return;
+    subtitleEl.style.opacity = '0';
+    setTimeout(function () {
+      subtitleEl.textContent = text;
+      subtitleEl.style.opacity = '1';
+    }, 200);
+  }
+
+  function startStages() {
+    STAGES.forEach(function (stage) {
+      stageTimers.push(setTimeout(function () { setSubtitle(stage.text); }, stage.delay));
+    });
+  }
+
+  function clearAllTimers() {
+    stageTimers.forEach(function (t) { clearTimeout(t); });
+    stageTimers = [];
+    if (timeoutTimer) {
+      clearTimeout(timeoutTimer);
+      timeoutTimer = null;
+    }
+  }
+
+  function redirectTo(url) {
+    if (redirected) return;
+    if (!isValidUrl(url)) {
+      showError('Получена некорректная ссылка на оплату.', null);
+      return;
+    }
+    redirected = true;
+    clearAllTimers();
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+    setSubtitle('Перенаправляем на страницу оплаты');
+    setTimeout(function () { location.replace(url); }, 80);
+  }
+
+  function showError(msg, retryUrl) {
+    clearAllTimers();
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (msg) errorText.textContent = msg;
+    errorBlock.classList.add('visible');
+    if (retryUrl && isValidUrl(retryUrl)) {
+      retryBtn.href = retryUrl;
+      retryBtn.style.display = 'block';
+    }
+  }
+
+  function checkLocalStorage() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data && data.url && data.expires_at && data.expires_at > Date.now()) {
+        redirectTo(data.url);
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch (_) {}
+  }
+
+  function pingOpener() {
+    if (!window.opener || window.opener.closed) return;
+    try {
+      window.opener.postMessage({ type: 'aurora_loader_ready' }, '*');
+    } catch (_) {}
+  }
+
+  // ---------- postMessage listener ----------
+  window.addEventListener('message', function (event) {
+    if (!isAllowedOrigin(event.origin)) return;
+    var data = event.data;
+    if (!data || typeof data !== 'object') return;
+
+    if (data.type === 'aurora_payment_url' && data.url) {
+      redirectTo(data.url);
+    } else if (data.type === 'aurora_payment_error') {
+      showError(
+        data.message || 'Не удалось создать платёж. Попробуйте ещё раз из кабинета.',
+        null
+      );
+    }
+  });
+
+  // ---------- UI handlers ----------
+  closeBtn.addEventListener('click', function () {
+    try { window.close(); } catch (_) {}
+    setTimeout(function () {
+      // Если window.close() заблокирован (когда не мы открыли вкладку) — фоллбек
+      if (!window.closed) {
+        location.href = 'https://aurora-career.ru/cabinet/';
+      }
+    }, 200);
+  });
+
+  // ---------- Запуск ----------
+  startStages();
+  checkLocalStorage();
+  pingOpener();
+  // Повторим сигнал через 600мс — на случай если opener только настраивает обработчик
+  setTimeout(pingOpener, 600);
+  setTimeout(pingOpener, 1500);
+
+  timeoutTimer = setTimeout(function () {
+    if (!redirected) {
+      showError(
+        'Превышено время ожидания. Откройте счёт из письма на вашей почте или вернитесь в кабинет и попробуйте снова.',
+        null
+      );
+    }
+  }, TIMEOUT_MS);
+})();
+</script>
+</body>
+</html>

@@ -1,8 +1,9 @@
 /**
- * cabinet.js v3.8 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.9 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  *
  * v3.8: 3-уровневая защита от блокировки popup при оплате (см. handlePurchase).
+ * v3.9: страница-прокладка /cabinet/payment-loading/ + postMessage/localStorage канал.
  */
 
 const API_BASE_URL = window.AuroraSession
@@ -1355,6 +1356,15 @@ async function loadTariffs() {
     }
 }
 
+// URL страницы-прокладки. Открывается синхронно при клике на тариф.
+// Главные плюсы (vs about:blank):
+//   1) Юзер видит брендированный лоадер с темой Aurora, а не белый экран.
+//   2) Сменяемые тексты дают понять, что мы работаем (особенно на медленном инете).
+//   3) Если что-то пошло не так — у юзера на нашей странице понятный fallback.
+const PAYMENT_LOADER_PATH = '/cabinet/payment-loading/';
+const PAYMENT_STORAGE_KEY = 'aurora_pending_payment';
+const PAYMENT_STORAGE_TTL_MS = 5 * 60 * 1000;
+
 async function handlePurchase(planCode) {
     const card = document.querySelector(`[data-plan="${planCode}"]`);
     if (card) {
@@ -1362,17 +1372,43 @@ async function handlePurchase(planCode) {
         card.style.pointerEvents = 'none';
     }
 
-    // L1: открываем пустую вкладку СИНХРОННО, в том же tick что и клик.
-    // Это сохраняет user gesture trust → браузер не блокирует popup.
-    // Дальше в эту вкладку зальём реальный URL после ответа сервера.
+    // L1: открываем НАШУ страницу-прокладку СИНХРОННО (user gesture trust).
+    // Браузер не блокирует popup, юзер видит брендированный лоадер вместо about:blank.
+    const loaderUrl = PAYMENT_LOADER_PATH + '?t=' + Date.now();
     let paymentWindow = null;
     try {
-        paymentWindow = window.open('about:blank', '_blank');
+        paymentWindow = window.open(loaderUrl, '_blank');
     } catch (_) {
         paymentWindow = null;
     }
 
     _showPaymentRedirectOverlay();
+
+    // Готовим обработчик ready-сигнала ОТ прокладки. Прокладка может прислать
+    // его раньше, чем мы получим payment_url от бэка — тогда сохраняем URL
+    // и отправим, как только он появится.
+    let pendingUrl = null;
+    let pendingError = null;
+    let listenerActive = true;
+
+    const onLoaderReady = (event) => {
+        if (!listenerActive) return;
+        if (event.source !== paymentWindow) return;
+        if (event.origin !== location.origin) return;
+        const data = event.data || {};
+        if (data.type !== 'aurora_loader_ready') return;
+        if (pendingUrl) {
+            _postToLoader(paymentWindow, { type: 'aurora_payment_url', url: pendingUrl });
+        } else if (pendingError) {
+            _postToLoader(paymentWindow, { type: 'aurora_payment_error', message: pendingError });
+        }
+    };
+    window.addEventListener('message', onLoaderReady);
+
+    const cleanupListener = () => {
+        listenerActive = false;
+        window.removeEventListener('message', onLoaderReady);
+    };
 
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/subscribe/purchase`, {
@@ -1388,8 +1424,10 @@ async function handlePurchase(planCode) {
 
         const data = await resp.json();
         if (!data.payment_url) {
-            if (_isWindowAlive(paymentWindow)) paymentWindow.close();
+            pendingError = 'Не удалось создать платёж. Попробуйте ещё раз.';
+            _postToLoader(paymentWindow, { type: 'aurora_payment_error', message: pendingError });
             _hidePaymentRedirectOverlay();
+            setTimeout(cleanupListener, 5000);
             return;
         }
 
@@ -1401,35 +1439,58 @@ async function handlePurchase(planCode) {
             description: data.description,
         };
 
+        pendingUrl = data.payment_url;
+
+        // Резервный канал передачи URL: localStorage с TTL.
+        // Используется если юзер обновит прокладку (postMessage потерян).
+        try {
+            localStorage.setItem(PAYMENT_STORAGE_KEY, JSON.stringify({
+                url: data.payment_url,
+                expires_at: Date.now() + PAYMENT_STORAGE_TTL_MS,
+            }));
+        } catch (_) {}
+
         if (_isWindowAlive(paymentWindow)) {
-            try {
-                paymentWindow.location.href = data.payment_url;
-                _trackPaymentEvent('window_open_ok', data.payment_id);
-                _updatePaymentOverlayOpened(data.payment_url, data.payment_id);
-                return;
-            } catch (e) {
-                console.warn('[Payment] Failed to redirect popup:', e);
-            }
+            // Отправляем URL прокладке. Дублируем 3 раза с интервалом —
+            // защита от race condition (прокладка может ещё не повесить listener).
+            _postToLoader(paymentWindow, { type: 'aurora_payment_url', url: data.payment_url });
+            setTimeout(() => _postToLoader(paymentWindow, { type: 'aurora_payment_url', url: data.payment_url }), 250);
+            setTimeout(() => _postToLoader(paymentWindow, { type: 'aurora_payment_url', url: data.payment_url }), 800);
+
+            _trackPaymentEvent('window_open_ok', data.payment_id);
+            _updatePaymentOverlayOpened(data.payment_url, data.payment_id);
+            // Слушатель ready-сигнала живёт ещё 30 сек на случай очень медленной загрузки прокладки
+            setTimeout(cleanupListener, 30000);
+            return;
         }
 
-        // L2: вкладка не открылась или редирект упал → fallback-модалка
+        // L2: окно прокладки не открылось → fallback-модалка с прямой <a>
         _trackPaymentEvent('popup_blocked', data.payment_id, {
             ua: navigator.userAgent,
         });
         _hidePaymentRedirectOverlay();
         _showPaymentBlockedModal(data.payment_url, data.payment_id);
+        cleanupListener();
 
     } catch (e) {
         console.error('[Purchase] Error:', e);
-        if (_isWindowAlive(paymentWindow)) {
-            try { paymentWindow.close(); } catch (_) {}
-        }
+        pendingError = 'Не удалось создать платёж. Попробуйте ещё раз.';
+        _postToLoader(paymentWindow, { type: 'aurora_payment_error', message: pendingError });
+        // Прокладку не закрываем — пусть юзер увидит сообщение об ошибке и закроет сам
         _hidePaymentRedirectOverlay();
         if (card) {
             card.style.opacity = '1';
             card.style.pointerEvents = 'auto';
         }
+        setTimeout(cleanupListener, 5000);
     }
+}
+
+function _postToLoader(win, payload) {
+    if (!_isWindowAlive(win)) return;
+    try {
+        win.postMessage(payload, location.origin);
+    } catch (_) {}
 }
 
 // ============================================================================
@@ -1563,17 +1624,19 @@ function _showPaymentRedirectOverlay() {
         overlay = document.createElement('div');
         overlay.id = 'paymentRedirectOverlay';
         overlay.innerHTML = `
-            <div style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:24px;">
+            <div id="paymentRedirectInner" style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;padding:24px;">
                 <button type="button" id="paymentRedirectClose" aria-label="Закрыть"
                     class="payment-redirect-close"
                     style="position:absolute;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));width:44px;height:44px;border-radius:12px;border:1px solid rgba(204,190,255,0.25);background:rgba(33,30,41,0.9);color:#e7e0ef;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s;z-index:2;">
                     ×
                 </button>
-                <div style="display:flex;flex-direction:column;align-items:center;gap:20px;max-width:min(100%,360px);">
-                    <div class="payment-redirect-spinner"></div>
-                    <p id="paymentRedirectText" style="color:#e7e0ef;font-size:16px;font-weight:600;text-align:center;margin:0;">
-                        Перенаправление на страницу оплаты…
-                    </p>
+                <div id="paymentRedirectContent" style="display:flex;flex-direction:column;align-items:center;gap:24px;width:100%;max-width:min(100%,400px);">
+                    <div id="paymentRedirectMain" style="display:flex;flex-direction:column;align-items:center;gap:20px;width:100%;">
+                        <div class="payment-redirect-spinner" aria-hidden="true"></div>
+                        <p id="paymentRedirectText" style="color:#e7e0ef;font-size:16px;font-weight:600;text-align:center;margin:0;line-height:1.45;max-width:100%;">
+                            Перенаправление на страницу оплаты…
+                        </p>
+                    </div>
                 </div>
             </div>`;
         Object.assign(overlay.style, {
@@ -1620,7 +1683,9 @@ function _showPaymentRedirectOverlay() {
 function _updatePaymentOverlayOpened(paymentUrl, paymentId) {
     const text = document.getElementById('paymentRedirectText');
     if (text) {
-        text.innerHTML = 'Оплата открыта в новой вкладке.<br><span style="font-weight:400;font-size:14px;color:#cac3d7;margin-top:4px;display:inline-block;">После оплаты эта страница обновится автоматически.</span>';
+        text.innerHTML = ''
+            + '<span style="display:block;font-weight:600;color:#e7e0ef;">Оплата открыта в новой вкладке.</span>'
+            + '<span style="display:block;font-weight:400;font-size:14px;color:#cac3d7;margin-top:10px;line-height:1.5;">После оплаты эта страница обновится автоматически.</span>';
     }
 
     // L3: через 4 секунды показываем резервную ссылку.
@@ -1645,13 +1710,12 @@ function _showPaymentOverlayFallback(paymentUrl, paymentId) {
     if (!overlay) return;
     if (overlay.querySelector('#paymentRedirectFallback')) return;
 
-    const inner = overlay.querySelector('div > div:last-child');
-    const target = inner || overlay.firstElementChild;
+    const target = document.getElementById('paymentRedirectContent');
     if (!target) return;
 
     const wrap = document.createElement('div');
     wrap.id = 'paymentRedirectFallback';
-    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:320px;margin-top:8px;';
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:320px;';
     wrap.innerHTML = `
         <p style="color:#cac3d7;font-size:13px;line-height:1.5;text-align:center;margin:0;">
             Если новая вкладка не открылась — нажмите кнопку ниже.<br>
