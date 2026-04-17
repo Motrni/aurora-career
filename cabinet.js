@@ -1,6 +1,10 @@
 /**
- * cabinet.js v3.7 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.9.1 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
+ *
+ * v3.8:   3-уровневая защита от блокировки popup при оплате (см. handlePurchase).
+ * v3.9:   страница-прокладка /cabinet/payment-loading/ + postMessage/localStorage канал.
+ * v3.9.1: трекинг tariff_modal_opened для воронки "интерес → оплата".
  */
 
 const API_BASE_URL = window.AuroraSession
@@ -12,6 +16,38 @@ const API_BASE_URL = window.AuroraSession
 let currentUser = null;
 let _loadedTariffs = [];
 let _paymentRedirectPollTimer = null;
+let _paymentFallbackTimer = null;
+let _lastPaymentContext = null;
+
+// ============================================================================
+// PAYMENT FUNNEL ANALYTICS — fire-and-forget трекинг точек отвала
+// ============================================================================
+
+function _trackPaymentEvent(eventType, paymentId, extra) {
+    try {
+        const body = JSON.stringify({
+            event_type: eventType,
+            payment_id: paymentId || null,
+            extra: extra || undefined,
+        });
+        fetch(`${API_BASE_URL}/api/analytics/payment-event`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+            keepalive: true,
+        }).catch(() => {});
+    } catch (_) {}
+}
+
+function _isWindowAlive(handle) {
+    if (!handle) return false;
+    try {
+        return !handle.closed;
+    } catch (_) {
+        return true;
+    }
+}
 
 // ============================================================================
 // API HELPER
@@ -1321,6 +1357,15 @@ async function loadTariffs() {
     }
 }
 
+// URL страницы-прокладки. Открывается синхронно при клике на тариф.
+// Главные плюсы (vs about:blank):
+//   1) Юзер видит брендированный лоадер с темой Aurora, а не белый экран.
+//   2) Сменяемые тексты дают понять, что мы работаем (особенно на медленном инете).
+//   3) Если что-то пошло не так — у юзера на нашей странице понятный fallback.
+const PAYMENT_LOADER_PATH = '/cabinet/payment-loading/';
+const PAYMENT_STORAGE_KEY = 'aurora_pending_payment';
+const PAYMENT_STORAGE_TTL_MS = 5 * 60 * 1000;
+
 async function handlePurchase(planCode) {
     const card = document.querySelector(`[data-plan="${planCode}"]`);
     if (card) {
@@ -1328,7 +1373,43 @@ async function handlePurchase(planCode) {
         card.style.pointerEvents = 'none';
     }
 
+    // L1: открываем НАШУ страницу-прокладку СИНХРОННО (user gesture trust).
+    // Браузер не блокирует popup, юзер видит брендированный лоадер вместо about:blank.
+    const loaderUrl = PAYMENT_LOADER_PATH + '?t=' + Date.now();
+    let paymentWindow = null;
+    try {
+        paymentWindow = window.open(loaderUrl, '_blank');
+    } catch (_) {
+        paymentWindow = null;
+    }
+
     _showPaymentRedirectOverlay();
+
+    // Готовим обработчик ready-сигнала ОТ прокладки. Прокладка может прислать
+    // его раньше, чем мы получим payment_url от бэка — тогда сохраняем URL
+    // и отправим, как только он появится.
+    let pendingUrl = null;
+    let pendingError = null;
+    let listenerActive = true;
+
+    const onLoaderReady = (event) => {
+        if (!listenerActive) return;
+        if (event.source !== paymentWindow) return;
+        if (event.origin !== location.origin) return;
+        const data = event.data || {};
+        if (data.type !== 'aurora_loader_ready') return;
+        if (pendingUrl) {
+            _postToLoader(paymentWindow, { type: 'aurora_payment_url', url: pendingUrl });
+        } else if (pendingError) {
+            _postToLoader(paymentWindow, { type: 'aurora_payment_error', message: pendingError });
+        }
+    };
+    window.addEventListener('message', onLoaderReady);
+
+    const cleanupListener = () => {
+        listenerActive = false;
+        window.removeEventListener('message', onLoaderReady);
+    };
 
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/subscribe/purchase`, {
@@ -1338,26 +1419,79 @@ async function handlePurchase(planCode) {
         });
 
         if (!resp || !resp.ok) {
-            const err = await resp.json().catch(() => ({}));
+            const err = await (resp ? resp.json().catch(() => ({})) : Promise.resolve({}));
             throw new Error(err.detail || 'Purchase failed');
         }
 
         const data = await resp.json();
-        if (data.payment_url) {
-            window.open(data.payment_url, '_blank', 'noopener');
-            _updatePaymentOverlayOpened();
-        } else {
+        if (!data.payment_url) {
+            pendingError = 'Не удалось создать платёж. Попробуйте ещё раз.';
+            _postToLoader(paymentWindow, { type: 'aurora_payment_error', message: pendingError });
             _hidePaymentRedirectOverlay();
+            setTimeout(cleanupListener, 5000);
+            return;
         }
+
+        _lastPaymentContext = {
+            payment_url: data.payment_url,
+            payment_id: data.payment_id || null,
+            plan_code: planCode,
+            amount: data.amount,
+            description: data.description,
+        };
+
+        pendingUrl = data.payment_url;
+
+        // Резервный канал передачи URL: localStorage с TTL.
+        // Используется если юзер обновит прокладку (postMessage потерян).
+        try {
+            localStorage.setItem(PAYMENT_STORAGE_KEY, JSON.stringify({
+                url: data.payment_url,
+                expires_at: Date.now() + PAYMENT_STORAGE_TTL_MS,
+            }));
+        } catch (_) {}
+
+        if (_isWindowAlive(paymentWindow)) {
+            // Отправляем URL прокладке. Дублируем 3 раза с интервалом —
+            // защита от race condition (прокладка может ещё не повесить listener).
+            _postToLoader(paymentWindow, { type: 'aurora_payment_url', url: data.payment_url });
+            setTimeout(() => _postToLoader(paymentWindow, { type: 'aurora_payment_url', url: data.payment_url }), 250);
+            setTimeout(() => _postToLoader(paymentWindow, { type: 'aurora_payment_url', url: data.payment_url }), 800);
+
+            _trackPaymentEvent('window_open_ok', data.payment_id);
+            _updatePaymentOverlayOpened(data.payment_url, data.payment_id);
+            // Слушатель ready-сигнала живёт ещё 30 сек на случай очень медленной загрузки прокладки
+            setTimeout(cleanupListener, 30000);
+            return;
+        }
+
+        // L2: окно прокладки не открылось → fallback-модалка с прямой <a>
+        _trackPaymentEvent('popup_blocked', data.payment_id, {
+            ua: navigator.userAgent,
+        });
+        _hidePaymentRedirectOverlay();
+        _showPaymentBlockedModal(data.payment_url, data.payment_id);
+        cleanupListener();
 
     } catch (e) {
         console.error('[Purchase] Error:', e);
+        pendingError = 'Не удалось создать платёж. Попробуйте ещё раз.';
+        _postToLoader(paymentWindow, { type: 'aurora_payment_error', message: pendingError });
+        // Прокладку не закрываем — пусть юзер увидит сообщение об ошибке и закроет сам
         _hidePaymentRedirectOverlay();
         if (card) {
             card.style.opacity = '1';
             card.style.pointerEvents = 'auto';
         }
+        setTimeout(cleanupListener, 5000);
     }
+}
+
+function _postToLoader(win, payload) {
+    if (!_isWindowAlive(win)) return;
+    try {
+        win.postMessage(payload, location.origin);
+    } catch (_) {}
 }
 
 // ============================================================================
@@ -1370,6 +1504,14 @@ function showTariffModal(planCode) {
         handlePurchase(planCode);
         return;
     }
+
+    // Трекинг: юзер открыл модалку конкретного тарифа.
+    // Шаг "интерес → намерение" в воронке оплаты. Fire-and-forget.
+    _trackPaymentEvent('tariff_modal_opened', null, {
+        plan_code: planCode,
+        price: t.price,
+        discounted_price: t.discounted_price || null,
+    });
 
     const modal = document.getElementById('tariffModal');
     const card = document.getElementById('tariffModalCard');
@@ -1491,17 +1633,19 @@ function _showPaymentRedirectOverlay() {
         overlay = document.createElement('div');
         overlay.id = 'paymentRedirectOverlay';
         overlay.innerHTML = `
-            <div style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:24px;">
+            <div id="paymentRedirectInner" style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;padding:24px;">
                 <button type="button" id="paymentRedirectClose" aria-label="Закрыть"
                     class="payment-redirect-close"
                     style="position:absolute;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));width:44px;height:44px;border-radius:12px;border:1px solid rgba(204,190,255,0.25);background:rgba(33,30,41,0.9);color:#e7e0ef;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s;z-index:2;">
                     ×
                 </button>
-                <div style="display:flex;flex-direction:column;align-items:center;gap:20px;max-width:min(100%,360px);">
-                    <div class="payment-redirect-spinner"></div>
-                    <p id="paymentRedirectText" style="color:#e7e0ef;font-size:16px;font-weight:600;text-align:center;margin:0;">
-                        Перенаправление на страницу оплаты…
-                    </p>
+                <div id="paymentRedirectContent" style="display:flex;flex-direction:column;align-items:center;gap:24px;width:100%;max-width:min(100%,400px);">
+                    <div id="paymentRedirectMain" style="display:flex;flex-direction:column;align-items:center;gap:20px;width:100%;">
+                        <div class="payment-redirect-spinner" aria-hidden="true"></div>
+                        <p id="paymentRedirectText" style="color:#e7e0ef;font-size:16px;font-weight:600;text-align:center;margin:0;line-height:1.45;max-width:100%;">
+                            Перенаправление на страницу оплаты…
+                        </p>
+                    </div>
                 </div>
             </div>`;
         Object.assign(overlay.style, {
@@ -1545,21 +1689,205 @@ function _showPaymentRedirectOverlay() {
     requestAnimationFrame(() => { overlay.style.opacity = '1'; });
 }
 
-function _updatePaymentOverlayOpened() {
+function _updatePaymentOverlayOpened(paymentUrl, paymentId) {
     const text = document.getElementById('paymentRedirectText');
     if (text) {
-        text.innerHTML = 'Оплата открыта в новой вкладке.<br><span style="font-weight:400;font-size:14px;color:#cac3d7;margin-top:4px;display:inline-block;">После оплаты эта страница обновится автоматически.</span>';
+        text.innerHTML = ''
+            + '<span style="display:block;font-weight:600;color:#e7e0ef;">Оплата открыта в новой вкладке.</span>'
+            + '<span style="display:block;font-weight:400;font-size:14px;color:#cac3d7;margin-top:10px;line-height:1.5;">После оплаты эта страница обновится автоматически.</span>';
     }
+
+    // L3: через 4 секунды показываем резервную ссылку.
+    // Если новая вкладка не открылась (что редко после L1, но возможно на
+    // совсем строгих браузерах) или пользователь её случайно закрыл —
+    // он увидит явный CTA "открыть оплату вручную" с прямой <a>.
+    if (_paymentFallbackTimer) {
+        clearTimeout(_paymentFallbackTimer);
+        _paymentFallbackTimer = null;
+    }
+    if (paymentUrl) {
+        _paymentFallbackTimer = setTimeout(() => {
+            _showPaymentOverlayFallback(paymentUrl, paymentId);
+        }, 4000);
+    }
+
     setTimeout(() => _pollPaymentStatus(), 3000);
+}
+
+function _showPaymentOverlayFallback(paymentUrl, paymentId) {
+    const overlay = document.getElementById('paymentRedirectOverlay');
+    if (!overlay) return;
+    if (overlay.querySelector('#paymentRedirectFallback')) return;
+
+    const target = document.getElementById('paymentRedirectContent');
+    if (!target) return;
+
+    const wrap = document.createElement('div');
+    wrap.id = 'paymentRedirectFallback';
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:320px;';
+    wrap.innerHTML = `
+        <p style="color:#cac3d7;font-size:13px;line-height:1.5;text-align:center;margin:0;">
+            Если новая вкладка не открылась — нажмите кнопку ниже.<br>
+            Также счёт продублирован на вашу почту.
+        </p>
+        <a id="paymentRedirectFallbackLink" href="${paymentUrl}" target="_blank" rel="noopener noreferrer"
+           style="display:block;text-align:center;padding:14px 18px;border-radius:14px;
+                  background:linear-gradient(135deg,#7b4dff 0%,#5a30d0 100%);
+                  color:#fff;font-weight:700;font-size:15px;text-decoration:none;
+                  box-shadow:0 10px 30px rgba(90,48,208,0.35);
+                  transition:filter 0.2s, transform 0.1s;">
+            Открыть оплату вручную
+        </a>
+    `;
+    target.appendChild(wrap);
+
+    const link = wrap.querySelector('#paymentRedirectFallbackLink');
+    link.addEventListener('mouseenter', () => { link.style.filter = 'brightness(1.1)'; });
+    link.addEventListener('mouseleave', () => { link.style.filter = 'brightness(1)'; });
+    link.addEventListener('mousedown', () => { link.style.transform = 'scale(0.98)'; });
+    link.addEventListener('mouseup', () => { link.style.transform = 'scale(1)'; });
+    link.addEventListener('click', () => {
+        _trackPaymentEvent('fallback_link_clicked', paymentId);
+    });
 }
 
 function _hidePaymentRedirectOverlay() {
     _stopPaymentRedirectPoll();
     _restoreTariffCardsAfterPaymentDismiss();
+    if (_paymentFallbackTimer) {
+        clearTimeout(_paymentFallbackTimer);
+        _paymentFallbackTimer = null;
+    }
     const overlay = document.getElementById('paymentRedirectOverlay');
     if (!overlay) return;
+    const fb = overlay.querySelector('#paymentRedirectFallback');
+    if (fb) fb.remove();
     overlay.style.opacity = '0';
     setTimeout(() => { overlay.style.display = 'none'; }, 260);
+}
+
+// ============================================================================
+// L2: PAYMENT BLOCKED MODAL — fallback когда window.open вернул null
+// ============================================================================
+
+function _showPaymentBlockedModal(paymentUrl, paymentId) {
+    let modal = document.getElementById('paymentBlockedModal');
+    if (modal) modal.remove();
+
+    modal = document.createElement('div');
+    modal.id = 'paymentBlockedModal';
+    Object.assign(modal.style, {
+        position: 'fixed', inset: '0', zIndex: '10000',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px', boxSizing: 'border-box',
+        background: 'rgba(16,13,23,0.82)', backdropFilter: 'blur(10px)',
+        opacity: '0', transition: 'opacity 0.25s ease',
+    });
+    modal.innerHTML = `
+        <div style="position:relative;width:100%;max-width:420px;background:linear-gradient(180deg,#1c1726 0%,#15121c 100%);
+                    border:1px solid rgba(204,190,255,0.12);border-radius:20px;
+                    box-shadow:0 40px 100px rgba(0,0,0,0.55);overflow:hidden;
+                    transform:scale(0.96);transition:transform 0.25s ease;">
+            <div style="position:absolute;top:-80px;right:-80px;width:220px;height:220px;
+                        background:rgba(101,62,219,0.18);border-radius:50%;filter:blur(70px);pointer-events:none;"></div>
+
+            <button type="button" id="paymentBlockedClose" aria-label="Закрыть"
+                    style="position:absolute;top:14px;right:14px;width:40px;height:40px;
+                           border-radius:12px;border:1px solid rgba(204,190,255,0.18);
+                           background:rgba(33,30,41,0.9);color:#e7e0ef;font-size:22px;
+                           line-height:1;cursor:pointer;display:flex;align-items:center;
+                           justify-content:center;z-index:2;transition:background 0.2s;">×</button>
+
+            <div style="position:relative;padding:28px 24px 8px 24px;">
+                <div style="display:flex;align-items:center;justify-content:center;
+                            width:56px;height:56px;border-radius:16px;
+                            background:rgba(255,176,71,0.12);
+                            border:1px solid rgba(255,176,71,0.25);margin-bottom:14px;">
+                    <span style="color:#ffb047;font-size:28px;line-height:1;">!</span>
+                </div>
+                <h2 style="color:#f1ecfa;font-size:20px;font-weight:800;line-height:1.25;
+                           margin:0 0 8px 0;letter-spacing:-0.01em;">
+                    Браузер заблокировал окно оплаты
+                </h2>
+                <p style="color:#a8a0b8;font-size:14px;line-height:1.55;margin:0;">
+                    Это безопасная страница CloudPayments — нужно открыть её вручную.
+                    Используйте кнопку ниже или ссылку из письма со счётом на вашей почте.
+                </p>
+            </div>
+
+            <div style="position:relative;padding:18px 24px 24px 24px;display:flex;flex-direction:column;gap:10px;">
+                <a id="paymentBlockedPayLink" href="${paymentUrl}" target="_blank" rel="noopener noreferrer"
+                   style="display:block;text-align:center;padding:15px 18px;border-radius:14px;
+                          background:linear-gradient(135deg,#7b4dff 0%,#5a30d0 100%);
+                          color:#fff;font-weight:700;font-size:15px;text-decoration:none;
+                          box-shadow:0 10px 30px rgba(90,48,208,0.35);
+                          transition:filter 0.2s, transform 0.1s;">
+                    Перейти к оплате
+                </a>
+                <button type="button" id="paymentBlockedCopy"
+                        style="display:flex;align-items:center;justify-content:center;gap:8px;
+                               padding:13px 18px;border-radius:14px;border:1px solid rgba(204,190,255,0.18);
+                               background:transparent;color:#cac3d7;font-weight:600;font-size:14px;
+                               cursor:pointer;transition:background 0.2s, border-color 0.2s;">
+                    Скопировать ссылку
+                </button>
+                <p style="color:#7d7589;font-size:11px;line-height:1.5;text-align:center;margin:6px 0 0 0;">
+                    После оплаты этот кабинет обновится автоматически.
+                </p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => {
+        modal.style.opacity = '1';
+        const card = modal.querySelector('div');
+        if (card) card.style.transform = 'scale(1)';
+    });
+
+    const closeFn = () => {
+        modal.style.opacity = '0';
+        setTimeout(() => modal.remove(), 250);
+        _restoreTariffCardsAfterPaymentDismiss();
+    };
+    modal.querySelector('#paymentBlockedClose').addEventListener('click', closeFn);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeFn(); });
+
+    const payLink = modal.querySelector('#paymentBlockedPayLink');
+    payLink.addEventListener('mouseenter', () => { payLink.style.filter = 'brightness(1.1)'; });
+    payLink.addEventListener('mouseleave', () => { payLink.style.filter = 'brightness(1)'; });
+    payLink.addEventListener('click', () => {
+        _trackPaymentEvent('modal_link_clicked', paymentId);
+        // Поллим статус оплаты — если оплата пройдёт, кабинет обновится сам
+        setTimeout(() => _pollPaymentStatus(), 3000);
+    });
+
+    const copyBtn = modal.querySelector('#paymentBlockedCopy');
+    copyBtn.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(paymentUrl);
+            copyBtn.textContent = 'Ссылка скопирована';
+            copyBtn.style.color = '#a78bfa';
+            copyBtn.style.borderColor = 'rgba(167,139,250,0.45)';
+            _trackPaymentEvent('modal_link_copied', paymentId);
+            setTimeout(() => {
+                copyBtn.textContent = 'Скопировать ссылку';
+                copyBtn.style.color = '#cac3d7';
+                copyBtn.style.borderColor = 'rgba(204,190,255,0.18)';
+            }, 2200);
+        } catch (e) {
+            // Fallback для старых браузеров без navigator.clipboard
+            const ta = document.createElement('textarea');
+            ta.value = paymentUrl;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (_) {}
+            ta.remove();
+            copyBtn.textContent = 'Ссылка скопирована';
+            _trackPaymentEvent('modal_link_copied', paymentId, { fallback: true });
+        }
+    });
 }
 
 function _pollPaymentStatus() {
@@ -1685,18 +2013,87 @@ async function showPaymentPending(initialData) {
 }
 
 async function handleLinkTelegram() {
+    // L1: открываем пустую вкладку синхронно — иначе Safari/Brave заблокируют popup
+    let tgWindow = null;
+    try { tgWindow = window.open('about:blank', '_blank'); } catch (_) {}
+
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/auth/link-telegram`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
-        if (!resp || !resp.ok) return;
+        if (!resp || !resp.ok) {
+            if (_isWindowAlive(tgWindow)) tgWindow.close();
+            return;
+        }
 
         const data = await resp.json();
-        if (data.link) {
-            window.open(data.link, '_blank');
+        if (!data.link) {
+            if (_isWindowAlive(tgWindow)) tgWindow.close();
+            return;
         }
-    } catch (_) {}
+
+        if (_isWindowAlive(tgWindow)) {
+            try {
+                tgWindow.location.href = data.link;
+                return;
+            } catch (_) {}
+        }
+
+        // L2: вкладка не открылась — показываем простой alert-fallback с прямой <a>
+        _showSimpleLinkFallback(data.link, 'Привязка Telegram');
+    } catch (_) {
+        if (_isWindowAlive(tgWindow)) {
+            try { tgWindow.close(); } catch (_) {}
+        }
+    }
+}
+
+function _showSimpleLinkFallback(url, title) {
+    let modal = document.getElementById('simpleLinkFallbackModal');
+    if (modal) modal.remove();
+
+    modal = document.createElement('div');
+    modal.id = 'simpleLinkFallbackModal';
+    Object.assign(modal.style, {
+        position: 'fixed', inset: '0', zIndex: '10000',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px', boxSizing: 'border-box',
+        background: 'rgba(16,13,23,0.82)', backdropFilter: 'blur(10px)',
+        opacity: '0', transition: 'opacity 0.25s ease',
+    });
+    const safeTitle = String(title || 'Открыть ссылку').replace(/[<>&]/g, '');
+    modal.innerHTML = `
+        <div style="position:relative;width:100%;max-width:380px;background:#1c1726;
+                    border:1px solid rgba(204,190,255,0.12);border-radius:18px;padding:24px;
+                    box-shadow:0 30px 80px rgba(0,0,0,0.5);">
+            <h3 style="color:#f1ecfa;font-size:17px;font-weight:700;margin:0 0 8px 0;">${safeTitle}</h3>
+            <p style="color:#a8a0b8;font-size:13px;line-height:1.55;margin:0 0 16px 0;">
+                Браузер заблокировал открытие новой вкладки. Нажмите кнопку, чтобы открыть вручную.
+            </p>
+            <a href="${url}" target="_blank" rel="noopener noreferrer"
+               style="display:block;text-align:center;padding:13px 18px;border-radius:12px;
+                      background:linear-gradient(135deg,#7b4dff 0%,#5a30d0 100%);color:#fff;
+                      font-weight:700;font-size:14px;text-decoration:none;
+                      box-shadow:0 8px 24px rgba(90,48,208,0.3);">
+                Открыть
+            </a>
+            <button type="button" id="simpleLinkClose"
+                    style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:10px;
+                           border:none;background:transparent;color:#7d7589;font-size:13px;cursor:pointer;">
+                Закрыть
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => { modal.style.opacity = '1'; });
+
+    const closeFn = () => {
+        modal.style.opacity = '0';
+        setTimeout(() => modal.remove(), 250);
+    };
+    modal.querySelector('#simpleLinkClose').addEventListener('click', closeFn);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeFn(); });
 }
 
 // ============================================================================
