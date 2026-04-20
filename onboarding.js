@@ -520,7 +520,11 @@ async function pollHhStatus() {
             document.getElementById('hhOtpForm').classList.add('hidden');
             document.getElementById('hhLoginForm').classList.remove('hidden');
             document.getElementById('hhLoginBtn').disabled = false;
-            document.getElementById('hhLoginBtn').textContent = 'Далее';
+
+            const isProxyErr = data.error_code === 'proxy_unavailable';
+            document.getElementById('hhLoginBtn').innerHTML = isProxyErr
+                ? '<span class="material-symbols-outlined align-middle text-base mr-1">refresh</span>Попробовать ещё раз'
+                : 'Далее';
 
             const errorEl = document.getElementById('hhLoginError');
             showError(errorEl, data.message || 'Ошибка входа. Попробуйте позже.');
@@ -596,6 +600,79 @@ function selectResume(resumeId, el) {
     el.querySelector('.resume-check').innerHTML = '<span class="material-symbols-outlined text-primary text-base">check</span>';
 
     document.getElementById('resumeSelectBtn').disabled = false;
+}
+
+let _syncResumesPolling = false;
+
+async function syncResumesFromHH() {
+    if (_syncResumesPolling) return;
+    const btn = document.getElementById('resumeRefreshBtn');
+    const icon = document.getElementById('resumeRefreshIcon');
+    const text = document.getElementById('resumeRefreshText');
+    if (!btn) return;
+
+    btn.disabled = true;
+    if (icon) icon.style.animation = 'spin 1s linear infinite';
+    if (text) text.textContent = 'Обновляем с hh.ru...';
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/resumes/sync`, { method: 'POST' });
+        if (!resp || !resp.ok) {
+            if (text) text.textContent = 'Ошибка. Попробуйте позже';
+            setTimeout(() => _resetSyncBtn(), 3000);
+            return;
+        }
+        const data = await resp.json();
+
+        if (data.status === 'cooldown') {
+            const min = Math.ceil((data.seconds_left || 0) / 60);
+            if (text) text.textContent = `Подождите ${min} мин`;
+            setTimeout(() => _resetSyncBtn(), 4000);
+            return;
+        }
+
+        // started / already_running — поллим статус
+        _syncResumesPolling = true;
+        const startedAt = Date.now();
+        const TIMEOUT_MS = 90 * 1000;
+
+        while (Date.now() - startedAt < TIMEOUT_MS) {
+            await new Promise(r => setTimeout(r, 2000));
+            const sresp = await apiFetch(`${API_BASE_URL}/api/resumes/sync/status`);
+            if (!sresp || !sresp.ok) continue;
+            const sdata = await sresp.json();
+            const status = sdata.status || 'idle';
+
+            if (status === 'complete' || status === 'idle') {
+                await loadResumes();
+                if (text) text.textContent = 'Список обновлён';
+                setTimeout(() => _resetSyncBtn(), 2000);
+                return;
+            }
+            if (status === 'error_login' || status.startsWith('error')) {
+                if (text) text.textContent = 'Ошибка синхронизации';
+                setTimeout(() => _resetSyncBtn(), 3000);
+                return;
+            }
+        }
+        if (text) text.textContent = 'Слишком долго. Обновите вручную';
+        setTimeout(() => _resetSyncBtn(), 3000);
+    } catch (e) {
+        console.error('[SyncResumes] Error:', e);
+        if (text) text.textContent = 'Ошибка соединения';
+        setTimeout(() => _resetSyncBtn(), 3000);
+    } finally {
+        _syncResumesPolling = false;
+    }
+}
+
+function _resetSyncBtn() {
+    const btn = document.getElementById('resumeRefreshBtn');
+    const icon = document.getElementById('resumeRefreshIcon');
+    const text = document.getElementById('resumeRefreshText');
+    if (btn) btn.disabled = false;
+    if (icon) icon.style.animation = '';
+    if (text) text.textContent = 'Обновить список резюме';
 }
 
 async function handleResumeSelect() {
