@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.9.2 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.9.3 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  *
  * v3.8:   3-уровневая защита от блокировки popup при оплате (см. handlePurchase).
@@ -7,6 +7,11 @@
  * v3.9.1: трекинг tariff_modal_opened для воронки "интерес → оплата".
  * v3.9.2: тарифы видны и триальщикам — можно купить, не дожидаясь окончания триала
  *         (activate_paid_subscription корректно перезатирает trial → active).
+ * v3.9.3: видимость #promoCard управляется флагом data.can_apply_promo (с бэка):
+ *         - active: скрыто (скидка сгорит за 2 дня при подписке на 30+);
+ *         - использован менторский промо: показано (плашка "применён");
+ *         - есть post-purchase lock (истёкшая ref/mentor): скрыто;
+ *         - none/trial/ended_trial/ended_active без lock: показано.
  */
 
 const API_BASE_URL = window.AuroraSession
@@ -1038,22 +1043,39 @@ async function revokeSession(sessionId) {
 // ============================================================================
 
 async function loadPromoStatus() {
+    const card = document.getElementById('promoCard');
+    let mentorApplied = false;
+
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/mentor/my-promo`);
-        if (!resp || !resp.ok) return;
-        const data = await resp.json();
-
-        if (data.applied) {
-            document.getElementById('promoNotApplied').classList.add('hidden');
-            const appliedEl = document.getElementById('promoApplied');
-            appliedEl.classList.remove('hidden');
-            document.getElementById('promoAppliedCode').textContent = `Промокод ${data.promo_code} применён`;
-            const mentorInfo = data.mentor_name || '';
-            const benefitInfo = data.benefit_type === 'discount' ? `Скидка ${data.benefit_value}%` : '';
-            document.getElementById('promoAppliedMentor').textContent =
-                [mentorInfo, benefitInfo].filter(Boolean).join(' — ');
+        if (resp && resp.ok) {
+            const data = await resp.json();
+            if (data.applied) {
+                mentorApplied = true;
+                document.getElementById('promoNotApplied').classList.add('hidden');
+                const appliedEl = document.getElementById('promoApplied');
+                appliedEl.classList.remove('hidden');
+                document.getElementById('promoAppliedCode').textContent = `Промокод ${data.promo_code} применён`;
+                const mentorInfo = data.mentor_name || '';
+                const benefitInfo = data.benefit_type === 'discount' ? `Скидка ${data.benefit_value}%` : '';
+                document.getElementById('promoAppliedMentor').textContent =
+                    [mentorInfo, benefitInfo].filter(Boolean).join(' — ');
+            }
         }
     } catch (_) {}
+
+    if (card) {
+        // Видимость карточки:
+        //   - Если уже применён менторский промо — показываем (плашка "Промокод X применён").
+        //   - Иначе показываем форму ввода ТОЛЬКО если can_apply_promo=true
+        //     (none / trial / ended_trial / ended_active без post-purchase lock).
+        const canApply = !!(currentUser && currentUser.can_apply_promo);
+        if (mentorApplied || canApply) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    }
 
     const pendingCode = localStorage.getItem('aurora_ref_code');
     if (pendingCode) {
