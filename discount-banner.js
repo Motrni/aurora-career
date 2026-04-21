@@ -1,5 +1,9 @@
 /**
- * discount-banner.js v1.0 — Баннер персональной скидки с кольцом обратного отсчёта.
+ * discount-banner.js v2.0 — Баннер скидки с двумя режимами:
+ *   1) WELCOME (без таймера): discount.expires_at = null. Висит постоянно
+ *      пока пользователь не активирует триал (тогда таймер стартует на бэке).
+ *   2) TIMER (с обратным отсчётом): discount.expires_at — ISO строка в будущем.
+ *      Используется для активного триала, рефки и менторских промо.
  *
  * Использование (после получения данных из /api/auth/me):
  *   if (window.DiscountBanner && data.discount) {
@@ -39,7 +43,7 @@
         return Math.max(0, Math.floor(diff / 1000));
     }
 
-    function buildBannerHTML(percent) {
+    function buildTimerBannerHTML(percent) {
         var discountText = Math.round(percent) + '%';
 
         return '' +
@@ -78,6 +82,34 @@
             '</div>';
     }
 
+    function buildWelcomeBannerHTML(percent) {
+        var discountText = Math.round(percent) + '%';
+
+        return '' +
+            '<div id="discountBannerInner" class="relative overflow-hidden rounded-2xl border border-primary/20 p-4 md:p-5" ' +
+                 'style="background:linear-gradient(135deg,rgba(101,62,219,0.10) 0%,rgba(90,48,208,0.06) 100%);backdrop-filter:blur(12px);animation:dbFadeIn 0.4s ease;">' +
+                '<div class="flex flex-col sm:flex-row items-center gap-4">' +
+                    '<div class="flex items-center gap-4 flex-1 min-w-0">' +
+                        '<div class="relative shrink-0 flex items-center justify-center" style="width:52px;height:52px;border-radius:50%;background:rgba(101,62,219,0.18);">' +
+                            '<span class="material-symbols-outlined text-primary" style="font-size:28px;">local_offer</span>' +
+                        '</div>' +
+                        '<div class="min-w-0">' +
+                            '<p class="text-sm md:text-base font-semibold text-on-surface">' +
+                                'Ваша приветственная скидка <span class="text-primary">' + discountText + '</span> активна' +
+                            '</p>' +
+                            '<p class="text-xs md:text-sm text-on-surface-variant mt-0.5">' +
+                                'Таймер 48 часов запустится после активации пробного периода' +
+                            '</p>' +
+                        '</div>' +
+                    '</div>' +
+                    '<button id="dbCtaBtn" class="shrink-0 btn-primary text-white font-medium py-2.5 px-5 rounded-xl text-sm cursor-pointer whitespace-nowrap flex items-center gap-2">' +
+                        '<span class="material-symbols-outlined text-base" style="font-size:18px;">local_offer</span>' +
+                        'Выбрать тариф со скидкой' +
+                    '</button>' +
+                '</div>' +
+            '</div>';
+    }
+
     function injectStyles() {
         if (document.getElementById('dbStyles')) return;
         var style = document.createElement('style');
@@ -95,14 +127,27 @@
         if (el) el.innerHTML = '';
     }
 
+    function bindCtaButton(onCabinet) {
+        var ctaBtn = document.getElementById('dbCtaBtn');
+        if (!ctaBtn) return;
+        ctaBtn.addEventListener('click', function () {
+            if (onCabinet) {
+                var grid = document.getElementById('tariffGrid');
+                if (grid) {
+                    grid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else {
+                window.location.href = '/cabinet/#tariffGrid';
+            }
+        });
+    }
+
     function init(discountData, opts) {
-        if (!discountData || !discountData.expires_at) return;
+        if (!discountData || !discountData.percent) return;
 
-        var remaining = getRemainingSeconds(discountData.expires_at);
-        if (remaining <= 0) return;
-
-        var percent = discountData.percent || 15;
+        var percent = discountData.percent;
         var onCabinet = (opts && opts.onCabinet) || false;
+        var hasTimer = !!discountData.expires_at;
 
         destroy();
         injectStyles();
@@ -110,25 +155,23 @@
         var container = document.getElementById('discountBanner');
         if (!container) return;
 
-        container.innerHTML = buildBannerHTML(percent);
+        // Welcome-режим: бессрочная скидка без таймера.
+        if (!hasTimer) {
+            container.innerHTML = buildWelcomeBannerHTML(percent);
+            bindCtaButton(onCabinet);
+            return;
+        }
+
+        // Timer-режим: проверяем что срок ещё не истёк.
+        var remaining = getRemainingSeconds(discountData.expires_at);
+        if (remaining <= 0) return;
+
+        container.innerHTML = buildTimerBannerHTML(percent);
+        bindCtaButton(onCabinet);
 
         var circle = document.getElementById('dbProgressCircle');
         var ringTime = document.getElementById('dbRingTime');
         var countdown = document.getElementById('dbCountdown');
-        var ctaBtn = document.getElementById('dbCtaBtn');
-
-        if (ctaBtn) {
-            ctaBtn.addEventListener('click', function () {
-                if (onCabinet) {
-                    var grid = document.getElementById('tariffGrid');
-                    if (grid) {
-                        grid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                } else {
-                    window.location.href = '/cabinet/#tariffGrid';
-                }
-            });
-        }
 
         function tick() {
             var sec = getRemainingSeconds(discountData.expires_at);

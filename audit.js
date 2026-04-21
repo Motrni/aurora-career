@@ -1,5 +1,5 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v1.3 — немедленный переход на loading после submit + retry + indeterminate bar
+// v1.4 — обязательное согласие на обработку ПД (152-ФЗ)
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
@@ -115,6 +115,8 @@ function openEmailModal() {
     document.getElementById('emailModal').classList.remove('hidden');
     setTimeout(() => document.getElementById('emailInput').focus(), 100);
     initTurnstile();
+    initConsentCheckbox();
+    updateSubmitButtonState();
 }
 
 function closeEmailModal() {
@@ -124,7 +126,7 @@ function closeEmailModal() {
 function initTurnstile() {
     if (!TURNSTILE_SITE_KEY || turnstileReady) return;
     turnstileReady = true;
-    document.getElementById('btnGetResult').disabled = true;
+    updateSubmitButtonState();
 
     const script = document.createElement('script');
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=renderTurnstile';
@@ -140,10 +142,30 @@ window.renderTurnstile = function () {
         theme: 'dark',
         callback: function (token) {
             turnstileToken = token;
-            document.getElementById('btnGetResult').disabled = false;
+            updateSubmitButtonState();
         },
     });
 };
+
+function initConsentCheckbox() {
+    const cb = document.getElementById('auditConsentPrivacy');
+    if (!cb || cb.dataset.bound === '1') return;
+    cb.dataset.bound = '1';
+    cb.addEventListener('change', () => {
+        const errEl = document.getElementById('consentError');
+        if (cb.checked && errEl) errEl.classList.add('hidden');
+        updateSubmitButtonState();
+    });
+}
+
+function updateSubmitButtonState() {
+    const btn = document.getElementById('btnGetResult');
+    if (!btn) return;
+    const cb = document.getElementById('auditConsentPrivacy');
+    const consentOk = !!(cb && cb.checked);
+    const captchaOk = !TURNSTILE_SITE_KEY || !!turnstileToken;
+    btn.disabled = !(consentOk && captchaOk);
+}
 
 // ============================================================================
 // SUBMIT — сразу показывает loading, fetch идёт в фоне
@@ -152,10 +174,13 @@ window.renderTurnstile = function () {
 async function submitAudit() {
     const emailInput = document.getElementById('emailInput');
     const emailErr = document.getElementById('emailError');
+    const consentCb = document.getElementById('auditConsentPrivacy');
+    const consentErr = document.getElementById('consentError');
     const btn = document.getElementById('btnGetResult');
 
     userEmail = emailInput.value.trim().toLowerCase();
     emailErr.classList.add('hidden');
+    if (consentErr) consentErr.classList.add('hidden');
 
     if (!userEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
         emailErr.textContent = 'Введите корректный email';
@@ -163,11 +188,20 @@ async function submitAudit() {
         return;
     }
 
+    if (!consentCb || !consentCb.checked) {
+        if (consentErr) consentErr.classList.remove('hidden');
+        return;
+    }
+
     btn.disabled = true;
+
+    const privacyVersion = (window.AURORA_LEGAL_VERSIONS && window.AURORA_LEGAL_VERSIONS.privacy) || '';
 
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('email', userEmail);
+    formData.append('consent_privacy', 'true');
+    if (privacyVersion) formData.append('consent_privacy_version', privacyVersion);
     if (turnstileToken) formData.append('captcha_token', turnstileToken);
 
     // Сразу закрываем модалку и показываем экран загрузки
@@ -311,6 +345,11 @@ function retryAudit() {
     userEmail = '';
     turnstileReady = false;
 
+    const consentCb = document.getElementById('auditConsentPrivacy');
+    if (consentCb) consentCb.checked = false;
+    const consentErr = document.getElementById('consentError');
+    if (consentErr) consentErr.classList.add('hidden');
+
     document.getElementById('stepLoading').classList.add('hidden');
     document.getElementById('stepUpload').classList.remove('hidden');
 
@@ -385,8 +424,8 @@ function showResult(result, totalAudits) {
 function resetEmailModalButton() {
     const btn = document.getElementById('btnGetResult');
     if (btn) {
-        btn.disabled = !!TURNSTILE_SITE_KEY;
         btn.textContent = 'Получить разбор';
+        updateSubmitButtonState();
     }
 }
 

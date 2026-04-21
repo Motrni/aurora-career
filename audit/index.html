@@ -174,6 +174,19 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
                 <p id="emailError" class="text-error text-xs mt-1 hidden"></p>
             </div>
             <div id="turnstileContainer" class="mt-4"></div>
+
+            <label class="flex items-start gap-2 mt-4 cursor-pointer select-none">
+                <input type="checkbox" id="auditConsentPrivacy"
+                       class="mt-0.5 h-4 w-4 rounded border-surface-variant bg-surface-container
+                              text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer flex-shrink-0">
+                <span class="text-on-surface-variant text-xs leading-snug">
+                    Я даю согласие на обработку персональных данных в соответствии с
+                    <a href="#" onclick="event.preventDefault();event.stopPropagation();openLegalModal('privacy');return false;"
+                       class="text-primary hover:underline">Политикой конфиденциальности</a>
+                </span>
+            </label>
+            <p id="consentError" class="text-error text-xs mt-1 hidden">Для получения разбора необходимо ваше согласие</p>
+
             <button id="btnGetResult" onclick="submitAudit()"
                     class="btn-primary w-full mt-4 py-3 rounded-xl text-white font-semibold text-sm">
                 Получить разбор
@@ -254,6 +267,6 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=1.3"></script>
+<script src="audit.js?v=1.4"></script>
 </body>
 </html>
