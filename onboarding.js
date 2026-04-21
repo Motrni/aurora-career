@@ -694,9 +694,18 @@ async function handleResumeSelect() {
             throw new Error(err.detail || 'Ошибка сохранения');
         }
 
-        showStep(3);
-        startAnalysisPolling();
-        startTextRotation();
+        // Audit-юзеры пропускают AI-анализ резюме — бэкенд сразу ставит
+        // current_step=onboarding_search_profile и кладёт smart_cluster в очередь.
+        // Поэтому нужно поллить roles-status, а не analysis-status.
+        if (isAuditUser) {
+            showStep(3);
+            startRolesPolling();
+            startRolesTextRotation();
+        } else {
+            showStep(3);
+            startAnalysisPolling();
+            startTextRotation();
+        }
 
     } catch (e) {
         console.error('[Select Resume] Error:', e);
@@ -753,9 +762,45 @@ async function pollAnalysisStatus() {
             stopAnalysisPolling();
             stopTextRotation();
             displayAnalysisResult(data.score, data.report);
+        } else if (data.status === 'unknown') {
+            // Бэкенд не знает про analysis для текущего шага — фронт и бэкенд
+            // рассинхронизированы (например, audit-юзер пропускает анализ).
+            // Перечитываем реальный current_step и переключаемся на нужный поток.
+            stopAnalysisPolling();
+            stopTextRotation();
+            await resyncOnboardingStep();
         }
     } catch (e) {
         console.error('[Analysis Poll] Error:', e);
+    }
+}
+
+async function resyncOnboardingStep() {
+    try {
+        const meResp = await apiFetch(`${API_BASE_URL}/api/auth/me`);
+        if (!meResp || !meResp.ok) return;
+        const data = await meResp.json();
+        if (data.status !== 'ok' || !data.current_step) return;
+
+        if (data.current_step === 'onboarding_search_profile') {
+            showStep(isAuditUser ? 3 : 4);
+            startRolesPolling();
+            startRolesTextRotation();
+        } else if (data.current_step === 'onboarding_roles_ready') {
+            showStep(isAuditUser ? 3 : 4);
+            loadRolesFromServer();
+        } else if (data.current_step === 'onboarding_query_generating') {
+            showStep(isAuditUser ? 3 : 4);
+            showQueryGenerating();
+            startProfilePolling();
+        } else if (data.current_step === 'onboarding_profile_complete') {
+            showStep(isAuditUser ? 3 : 4);
+            showProfileComplete();
+        } else if (data.current_step === 'onboarding_settings') {
+            window.location.href = '/settings/';
+        }
+    } catch (e) {
+        console.error('[Resync Step] Error:', e);
     }
 }
 

@@ -1,10 +1,12 @@
 /**
- * cabinet.js v3.9.1 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.9.2 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  *
  * v3.8:   3-уровневая защита от блокировки popup при оплате (см. handlePurchase).
  * v3.9:   страница-прокладка /cabinet/payment-loading/ + postMessage/localStorage канал.
  * v3.9.1: трекинг tariff_modal_opened для воронки "интерес → оплата".
+ * v3.9.2: тарифы видны и триальщикам — можно купить, не дожидаясь окончания триала
+ *         (activate_paid_subscription корректно перезатирает trial → active).
  */
 
 const API_BASE_URL = window.AuroraSession
@@ -217,7 +219,11 @@ async function renderCabinet(user) {
         if (mob) mob.classList.remove('hidden');
     }
 
-    const showTariffs = user.subscription_status === 'none' || user.subscription_status === 'ended_trial' || user.subscription_status === 'ended_active';
+    const showTariffs =
+        user.subscription_status === 'none' ||
+        user.subscription_status === 'trial' ||
+        user.subscription_status === 'ended_trial' ||
+        user.subscription_status === 'ended_active';
     const featuresBlock = document.getElementById('tariffFeatures');
     if (showTariffs) {
         await loadTariffs();
