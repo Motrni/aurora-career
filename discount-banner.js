@@ -1,5 +1,5 @@
 /**
- * discount-banner.js v2.0 — Баннер скидки с двумя режимами:
+ * discount-banner.js v2.1 — Баннер скидки с двумя режимами:
  *   1) WELCOME (без таймера): discount.expires_at = null. Висит постоянно
  *      пока пользователь не активирует триал (тогда таймер стартует на бэке).
  *   2) TIMER (с обратным отсчётом): discount.expires_at — ISO строка в будущем.
@@ -96,9 +96,6 @@
                         '<div class="min-w-0">' +
                             '<p class="text-sm md:text-base font-semibold text-on-surface">' +
                                 'Ваша приветственная скидка <span class="text-primary">' + discountText + '</span> активна' +
-                            '</p>' +
-                            '<p class="text-xs md:text-sm text-on-surface-variant mt-0.5">' +
-                                'Таймер 48 часов запустится после активации пробного периода' +
                             '</p>' +
                         '</div>' +
                     '</div>' +
