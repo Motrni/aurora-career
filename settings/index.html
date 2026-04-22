@@ -816,6 +816,21 @@ body.has-floating-save {
                                 <label class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase block">Телефон</label>
                                 <input type="tel" id="contactPhoneInput" class="w-full bg-surface-container-high/50 border border-outline-variant/10 rounded-xl py-3 px-4 text-on-surface placeholder-outline focus:ring-2 focus:ring-primary/40 transition-all text-sm" placeholder="+7 (999) 000-00-00" />
                             </div>
+
+                            <!-- Пол кандидата (нужен Дипсику для согласования родовых окончаний в сопроводительных) -->
+                            <div id="contactGenderBlock" class="space-y-2">
+                                <label class="text-[11px] font-bold tracking-widest text-on-surface-variant uppercase block">Пол</label>
+                                <select id="contactGenderSelect" class="w-full bg-surface-container-high/50 border border-outline-variant/10 rounded-xl py-3 px-4 text-on-surface focus:ring-2 focus:ring-primary/40 transition-all text-sm appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23cac3d7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px;">
+                                    <!-- Placeholder-опция: показывается ТОЛЬКО когда gender=NULL, выбрать её самому нельзя -->
+                                    <option value="" id="contactGenderPlaceholder" disabled hidden>Не указан</option>
+                                    <option value="male">Мужской</option>
+                                    <option value="female">Женский</option>
+                                </select>
+                                <p id="contactGenderHint" class="text-[10px] text-on-surface-variant/60 px-1 hidden">
+                                    Аврора определила пол автоматически. Если ошиблась — поправьте здесь.
+                                </p>
+                            </div>
+
                             <label class="flex items-center gap-3 cursor-pointer select-none">
                                 <input type="checkbox" id="contactHideCheckbox" class="sr-only peer" />
                                 <div class="w-10 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-tertiary relative"></div>

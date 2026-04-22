@@ -28,6 +28,11 @@ window.USER_FIRST_NAME = "Кандидат";
 window.USER_CONTACT_TG = null;
 window.USER_PHONE = null;
 window.USER_ENRICHMENT_DONE = false;
+// Пол кандидата для согласования родовых окончаний в сопроводительных.
+// USER_GENDER:        'male' | 'female' | null
+// USER_GENDER_SOURCE: 'manual' (юзер выбрал сам) | 'detected' (snapshot/эвристика) | 'unknown'
+window.USER_GENDER = null;
+window.USER_GENDER_SOURCE = 'unknown';
 
 // Auth State (Hybrid: JWT or Legacy HMAC)
 let authMode = null; // 'jwt' or 'legacy'
@@ -1155,6 +1160,9 @@ async function loadSettings() {
         window.USER_CONTACT_TG = data.contact_tg || null;
         window.USER_PHONE = data.phone || null;
         window.USER_ENRICHMENT_DONE = data.contact_enrichment_done || false;
+        // Пол: 'male' / 'female' / null. Источник: 'manual' / 'detected' / 'unknown'.
+        window.USER_GENDER = (data.gender === 'male' || data.gender === 'female') ? data.gender : null;
+        window.USER_GENDER_SOURCE = data.gender_source || 'unknown';
         _applyContactDataUI();
 
         const settings = data.settings;
@@ -2007,6 +2015,8 @@ async function saveResponseSettings() {
 
         // Collect Data — Hybrid auth
         const hideContacts = document.getElementById("contactHideCheckbox").checked;
+        const genderSelect = document.getElementById("contactGenderSelect");
+        const genderVal = genderSelect ? genderSelect.value : "";
         const payload = {
             cl_use_default: document.getElementById("clUseDefaultCheckbox").checked,
             cl_header: document.getElementById("clHeaderInput").value.trim(),
@@ -2014,6 +2024,9 @@ async function saveResponseSettings() {
             cl_style: document.getElementById("clStyleSelect").value,
             contact_tg: hideContacts ? "" : (document.getElementById("contactTgInput").value.trim() || ""),
             phone: hideContacts ? "" : (document.getElementById("contactPhoneInput").value.trim() || ""),
+            // Пол: только 'male' / 'female' / '' (для очистки) / undefined (не трогать).
+            // Если placeholder выбран (value=""), не шлём вообще — текущее значение в БД сохраняется.
+            ...(genderVal === 'male' || genderVal === 'female' ? { gender: genderVal } : {}),
         };
         
         // Add legacy auth if needed
@@ -2069,6 +2082,8 @@ function _applyContactDataUI() {
     const hideCheckbox = document.getElementById("contactHideCheckbox");
     const sourceHint = document.getElementById("contactSourceHint");
     const notFoundHint = document.getElementById("contactNotFoundHint");
+    const genderSelect = document.getElementById("contactGenderSelect");
+    const genderHint = document.getElementById("contactGenderHint");
 
     if (!tgInput || !phoneInput) return;
 
@@ -2087,6 +2102,36 @@ function _applyContactDataUI() {
     if (notFoundHint) {
         const showNotFound = window.USER_ENRICHMENT_DONE && !window.USER_CONTACT_TG;
         notFoundHint.classList.toggle("hidden", !showNotFound);
+    }
+
+    // --- Gender (Пол) ---
+    // Логика селекта:
+    //   • USER_GENDER = 'male' / 'female'  → выбираем эту опцию.
+    //   • USER_GENDER = null                → показываем placeholder "Не указан"
+    //                                          (его нельзя выбрать, выбрать можно только male/female).
+    //   • Источник 'detected' (snapshot/эвристика) → показываем плашку
+    //     "Аврора определила автоматически. Если ошиблась — поправьте здесь".
+    //   • Источник 'manual' → плашку прячем (юзер уже знает что выбрал сам).
+    if (genderSelect) {
+        if (window.USER_GENDER === 'male' || window.USER_GENDER === 'female') {
+            genderSelect.value = window.USER_GENDER;
+        } else {
+            // Показываем placeholder "Не указан" — disabled, чтобы юзер сам не мог его выбрать.
+            genderSelect.value = "";
+        }
+
+        if (genderHint) {
+            const showAutoHint = window.USER_GENDER && window.USER_GENDER_SOURCE === 'detected';
+            genderHint.classList.toggle("hidden", !showAutoHint);
+        }
+
+        genderSelect.addEventListener("change", () => {
+            // Когда юзер вручную меняет — это уже manual, прячем подсказку про auto-detect.
+            window.USER_GENDER = genderSelect.value || null;
+            window.USER_GENDER_SOURCE = 'manual';
+            if (genderHint) genderHint.classList.add("hidden");
+            updateCLPreview();
+        });
     }
 
     // Toggle fields on hide checkbox
@@ -2125,21 +2170,40 @@ function updateCLPreview() {
 
     if (!headerEl || !footerEl) return;
 
-    // Update Body Preview based on Style
+    // Update Body Preview based on Style + Gender
     const styleSelect = document.getElementById("clStyleSelect");
     const clStyle = styleSelect ? styleSelect.value : 'classic';
 
-    if (clStyle === 'startup') {
-        bodyEl.innerHTML = `Увидел вашу вакансию Frontend-разработчик и сразу зацепился за стек. React, TypeScript, работа с GraphQL — это то, чем я плотно занимаюсь последние два года на продуктовых проектах.<br><br>На прошлом месте поднял SPA с нуля, настроил SSR для SEO, оптимизировал бандл и добился Lighthouse 95+. Параллельно писал переиспользуемые компоненты на Storybook, чтобы дизайн-система жила отдельно от продукта. С CI/CD тоже на ты — пайплайны в GitLab настраивал сам.<br><br>Готов ворваться в задачи и приносить пользу. Буду рад пообщаться!`;
-    } else if (clStyle === 'formal') {
-        bodyEl.innerHTML = `Обращаюсь к Вам по поводу позиции Backend-разработчик. Обладаю профильным опытом в области проектирования высоконагруженных систем.<br><br>В рамках предыдущих проектов реализовал систему мониторинга на базе Prometheus и Grafana, что позволило сократить время обнаружения инцидентов. Имею устойчивый опыт работы с PostgreSQL и проектирования REST API.<br><br>Буду рад обсудить, как моя экспертиза может быть полезна Вашей команде. Благодарю за уделенное время.`;
-    } else if (clStyle === 'executive') {
-        bodyEl.innerHTML = `Изучил вакансию Engineering Manager. Мой опыт управления командами до 15 человек и построения процессов позволит эффективно закрыть задачи вашего направления.<br><br>На позиции Team Lead с нуля выстроил CI/CD и внедрил Scrum, что сократило Time-to-market на 40%. Оптимизировал бюджет разработки и нанял ключевых специалистов.<br><br>Готов обсудить, как мой опыт поможет достичь KPI вашего департамента.`;
-    } else if (clStyle === 'direct') {
-        bodyEl.innerHTML = `Откликаюсь на DevOps Engineer. Стек совпадает с требованиями.<br><br>Основной стек: Linux, Docker, K8s, Terraform, GitLab CI. Коммерческий опыт — 4 года. Поднимал инфраструктуру на AWS для проекта с нагрузкой 10k RPS. Настраивал мониторинг на Prometheus + Grafana.<br><br>Готов к техническому интервью.`;
-    } else {
-        bodyEl.innerHTML = `Увидел вашу вакансию QA Engineer. Мой опыт в тестировании финтех-продуктов хорошо ложится на ваши задачи, особенно в части автоматизации на Python и Selenium.<br><br>На прошлых проектах плотно работал с PostgreSQL, писал интеграционные тесты и настраивал CI/CD пайплайны. Знаю, как выстроить процесс регрессионного тестирования с нуля.<br><br>Буду рад пообщаться и обсудить детали.`;
-    }
+    // Текст превью отличается родом глаголов в зависимости от выбранного пола.
+    // Если пол не указан — берём 'male' как дефолт (но реальная генерация в DeepSeek
+    // в этом случае пойдёт по нейтральным конструкциям — см. промпты).
+    const previewGender = (window.USER_GENDER === 'female') ? 'female' : 'male';
+
+    const PREVIEW_BODIES = {
+        classic: {
+            male: `Увидел вашу вакансию QA Engineer. Мой опыт в тестировании финтех-продуктов хорошо ложится на ваши задачи, особенно в части автоматизации на Python и Selenium.<br><br>На прошлых проектах плотно работал с PostgreSQL, писал интеграционные тесты и настраивал CI/CD пайплайны. Знаю, как выстроить процесс регрессионного тестирования с нуля.<br><br>Буду рад пообщаться и обсудить детали.`,
+            female: `Увидела вашу вакансию QA Engineer. Мой опыт в тестировании финтех-продуктов хорошо ложится на ваши задачи, особенно в части автоматизации на Python и Selenium.<br><br>На прошлых проектах плотно работала с PostgreSQL, писала интеграционные тесты и настраивала CI/CD пайплайны. Знаю, как выстроить процесс регрессионного тестирования с нуля.<br><br>Буду рада пообщаться и обсудить детали.`,
+        },
+        startup: {
+            male: `Увидел вашу вакансию Frontend-разработчик и сразу зацепился за стек. React, TypeScript, работа с GraphQL — это то, чем я плотно занимаюсь последние два года на продуктовых проектах.<br><br>На прошлом месте поднял SPA с нуля, настроил SSR для SEO, оптимизировал бандл и добился Lighthouse 95+. Параллельно писал переиспользуемые компоненты на Storybook, чтобы дизайн-система жила отдельно от продукта. С CI/CD тоже на ты — пайплайны в GitLab настраивал сам.<br><br>Готов ворваться в задачи и приносить пользу. Буду рад пообщаться!`,
+            female: `Увидела вашу вакансию Frontend-разработчик и сразу зацепилась за стек. React, TypeScript, работа с GraphQL — это то, чем я плотно занимаюсь последние два года на продуктовых проектах.<br><br>На прошлом месте подняла SPA с нуля, настроила SSR для SEO, оптимизировала бандл и добилась Lighthouse 95+. Параллельно писала переиспользуемые компоненты на Storybook, чтобы дизайн-система жила отдельно от продукта. С CI/CD тоже на ты — пайплайны в GitLab настраивала сама.<br><br>Готова ворваться в задачи и приносить пользу. Буду рада пообщаться!`,
+        },
+        formal: {
+            male: `Обращаюсь к Вам по поводу позиции Backend-разработчик. Обладаю профильным опытом в области проектирования высоконагруженных систем.<br><br>В рамках предыдущих проектов реализовал систему мониторинга на базе Prometheus и Grafana, что позволило сократить время обнаружения инцидентов. Имею устойчивый опыт работы с PostgreSQL и проектирования REST API.<br><br>Буду рад обсудить, как моя экспертиза может быть полезна Вашей команде. Благодарю за уделенное время.`,
+            female: `Обращаюсь к Вам по поводу позиции Backend-разработчик. Обладаю профильным опытом в области проектирования высоконагруженных систем.<br><br>В рамках предыдущих проектов реализовала систему мониторинга на базе Prometheus и Grafana, что позволило сократить время обнаружения инцидентов. Имею устойчивый опыт работы с PostgreSQL и проектирования REST API.<br><br>Буду рада обсудить, как моя экспертиза может быть полезна Вашей команде. Благодарю за уделенное время.`,
+        },
+        executive: {
+            male: `Изучил вакансию Engineering Manager. Мой опыт управления командами до 15 человек и построения процессов позволит эффективно закрыть задачи вашего направления.<br><br>На позиции Team Lead с нуля выстроил CI/CD и внедрил Scrum, что сократило Time-to-market на 40%. Оптимизировал бюджет разработки и нанял ключевых специалистов.<br><br>Готов обсудить, как мой опыт поможет достичь KPI вашего департамента.`,
+            female: `Изучила вакансию Engineering Manager. Мой опыт управления командами до 15 человек и построения процессов позволит эффективно закрыть задачи вашего направления.<br><br>На позиции Team Lead с нуля выстроила CI/CD и внедрила Scrum, что сократило Time-to-market на 40%. Оптимизировала бюджет разработки и наняла ключевых специалистов.<br><br>Готова обсудить, как мой опыт поможет достичь KPI вашего департамента.`,
+        },
+        direct: {
+            male: `Откликаюсь на DevOps Engineer. Стек совпадает с требованиями.<br><br>Основной стек: Linux, Docker, K8s, Terraform, GitLab CI. Коммерческий опыт — 4 года. Поднимал инфраструктуру на AWS для проекта с нагрузкой 10k RPS. Настраивал мониторинг на Prometheus + Grafana.<br><br>Готов к техническому интервью.`,
+            female: `Откликаюсь на DevOps Engineer. Стек совпадает с требованиями.<br><br>Основной стек: Linux, Docker, K8s, Terraform, GitLab CI. Коммерческий опыт — 4 года. Поднимала инфраструктуру на AWS для проекта с нагрузкой 10k RPS. Настраивала мониторинг на Prometheus + Grafana.<br><br>Готова к техническому интервью.`,
+        },
+    };
+
+    const styleBodies = PREVIEW_BODIES[clStyle] || PREVIEW_BODIES.classic;
+    bodyEl.innerHTML = styleBodies[previewGender] || styleBodies.male;
 
     // Build footer text from contact fields
     const hideContacts = document.getElementById("contactHideCheckbox")?.checked;

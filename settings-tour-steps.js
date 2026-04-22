@@ -62,6 +62,17 @@ window.SETTINGS_TOUR_STEPS = [
         }
     },
     {
+        selector: '#contactGenderBlock',
+        title: 'Пол кандидата',
+        description: 'Аврора автоматически определяет ваш пол по резюме — это нужно, чтобы письма писались в правильном роде («работал/работала»). Если определила неверно или не определила — поправьте здесь, иначе сопроводительные могут получаться в неподходящем роде.',
+        side: 'top',
+        onBeforeShow: function () {
+            window.switchMainTab('response');
+            var el = document.getElementById('contactGenderBlock');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    },
+    {
         selector: '#aiSwitchCard',
         title: 'AI-режим сопроводительного',
         description: 'Когда включено — нейросеть сама создаёт идеальное приветствие и подпись для каждого отклика. Если хотите свой текст — выключите переключатель.',
