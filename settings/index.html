@@ -359,7 +359,8 @@ input[type="number"] { -moz-appearance: textfield; }
 /* Region chip inline style override handled by JS, keeping class for light-theme compat */
 .region-chip { border-radius: 12px; }
 
-#searchActionBar {
+#searchActionBar,
+#responseActionBar {
     transition: transform 0.24s ease, opacity 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
     transform-origin: center bottom;
 }
@@ -371,7 +372,8 @@ input[type="number"] { -moz-appearance: textfield; }
     from { opacity: 0.92; transform: translateY(18px) scale(0.97); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
-#searchActionBar.is-floating {
+#searchActionBar.is-floating,
+#responseActionBar.is-floating {
     position: fixed;
     left: 50%;
     right: auto;
@@ -386,7 +388,8 @@ input[type="number"] { -moz-appearance: textfield; }
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
     animation: saveBarRiseIn 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
-#searchActionBar.is-docked {
+#searchActionBar.is-docked,
+#responseActionBar.is-docked {
     animation: saveBarDockIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 body.has-floating-save {
@@ -396,7 +399,8 @@ body.has-floating-save {
     color: #ccbeff;
 }
 @media (min-width: 768px) {
-    #searchActionBar.is-floating {
+    #searchActionBar.is-floating,
+    #responseActionBar.is-floating {
         bottom: 18px;
         width: min(700px, calc(100% - 40px));
     }
@@ -407,7 +411,10 @@ body.has-floating-save {
 @media (prefers-reduced-motion: reduce) {
     #searchActionBar,
     #searchActionBar.is-floating,
-    #searchActionBar.is-docked {
+    #searchActionBar.is-docked,
+    #responseActionBar,
+    #responseActionBar.is-floating,
+    #responseActionBar.is-docked {
         animation: none !important;
         transition: none !important;
     }
@@ -880,13 +887,6 @@ body.has-floating-save {
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex items-center gap-3 md:gap-4 pt-2">
-                        <button id="saveResponseBtn" class="px-8 md:px-10 py-3 md:py-4 bg-gradient-to-r from-primary-container to-secondary-container text-on-primary-container rounded-full font-bold text-sm md:text-base shadow-[0_10px_30px_rgba(90,48,208,0.3)] hover:scale-[1.02] active:scale-95 transition-all">
-                            Сохранить настройки откликов
-                        </button>
-                    </div>
-
                 </div><!-- End left column -->
 
                 <!-- Right Column: Preview -->
@@ -913,6 +913,22 @@ body.has-floating-save {
                 </div><!-- End right column -->
 
             </div><!-- End grid -->
+
+            <!-- Action Bar (sticky/floating, аналогично #searchActionBar) -->
+            <div id="responseActionBar" class="mt-10 md:mt-16 flex flex-col md:flex-row md:flex-wrap items-center justify-between gap-4 md:gap-6 p-6 md:p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                        <span class="material-symbols-outlined">verified</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm md:text-base">Настройки откликов</h4>
+                        <p class="text-xs md:text-sm text-on-surface-variant">Изменения применятся к новым откликам мгновенно</p>
+                    </div>
+                </div>
+                <div class="flex gap-3 md:gap-4 w-full md:w-auto">
+                    <button id="saveResponseBtn" disabled class="flex-grow md:flex-none px-8 md:px-12 py-3 md:py-4 rounded-xl bg-primary-container text-on-primary-container font-bold shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed text-sm md:text-base">Нет изменений</button>
+                </div>
+            </div>
 
         </div><!-- End responseSettingsTab -->
 

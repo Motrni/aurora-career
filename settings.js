@@ -403,6 +403,77 @@ function updateSaveButtonState() {
     updateSaveBarFloatingState();
 }
 
+
+// ============================================================
+// RESPONSE TAB — DIRTY STATE TRACKING + STICKY ACTION BAR
+// (полный аналог логики search-таба, чтобы юзер не терял изменения)
+// ============================================================
+let initialResponseState = null;
+const RESPONSE_SAVE_LABEL_DIRTY = "Сохранить настройки откликов";
+const RESPONSE_SAVE_LABEL_CLEAN = "Нет изменений";
+let _hasResponseChanges = false;
+let _responseBarBaseTop = null;
+let _responseBarDocked = false;
+
+function serializeResponseForm() {
+    // Собираем стейт всех полей вкладки "Настройки откликов" в JSON-строку.
+    // Сравниваем при сохранении и при каждом input/change.
+    const useDefaultEl  = document.getElementById("clUseDefaultCheckbox");
+    const headerEl      = document.getElementById("clHeaderInput");
+    const footerEl      = document.getElementById("clFooterInput");
+    const styleEl       = document.getElementById("clStyleSelect");
+    const tgEl          = document.getElementById("contactTgInput");
+    const phoneEl       = document.getElementById("contactPhoneInput");
+    const hideEl        = document.getElementById("contactHideCheckbox");
+    const genderEl      = document.getElementById("contactGenderSelect");
+
+    const data = {
+        cl_use_default: useDefaultEl ? !!useDefaultEl.checked : true,
+        cl_header:      headerEl ? headerEl.value.trim() : "",
+        cl_footer:      footerEl ? footerEl.value.trim() : "",
+        cl_style:       styleEl ? styleEl.value : "classic",
+        contact_tg:     tgEl ? tgEl.value.trim() : "",
+        phone:          phoneEl ? phoneEl.value.trim() : "",
+        hide_contacts:  hideEl ? !!hideEl.checked : false,
+        gender:         genderEl ? (genderEl.value || "") : "",
+    };
+    return JSON.stringify(data);
+}
+
+function captureResponseInitialState() {
+    // Вызывается при загрузке настроек (после _applyContactDataUI) и после
+    // успешного сохранения — чтобы sticky bar спрятался и beforeunload не дёргал.
+    initialResponseState = serializeResponseForm();
+    _hasResponseChanges = false;
+}
+
+function updateResponseSaveButtonState() {
+    const saveBtn = document.getElementById('saveResponseBtn');
+    if (!saveBtn || initialResponseState === null) return;
+
+    const currentState = serializeResponseForm();
+    _hasResponseChanges = currentState !== initialResponseState;
+
+    if (_hasResponseChanges) {
+        saveBtn.disabled = false;
+        saveBtn.innerText = RESPONSE_SAVE_LABEL_DIRTY;
+        saveBtn.style.opacity = "1";
+    } else {
+        saveBtn.disabled = true;
+        saveBtn.innerText = RESPONSE_SAVE_LABEL_CLEAN;
+        saveBtn.style.opacity = "0.5";
+    }
+    updateSaveBarFloatingState();
+}
+
+function updateAllDirtyStates() {
+    // Универсальный listener для всех input/select/textarea на странице.
+    // Каждый из updateXxxSaveButtonState внутри сам решит, его ли это поле
+    // (по сравнению serialize-результата).
+    if (typeof updateSaveButtonState === 'function')         updateSaveButtonState();
+    if (typeof updateResponseSaveButtonState === 'function') updateResponseSaveButtonState();
+}
+
 function _adjustSaveBarAboveFooter(actionBar) {
     const footer = document.querySelector('footer');
     if (!footer || !actionBar) return;
@@ -421,60 +492,126 @@ function _adjustSaveBarAboveFooter(actionBar) {
     }
 }
 
-function updateSaveBarFloatingState() {
-    const actionBar = document.getElementById('searchActionBar');
-    const hint = document.getElementById('onboardingSaveHint');
-    if (!actionBar) return;
+// ===== STICKY ACTION BARS — общая логика для обоих табов =====
+//
+// Контракт: для каждого таба (search/response) поддерживаем свой actionBar
+// и пару состояний (_saveBarBaseTop / _saveBarDocked) — отдельно, потому что
+// они scroll-зависимые и могут быть разной высоты.
+//
+// Главная функция updateSaveBarFloatingState() решает, какой именно
+// бар должен быть виден сейчас (по активной вкладке) и применяет к нему
+// is-floating / is-docked / clean.
 
+function _detectActiveTab() {
     const searchTab = document.getElementById('searchSettingsTab');
-    const isSearchTabActive = searchTab && searchTab.classList.contains('active');
+    if (searchTab && searchTab.classList.contains('active')) return 'search';
+    const responseTab = document.getElementById('responseSettingsTab');
+    if (responseTab && responseTab.classList.contains('active')) return 'response';
+    return null;
+}
 
-    if (!isSearchTabActive && !_isOnboardingMode) {
-        actionBar.classList.remove('is-floating', 'is-docked');
-        actionBar.style.bottom = '';
-        document.body.classList.remove('has-floating-save');
+function _clearActionBar(barId) {
+    const bar = document.getElementById(barId);
+    if (!bar) return;
+    bar.classList.remove('is-floating', 'is-docked');
+    bar.style.bottom = '';
+}
+
+function _applyFloatingToBar(bar, baseTopRefSetter, isDockedFlag, dockedSetter, scrollWindow) {
+    // bar — элемент actionBar
+    // baseTopRefSetter() — функция возвращающая текущий _xxxBarBaseTop (для null-init)
+    // isDockedFlag — текущий флаг для этого бара
+    // dockedSetter(bool) — функция выставляющая этот флаг
+    // scrollWindow — { baseTop } объект, чтобы перерасчитать base top
+    if (scrollWindow.baseTop === null) {
+        // Расчёт baseTop делается извне (refreshXxxBarBaseTop); здесь просто пропускаем
+        return isDockedFlag;
+    }
+    const viewportBottom = window.scrollY + window.innerHeight;
+    let docked = isDockedFlag;
+    if (docked) {
+        if (viewportBottom < (scrollWindow.baseTop - 72)) docked = false;
+    } else {
+        if (viewportBottom >= (scrollWindow.baseTop + 24)) docked = true;
+    }
+
+    bar.classList.toggle('is-floating', !docked);
+    bar.classList.toggle('is-docked', docked);
+    document.body.classList.toggle('has-floating-save', !docked);
+    if (!docked) _adjustSaveBarAboveFooter(bar);
+    dockedSetter(docked);
+    return docked;
+}
+
+function updateSaveBarFloatingState() {
+    const searchBar   = document.getElementById('searchActionBar');
+    const responseBar = document.getElementById('responseActionBar');
+    const hint        = document.getElementById('onboardingSaveHint');
+
+    const activeTab = _detectActiveTab();
+
+    // Бары неактивных вкладок — гасим всегда.
+    if (activeTab !== 'search') _clearActionBar('searchActionBar');
+    if (activeTab !== 'response') _clearActionBar('responseActionBar');
+
+    // --- Onboarding: всегда показываем search bar как floating ---
+    if (_isOnboardingMode && searchBar) {
+        _saveBarDocked = false;
+        searchBar.classList.add('is-floating');
+        searchBar.classList.remove('is-docked');
+        document.body.classList.add('has-floating-save');
+        _adjustSaveBarAboveFooter(searchBar);
+        if (hint) hint.classList.remove('hidden');
+        return;
+    }
+    if (hint) hint.classList.add('hidden');
+
+    // --- Активный SEARCH таб ---
+    if (activeTab === 'search' && searchBar) {
+        if (_hasSearchChanges) {
+            if (_saveBarBaseTop === null) refreshSaveBarBaseTop();
+            const scrollWindow = { baseTop: _saveBarBaseTop };
+            _applyFloatingToBar(
+                searchBar,
+                () => _saveBarBaseTop,
+                _saveBarDocked,
+                (v) => { _saveBarDocked = v; },
+                scrollWindow,
+            );
+        } else {
+            _saveBarDocked = false;
+            _clearActionBar('searchActionBar');
+            document.body.classList.remove('has-floating-save');
+        }
         return;
     }
 
-    if (_isOnboardingMode) {
-        _saveBarDocked = false;
-        actionBar.classList.add('is-floating');
-        actionBar.classList.remove('is-docked');
-        document.body.classList.add('has-floating-save');
-        _adjustSaveBarAboveFooter(actionBar);
-    } else if (_hasSearchChanges) {
-        if (_saveBarBaseTop === null) {
-            refreshSaveBarBaseTop();
-        }
-        const viewportBottom = window.scrollY + window.innerHeight;
-        if (_saveBarDocked) {
-            if (viewportBottom < (_saveBarBaseTop - 72)) {
-                _saveBarDocked = false;
-            }
+    // --- Активный RESPONSE таб ---
+    if (activeTab === 'response' && responseBar) {
+        if (_hasResponseChanges) {
+            if (_responseBarBaseTop === null) refreshResponseBarBaseTop();
+            const scrollWindow = { baseTop: _responseBarBaseTop };
+            _applyFloatingToBar(
+                responseBar,
+                () => _responseBarBaseTop,
+                _responseBarDocked,
+                (v) => { _responseBarDocked = v; },
+                scrollWindow,
+            );
         } else {
-            if (viewportBottom >= (_saveBarBaseTop + 24)) {
-                _saveBarDocked = true;
-            }
+            _responseBarDocked = false;
+            _clearActionBar('responseActionBar');
+            document.body.classList.remove('has-floating-save');
         }
-
-        actionBar.classList.toggle('is-floating', !_saveBarDocked);
-        actionBar.classList.toggle('is-docked', _saveBarDocked);
-        document.body.classList.toggle('has-floating-save', !_saveBarDocked);
-        if (!_saveBarDocked) _adjustSaveBarAboveFooter(actionBar);
-    } else {
-        _saveBarDocked = false;
-        actionBar.classList.remove('is-floating', 'is-docked');
-        actionBar.style.bottom = '';
-        document.body.classList.remove('has-floating-save');
+        return;
     }
 
-    if (hint) {
-        hint.classList.toggle('hidden', !_isOnboardingMode);
-    }
+    // Никакой активной вкладки нет — всё гасим
+    document.body.classList.remove('has-floating-save');
 }
 
-function refreshSaveBarBaseTop() {
-    const actionBar = document.getElementById('searchActionBar');
+function _refreshBarBaseTop(barId, baseTopGetter, baseTopSetter) {
+    const actionBar = document.getElementById(barId);
     if (!actionBar) return;
 
     const hadFloating = actionBar.classList.contains('is-floating');
@@ -485,7 +622,7 @@ function refreshSaveBarBaseTop() {
     }
 
     const rect = actionBar.getBoundingClientRect();
-    _saveBarBaseTop = rect.top + window.scrollY;
+    baseTopSetter(rect.top + window.scrollY);
 
     if (hadDocked) {
         actionBar.classList.add('is-docked');
@@ -493,6 +630,14 @@ function refreshSaveBarBaseTop() {
         actionBar.classList.add('is-floating');
         document.body.classList.add('has-floating-save');
     }
+}
+
+function refreshSaveBarBaseTop() {
+    _refreshBarBaseTop('searchActionBar', () => _saveBarBaseTop, (v) => { _saveBarBaseTop = v; });
+}
+
+function refreshResponseBarBaseTop() {
+    _refreshBarBaseTop('responseActionBar', () => _responseBarBaseTop, (v) => { _responseBarBaseTop = v; });
 }
 
 function requestSaveBarStateUpdate() {
@@ -521,13 +666,16 @@ function syncScheduleVisualState() {
 
 function initDirtyStateTracking() {
     initialSearchState = serializeSearchForm();
+    captureResponseInitialState();
     updateSaveButtonState();
+    updateResponseSaveButtonState();
 
-    // Attach listeners to ALL inputs
+    // Единый listener на все input/select/textarea — каждая updateXxx внутри
+    // сама определит "своё" ли это поле через сравнение serialize-результата.
     const inputs = document.querySelectorAll('input, select, textarea');
     inputs.forEach(input => {
-        input.addEventListener('input', updateSaveButtonState);
-        input.addEventListener('change', updateSaveButtonState);
+        input.addEventListener('input', updateAllDirtyStates);
+        input.addEventListener('change', updateAllDirtyStates);
     });
 
     // MutationObserver for tags or custom components
@@ -1343,6 +1491,7 @@ function tryInitTree() {
         toggleGlobalLoading(false);
         setTimeout(() => {
             refreshSaveBarBaseTop();
+            refreshResponseBarBaseTop();
             initDirtyStateTracking();
             checkVacancies();
             if (window._currentStep === 'onboarding_settings') {
@@ -2017,6 +2166,14 @@ async function saveResponseSettings() {
         const hideContacts = document.getElementById("contactHideCheckbox").checked;
         const genderSelect = document.getElementById("contactGenderSelect");
         const genderVal = genderSelect ? genderSelect.value : "";
+
+        // [DEBUG] Сразу видно в DevTools Console если что-то не так с gender:
+        // если genderVal === '' при визуально выбранном "Женский" → кэш JS / битый select.
+        console.debug("[saveResponseSettings] genderSelect found:", !!genderSelect,
+                      "value:", JSON.stringify(genderVal),
+                      "USER_GENDER:", window.USER_GENDER,
+                      "USER_GENDER_SOURCE:", window.USER_GENDER_SOURCE);
+
         const payload = {
             cl_use_default: document.getElementById("clUseDefaultCheckbox").checked,
             cl_header: document.getElementById("clHeaderInput").value.trim(),
@@ -2024,11 +2181,16 @@ async function saveResponseSettings() {
             cl_style: document.getElementById("clStyleSelect").value,
             contact_tg: hideContacts ? "" : (document.getElementById("contactTgInput").value.trim() || ""),
             phone: hideContacts ? "" : (document.getElementById("contactPhoneInput").value.trim() || ""),
-            // Пол: только 'male' / 'female' / '' (для очистки) / undefined (не трогать).
-            // Если placeholder выбран (value=""), не шлём вообще — текущее значение в БД сохраняется.
-            ...(genderVal === 'male' || genderVal === 'female' ? { gender: genderVal } : {}),
         };
-        
+
+        // Пол: 'male' / 'female' — отправляем явно. Placeholder (value="") не шлём,
+        // чтобы случайно не сбросить значение в БД.
+        if (genderVal === 'male' || genderVal === 'female') {
+            payload.gender = genderVal;
+        }
+
+        console.debug("[saveResponseSettings] final payload:", payload);
+
         // Add legacy auth if needed
         if (authMode === 'legacy' && legacyUserId && legacySign) {
             payload.user_id = parseInt(legacyUserId);
@@ -2041,24 +2203,53 @@ async function saveResponseSettings() {
             body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
+        // FastAPI HTTPException возвращает {"detail": "..."} с не-2xx статусом.
+        // Pydantic-валидаторы — массив errors с сообщениями.
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (_) { /* not json — игнорируем */ }
 
-        if (data.status === "ok") {
+        if (!response.ok) {
+            const detail = data && (
+                (typeof data.detail === 'string' && data.detail) ||
+                (Array.isArray(data.detail) && data.detail.map(e => e.msg).join("; ")) ||
+                data.error
+            );
+            throw new Error(detail || `HTTP ${response.status}`);
+        }
+
+        if (data && data.status === "ok") {
             saveBtn.innerText = "Сохранено!";
             saveBtn.style.background = "#4caf50";
+
             setTimeout(() => {
-                saveBtn.innerText = "Сохранить настройки откликов";
                 saveBtn.style.background = ""; // Reset
-                saveBtn.disabled = false;
+                // Только теперь фиксируем новое "чистое" состояние и
+                // обновляем кнопку — это спрячет sticky bar и сбросит
+                // подсказку beforeunload. Если бы сделали раньше,
+                // updateResponseSaveButtonState мгновенно затёр бы
+                // "Сохранено!" на "Нет изменений".
+                if (typeof captureResponseInitialState === 'function') {
+                    captureResponseInitialState();
+                }
+                if (typeof updateResponseSaveButtonState === 'function') {
+                    updateResponseSaveButtonState();
+                }
             }, 2000);
         } else {
-            throw new Error(data.error || "Ошибка сервера");
+            throw new Error((data && data.error) || "Ошибка сервера");
         }
 
     } catch (e) {
-        console.error(e);
+        console.error("[saveResponseSettings] failed:", e);
         saveBtn.innerText = "Ошибка";
         saveBtn.style.background = "#ff4d4d";
+        // Покажем понятный alert юзеру с реальным текстом ошибки
+        // (а не просто красную кнопку — он не поймёт что не так).
+        try {
+            alert("Не удалось сохранить настройки откликов:\n\n" + (e && e.message ? e.message : e));
+        } catch (_) { /* alert недоступен — окей */ }
         setTimeout(() => {
             saveBtn.innerText = "Сохранить настройки откликов";
             saveBtn.style.background = "";
@@ -2667,4 +2858,69 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // ============================================================
+    // ЗАЩИТА ОТ ПОТЕРИ ДАННЫХ
+    // ============================================================
+    // 1) beforeunload — браузерное предупреждение при закрытии вкладки/перезагрузке/
+    //    смене URL вручную. Текст не контролируется браузером (chromium показывает
+    //    стандартный alert "Изменения, внесённые на странице, могут не сохраниться").
+    // 2) Перехват кликов по навигационным <a> на странице (Кабинет/Отклики/Резюме
+    //    в верхнем меню) — показываем красивый confirm перед уходом.
+    //
+    // Срабатывает если есть unsaved-изменения В ЛЮБОЙ из вкладок (поиск/отклики).
+
+    function _hasAnyUnsavedChanges() {
+        return _hasSearchChanges || _hasResponseChanges;
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+        if (_hasAnyUnsavedChanges()) {
+            // Современные браузеры игнорируют returnValue текст и показывают
+            // свой generic, но preventDefault + returnValue требуется чтобы
+            // диалог вообще появился.
+            e.preventDefault();
+            e.returnValue = 'У вас есть несохранённые изменения. Они будут потеряны.';
+            return e.returnValue;
+        }
+    });
+
+    // In-app navigation guard: внутренние ссылки в шапке (Кабинет/Отклики/Резюме
+    // и мобильное меню). Перехватываем клик и показываем confirm.
+    const NAV_SELECTOR = 'a[href^="/"]:not([target="_blank"]):not([data-allow-leave])';
+    document.addEventListener('click', (event) => {
+        if (!_hasAnyUnsavedChanges()) return;
+
+        const link = event.target && event.target.closest && event.target.closest(NAV_SELECTOR);
+        if (!link) return;
+
+        const href = link.getAttribute('href') || '';
+        // Игнорируем якоря и javascript: ссылки
+        if (href.startsWith('#') || href.startsWith('javascript:')) return;
+
+        // Игнорируем переходы внутри текущей страницы (на ту же URL)
+        try {
+            const target = new URL(href, window.location.origin);
+            if (target.pathname === window.location.pathname && !target.search && !target.hash) {
+                return;
+            }
+        } catch (_) { /* invalid URL — пусть browser сам разруливает */ }
+
+        // Confirm. Если юзер согласен уйти — позволяем (клик идёт дальше),
+        // beforeunload тоже сработает но это уже норма.
+        const dirtyTabs = [];
+        if (_hasSearchChanges)   dirtyTabs.push('"Настройки поиска"');
+        if (_hasResponseChanges) dirtyTabs.push('"Настройки откликов"');
+        const tabsText = dirtyTabs.join(' и ');
+
+        const confirmed = window.confirm(
+            `У вас есть несохранённые изменения в ${tabsText}.\n\n` +
+            `Если уйти сейчас — все изменения будут потеряны.\n\n` +
+            `Уйти без сохранения?`
+        );
+        if (!confirmed) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }, true); // capture-phase, чтобы перехватить ДО других обработчиков
 });
