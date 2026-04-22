@@ -2322,6 +2322,12 @@ function _applyContactDataUI() {
             window.USER_GENDER_SOURCE = 'manual';
             if (genderHint) genderHint.classList.add("hidden");
             updateCLPreview();
+            // Подстраховка: общий dirty-listener из initDirtyStateTracking тоже
+            // должен сработать, но если по какой-то причине его не успели навесить
+            // (race condition при загрузке) — здесь всё равно обновим состояние.
+            if (typeof updateAllDirtyStates === 'function') {
+                updateAllDirtyStates();
+            }
         });
     }
 
@@ -2862,11 +2868,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // ЗАЩИТА ОТ ПОТЕРИ ДАННЫХ
     // ============================================================
-    // 1) beforeunload — браузерное предупреждение при закрытии вкладки/перезагрузке/
-    //    смене URL вручную. Текст не контролируется браузером (chromium показывает
-    //    стандартный alert "Изменения, внесённые на странице, могут не сохраниться").
-    // 2) Перехват кликов по навигационным <a> на странице (Кабинет/Отклики/Резюме
-    //    в верхнем меню) — показываем красивый confirm перед уходом.
+    // 1) beforeunload — браузерное предупреждение при закрытии вкладки/перезагрузке.
+    //    Текст не контролируется браузером (chromium показывает стандартный alert).
+    // 2) In-app navigation guard — клик по любой <a href="/..."> в шапке.
+    //    Показываем КАСТОМНЫЙ модал #leaveConfirmModal с тремя кнопками:
+    //      • "Сохранить и уйти" — вызывает saveSettings/saveResponseSettings,
+    //         ждёт результат, потом продолжает навигацию.
+    //      • "Уйти без сохранения" — пускаем дальше, изменения теряются.
+    //      • "Остаться на странице" — отменяем переход.
     //
     // Срабатывает если есть unsaved-изменения В ЛЮБОЙ из вкладок (поиск/отклики).
 
@@ -2874,53 +2883,170 @@ document.addEventListener('DOMContentLoaded', () => {
         return _hasSearchChanges || _hasResponseChanges;
     }
 
+    function _dirtyTabsText() {
+        const dirty = [];
+        if (_hasSearchChanges)   dirty.push('«Настройки поиска»');
+        if (_hasResponseChanges) dirty.push('«Настройки откликов»');
+        return dirty.join(' и ');
+    }
+
     window.addEventListener('beforeunload', (e) => {
         if (_hasAnyUnsavedChanges()) {
-            // Современные браузеры игнорируют returnValue текст и показывают
-            // свой generic, но preventDefault + returnValue требуется чтобы
-            // диалог вообще появился.
+            // beforeunload показывает только generic browser alert (Chromium
+            // игнорирует кастомный текст). preventDefault + returnValue нужны
+            // чтобы вообще появилось.
             e.preventDefault();
             e.returnValue = 'У вас есть несохранённые изменения. Они будут потеряны.';
             return e.returnValue;
         }
     });
 
-    // In-app navigation guard: внутренние ссылки в шапке (Кабинет/Отклики/Резюме
-    // и мобильное меню). Перехватываем клик и показываем confirm.
+    // ---------- Кастомный модал (Promise-based) ----------
+    // showLeaveConfirmModal() → resolves to: 'save' | 'discard' | 'stay'
+    function showLeaveConfirmModal() {
+        return new Promise((resolve) => {
+            const modal      = document.getElementById('leaveConfirmModal');
+            const bodyEl     = document.getElementById('leaveConfirmBody');
+            const stayBtn    = document.getElementById('leaveConfirmStay');
+            const discardBtn = document.getElementById('leaveConfirmDiscard');
+            const saveBtn    = document.getElementById('leaveConfirmSave');
+
+            if (!modal || !stayBtn || !discardBtn || !saveBtn) {
+                // Fallback: модал не найден — старый browser confirm.
+                const ok = window.confirm(
+                    `У вас есть несохранённые изменения в ${_dirtyTabsText()}. ` +
+                    `Уйти без сохранения?`
+                );
+                resolve(ok ? 'discard' : 'stay');
+                return;
+            }
+
+            if (bodyEl) {
+                bodyEl.innerHTML =
+                    `У вас есть несохранённые изменения в <b>${_dirtyTabsText()}</b>.<br><br>` +
+                    `Что сделать?`;
+            }
+
+            // Показываем
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Блокируем скролл фона
+            const prevOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+
+            const cleanup = (result) => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = prevOverflow;
+                stayBtn.removeEventListener('click', onStay);
+                discardBtn.removeEventListener('click', onDiscard);
+                saveBtn.removeEventListener('click', onSave);
+                modal.removeEventListener('click', onBackdrop);
+                document.removeEventListener('keydown', onKey);
+                resolve(result);
+            };
+
+            const onStay     = () => cleanup('stay');
+            const onDiscard  = () => cleanup('discard');
+            const onSave     = () => cleanup('save');
+            const onBackdrop = (e) => { if (e.target === modal) cleanup('stay'); };
+            const onKey      = (e) => { if (e.key === 'Escape') cleanup('stay'); };
+
+            stayBtn.addEventListener('click', onStay);
+            discardBtn.addEventListener('click', onDiscard);
+            saveBtn.addEventListener('click', onSave);
+            modal.addEventListener('click', onBackdrop);
+            document.addEventListener('keydown', onKey);
+        });
+    }
+
+    // Сохраняет ту вкладку(и), которая dirty. Возвращает true при успехе.
+    async function _saveDirtyTabs() {
+        const tasks = [];
+        if (_hasSearchChanges) {
+            // Search-форма сохраняется через клик по реальной кнопке —
+            // у неё своя обвязка (валидация, onboarding-состояние и т.п.)
+            const sBtn = document.getElementById('saveBtn');
+            if (sBtn && !sBtn.disabled) {
+                tasks.push(new Promise((resolve) => {
+                    // Хак: после клика отслеживаем кнопку до сброса dirty-state.
+                    sBtn.click();
+                    let elapsed = 0;
+                    const poll = () => {
+                        elapsed += 200;
+                        if (!_hasSearchChanges) return resolve(true);
+                        if (elapsed > 15000) return resolve(false); // 15s таймаут
+                        setTimeout(poll, 200);
+                    };
+                    poll();
+                }));
+            }
+        }
+        if (_hasResponseChanges) {
+            // Response — тоже через click по кнопке (там async saveResponseSettings).
+            const rBtn = document.getElementById('saveResponseBtn');
+            if (rBtn && !rBtn.disabled) {
+                tasks.push(new Promise((resolve) => {
+                    rBtn.click();
+                    let elapsed = 0;
+                    const poll = () => {
+                        elapsed += 200;
+                        if (!_hasResponseChanges) return resolve(true);
+                        if (elapsed > 15000) return resolve(false);
+                        setTimeout(poll, 200);
+                    };
+                    poll();
+                }));
+            }
+        }
+        if (tasks.length === 0) return true;
+        const results = await Promise.all(tasks);
+        return results.every(Boolean);
+    }
+
+    // ---------- In-app navigation guard ----------
     const NAV_SELECTOR = 'a[href^="/"]:not([target="_blank"]):not([data-allow-leave])';
-    document.addEventListener('click', (event) => {
+    document.addEventListener('click', async (event) => {
         if (!_hasAnyUnsavedChanges()) return;
 
         const link = event.target && event.target.closest && event.target.closest(NAV_SELECTOR);
         if (!link) return;
 
         const href = link.getAttribute('href') || '';
-        // Игнорируем якоря и javascript: ссылки
         if (href.startsWith('#') || href.startsWith('javascript:')) return;
 
-        // Игнорируем переходы внутри текущей страницы (на ту же URL)
+        // Игнорируем переходы на ту же URL
         try {
             const target = new URL(href, window.location.origin);
             if (target.pathname === window.location.pathname && !target.search && !target.hash) {
                 return;
             }
-        } catch (_) { /* invalid URL — пусть browser сам разруливает */ }
+        } catch (_) { /* invalid URL */ }
 
-        // Confirm. Если юзер согласен уйти — позволяем (клик идёт дальше),
-        // beforeunload тоже сработает но это уже норма.
-        const dirtyTabs = [];
-        if (_hasSearchChanges)   dirtyTabs.push('"Настройки поиска"');
-        if (_hasResponseChanges) dirtyTabs.push('"Настройки откликов"');
-        const tabsText = dirtyTabs.join(' и ');
+        // Перехватываем клик ДО browser-перехода.
+        event.preventDefault();
+        event.stopPropagation();
 
-        const confirmed = window.confirm(
-            `У вас есть несохранённые изменения в ${tabsText}.\n\n` +
-            `Если уйти сейчас — все изменения будут потеряны.\n\n` +
-            `Уйти без сохранения?`
-        );
-        if (!confirmed) {
-            event.preventDefault();
-            event.stopPropagation();
+        const choice = await showLeaveConfirmModal();
+        if (choice === 'stay') {
+            return; // ничего не делаем
         }
-    }, true); // capture-phase, чтобы перехватить ДО других обработчиков
+
+        if (choice === 'save') {
+            // Покажем индикатор "сохраняю и ухожу" на самом link'е (опционально)
+            const ok = await _saveDirtyTabs();
+            if (!ok) {
+                alert('Не удалось сохранить настройки. Попробуйте ещё раз или уйдите без сохранения.');
+                return;
+            }
+            // Сохранилось — продолжаем переход.
+        }
+
+        // discard или save → переходим. data-allow-leave чтобы уже не цеплять
+        // повторно нашим же обработчиком.
+        link.setAttribute('data-allow-leave', '1');
+        // beforeunload может ещё раз спросить (если save не успел сбросить
+        // dirty-state) — но это редкий race.
+        window.location.href = href;
+    }, true); // capture-phase, перехват ДО других обработчиков
 });
