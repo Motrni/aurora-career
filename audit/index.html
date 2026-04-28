@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <base href="/">
 <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
-<title>Бесплатный аудит резюме | Aurora Career</title>
+<title>Бесплатный аудит резюме | Аврора</title>
 <meta name="description" content="ИИ-анализ резюме за 30 секунд. Узнай почему рекрутеры игнорируют твоё резюме на hh.ru.">
 <link rel="icon" type="image/png" href="favicon.png?v=3">
 <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
@@ -42,7 +42,38 @@ tailwind.config = {
 };
 </script>
 <style>
-body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; }
+html { overflow-x: clip; }
+body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; overflow-x: clip; }
+
+.brand-logo-font {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+}
+
+/* Один экран без вертикального скролла — только блок загрузки */
+body:has(#stepUpload:not(.hidden)) {
+    overflow-y: hidden;
+    height: 100dvh;
+    max-height: 100dvh;
+}
+body:has(#stepLoading:not(.hidden)) {
+    overflow-y: hidden;
+    height: 100dvh;
+    max-height: 100dvh;
+}
+/* Результат/длинные экраны — скролл снова разрешён */
+body:has(#stepResult:not(.hidden)) {
+    overflow-y: auto;
+    height: auto;
+    max-height: none;
+}
+body:has(#stepLoggedIn:not(.hidden)) {
+    overflow-y: auto;
+    height: auto;
+    max-height: none;
+}
 .aurora-glow {
     position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
     width: 600px; height: 600px;
@@ -114,21 +145,13 @@ body.audit-has-sticky { padding-bottom: 84px; }
 @media (min-width: 640px) { body.audit-has-sticky { padding-bottom: 72px; } }
 
 /* ═══════════════════════════════════════════════════════
-   Aurora portrait — паттерн «парит над карточкой»
+   Aurora portrait — общие утилиты
    ═══════════════════════════════════════════════════════ */
 .aurora-portrait-wrap {
     display: flex; justify-content: center;
     position: relative; z-index: 2; pointer-events: none;
 }
-.aurora-portrait-hero-img {
-    width: 180px; height: 180px;
-    object-fit: contain;
-    filter: drop-shadow(0 8px 40px rgba(101,62,219,0.60))
-            drop-shadow(0 0 16px rgba(204,190,255,0.30));
-    animation: auroraFloat 4s ease-in-out infinite;
-    display: block;
-}
-/* Greeting / result — чуть меньше */
+/* Greeting / result */
 .aurora-portrait-result-img {
     width: 148px; height: 148px;
     object-fit: contain;
@@ -150,29 +173,226 @@ body.audit-has-sticky { padding-bottom: 84px; }
     50%       { transform: translateY(-8px); }
 }
 
-/* Карточки, которые «подлезают» под портрет */
-.aurora-upload-card  { margin-top: -60px; padding-top: 76px !important; }
+/* Result card */
 .aurora-result-card  { margin-top: -48px; padding-top: 64px !important; text-align: center; }
 .aurora-loading-card { padding-top: 48px !important; }
-
-/* Если картинка не загрузилась — убираем отрицательный margin */
-.aurora-portrait-wrap.hidden + .aurora-upload-card { margin-top: 0; padding-top: 1.5rem !important; }
 .aurora-portrait-wrap.hidden + .aurora-result-card  { margin-top: 0; padding-top: 1.5rem !important; }
+
+/* ═══════════════════════════════════════════════════════
+   Экран #stepUpload — один viewport: фото + плоская карточка снизу
+   ═══════════════════════════════════════════════════════ */
+.audit-upload-root {
+    position: relative;
+    width: 100vw;
+    max-width: none;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.hero-stage {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* --aurora-top: вертикальное смещение; высота по умолчанию 130% — как ты подобрал в DevTools */
+.hero-aurora-img {
+    position: absolute;
+    top: var(--aurora-top, 0px);
+    left: 50%;
+    transform: translateX(-50%);
+    height: 130%;
+    width: auto;
+    max-width: none !important;
+    object-fit: unset;
+    display: block;
+}
+
+.glass-card-strong {
+    background: linear-gradient(
+        155deg,
+        rgba(255, 255, 255, 0.058) 0%,
+        rgba(12, 8, 24, 0.18) 48%,
+        rgba(10, 6, 20, 0.28) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(52px) saturate(205%);
+    -webkit-backdrop-filter: blur(52px) saturate(205%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        0 -6px 32px rgba(0, 0, 0, 0.32);
+}
+
+/* Карточка у низа ~40% высоты экрана, на ~20% уже чем было (896→~716px) */
+.hero-card:not(.hero-card--static) {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(10px, 2vmin, 18px);
+    transform: translateX(-50%);
+    z-index: 3;
+    /* ~20% уже от 896px ≈ 716px; на узком экране — почти вся ширина минус отступы */
+    width: min(716px, calc(100vw - 48px));
+    min-width: 0;
+    box-sizing: border-box;
+    min-height: 40vh;
+    max-height: 48vh;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(10px, 2.2vmin, 14px) clamp(14px, 3vw, 20px) !important;
+    margin: 0 !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.hero-brand-title { color: #f7f6fc !important; letter-spacing: -0.055em !important; text-shadow: 0 1px 24px rgba(0, 0, 0, 0.42); }
+.hero-brand-tag {
+    font-size: 11px !important;
+    letter-spacing: 0.05em !important;
+    font-weight: 300 !important;
+    color: #e2def0 !important;
+}
+@media (min-width: 768px) {
+    .hero-brand-tag { font-size: 12px !important; }
+}
+
+.hero-card:not(.hero-card--static) h1 {
+    color: #fcfbff !important;
+    font-weight: 600 !important;
+    text-shadow: 0 1px 22px rgba(0, 0, 0, 0.7);
+}
+
+.hero-tagline {
+    color: #f3f2f9 !important;
+    text-shadow: 0 1px 16px rgba(0, 0, 0, 0.55);
+}
+
+.hero-drop-zone {
+    border-width: 1.75px !important;
+    border-style: dashed !important;
+    border-color: rgba(196, 186, 230, 0.38) !important;
+    padding: 0.5rem 0.85rem !important;
+    margin-top: 0.65rem !important;
+    cursor: pointer;
+    border-radius: 0.75rem;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s;
+    background: linear-gradient(
+        180deg,
+        rgba(122, 90, 220, 0.11) 0%,
+        rgba(40, 32, 72, 0.22) 100%
+    );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.hero-drop-zone:hover {
+    border-color: rgba(204, 190, 255, 0.65) !important;
+    background: linear-gradient(
+        180deg,
+        rgba(130, 100, 240, 0.20) 0%,
+        rgba(65, 50, 120, 0.38) 100%
+    );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 0 0 1px rgba(204, 190, 255, 0.12),
+        0 8px 28px rgba(90, 48, 208, 0.25);
+    transform: translateY(-1px);
+}
+
+.hero-drop-zone.drop-zone.dragover {
+    border-color: rgba(204, 190, 255, 0.85) !important;
+    border-style: solid !important;
+    background: rgba(101, 62, 219, 0.24) !important;
+}
+
+.hero-social {
+    margin-top: 8px !important;
+    padding-bottom: 0 !important;
+}
+.hero-social span { color: #ddccff !important; }
+
+/* Compliance-строка (юр. лицо + Политика) — низ карточки */
+.hero-compliance {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px 10px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: rgba(231, 224, 239, 0.55);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+.hero-compliance-sep { opacity: 0.45; }
+.hero-compliance-link {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    color: rgba(204, 190, 255, 0.78);
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: rgba(204, 190, 255, 0.35);
+    text-underline-offset: 2px;
+    transition: color 0.15s, text-decoration-color 0.15s;
+}
+.hero-compliance-link:hover {
+    color: #ccbeff;
+    text-decoration-color: #ccbeff;
+}
+
+/* Узкая ширина: карточка ~96% ширины (отступ 2% по бокам), прижата к низу */
+@media (max-width: 768px) {
+    .hero-card:not(.hero-card--static) {
+        left: 2% !important;
+        right: 2% !important;
+        width: 96% !important;
+        max-width: none !important;
+        transform: none !important;
+        bottom: 0 !important;
+        border-radius: 1.125rem 1.125rem 0 0 !important;
+        padding-left: clamp(14px, 4vw, 22px) !important;
+        padding-right: clamp(14px, 4vw, 22px) !important;
+        padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+    }
+}
+
+.hero-stage.hidden ~ .glass-card-strong.hero-card {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: min(896px, 100%) !important;
+    margin: 1rem auto 0 !important;
+}
 </style>
 <link rel="stylesheet" href="cookie-consent.css">
 <link rel="stylesheet" href="legal-modal.css">
 <script src="legal-modal.js?v=1.0"></script>
 <script src="cookie-consent.js?v=1.1"></script>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-start p-4 pt-8 md:pt-16">
+<body class="min-h-screen flex flex-col items-center justify-start">
 <div class="aurora-glow"></div>
 
-<div class="w-full max-w-lg relative z-10">
+<div class="w-full max-w-5xl relative z-10">
 
     <!-- Уже авторизован: без лид-магнита -->
-    <div id="stepLoggedIn" class="hidden fade-in">
+    <div id="stepLoggedIn" class="hidden fade-in max-w-lg mx-auto px-4 pt-10 md:pt-16">
         <div class="text-center mb-8">
-            <a href="/" class="text-primary text-2xl font-bold">Aurora Career</a>
+            <div class="flex flex-col items-center gap-0.5">
+                <div class="brand-logo-font text-xl text-[#e7e0ef]">Аврора</div>
+                <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+            </div>
         </div>
         <div class="glass-card rounded-2xl p-8 shadow-2xl text-center">
             <span class="material-symbols-outlined text-4xl text-primary mb-3" style="display:block">account_circle</span>
@@ -188,45 +408,58 @@ body.audit-has-sticky { padding-bottom: 84px; }
     </div>
 
     <!-- STEP 1: Upload -->
-    <div id="stepUpload" class="fade-in">
+    <div id="stepUpload" class="fade-in audit-upload-root">
 
-        <!-- Aurora hero portrait -->
-        <div class="aurora-portrait-wrap" id="uploadPortraitWrap">
+        <div class="hero-stage" id="heroStage">
             <img src="audit/images/aurora/aurora-greeting.png"
-                 class="aurora-portrait-hero-img select-none"
-                 onerror="document.getElementById('uploadPortraitWrap').classList.add('hidden')"
+                 class="hero-aurora-img select-none"
+                 onerror="document.getElementById('heroStage').classList.add('hidden')"
                  alt="Аврора">
         </div>
 
-        <!-- Карточка «подлезает» под портрет -->
-        <div class="glass-card aurora-upload-card rounded-2xl px-6 pb-6 md:px-8 md:pb-8 shadow-2xl">
+        <div class="glass-card-strong hero-card rounded-2xl">
 
-            <!-- Маленький лейбл-бренд над заголовком -->
-            <p class="text-primary text-xs font-semibold tracking-widest uppercase text-center mb-3 opacity-70">
-                Aurora Career
-            </p>
-            <h1 class="text-xl md:text-2xl font-bold text-on-surface text-center leading-snug">
-                Узнай почему рекрутеры<br>игнорируют твоё резюме
+            <!-- Как в кабинете: Аврора + Карьерный ИИ-Ассистент -->
+            <div class="flex flex-col items-center gap-0 mb-3">
+                <div class="brand-logo-font hero-brand-title text-2xl md:text-[1.75rem]">Аврора</div>
+                <div class="hero-brand-tag text-center">Карьерный ИИ-Ассистент</div>
+            </div>
+
+            <h1 class="text-center leading-tight text-lg md:text-xl px-1">
+                Узнай почему рекрутеры<br>
+                игнорируют твоё резюме
             </h1>
-            <p class="text-on-surface-variant text-sm text-center mt-2">
+            <p class="hero-tagline text-sm md:text-base text-center mt-2 leading-snug px-2">
                 ИИ-анализ за 30 секунд. Бесплатно.
             </p>
 
-            <div id="dropZone" class="drop-zone rounded-xl mt-6 p-8 text-center cursor-pointer"
+            <div id="dropZone" class="drop-zone hero-drop-zone w-full max-w-2xl mx-auto rounded-xl text-center cursor-pointer"
                  onclick="document.getElementById('fileInput').click()">
-                <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2" style="display:block">upload_file</span>
-                <p class="text-on-surface font-medium">Загрузите резюме</p>
-                <p class="text-on-surface-variant text-xs mt-1">PDF или DOCX, до 5 МБ</p>
+                <span class="material-symbols-outlined text-[#eae6f9] mb-1" style="display:block; font-size: 28px;">upload_file</span>
+                <p class="text-white font-semibold text-base">Загрузите резюме</p>
+                <p class="hero-tagline text-[13px] mt-0.5 opacity-90">PDF или DOCX, до 5 МБ</p>
                 <input type="file" id="fileInput" accept=".pdf,.docx" class="hidden">
             </div>
 
-            <p id="fileName" class="text-on-surface-variant text-xs text-center mt-3 hidden"></p>
-            <p id="uploadError" class="text-error text-xs text-center mt-2 hidden"></p>
+            <p id="fileName" class="hero-tagline text-[13px] text-center mt-2 hidden"></p>
+            <p id="uploadError" class="text-error text-[13px] text-center mt-1 hidden"></p>
 
-            <div id="socialProof" class="text-center mt-5">
-                <p class="text-on-surface-variant text-xs">
-                    <span class="text-primary font-semibold" id="counterValue">...</span> резюме уже проверено
+            <div id="socialProof" class="hero-social text-center mt-3">
+                <p class="text-[13px] md:text-sm text-[#eae6f9] opacity-92">
+                    <span class="text-primary font-semibold" id="counterValue">...</span>
+                    резюме уже проверено
                 </p>
+            </div>
+
+            <!-- Compliance footer (152-ФЗ): юр. лицо + ссылка на политику -->
+            <div class="hero-compliance">
+                <span>&copy; 2026 Аврора · ИП Клепов В.&nbsp;С.</span>
+                <span class="hero-compliance-sep">·</span>
+                <button type="button"
+                        onclick="openLegalModal('privacy')"
+                        class="hero-compliance-link">
+                    Политика конфиденциальности
+                </button>
             </div>
         </div>
     </div>
@@ -265,7 +498,7 @@ body.audit-has-sticky { padding-bottom: 84px; }
     </div>
 
     <!-- STEP 2: Loading animation — Аврора «печатает» -->
-    <div id="stepLoading" class="hidden fade-in">
+    <div id="stepLoading" class="hidden fade-in max-w-lg mx-auto px-4 pt-10 md:pt-16">
         <div class="glass-card rounded-2xl px-8 pb-10 shadow-2xl text-center aurora-loading-card">
 
             <!-- Большой аватар + bubble -->
@@ -299,7 +532,7 @@ body.audit-has-sticky { padding-bottom: 84px; }
     </div>
 
     <!-- STEP 3: Result -->
-    <div id="stepResult" class="hidden fade-in">
+    <div id="stepResult" class="hidden fade-in max-w-lg mx-auto px-4 pt-6 pb-8">
 
         <!-- Aurora portrait — парит над greeting-карточкой -->
         <div class="aurora-portrait-wrap" id="resultPortraitWrap">
@@ -398,6 +631,6 @@ body.audit-has-sticky { padding-bottom: 84px; }
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=1.6"></script>
+<script src="audit.js?v=2.5"></script>
 </body>
 </html>

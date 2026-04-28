@@ -1,8 +1,5 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v1.6 — Этап 2 ТЗ: 4 портрета Авроры (greeting/thinking/happy/empathy),
-//        анимация «печатает» с min 8 c, аккордеоны для критических проблем.
-// v1.5 — Этап 1 ТЗ: персонализированное приветствие, реакция Авроры,
-//        блок-мост, переписанный CTA, sticky-бар.
+// v2.5 — добавлен compliance-footer (152-ФЗ) внизу карточки
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
