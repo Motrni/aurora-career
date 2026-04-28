@@ -216,6 +216,7 @@ async function renderCabinet(user) {
 
     updateSubscriptionCard(user);
     updateTelegramCard(user.has_telegram);
+    updateCommunityCard(user);
     applyTrialCardVisibility(user);
 
     if (user.has_access && !user.hh_linked) {
@@ -943,6 +944,43 @@ function updateTelegramCard(hasTelegram) {
         document.getElementById('telegramLinkedCard').classList.remove('hidden');
     } else {
         document.getElementById('telegramCard').classList.remove('hidden');
+    }
+}
+
+/**
+ * Карточка «Сообщество в Telegram».
+ *   • Канал @AuroraCareer — показываем ВСЕМ (включая none/trial/ended_*).
+ *   • Чат для подписчиков — только для subscription_status === 'active'.
+ *
+ * Никаких бэк-вызовов: ссылки публичные, статус подписки уже у нас в user.
+ */
+function updateCommunityCard(user) {
+    const card    = document.getElementById('communityCard');
+    const chatEl  = document.getElementById('communityChatLink');
+    const hintEl  = document.getElementById('communityChannelHint');
+    if (!card) return;
+
+    const status = user && user.subscription_status;
+    const isActive = status === 'active';
+
+    // Карточка видна всегда (минимум есть канал)
+    card.classList.remove('hidden');
+
+    // Чат — только для active
+    if (chatEl) {
+        if (isActive) {
+            chatEl.classList.remove('hidden');
+            chatEl.classList.add('flex');
+        } else {
+            chatEl.classList.add('hidden');
+            chatEl.classList.remove('flex');
+        }
+    }
+
+    // Подсказка под каналом — только для НЕ-active (тем, кому ещё нечего показать
+    // кроме канала, дадим лёгкий буст: "там делимся приёмами").
+    if (hintEl) {
+        hintEl.classList.toggle('hidden', isActive);
     }
 }
 

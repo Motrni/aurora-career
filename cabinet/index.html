@@ -683,6 +683,64 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                     </div>
                 </div>
 
+                <!-- Telegram-сообщество (группа + чат) -->
+                <!--
+                    Логика видимости:
+                      • Канал — всегда видим, для всех (none/trial/ended_*/active).
+                      • Чат пользователей — только для подписки 'active'
+                        (юзер уже заплатил → пускаем в "клуб").
+                    Управляется в cabinet.js:updateCommunityCard().
+                -->
+                <div class="p-5 md:p-6 rounded-2xl cab-card hidden" id="communityCard">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="material-symbols-outlined text-primary text-2xl">groups</span>
+                        <span class="text-sm font-medium text-on-surface">Сообщество в Telegram</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Канал (всегда) -->
+                        <a id="communityChannelLink"
+                           href="https://t.me/AuroraCareer"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="group flex items-center gap-3 p-3 rounded-xl bg-surface-container/60 hover:bg-surface-container transition-colors cursor-pointer">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:rgba(101,62,219,0.10);">
+                                <span class="material-symbols-outlined text-primary text-lg">campaign</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-on-surface text-sm font-medium leading-tight">Канал «Аврора Карьера»</p>
+                                <p class="text-on-surface-variant text-[11px] mt-0.5 leading-snug">
+                                    Свежие фишки поиска работы, кейсы и обновления сервиса
+                                </p>
+                            </div>
+                            <span class="material-symbols-outlined text-outline text-lg group-hover:text-primary transition-colors">open_in_new</span>
+                        </a>
+
+                        <!-- Чат пользователей (только active) -->
+                        <a id="communityChatLink"
+                           href="https://t.me/+Xw5Do98OV-w4ZmIy"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="group hidden items-center gap-3 p-3 rounded-xl bg-primary-container/15 hover:bg-primary-container/25 border border-primary/15 transition-colors cursor-pointer">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-primary-container/30">
+                                <span class="material-symbols-outlined text-primary text-lg">forum</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-on-surface text-sm font-medium leading-tight">Чат для подписчиков</p>
+                                <p class="text-on-surface-variant text-[11px] mt-0.5 leading-snug">
+                                    Закрытое сообщество тех, кто пользуется Авророй активно
+                                </p>
+                            </div>
+                            <span class="material-symbols-outlined text-primary text-lg">open_in_new</span>
+                        </a>
+
+                        <!-- CTA для НЕ-active: подписаться на канал -->
+                        <p id="communityChannelHint" class="text-on-surface-variant text-[11px] leading-relaxed px-1 hidden">
+                            Подпишись на канал — там делимся приёмами, которые помогают находить работу быстрее.
+                        </p>
+                    </div>
+                </div>
+
                 <!-- Promo Code -->
                 <div class="hidden p-5 md:p-6 rounded-2xl cab-card" id="promoCard">
                     <div class="flex items-center gap-3 mb-4">
