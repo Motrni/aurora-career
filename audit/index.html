@@ -65,27 +65,33 @@ body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; }
 .fade-in { animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-/* Indeterminate progress bar — две полосы с разной скоростью (Material Design style) */
-.progress-track {
-    position: relative; width: 100%; height: 4px;
-    background: rgba(147,142,160,0.15); border-radius: 2px; overflow: hidden;
+/* Typing bubble — Аврора «печатает» */
+.typing-row {
+    display: flex; align-items: flex-end; gap: 12px; justify-content: center;
 }
-.progress-seg {
-    position: absolute; top: 0; bottom: 0;
-    background: linear-gradient(90deg, rgba(204,190,255,0.2), #ccbeff, #7b61ff, #ccbeff, rgba(204,190,255,0.2));
-    border-radius: 2px;
+.typing-avatar {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(101,62,219,0.35) 0%, rgba(123,97,255,0.18) 100%);
+    border: 1px solid rgba(204,190,255,0.25);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.progress-seg-1 { animation: seg1 2.0s cubic-bezier(0.65,0.815,0.735,0.395) infinite; }
-.progress-seg-2 { animation: seg2 2.0s cubic-bezier(0.165,0.84,0.44,1) infinite; animation-delay: 1.05s; }
-@keyframes seg1 {
-    0%   { left:-35%;  right:100%; }
-    60%  { left: 100%; right:-90%; }
-    100% { left: 100%; right:-90%; }
+.typing-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.typing-bubble {
+    background: rgba(204,190,255,0.12);
+    border: 1px solid rgba(204,190,255,0.2);
+    border-radius: 18px 18px 18px 4px;
+    padding: 14px 18px; display: inline-flex; align-items: center; gap: 6px;
 }
-@keyframes seg2 {
-    0%   { left:-200%; right:100%; }
-    60%  { left:-8%;   right:107%; }
-    100% { left: 107%; right:-8%;  }
+.typing-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ccbeff; opacity: 0.55;
+    animation: typingDot 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingDot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+    30%           { transform: translateY(-5px); opacity: 1; }
 }
 #loadingText { transition: opacity 0.2s ease; }
 .drop-zone { border: 2px dashed rgba(147,142,160,0.3); transition: all 0.2s; }
@@ -95,10 +101,17 @@ body { background-color: #15121c; font-family: 'Inter', system-ui, sans-serif; }
 .score-ring .bg { stroke: rgba(147,142,160,0.15); }
 .score-ring .fg { stroke: #ccbeff; transition: stroke-dashoffset 1.5s ease-out; }
 .issue-card { border-left: 3px solid #f59e0b; background: rgba(245,158,11,0.06); }
+.issue-card summary::-webkit-details-marker { display: none; }
+.issue-card summary { list-style: none; }
+.issue-card[open] summary { margin-bottom: 4px; }
 input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0 2px rgba(204,190,255,0.15); }
 
 /* Modal overlay */
 .modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+
+/* Sticky CTA bar — отступ снизу у body, чтобы бар не перекрывал контент */
+body.audit-has-sticky { padding-bottom: 84px; }
+@media (min-width: 640px) { body.audit-has-sticky { padding-bottom: 72px; } }
 </style>
 <link rel="stylesheet" href="cookie-consent.css">
 <link rel="stylesheet" href="legal-modal.css">
@@ -135,6 +148,10 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
         </div>
 
         <div class="glass-card rounded-2xl p-6 md:p-8 shadow-2xl">
+            <img src="audit/images/aurora/aurora-greeting.png"
+                 onerror="this.style.display='none'"
+                 class="w-24 h-24 mx-auto mb-3 select-none"
+                 alt="Аврора">
             <h1 class="text-xl md:text-2xl font-bold text-on-surface text-center leading-snug">
                 Узнай почему рекрутеры<br>игнорируют твоё резюме
             </h1>
@@ -194,16 +211,24 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
         </div>
     </div>
 
-    <!-- STEP 2: Loading animation -->
+    <!-- STEP 2: Loading animation — Аврора «печатает» -->
     <div id="stepLoading" class="hidden fade-in">
         <div class="glass-card rounded-2xl p-8 shadow-2xl text-center">
-            <p id="loadingText" class="text-on-surface font-medium text-base mb-6">
-                Анализируем структуру резюме...
-            </p>
-            <div id="loadingBarWrap" class="progress-track">
-                <div class="progress-seg progress-seg-1"></div>
-                <div class="progress-seg progress-seg-2"></div>
+            <div id="loadingTypingWrap" class="typing-row mb-5">
+                <div class="typing-avatar">
+                    <img src="audit/images/aurora/aurora-thinking.png"
+                         onerror="this.parentElement.innerHTML='&#10024;';this.parentElement.style.fontSize='20px';this.parentElement.style.color='#ccbeff';"
+                         alt="Аврора">
+                </div>
+                <div class="typing-bubble" aria-label="Аврора печатает">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
             </div>
+            <p id="loadingText" class="text-on-surface font-medium text-base">
+                Анализирую структуру резюме...
+            </p>
             <p id="loadingError" class="text-error text-sm mt-5 hidden"></p>
             <button id="loadingRetryBtn" onclick="retryAudit()"
                     class="btn-primary mt-4 px-6 py-2.5 rounded-xl text-white text-sm font-semibold hidden">
@@ -214,8 +239,24 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
 
     <!-- STEP 3: Result -->
     <div id="stepResult" class="hidden fade-in">
-        <div class="text-center mb-6">
-            <a href="/" class="text-primary text-2xl font-bold">Aurora Career</a>
+
+        <!-- Aurora greeting (заменяет шапку «Aurora Career») -->
+        <div id="auroraGreeting" class="glass-card rounded-2xl p-5 mb-4 flex items-start gap-4 shadow-xl">
+            <div class="flex-1 min-w-0">
+                <h2 id="greetingHello" class="text-lg font-bold text-on-surface leading-snug">Добрый день!</h2>
+                <p class="text-on-surface-variant text-sm mt-2 leading-relaxed">
+                    Я Аврора — ваш личный карьерный ассистент.<br><br>
+                    Я проанализировала ваше резюме и готова рассказать,
+                    почему рекрутеры могут его игнорировать — и как это исправить.
+                </p>
+            </div>
+            <div class="w-24 h-24 flex-shrink-0">
+                <img id="auroraPortraitResult"
+                     src="audit/images/aurora/aurora-greeting.png"
+                     onerror="this.style.display='none'"
+                     class="w-24 h-24 select-none"
+                     alt="Аврора">
+            </div>
         </div>
 
         <!-- Score -->
@@ -226,6 +267,7 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
                 <span class="text-2xl text-outline"> / 10</span>
             </div>
             <p id="verdictText" class="text-on-surface-variant text-sm mt-3"></p>
+            <p id="scoreReaction" class="text-on-surface text-sm mt-3 italic leading-relaxed"></p>
         </div>
 
         <!-- Recruiter impression -->
@@ -249,24 +291,52 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
             <p id="algoText" class="text-on-surface-variant text-sm mt-2 leading-relaxed"></p>
         </div>
 
+        <!-- Bridge: между анализом и CTA -->
+        <div id="bridgeBlock" class="glass-card rounded-2xl p-5 shadow-xl mb-4">
+            <p class="text-on-surface text-sm leading-relaxed">
+                Исправить это вручную можно.
+                <span class="text-primary font-semibold">Но есть проблема посерьёзнее.</span>
+            </p>
+            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed">
+                Даже с идеальным резюме большинство кандидатов откликаются на 3–5 вакансий в день.
+                Этого мало. Рынок видит только тех, кто активен каждый день.
+            </p>
+        </div>
+
         <!-- CTA -->
-        <div class="glass-card rounded-2xl p-6 shadow-2xl text-center mt-6">
-            <p class="text-on-surface font-semibold mb-1">Что Аврора делает автоматически:</p>
-            <div class="text-on-surface-variant text-sm text-left space-y-1.5 my-4 mx-auto max-w-xs">
-                <p>&#10003; Пишет сопроводительное письмо под каждую вакансию</p>
-                <p>&#10003; Отправляет до 20 откликов в день пока вы занимаетесь жизнью</p>
-                <p>&#10003; Подбирает вакансии под ваш профиль</p>
-            </div>
+        <div class="glass-card rounded-2xl p-6 shadow-2xl mt-6">
+            <p class="text-on-surface font-semibold text-base">Именно для этого я и существую.</p>
+            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed">
+                Каждый день я нахожу подходящие вакансии и отправляю отклики от вашего имени —
+                с персональным сопроводительным письмом под каждую позицию.
+                До 20 откликов в день, пока вы занимаетесь своей жизнью.
+            </p>
+            <p class="text-primary text-sm font-semibold mt-4">Первые 10 откликов — бесплатно.</p>
             <button id="ctaButton" onclick="goToRegister()"
-                    class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold">
-                Попробовать бесплатно — 10 откликов в подарок
+                    class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold mt-5">
+                Попробовать &rarr;
             </button>
         </div>
     </div>
 
 </div>
 
+<!-- Sticky CTA bar — появляется при скролле страницы результатов -->
+<div id="auditStickyBar"
+     class="fixed bottom-0 left-0 right-0 z-40 hidden translate-y-full transition-transform duration-300
+            border-t border-outline/20 px-4 py-3 shadow-2xl
+            flex items-center justify-between gap-3"
+     style="background: rgba(21,18,28,0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);">
+    <span class="text-on-surface text-xs sm:text-sm leading-tight">
+        Хотите, чтобы Аврора отправляла отклики за вас?
+    </span>
+    <button onclick="goToRegister()"
+            class="btn-primary text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl whitespace-nowrap flex-shrink-0">
+        Попробовать бесплатно
+    </button>
+</div>
+
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=1.4"></script>
+<script src="audit.js?v=1.6"></script>
 </body>
 </html>

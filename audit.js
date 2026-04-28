@@ -1,5 +1,8 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v1.4 — обязательное согласие на обработку ПД (152-ФЗ)
+// v1.6 — Этап 2 ТЗ: 4 портрета Авроры (greeting/thinking/happy/empathy),
+//        анимация «печатает» с min 8 c, аккордеоны для критических проблем.
+// v1.5 — Этап 1 ТЗ: персонализированное приветствие, реакция Авроры,
+//        блок-мост, переписанный CTA, sticky-бар.
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
@@ -11,6 +14,13 @@ function apiBase() {
 }
 
 const TURNSTILE_SITE_KEY = '0x4AAAAAAC2GxGcQ1mSylGca';
+
+const AURORA_PORTRAITS = {
+    greeting: 'audit/images/aurora/aurora-greeting.png',
+    thinking: 'audit/images/aurora/aurora-thinking.png',
+    happy:    'audit/images/aurora/aurora-happy.png',
+    empathy:  'audit/images/aurora/aurora-empathy.png',
+};
 
 let selectedFile = null;
 let turnstileToken = null;
@@ -207,9 +217,19 @@ async function submitAudit() {
     // Сразу закрываем модалку и показываем экран загрузки
     closeEmailModal();
     showLoadingScreen();
+    const startedAt = Date.now();
 
     // Fetch в фоне с ретраями
     const result = await fetchAuditWithRetry(formData, 2);
+
+    // Минимум 8 с показа экрана «печатает» — но только при успехе.
+    // На ошибках/конфликтах не задерживаем пользователя.
+    if (result.type === 'success') {
+        const elapsed = Date.now() - startedAt;
+        const remain = LOADING_MIN_DURATION_MS - elapsed;
+        if (remain > 0) await new Promise(r => setTimeout(r, remain));
+    }
+
     stopLoadingPhases();
 
     if (result.type === 'conflict') {
@@ -289,11 +309,13 @@ async function fetchAuditWithRetry(formData, maxRetries) {
 // ============================================================================
 
 const LOADING_PHASES = [
-    'Анализируем структуру резюме...',
-    'Проверяем ключевые слова для алгоритма hh.ru...',
-    'Оцениваем первое впечатление рекрутера...',
-    'Готовим рекомендации...',
+    'Анализирую структуру резюме...',
+    'Проверяю ключевые слова для hh.ru...',
+    'Оцениваю первое впечатление рекрутера...',
+    'Готовлю рекомендации...',
 ];
+
+const LOADING_MIN_DURATION_MS = 8000;
 
 function showLoadingScreen() {
     document.getElementById('stepUpload').classList.add('hidden');
@@ -304,6 +326,7 @@ function showLoadingScreen() {
     if (textEl) textEl.textContent = LOADING_PHASES[0];
 
     let idx = 0;
+    const stepMs = Math.max(1500, Math.floor(LOADING_MIN_DURATION_MS / LOADING_PHASES.length));
     _phaseTimer = setInterval(() => {
         idx = (idx + 1) % LOADING_PHASES.length;
         if (!textEl) return;
@@ -312,7 +335,7 @@ function showLoadingScreen() {
             textEl.textContent = LOADING_PHASES[idx];
             textEl.style.opacity = '1';
         }, 200);
-    }, 3500);
+    }, stepMs);
 }
 
 function stopLoadingPhases() {
@@ -326,7 +349,7 @@ function showLoadingError(message) {
     const textEl = document.getElementById('loadingText');
     const errEl = document.getElementById('loadingError');
     const retryBtn = document.getElementById('loadingRetryBtn');
-    const barEl = document.getElementById('loadingBarWrap');
+    const typingEl = document.getElementById('loadingTypingWrap');
 
     if (textEl) textEl.textContent = 'Что-то пошло не так';
     if (errEl) {
@@ -334,12 +357,13 @@ function showLoadingError(message) {
         errEl.classList.remove('hidden');
     }
     if (retryBtn) retryBtn.classList.remove('hidden');
-    // Останавливаем бегущую полосу
-    if (barEl) barEl.classList.add('hidden');
+    // Скрываем «печатает», экран ошибки
+    if (typingEl) typingEl.classList.add('hidden');
 }
 
 function retryAudit() {
     // Сбрасываем состояние и возвращаем на экран загрузки файла
+    disableStickyBar();
     selectedFile = null;
     turnstileToken = null;
     userEmail = '';
@@ -362,8 +386,8 @@ function retryAudit() {
     const retryBtn = document.getElementById('loadingRetryBtn');
     if (retryBtn) retryBtn.classList.add('hidden');
 
-    const barEl = document.getElementById('loadingBarWrap');
-    if (barEl) barEl.classList.remove('hidden');
+    const typingEl = document.getElementById('loadingTypingWrap');
+    if (typingEl) typingEl.classList.remove('hidden');
 
     // Сбрасываем Turnstile для следующей попытки
     if (window.turnstile) {
@@ -379,8 +403,38 @@ function retryAudit() {
 function showResult(result, totalAudits) {
     document.getElementById('stepResult').classList.remove('hidden');
 
+    const greetEl = document.getElementById('greetingHello');
+    if (greetEl) {
+        const rawName = (result && result.candidate_first_name) || '';
+        const name = String(rawName).trim().split(/\s+/)[0] || '';
+        greetEl.textContent = name ? `Добрый день, ${name}!` : 'Добрый день!';
+    }
+
+    const portraitEl = document.getElementById('auroraPortraitResult');
+    if (portraitEl) {
+        const sNum = Number(result && result.score) || 0;
+        portraitEl.style.display = '';
+        portraitEl.src = sNum >= 7
+            ? AURORA_PORTRAITS.happy
+            : AURORA_PORTRAITS.empathy;
+    }
+
     document.getElementById('scoreValue').textContent = result.score || '?';
     document.getElementById('verdictText').textContent = result.verdict || '';
+
+    const reactionEl = document.getElementById('scoreReaction');
+    if (reactionEl) {
+        const s = Number(result.score) || 0;
+        let reaction = '';
+        if (s >= 8) {
+            reaction = 'Отличное резюме! Есть пара деталей, которые сделают его безупречным.';
+        } else if (s >= 5) {
+            reaction = 'Хорошая база, но несколько вещей мешают вам получать больше ответов.';
+        } else if (s >= 1) {
+            reaction = 'Не переживайте — я нашла конкретные причины, почему рекрутеры молчат. Это поправимо.';
+        }
+        reactionEl.textContent = reaction;
+    }
 
     if (result.recruiter_first_impression) {
         const block = document.getElementById('impressionBlock');
@@ -390,17 +444,27 @@ function showResult(result, totalAudits) {
 
     const container = document.getElementById('issuesBlock');
     container.innerHTML = '';
-    (result.critical_issues || []).forEach(issue => {
-        const card = document.createElement('div');
-        card.className = 'issue-card glass-card rounded-xl p-4 shadow-lg';
+    (result.critical_issues || []).forEach((issue, i) => {
+        const card = document.createElement('details');
+        card.className = 'issue-card glass-card rounded-xl p-4 shadow-lg group';
+        // Первая проблема развёрнута, остальные свёрнуты
+        if (i === 0) card.open = true;
         card.innerHTML = `
-            <h4 class="text-sm font-semibold text-on-surface flex items-center gap-2">
-                <span class="material-symbols-outlined text-base" style="font-size:16px;color:#f59e0b">warning</span>
-                ${esc(issue.title)}
-            </h4>
-            ${issue.quote ? `<p class="text-on-surface-variant text-xs mt-2 italic">&laquo;${esc(issue.quote)}&raquo;</p>` : ''}
-            ${issue.why_it_hurts ? `<p class="text-on-surface-variant text-xs mt-1">${esc(issue.why_it_hurts)}</p>` : ''}
-            ${issue.fix ? `<p class="text-primary text-xs mt-2 font-medium">${esc(issue.fix)}</p>` : ''}
+            <summary class="cursor-pointer list-none flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <h4 class="text-sm font-semibold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base flex-shrink-0" style="font-size:16px;color:#f59e0b">warning</span>
+                        <span class="min-w-0">${esc(issue.title)}</span>
+                    </h4>
+                    ${issue.quote ? `<p class="text-on-surface-variant text-xs mt-2 italic">&laquo;${esc(issue.quote)}&raquo;</p>` : ''}
+                </div>
+                <span class="material-symbols-outlined text-outline transition-transform group-open:rotate-180 flex-shrink-0"
+                      style="font-size:20px">expand_more</span>
+            </summary>
+            <div class="mt-3 space-y-2 pl-1">
+                ${issue.why_it_hurts ? `<p class="text-on-surface-variant text-xs leading-relaxed">${esc(issue.why_it_hurts)}</p>` : ''}
+                ${issue.fix ? `<p class="text-primary text-xs font-medium leading-relaxed">${esc(issue.fix)}</p>` : ''}
+            </div>
         `;
         container.appendChild(card);
     });
@@ -414,6 +478,54 @@ function showResult(result, totalAudits) {
     if (totalAudits) {
         const el = document.getElementById('counterValue');
         if (el) el.textContent = totalAudits.toLocaleString('ru-RU');
+    }
+
+    enableStickyBar();
+}
+
+// ============================================================================
+// STICKY CTA BAR
+// ============================================================================
+
+let _stickyHandler = null;
+
+function enableStickyBar() {
+    const bar = document.getElementById('auditStickyBar');
+    if (!bar) return;
+
+    document.body.classList.add('audit-has-sticky');
+    bar.classList.remove('hidden');
+
+    const update = () => {
+        const stepResultVisible = !document.getElementById('stepResult').classList.contains('hidden');
+        if (!stepResultVisible) {
+            bar.classList.add('translate-y-full');
+            return;
+        }
+        if (window.scrollY > 200) {
+            bar.classList.remove('translate-y-full');
+        } else {
+            bar.classList.add('translate-y-full');
+        }
+    };
+
+    if (_stickyHandler) {
+        window.removeEventListener('scroll', _stickyHandler);
+    }
+    _stickyHandler = update;
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+}
+
+function disableStickyBar() {
+    const bar = document.getElementById('auditStickyBar');
+    if (!bar) return;
+    bar.classList.add('translate-y-full');
+    bar.classList.add('hidden');
+    document.body.classList.remove('audit-has-sticky');
+    if (_stickyHandler) {
+        window.removeEventListener('scroll', _stickyHandler);
+        _stickyHandler = null;
     }
 }
 
@@ -431,6 +543,7 @@ function resetEmailModalButton() {
 
 function showAlreadyUsed(data) {
     resetEmailModalButton();
+    disableStickyBar();
     document.getElementById('stepUpload').classList.add('hidden');
 
     const stepResult = document.getElementById('stepResult');
@@ -453,6 +566,7 @@ function showAlreadyUsed(data) {
 
 function showRegisteredEmail(data) {
     resetEmailModalButton();
+    disableStickyBar();
     document.getElementById('stepUpload').classList.add('hidden');
 
     const stepResult = document.getElementById('stepResult');
