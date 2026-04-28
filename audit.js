@@ -413,10 +413,11 @@ function showResult(result, totalAudits) {
     const portraitEl = document.getElementById('auroraPortraitResult');
     if (portraitEl) {
         const sNum = Number(result && result.score) || 0;
-        portraitEl.style.display = '';
-        portraitEl.src = sNum >= 7
-            ? AURORA_PORTRAITS.happy
-            : AURORA_PORTRAITS.empathy;
+        const newSrc = sNum >= 7 ? AURORA_PORTRAITS.happy : AURORA_PORTRAITS.empathy;
+        // Сбрасываем враппер (мог быть hidden из-за onerror предыдущего src)
+        const wrapEl = document.getElementById('resultPortraitWrap');
+        if (wrapEl) wrapEl.classList.remove('hidden');
+        portraitEl.src = newSrc;
     }
 
     document.getElementById('scoreValue').textContent = result.score || '?';

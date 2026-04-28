@@ -112,6 +112,52 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
 /* Sticky CTA bar — отступ снизу у body, чтобы бар не перекрывал контент */
 body.audit-has-sticky { padding-bottom: 84px; }
 @media (min-width: 640px) { body.audit-has-sticky { padding-bottom: 72px; } }
+
+/* ═══════════════════════════════════════════════════════
+   Aurora portrait — паттерн «парит над карточкой»
+   ═══════════════════════════════════════════════════════ */
+.aurora-portrait-wrap {
+    display: flex; justify-content: center;
+    position: relative; z-index: 2; pointer-events: none;
+}
+.aurora-portrait-hero-img {
+    width: 180px; height: 180px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 40px rgba(101,62,219,0.60))
+            drop-shadow(0 0 16px rgba(204,190,255,0.30));
+    animation: auroraFloat 4s ease-in-out infinite;
+    display: block;
+}
+/* Greeting / result — чуть меньше */
+.aurora-portrait-result-img {
+    width: 148px; height: 148px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 32px rgba(101,62,219,0.55))
+            drop-shadow(0 0 12px rgba(204,190,255,0.25));
+    animation: auroraFloat 4s ease-in-out infinite;
+    display: block;
+}
+/* Loading typing avatar — значительно крупнее */
+.typing-avatar-lg {
+    width: 72px !important; height: 72px !important;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(101,62,219,0.4) 0%, rgba(123,97,255,0.22) 100%) !important;
+    border: 1.5px solid rgba(204,190,255,0.3) !important;
+    filter: drop-shadow(0 4px 18px rgba(101,62,219,0.45));
+}
+@keyframes auroraFloat {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+}
+
+/* Карточки, которые «подлезают» под портрет */
+.aurora-upload-card  { margin-top: -60px; padding-top: 76px !important; }
+.aurora-result-card  { margin-top: -48px; padding-top: 64px !important; text-align: center; }
+.aurora-loading-card { padding-top: 48px !important; }
+
+/* Если картинка не загрузилась — убираем отрицательный margin */
+.aurora-portrait-wrap.hidden + .aurora-upload-card { margin-top: 0; padding-top: 1.5rem !important; }
+.aurora-portrait-wrap.hidden + .aurora-result-card  { margin-top: 0; padding-top: 1.5rem !important; }
 </style>
 <link rel="stylesheet" href="cookie-consent.css">
 <link rel="stylesheet" href="legal-modal.css">
@@ -143,15 +189,22 @@ body.audit-has-sticky { padding-bottom: 84px; }
 
     <!-- STEP 1: Upload -->
     <div id="stepUpload" class="fade-in">
-        <div class="text-center mb-8">
-            <a href="/" class="text-primary text-2xl font-bold">Aurora Career</a>
+
+        <!-- Aurora hero portrait -->
+        <div class="aurora-portrait-wrap" id="uploadPortraitWrap">
+            <img src="audit/images/aurora/aurora-greeting.png"
+                 class="aurora-portrait-hero-img select-none"
+                 onerror="document.getElementById('uploadPortraitWrap').classList.add('hidden')"
+                 alt="Аврора">
         </div>
 
-        <div class="glass-card rounded-2xl p-6 md:p-8 shadow-2xl">
-            <img src="audit/images/aurora/aurora-greeting.png"
-                 onerror="this.style.display='none'"
-                 class="w-24 h-24 mx-auto mb-3 select-none"
-                 alt="Аврора">
+        <!-- Карточка «подлезает» под портрет -->
+        <div class="glass-card aurora-upload-card rounded-2xl px-6 pb-6 md:px-8 md:pb-8 shadow-2xl">
+
+            <!-- Маленький лейбл-бренд над заголовком -->
+            <p class="text-primary text-xs font-semibold tracking-widest uppercase text-center mb-3 opacity-70">
+                Aurora Career
+            </p>
             <h1 class="text-xl md:text-2xl font-bold text-on-surface text-center leading-snug">
                 Узнай почему рекрутеры<br>игнорируют твоё резюме
             </h1>
@@ -213,22 +266,30 @@ body.audit-has-sticky { padding-bottom: 84px; }
 
     <!-- STEP 2: Loading animation — Аврора «печатает» -->
     <div id="stepLoading" class="hidden fade-in">
-        <div class="glass-card rounded-2xl p-8 shadow-2xl text-center">
-            <div id="loadingTypingWrap" class="typing-row mb-5">
-                <div class="typing-avatar">
+        <div class="glass-card rounded-2xl px-8 pb-10 shadow-2xl text-center aurora-loading-card">
+
+            <!-- Большой аватар + bubble -->
+            <div id="loadingTypingWrap" class="typing-row mb-6">
+                <div class="typing-avatar typing-avatar-lg overflow-hidden flex-shrink-0">
                     <img src="audit/images/aurora/aurora-thinking.png"
-                         onerror="this.parentElement.innerHTML='&#10024;';this.parentElement.style.fontSize='20px';this.parentElement.style.color='#ccbeff';"
+                         style="width:100%;height:100%;object-fit:cover;display:block;"
+                         onerror="this.parentElement.innerHTML='<span style=\'font-size:32px;line-height:72px;\'>✨</span>';"
                          alt="Аврора">
                 </div>
-                <div class="typing-bubble" aria-label="Аврора печатает">
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
+                <div class="typing-bubble" aria-label="Аврора анализирует" style="padding: 18px 24px;">
+                    <span class="typing-dot" style="width:9px;height:9px;"></span>
+                    <span class="typing-dot" style="width:9px;height:9px;"></span>
+                    <span class="typing-dot" style="width:9px;height:9px;"></span>
                 </div>
             </div>
-            <p id="loadingText" class="text-on-surface font-medium text-base">
+
+            <p id="loadingText" class="text-on-surface font-medium text-base leading-relaxed">
                 Анализирую структуру резюме...
             </p>
+            <p class="text-on-surface-variant text-xs mt-2 opacity-60">
+                Обычно занимает 20–40 секунд
+            </p>
+
             <p id="loadingError" class="text-error text-sm mt-5 hidden"></p>
             <button id="loadingRetryBtn" onclick="retryAudit()"
                     class="btn-primary mt-4 px-6 py-2.5 rounded-xl text-white text-sm font-semibold hidden">
@@ -240,23 +301,23 @@ body.audit-has-sticky { padding-bottom: 84px; }
     <!-- STEP 3: Result -->
     <div id="stepResult" class="hidden fade-in">
 
-        <!-- Aurora greeting (заменяет шапку «Aurora Career») -->
-        <div id="auroraGreeting" class="glass-card rounded-2xl p-5 mb-4 flex items-start gap-4 shadow-xl">
-            <div class="flex-1 min-w-0">
-                <h2 id="greetingHello" class="text-lg font-bold text-on-surface leading-snug">Добрый день!</h2>
-                <p class="text-on-surface-variant text-sm mt-2 leading-relaxed">
-                    Я Аврора — ваш личный карьерный ассистент.<br><br>
-                    Я проанализировала ваше резюме и готова рассказать,
-                    почему рекрутеры могут его игнорировать — и как это исправить.
-                </p>
-            </div>
-            <div class="w-24 h-24 flex-shrink-0">
-                <img id="auroraPortraitResult"
-                     src="audit/images/aurora/aurora-greeting.png"
-                     onerror="this.style.display='none'"
-                     class="w-24 h-24 select-none"
-                     alt="Аврора">
-            </div>
+        <!-- Aurora portrait — парит над greeting-карточкой -->
+        <div class="aurora-portrait-wrap" id="resultPortraitWrap">
+            <img id="auroraPortraitResult"
+                 src="audit/images/aurora/aurora-greeting.png"
+                 class="aurora-portrait-result-img select-none"
+                 onerror="document.getElementById('resultPortraitWrap').classList.add('hidden')"
+                 alt="Аврора">
+        </div>
+
+        <!-- Greeting card «подлезает» под портрет -->
+        <div id="auroraGreeting" class="glass-card aurora-result-card rounded-2xl px-6 pb-6 shadow-xl mb-4">
+            <h2 id="greetingHello" class="text-xl font-bold text-on-surface leading-snug">Добрый день!</h2>
+            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed max-w-xs mx-auto">
+                Я Аврора — ваш личный карьерный ассистент.<br>
+                Я проанализировала ваше резюме и готова рассказать,
+                почему рекрутеры могут его игнорировать — и как это исправить.
+            </p>
         </div>
 
         <!-- Score -->
