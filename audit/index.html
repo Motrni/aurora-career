@@ -157,6 +157,12 @@ body:has(#stepLoggedIn:not(.hidden)) {
     height: auto;
     max-height: none;
 }
+/* SEO-блок — скрыт CSS-fallback'ом когда не на #stepUpload (js дублирует это поведение) */
+body:has(#stepLoading:not(.hidden)) #audit-seo,
+body:has(#stepResult:not(.hidden)) #audit-seo,
+body:has(#stepLoggedIn:not(.hidden)) #audit-seo {
+    display: none !important;
+}
 .aurora-glow {
     position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
     width: 600px; height: 600px;
@@ -1264,6 +1270,6 @@ body.audit-has-sticky { padding-bottom: 84px; }
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=3.2"></script>
+<script src="audit.js?v=3.3"></script>
 </body>
 </html>

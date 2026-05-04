@@ -1,5 +1,5 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v3.2 — #stepLoading в split-layout (Аврора слева, процесс справа); mobile задник
+// v3.3 — fix: SEO-блок видим только на #stepUpload (исключаем баг «SEO во время loading»)
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
@@ -25,6 +25,13 @@ let userEmail = '';
 let turnstileReady = false;
 let _phaseTimer = null;
 
+// SEO-блок виден только когда показан #stepUpload (стартовый экран).
+// На loading / result / loggedIn — скрываем, чтобы не «торчал» снизу при скролле.
+function setSeoVisibility(visible) {
+    const seo = document.getElementById('audit-seo');
+    if (seo) seo.style.display = visible ? '' : 'none';
+}
+
 // ============================================================================
 // INIT
 // ============================================================================
@@ -49,6 +56,7 @@ async function checkLoggedInUser() {
     if (data.status !== 'ok') return;
     document.getElementById('stepUpload').classList.add('hidden');
     document.getElementById('stepLoggedIn').classList.remove('hidden');
+    setSeoVisibility(false);
 }
 
 function loadCounter() {
@@ -316,6 +324,7 @@ const LOADING_MIN_DURATION_MS = 8000;
 
 function showLoadingScreen() {
     document.getElementById('stepUpload').classList.add('hidden');
+    setSeoVisibility(false);
     const el = document.getElementById('stepLoading');
     el.classList.remove('hidden');
 
@@ -373,6 +382,7 @@ function retryAudit() {
 
     document.getElementById('stepLoading').classList.add('hidden');
     document.getElementById('stepUpload').classList.remove('hidden');
+    setSeoVisibility(true);
 
     const nameEl = document.getElementById('fileName');
     if (nameEl) { nameEl.textContent = ''; nameEl.classList.add('hidden'); }
@@ -399,6 +409,7 @@ function retryAudit() {
 
 function showResult(result, totalAudits) {
     document.getElementById('stepResult').classList.remove('hidden');
+    setSeoVisibility(false);
 
     const greetEl = document.getElementById('greetingHello');
     if (greetEl) {
@@ -543,6 +554,7 @@ function showAlreadyUsed(data) {
     resetEmailModalButton();
     disableStickyBar();
     document.getElementById('stepUpload').classList.add('hidden');
+    setSeoVisibility(false);
 
     const stepResult = document.getElementById('stepResult');
     stepResult.classList.remove('hidden');
@@ -566,6 +578,7 @@ function showRegisteredEmail(data) {
     resetEmailModalButton();
     disableStickyBar();
     document.getElementById('stepUpload').classList.add('hidden');
+    setSeoVisibility(false);
 
     const stepResult = document.getElementById('stepResult');
     stepResult.classList.remove('hidden');
