@@ -1,5 +1,5 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v2.9 — ПК: Аврора по центру колонки + лого в бренде; mobile: задник в полный рост
+// v3.0 — финальные параметры Авроры на ПК (height: 138%, y: 300px)
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {

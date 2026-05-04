@@ -288,8 +288,8 @@ body.audit-has-sticky { padding-bottom: 84px; }
        --aurora-height — высота картинки относительно колонки (100% = в рамку, >100% = крупнее)
        --aurora-y      — вертикальное смещение в px (минус = выше, плюс = ниже)
        --aurora-x      — горизонтальное смещение в px (минус = левее, плюс = правее) */
-    --aurora-height: 108%;
-    --aurora-y: 36px;
+    --aurora-height: 138%;
+    --aurora-y: 300px;
     --aurora-x: 0px;
 }
 
@@ -303,12 +303,12 @@ body.audit-has-sticky { padding-bottom: 84px; }
     justify-content: center;
 }
 .aurora-side-img {
-    height: var(--aurora-height, 108%);
+    height: var(--aurora-height, 138%);
     width: auto;
     max-width: none;
     object-fit: contain;
     object-position: center bottom;
-    transform: translate(var(--aurora-x, 0px), var(--aurora-y, 36px));
+    transform: translate(var(--aurora-x, 0px), var(--aurora-y, 300px));
     user-select: none;
     pointer-events: none;
     display: block;
@@ -1184,6 +1184,6 @@ body.audit-has-sticky { padding-bottom: 84px; }
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=2.9"></script>
+<script src="audit.js?v=3.0"></script>
 </body>
 </html>
