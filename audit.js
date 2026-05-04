@@ -1,6 +1,7 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v4.0 — sharing-флоу: постоянная ссылка ?id=, owner cookie, публикация с consent (152-ФЗ),
-//        страница 404 для просроченных/чужих ссылок, viewer sticky CTA, удаление аудита.
+// v4.1 — stepResult split-layout (Аврора слева на ПК / фоном на мобилке),
+//        viewer-приветствие с position_title и оценкой, аккордеоны collapsed-by-default,
+//        notFound с лого/кнопкой «На главную», getHomeUrl() для dev/prod.
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
@@ -9,6 +10,15 @@ function apiBase() {
     return (window.location.hostname.includes('twc1.net') || window.location.hostname.includes('aurora-develop'))
         ? 'https://api.aurora-develop.ru'
         : 'https://api.aurora-career.ru';
+}
+
+// На dev-стенде ведём на главную aurora-develop.ru, на проде — на aurora-career.ru.
+function getHomeUrl() {
+    const h = window.location.hostname;
+    if (h.includes('twc1.net') || h.includes('aurora-develop')) {
+        return 'https://aurora-develop.ru/';
+    }
+    return 'https://aurora-career.ru/';
 }
 
 const TURNSTILE_SITE_KEY = '0x4AAAAAAC2GxGcQ1mSylGca';
@@ -175,6 +185,13 @@ function showNotFound() {
     document.getElementById('stepResult').classList.add('hidden');
     setSeoVisibility(false);
     document.getElementById('stepNotFound').classList.remove('hidden');
+
+    // Подставляем правильный домен (dev → aurora-develop.ru, prod → aurora-career.ru)
+    const home = getHomeUrl();
+    const brandLink = document.getElementById('notfoundBrandLink');
+    const homeBtn = document.getElementById('notfoundHomeBtn');
+    if (brandLink) brandLink.href = home;
+    if (homeBtn) homeBtn.href = home;
 }
 
 // ============================================================================
@@ -524,20 +541,17 @@ function showResult(result, totalAudits, opts) {
     document.getElementById('stepResult').classList.remove('hidden');
     setSeoVisibility(false);
 
-    const greetEl = document.getElementById('greetingHello');
-    if (greetEl) {
-        const rawName = (result && result.candidate_first_name) || '';
-        const name = String(rawName).trim().split(/\s+/)[0] || '';
-        greetEl.textContent = name ? `Добрый день, ${name}!` : 'Добрый день!';
-    }
+    // Бренд-линк → главная (с учётом dev/prod)
+    const brandLink = document.getElementById('resultBrandLink');
+    if (brandLink) brandLink.href = getHomeUrl();
 
+    applyGreeting(result, opts);
+
+    // Аврора слева: happy если score >= 7, empathy иначе
     const portraitEl = document.getElementById('auroraPortraitResult');
     if (portraitEl) {
         const sNum = Number(result && result.score) || 0;
-        const newSrc = sNum >= 7 ? AURORA_PORTRAITS.happy : AURORA_PORTRAITS.empathy;
-        const wrapEl = document.getElementById('resultPortraitWrap');
-        if (wrapEl) wrapEl.classList.remove('hidden');
-        portraitEl.src = newSrc;
+        portraitEl.src = sNum >= 7 ? AURORA_PORTRAITS.happy : AURORA_PORTRAITS.empathy;
     }
 
     document.getElementById('scoreValue').textContent = result.score || '?';
@@ -550,48 +564,53 @@ function showResult(result, totalAudits, opts) {
         if (s >= 8) {
             reaction = 'Отличное резюме! Есть пара деталей, которые сделают его безупречным.';
         } else if (s >= 5) {
-            reaction = 'Хорошая база, но несколько вещей мешают вам получать больше ответов.';
+            reaction = 'Хорошая база, но несколько вещей мешают получать больше ответов.';
         } else if (s >= 1) {
-            reaction = 'Не переживайте — я нашла конкретные причины, почему рекрутеры молчат. Это поправимо.';
+            reaction = 'Не переживайте — есть конкретные причины, почему рекрутеры молчат. Это поправимо.';
         }
         reactionEl.textContent = reaction;
     }
 
+    // Аккордеон «Первое впечатление рекрутера» — закрыт по умолчанию.
     if (result.recruiter_first_impression) {
         const block = document.getElementById('impressionBlock');
         block.classList.remove('hidden');
+        block.open = false;
         document.getElementById('impressionText').textContent = result.recruiter_first_impression;
     }
 
+    // Critical issues: набор аккордеонов, ВСЕ закрыты по умолчанию.
+    // UX: «прогрессивное раскрытие» — пользователь сам выбирает что прочитать.
     const container = document.getElementById('issuesBlock');
     container.innerHTML = '';
-    (result.critical_issues || []).forEach((issue, i) => {
+    (result.critical_issues || []).forEach((issue) => {
         const card = document.createElement('details');
-        card.className = 'issue-card glass-card rounded-xl p-4 shadow-lg group';
-        if (i === 0) card.open = true;
+        card.className = 'result-accordion acc-warning';
         card.innerHTML = `
-            <summary class="cursor-pointer list-none flex items-start justify-between gap-3">
-                <div class="min-w-0 flex-1">
-                    <h4 class="text-sm font-semibold text-on-surface flex items-center gap-2">
-                        <span class="material-symbols-outlined text-base flex-shrink-0" style="font-size:16px;color:#f59e0b">warning</span>
-                        <span class="min-w-0">${esc(issue.title)}</span>
-                    </h4>
-                    ${issue.quote ? `<p class="text-on-surface-variant text-xs mt-2 italic">&laquo;${esc(issue.quote)}&raquo;</p>` : ''}
-                </div>
-                <span class="material-symbols-outlined text-outline transition-transform group-open:rotate-180 flex-shrink-0"
-                      style="font-size:20px">expand_more</span>
+            <summary>
+                <span class="acc-icon">
+                    <span class="material-symbols-outlined">warning</span>
+                </span>
+                <span class="flex-1 min-w-0">
+                    <span class="acc-title">${esc(issue.title || 'Критический момент')}</span>
+                    ${issue.quote ? `<span class="acc-subtitle">«${esc(issue.quote)}»</span>` : ''}
+                </span>
+                <span class="material-symbols-outlined acc-chevron">expand_more</span>
             </summary>
-            <div class="mt-3 space-y-2 pl-1">
-                ${issue.why_it_hurts ? `<p class="text-on-surface-variant text-xs leading-relaxed">${esc(issue.why_it_hurts)}</p>` : ''}
-                ${issue.fix ? `<p class="text-primary text-xs font-medium leading-relaxed">${esc(issue.fix)}</p>` : ''}
+            <div class="acc-body">
+                ${issue.quote ? `<p class="acc-quote">«${esc(issue.quote)}»</p>` : ''}
+                ${issue.why_it_hurts ? `<p>${esc(issue.why_it_hurts)}</p>` : ''}
+                ${issue.fix ? `<p class="acc-fix">${esc(issue.fix)}</p>` : ''}
             </div>
         `;
         container.appendChild(card);
     });
 
+    // Аккордеон «Алгоритм hh.ru» — закрыт по умолчанию.
     if (result.hh_algo_problems) {
         const block = document.getElementById('algoBlock');
         block.classList.remove('hidden');
+        block.open = false;
         document.getElementById('algoText').textContent = result.hh_algo_problems;
     }
 
@@ -601,6 +620,84 @@ function showResult(result, totalAudits, opts) {
     }
 
     applyOwnerVsViewer(opts);
+
+    // На всякий: проскроллить контент-сайд в начало (после прежней сессии).
+    const contentSide = document.querySelector('#stepResult .content-side');
+    if (contentSide) contentSide.scrollTop = 0;
+}
+
+// ============================================================================
+// GREETING (разные шапки для owner и viewer)
+// ============================================================================
+
+// Русское склонение слова «балл»: 1 балл / 2 балла / 5 баллов.
+function pluralPoints(n) {
+    n = Math.abs(Number(n) || 0);
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod100 >= 11 && mod100 <= 14) return 'баллов';
+    if (mod10 === 1) return 'балл';
+    if (mod10 >= 2 && mod10 <= 4) return 'балла';
+    return 'баллов';
+}
+
+// Русское склонение «критический момент»: 1 момент / 2 момента / 5 моментов.
+function pluralIssues(n) {
+    n = Math.abs(Number(n) || 0);
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod100 >= 11 && mod100 <= 14) return 'критических моментов';
+    if (mod10 === 1) return 'критический момент';
+    if (mod10 >= 2 && mod10 <= 4) return 'критических момента';
+    return 'критических моментов';
+}
+
+function applyGreeting(result, opts) {
+    const greetEl = document.getElementById('greetingHello');
+    const introEl = document.getElementById('greetingIntro');
+    if (!greetEl || !introEl) return;
+
+    const isOwner = !!(opts && opts.is_owner);
+    const score = Number(result && result.score) || 0;
+    const issuesCount = Array.isArray(result && result.critical_issues)
+        ? result.critical_issues.length : 0;
+    const positionTitle = String((result && result.position_title) || '').trim();
+
+    if (isOwner) {
+        // Владелец / только что прошёл аудит — личное приветствие по имени.
+        const rawName = (result && result.candidate_first_name) || '';
+        const name = String(rawName).trim().split(/\s+/)[0] || '';
+        greetEl.textContent = name ? `Добрый день, ${name}!` : 'Добрый день!';
+        introEl.classList.add('max-w-xs', 'mx-auto');
+        introEl.innerHTML =
+            'Я Аврора — ваш личный карьерный ассистент.<br>' +
+            'Я проанализировала ваше резюме и готова рассказать, ' +
+            'почему рекрутеры могут его игнорировать — и как это исправить.';
+        return;
+    }
+
+    // Viewer-режим: текст длиннее, разрешаем ширину родителя.
+    introEl.classList.remove('max-w-xs', 'mx-auto');
+
+    // Viewer (открыл чужой опубликованный аудит) — без имени, обезличенно.
+    greetEl.textContent = 'Разбор резюме';
+
+    const titleHtml = positionTitle
+        ? `Резюме «<span class="text-on-surface font-medium">${esc(positionTitle)}</span>»`
+        : 'Это резюме';
+
+    const scoreHtml =
+        `<span class="text-primary font-semibold">${score}/10</span> ` +
+        `(${score} ${pluralPoints(score)})`;
+
+    const issuesHtml = issuesCount > 0
+        ? `и&nbsp;нашла <span class="text-on-surface font-medium">${issuesCount}</span> ${pluralIssues(issuesCount)}.`
+        : 'и&nbsp;готова показать слабые места.';
+
+    introEl.innerHTML =
+        'Я Аврора — карьерный ИИ-ассистент.<br>' +
+        `${titleHtml} я оценила в ${scoreHtml} ${issuesHtml}<br>` +
+        '<span class="text-outline text-xs">Ниже — что увидит рекрутер и почему рейтинг такой.</span>';
 }
 
 // ============================================================================
@@ -636,35 +733,16 @@ function applyOwnerVsViewer(opts) {
 // ============================================================================
 // STICKY CTA BAR (только для viewer-а)
 // ============================================================================
-
-let _stickyHandler = null;
+// На stepResult правая колонка имеет внутренний overflow-y: auto, поэтому
+// window.scrollY не реагирует. Решение: для viewer показываем sticky сразу
+// (его всё равно нужно показать — он не помешает, наоборот, пушит к конверсии).
 
 function enableStickyBar() {
     const bar = document.getElementById('auditStickyBar');
     if (!bar) return;
-
     document.body.classList.add('audit-has-sticky');
     bar.classList.remove('hidden');
-
-    const update = () => {
-        const stepResultVisible = !document.getElementById('stepResult').classList.contains('hidden');
-        if (!stepResultVisible) {
-            bar.classList.add('translate-y-full');
-            return;
-        }
-        if (window.scrollY > 200) {
-            bar.classList.remove('translate-y-full');
-        } else {
-            bar.classList.add('translate-y-full');
-        }
-    };
-
-    if (_stickyHandler) {
-        window.removeEventListener('scroll', _stickyHandler);
-    }
-    _stickyHandler = update;
-    window.addEventListener('scroll', update, { passive: true });
-    update();
+    bar.classList.remove('translate-y-full');
 }
 
 function disableStickyBar() {
@@ -673,10 +751,6 @@ function disableStickyBar() {
     bar.classList.add('translate-y-full');
     bar.classList.add('hidden');
     document.body.classList.remove('audit-has-sticky');
-    if (_stickyHandler) {
-        window.removeEventListener('scroll', _stickyHandler);
-        _stickyHandler = null;
-    }
 }
 
 // ============================================================================

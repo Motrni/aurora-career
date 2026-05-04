@@ -638,6 +638,296 @@ body.audit-has-sticky { padding-bottom: 84px; }
     }
 }
 
+/* ═══════════════════════════════════════════════════════
+   #stepResult — split-layout с Авророй слева и контентом справа.
+   Переиспользует .audit-upload-root, но с модификатором .audit-result-root:
+   — правая колонка скроллится ВНУТРИ себя (overflow-y: auto)
+   — Аврора занимает всю левую колонку, не привязана к скроллу контента
+   — UI-блоки разбиты на свёрнутые аккордеоны (UX-skill: «прогрессивное раскрытие»)
+   ═══════════════════════════════════════════════════════ */
+.audit-result-root {
+    /* Чуть «весомее» картинка для финального экрана: hero-моменту нужен герой */
+    --aurora-height: 132%;
+    --aurora-y: 22%;
+}
+.audit-result-root .content-side.audit-result-content {
+    /* Контент длиннее, чем экран — даём ему скроллиться внутри колонки */
+    padding: clamp(24px, 3.6vw, 44px) clamp(24px, 4.2vw, 60px);
+    gap: 16px;
+    justify-content: flex-start;
+    /* Запас под viewer sticky-bar (50px высота + 16px отступ) */
+    padding-bottom: clamp(28px, 3vw, 48px);
+    scrollbar-gutter: stable;
+}
+body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
+    padding-bottom: 88px;
+}
+
+/* Brand-link — кликабельный шильдик (на главную) */
+.audit-result-root .brand-block a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 8px;
+    transition: opacity 0.15s;
+}
+.audit-result-root .brand-block a:hover { opacity: 0.85; }
+.audit-result-root .brand-block a:focus-visible {
+    outline: 2px solid rgba(204, 190, 255, 0.55);
+    outline-offset: 4px;
+}
+
+/* Greeting (обновлённый, не glass-card) */
+.audit-result-root .result-greeting {
+    text-align: left;
+    flex-shrink: 0;
+}
+.audit-result-root .result-greet-h2 {
+    font-size: clamp(22px, 2.2vw, 30px);
+    font-weight: 700;
+    line-height: 1.18;
+    color: #fff;
+    letter-spacing: -0.015em;
+    margin: 0;
+}
+.audit-result-root .result-greet-p {
+    font-size: clamp(14px, 1.05vw, 16px);
+    color: #cdc6e0;
+    margin: 10px 0 0;
+    line-height: 1.5;
+}
+
+/* Score-card: ядро результата, всегда раскрыто */
+.audit-result-root .result-score {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 18px;
+    background: linear-gradient(135deg, rgba(101, 62, 219, 0.18) 0%, rgba(50, 30, 100, 0.10) 100%);
+    border: 1px solid rgba(204, 190, 255, 0.18);
+    border-radius: 16px;
+    padding: 18px 20px;
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    flex-shrink: 0;
+}
+.audit-result-root .result-score-num {
+    font-size: clamp(44px, 4.5vw, 64px);
+    font-weight: 800;
+    line-height: 1;
+    color: #ccbeff;
+    letter-spacing: -0.03em;
+}
+.audit-result-root .result-score-of {
+    font-size: clamp(20px, 1.8vw, 26px);
+    color: #8a82a3;
+    font-weight: 500;
+    margin-left: 2px;
+}
+.audit-result-root .result-score-text { min-width: 0; }
+.audit-result-root .result-verdict {
+    font-size: clamp(13px, 1vw, 15px);
+    color: #d8d3e6;
+    line-height: 1.4;
+    margin: 0;
+}
+.audit-result-root .result-reaction {
+    font-size: clamp(13px, 1vw, 14px);
+    color: #b8afd0;
+    margin-top: 6px;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* Аккордеоны: <details> в стиле «матовое стекло» */
+.audit-result-root details.result-accordion {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0;
+    overflow: hidden;
+    transition: background 0.2s, border-color 0.2s;
+}
+.audit-result-root details.result-accordion[open] {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(204, 190, 255, 0.22);
+}
+.audit-result-root details.result-accordion > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s;
+}
+.audit-result-root details.result-accordion > summary::-webkit-details-marker { display: none; }
+.audit-result-root details.result-accordion > summary:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+.audit-result-root details.result-accordion > summary:focus-visible {
+    outline: 2px solid rgba(204, 190, 255, 0.55);
+    outline-offset: -2px;
+}
+.audit-result-root details.result-accordion .acc-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: rgba(204, 190, 255, 0.10);
+}
+.audit-result-root details.result-accordion .acc-icon .material-symbols-outlined {
+    font-size: 18px !important;
+    color: #ccbeff;
+}
+.audit-result-root details.result-accordion .acc-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+}
+.audit-result-root details.result-accordion .acc-subtitle {
+    /* Цитаты длинные — обрезаем многострочно (webkit-box заменяет display: block) */
+    display: -webkit-box;
+    font-size: 12px;
+    color: #998fb0;
+    margin-top: 2px;
+    line-height: 1.35;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.audit-result-root details.result-accordion .acc-chevron {
+    flex-shrink: 0;
+    color: #998fb0;
+    transition: transform 0.2s;
+    font-size: 20px !important;
+}
+.audit-result-root details.result-accordion[open] .acc-chevron {
+    transform: rotate(180deg);
+    color: #ccbeff;
+}
+.audit-result-root details.result-accordion .acc-body {
+    padding: 0 18px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 14px;
+    margin-top: 0;
+}
+.audit-result-root details.result-accordion .acc-body p {
+    font-size: 13px;
+    color: #cbc4dc;
+    line-height: 1.55;
+    margin: 0;
+}
+.audit-result-root details.result-accordion .acc-body p + p { margin-top: 10px; }
+.audit-result-root details.result-accordion .acc-body .acc-quote {
+    font-style: italic;
+    color: #b0a8c6;
+    border-left: 2px solid rgba(204, 190, 255, 0.4);
+    padding-left: 10px;
+    margin: 8px 0;
+}
+.audit-result-root details.result-accordion .acc-body .acc-fix {
+    color: #ccbeff;
+    font-weight: 500;
+}
+.audit-result-root details.result-accordion .acc-warning .acc-icon {
+    background: rgba(245, 158, 11, 0.14);
+}
+.audit-result-root details.result-accordion .acc-warning .acc-icon .material-symbols-outlined {
+    color: #fbbf24;
+}
+
+/* Bridge / CTA — всегда видимые блоки */
+.audit-result-root .result-bridge {
+    background: rgba(204, 190, 255, 0.06);
+    border: 1px solid rgba(204, 190, 255, 0.14);
+    border-radius: 14px;
+    padding: 16px 18px;
+    flex-shrink: 0;
+}
+.audit-result-root .result-bridge p {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #d8d3e6;
+    margin: 0;
+}
+.audit-result-root .result-bridge p + p { margin-top: 10px; color: #b0a8c6; font-size: 13px; }
+.audit-result-root .result-bridge strong { color: #fff; font-weight: 600; }
+
+.audit-result-root .result-cta {
+    background: linear-gradient(135deg, rgba(101, 62, 219, 0.22) 0%, rgba(50, 30, 100, 0.16) 100%);
+    border: 1px solid rgba(204, 190, 255, 0.22);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    flex-shrink: 0;
+}
+.audit-result-root .result-cta-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+}
+.audit-result-root .result-cta-text {
+    font-size: 13px;
+    color: #cbc4dc;
+    line-height: 1.55;
+    margin: 10px 0;
+}
+.audit-result-root .result-cta-free {
+    font-size: 13px;
+    color: #ccbeff;
+    font-weight: 600;
+    margin: 8px 0 14px;
+}
+.audit-result-root .result-cta button {
+    width: 100%;
+    background: linear-gradient(135deg, #653edb 0%, #5a30d0 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 13px;
+    border-radius: 11px;
+    border: 0;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.15s;
+}
+.audit-result-root .result-cta button:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+/* Owner controls (внутри content-side) */
+.audit-result-root #ownerActions {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 14px;
+    flex-shrink: 0;
+}
+
+/* Mobile: Аврора фоном, контент снизу со скроллом */
+@media (max-width: 900px) {
+    .audit-result-root .content-side.audit-result-content {
+        max-height: 70dvh;
+        padding: 22px 18px max(80px, env(safe-area-inset-bottom, 18px));
+        gap: 12px;
+        text-align: left;
+        align-items: stretch;
+    }
+    .audit-result-root .result-greet-h2 { font-size: 19px; }
+    .audit-result-root .result-greet-p { font-size: 13.5px; }
+    .audit-result-root .result-score-num { font-size: 38px; }
+    .audit-result-root .result-score-of { font-size: 18px; }
+}
+
 /* Когда Аврора не загрузилась (fallback): убираем колонку и центруем контент */
 .audit-upload-root.no-aurora {
     grid-template-columns: 1fr;
@@ -876,12 +1166,20 @@ body.audit-has-sticky { padding-bottom: 84px; }
 
     <!-- Аудит по ссылке не найден / истёк / неопубликован -->
     <div id="stepNotFound" class="hidden fade-in max-w-lg mx-auto px-4 pt-10 md:pt-16">
-        <div class="text-center mb-8">
-            <div class="flex flex-col items-center gap-0.5">
-                <div class="brand-logo-font text-xl text-[#e7e0ef]">Аврора</div>
-                <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+        <a href="https://aurora-career.ru/" id="notfoundBrandLink"
+           class="block mx-auto mb-8 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-xl"
+           style="width:max-content"
+           aria-label="На главную Аврора">
+            <div class="flex items-center justify-center gap-3">
+                <img src="/favicon.png?v=3" alt=""
+                     class="w-9 h-9 invert brightness-200 flex-shrink-0 transition-transform group-hover:scale-105"
+                     onerror="this.style.display='none'"/>
+                <div class="text-left leading-none">
+                    <div class="brand-logo-font text-xl text-[#e7e0ef] group-hover:text-white transition-colors">Аврора</div>
+                    <div class="text-[10px] text-[#cac3d7] font-light tracking-wide mt-1">Карьерный ИИ-Ассистент</div>
+                </div>
             </div>
-        </div>
+        </a>
         <div class="glass-card rounded-2xl p-8 shadow-2xl text-center">
             <span class="material-symbols-outlined text-4xl text-primary mb-3" style="display:block">link_off</span>
             <h1 class="text-xl font-bold text-on-surface">Отчёт недоступен</h1>
@@ -892,8 +1190,10 @@ body.audit-has-sticky { padding-bottom: 84px; }
             <a href="/audit/" class="btn-primary block mt-6 py-3.5 rounded-xl text-white font-semibold text-center text-sm">
                 Сделать свой бесплатный аудит
             </a>
-            <a href="/" class="block mt-3 py-2 text-on-surface-variant text-xs hover:text-on-surface transition-colors">
-                На главную aurora-career.ru
+            <a href="https://aurora-career.ru/" id="notfoundHomeBtn"
+               class="block mt-3 py-3.5 rounded-xl border border-outline/30 text-on-surface font-medium text-center text-sm
+                      hover:bg-surface-container hover:border-outline/50 transition-colors">
+                На главную
             </a>
         </div>
     </div>
@@ -1207,112 +1507,131 @@ body.audit-has-sticky { padding-bottom: 84px; }
         </div>
     </div>
 
-    <!-- STEP 3: Result -->
-    <div id="stepResult" class="hidden fade-in max-w-lg mx-auto px-4 pt-6 pb-8">
+    <!-- STEP 3: Result — split-layout с Авророй слева и контентом справа -->
+    <div id="stepResult" class="hidden fade-in audit-upload-root audit-result-root">
 
-        <!-- Aurora portrait — парит над greeting-карточкой -->
-        <div class="aurora-portrait-wrap" id="resultPortraitWrap">
+        <!-- Аврора слева на ПК / фоном на мобилке. Картинка меняется по score -->
+        <div class="aurora-side">
             <img id="auroraPortraitResult"
-                 src="audit/images/aurora/aurora-greeting.png"
-                 class="aurora-portrait-result-img select-none"
-                 onerror="document.getElementById('resultPortraitWrap').classList.add('hidden')"
-                 alt="Аврора">
+                 src="audit/images/aurora/aurora-happy.png"
+                 class="aurora-side-img select-none"
+                 alt="Аврора"
+                 onerror="document.getElementById('stepResult').classList.add('no-aurora')">
         </div>
 
-        <!-- Greeting card «подлезает» под портрет -->
-        <div id="auroraGreeting" class="glass-card aurora-result-card rounded-2xl px-6 pb-6 shadow-xl mb-4">
-            <h2 id="greetingHello" class="text-xl font-bold text-on-surface leading-snug">Добрый день!</h2>
-            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed max-w-xs mx-auto">
-                Я Аврора — ваш личный карьерный ассистент.<br>
-                Я проанализировала ваше резюме и готова рассказать,
-                почему рекрутеры могут его игнорировать — и как это исправить.
-            </p>
-        </div>
+        <!-- Контент справа -->
+        <div class="content-side audit-result-content">
 
-        <!-- Owner-only: «Поделиться» / «Удалить» / статус публикации.
-             Видно только владельцу аудита (по cookie aurora_audit_owner). -->
-        <div id="ownerActions" class="hidden glass-card rounded-2xl p-4 shadow-xl mb-4">
-            <div class="flex items-center gap-3">
-                <button onclick="openShareModal()"
-                        class="flex-1 btn-primary py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined" style="font-size:18px">share</span>
-                    <span id="shareBtnLabel">Поделиться результатом</span>
-                </button>
-                <button onclick="confirmDeleteAudit()" title="Удалить аудит"
-                        aria-label="Удалить аудит"
-                        class="w-12 h-12 flex items-center justify-center rounded-xl border border-outline/30 text-on-surface-variant hover:bg-surface-container transition-colors">
-                    <span class="material-symbols-outlined" style="font-size:20px">delete</span>
-                </button>
+            <!-- Бренд-блок — кликабелен, ведёт на главную (dev/prod) -->
+            <div class="brand-block">
+                <a id="resultBrandLink" href="https://aurora-career.ru/" aria-label="На главную Аврора">
+                    <img src="/favicon.png?v=3" alt="" class="brand-logo"
+                         onerror="this.style.display='none'"/>
+                    <div class="brand-text">
+                        <div class="brand-name">Аврора</div>
+                        <div class="brand-tag">Карьерный ИИ-Ассистент</div>
+                    </div>
+                </a>
             </div>
-            <div id="ownerSharedBanner" class="hidden mt-3 flex items-center justify-between gap-2">
-                <span class="text-on-surface-variant text-xs flex items-center gap-1.5 min-w-0">
-                    <span class="material-symbols-outlined text-primary flex-shrink-0" style="font-size:16px">public</span>
-                    <span class="truncate">Опубликовано · просмотров:&nbsp;<span id="ownerViewsCount" class="text-on-surface font-medium">0</span></span>
-                </span>
-                <button onclick="unshareAudit()"
-                        class="text-primary text-xs font-medium hover:underline whitespace-nowrap flex-shrink-0">
-                    Отменить публикацию
-                </button>
+
+            <!-- Greeting (текст разный для owner и viewer — заполняется JS-ом) -->
+            <div class="result-greeting">
+                <h2 id="greetingHello" class="result-greet-h2">Добрый день!</h2>
+                <p id="greetingIntro" class="result-greet-p"></p>
             </div>
-        </div>
 
-        <!-- Score -->
-        <div class="glass-card rounded-2xl p-6 shadow-2xl text-center mb-4">
-            <p class="text-on-surface-variant text-sm mb-3">Ваше резюме</p>
-            <div class="flex items-center justify-center gap-2">
-                <span id="scoreValue" class="text-5xl font-bold text-primary">0</span>
-                <span class="text-2xl text-outline"> / 10</span>
+            <!-- Score (всегда видим) -->
+            <div class="result-score">
+                <div>
+                    <span id="scoreValue" class="result-score-num">0</span><span class="result-score-of">/10</span>
+                </div>
+                <div class="result-score-text">
+                    <p id="verdictText" class="result-verdict"></p>
+                    <p id="scoreReaction" class="result-reaction"></p>
+                </div>
             </div>
-            <p id="verdictText" class="text-on-surface-variant text-sm mt-3"></p>
-            <p id="scoreReaction" class="text-on-surface text-sm mt-3 italic leading-relaxed"></p>
-        </div>
 
-        <!-- Recruiter impression -->
-        <div id="impressionBlock" class="glass-card rounded-2xl p-5 shadow-xl mb-4 hidden">
-            <h3 class="text-sm font-semibold text-on-surface flex items-center gap-2">
-                <span class="material-symbols-outlined text-base" style="font-size:18px">visibility</span>
-                Первое впечатление рекрутера
-            </h3>
-            <p id="impressionText" class="text-on-surface-variant text-sm mt-2 leading-relaxed"></p>
-        </div>
+            <!-- Owner-only действия: «Поделиться» / «Удалить» / статус публикации -->
+            <div id="ownerActions" class="hidden">
+                <div class="flex items-center gap-3">
+                    <button onclick="openShareModal()"
+                            class="flex-1 btn-primary py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined" style="font-size:18px">share</span>
+                        <span id="shareBtnLabel">Поделиться результатом</span>
+                    </button>
+                    <button onclick="confirmDeleteAudit()" title="Удалить аудит"
+                            aria-label="Удалить аудит"
+                            class="w-12 h-12 flex items-center justify-center rounded-xl border border-outline/30 text-on-surface-variant hover:bg-white/5 transition-colors">
+                        <span class="material-symbols-outlined" style="font-size:20px">delete</span>
+                    </button>
+                </div>
+                <div id="ownerSharedBanner" class="hidden mt-3 flex items-center justify-between gap-2">
+                    <span class="text-on-surface-variant text-xs flex items-center gap-1.5 min-w-0">
+                        <span class="material-symbols-outlined text-primary flex-shrink-0" style="font-size:16px">public</span>
+                        <span class="truncate">Опубликовано · просмотров:&nbsp;<span id="ownerViewsCount" class="text-on-surface font-medium">0</span></span>
+                    </span>
+                    <button onclick="unshareAudit()"
+                            class="text-primary text-xs font-medium hover:underline whitespace-nowrap flex-shrink-0">
+                        Отменить публикацию
+                    </button>
+                </div>
+            </div>
 
-        <!-- Critical issues -->
-        <div id="issuesBlock" class="space-y-3 mb-4"></div>
+            <!-- Аккордеон: Первое впечатление рекрутера (по умолчанию свёрнут) -->
+            <details id="impressionBlock" class="result-accordion hidden">
+                <summary>
+                    <span class="acc-icon">
+                        <span class="material-symbols-outlined">visibility</span>
+                    </span>
+                    <span class="flex-1 min-w-0">
+                        <span class="acc-title">Первое впечатление рекрутера</span>
+                        <span class="acc-subtitle">Что увидят за первые 6 секунд</span>
+                    </span>
+                    <span class="material-symbols-outlined acc-chevron">expand_more</span>
+                </summary>
+                <div class="acc-body">
+                    <p id="impressionText"></p>
+                </div>
+            </details>
 
-        <!-- HH Algorithm -->
-        <div id="algoBlock" class="glass-card rounded-2xl p-5 shadow-xl mb-4 hidden">
-            <h3 class="text-sm font-semibold text-on-surface flex items-center gap-2">
-                <span class="material-symbols-outlined text-base" style="font-size:18px">query_stats</span>
-                Алгоритм hh.ru
-            </h3>
-            <p id="algoText" class="text-on-surface-variant text-sm mt-2 leading-relaxed"></p>
-        </div>
+            <!-- Critical issues — массив аккордеонов, заполняется JS-ом -->
+            <div id="issuesBlock" class="space-y-2"></div>
 
-        <!-- Bridge: между анализом и CTA -->
-        <div id="bridgeBlock" class="glass-card rounded-2xl p-5 shadow-xl mb-4">
-            <p class="text-on-surface text-sm leading-relaxed">
-                Исправить это вручную можно.
-                <span class="text-primary font-semibold">Но есть проблема посерьёзнее.</span>
-            </p>
-            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed">
-                Даже с идеальным резюме большинство кандидатов откликаются на 3–5 вакансий в день.
-                Этого мало. Рынок видит только тех, кто активен каждый день.
-            </p>
-        </div>
+            <!-- Аккордеон: Алгоритм hh.ru -->
+            <details id="algoBlock" class="result-accordion hidden">
+                <summary>
+                    <span class="acc-icon">
+                        <span class="material-symbols-outlined">query_stats</span>
+                    </span>
+                    <span class="flex-1 min-w-0">
+                        <span class="acc-title">Алгоритм hh.ru</span>
+                        <span class="acc-subtitle">Почему резюме мало показывается рекрутерам</span>
+                    </span>
+                    <span class="material-symbols-outlined acc-chevron">expand_more</span>
+                </summary>
+                <div class="acc-body">
+                    <p id="algoText"></p>
+                </div>
+            </details>
 
-        <!-- CTA -->
-        <div class="glass-card rounded-2xl p-6 shadow-2xl mt-6">
-            <p class="text-on-surface font-semibold text-base">Именно для этого я и существую.</p>
-            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed">
-                Каждый день я нахожу подходящие вакансии и отправляю отклики от вашего имени —
-                с персональным сопроводительным письмом под каждую позицию.
-                До 20 откликов в день, пока вы занимаетесь своей жизнью.
-            </p>
-            <p class="text-primary text-sm font-semibold mt-4">Первые 10 откликов — бесплатно.</p>
-            <button id="ctaButton" onclick="goToRegister()"
-                    class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold mt-5">
-                Попробовать &rarr;
-            </button>
+            <!-- Bridge — мост к CTA, всегда виден (не аккордеон) -->
+            <div id="bridgeBlock" class="result-bridge">
+                <p>Исправить это вручную можно. <strong>Но есть проблема посерьёзнее.</strong></p>
+                <p>Даже с идеальным резюме большинство кандидатов откликаются на 3–5 вакансий в день.
+                   Этого мало. Рынок видит только тех, кто активен каждый день.</p>
+            </div>
+
+            <!-- CTA (тот же, что и был, в новой обёртке) -->
+            <div class="result-cta">
+                <p class="result-cta-title">Именно для этого я и существую.</p>
+                <p class="result-cta-text">
+                    Каждый день я нахожу подходящие вакансии и отправляю отклики от вашего имени —
+                    с персональным сопроводительным письмом под каждую позицию.
+                    До 20 откликов в день, пока вы занимаетесь своей жизнью.
+                </p>
+                <p class="result-cta-free">Первые 10 откликов — бесплатно.</p>
+                <button id="ctaButton" onclick="goToRegister()">Попробовать →</button>
+            </div>
         </div>
     </div>
 
@@ -1388,6 +1707,6 @@ body.audit-has-sticky { padding-bottom: 84px; }
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=4.0"></script>
+<script src="audit.js?v=4.1"></script>
 </body>
 </html>
