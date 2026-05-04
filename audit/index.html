@@ -10,6 +10,19 @@
 <meta name="description" content="ИИ-аудит резюме бесплатно за 30 секунд. Узнайте, как улучшить, переписать и составить резюме под hh.ru: оценка по 10-балльной шкале, конкретные ошибки и советы — без регистрации.">
 <meta name="keywords" content="аудит резюме, аудит резюме онлайн, аудит резюме бесплатно, разбор резюме, проверить резюме, оценить резюме, улучшить резюме, написать резюме, составить резюме, как улучшить резюме, анализ резюме, экспертиза резюме, рецензия на резюме, ИИ резюме, hh.ru резюме, резюме hh, ats фильтры">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<script>
+// Страницы с конкретным аудитом (/audit/?id=...) НЕ должны индексироваться
+// и не должны утекать UUID-ом в Referer внешним сайтам.
+(function () {
+    if (location.search.indexOf('id=') === -1) return;
+    var existing = document.querySelector('meta[name="robots"]');
+    if (existing) existing.setAttribute('content', 'noindex,nofollow');
+    var ref = document.createElement('meta');
+    ref.name = 'referrer';
+    ref.content = 'strict-origin';
+    document.head.appendChild(ref);
+})();
+</script>
 <meta name="yandex" content="index,follow">
 <meta name="googlebot" content="index,follow">
 <meta name="author" content="Аврора · Карьерный ИИ-Ассистент">
@@ -341,6 +354,7 @@ body.audit-has-sticky { padding-bottom: 84px; }
     align-items: center;
     gap: 12px;
     flex-shrink: 0;
+    align-self: center;
 }
 .brand-logo {
     width: 36px;
@@ -492,31 +506,33 @@ body.audit-has-sticky { padding-bottom: 84px; }
     text-decoration-color: #fff;
 }
 
-/* === Loading content (#stepLoading) — typing bubble + текст === */
+/* === Loading content (#stepLoading) — спиннер + текст === */
 .loading-content {
     align-items: flex-start;
 }
-.typing-bubble-pro {
+.loading-spinner-wrap {
+    align-self: flex-start;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 16px 22px;
-    background: rgba(204, 190, 255, 0.14);
-    border: 1px solid rgba(204, 190, 255, 0.22);
-    border-radius: 22px 22px 22px 6px;
-    align-self: flex-start;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(204, 190, 255, 0.10);
+    border: 1px solid rgba(204, 190, 255, 0.18);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
-.typing-bubble-pro .typing-dot {
-    width: 9px;
-    height: 9px;
+.spinner-pro {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(204, 190, 255, 0.22);
+    border-top-color: #ccbeff;
     border-radius: 50%;
-    background: #ccbeff;
-    animation: typingDot 1.2s infinite ease-in-out;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
 }
-.typing-bubble-pro .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-bubble-pro .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .loading-text-pro {
     font-size: clamp(18px, 1.6vw, 24px);
@@ -538,9 +554,8 @@ body.audit-has-sticky { padding-bottom: 84px; }
         align-items: center;
         text-align: center;
     }
-    .typing-bubble-pro {
+    .loading-spinner-wrap {
         align-self: center;
-        padding: 14px 20px;
     }
     .loading-text-pro {
         font-size: 17px;
@@ -859,6 +874,30 @@ body.audit-has-sticky { padding-bottom: 84px; }
 
 <div class="w-full max-w-5xl relative z-10">
 
+    <!-- Аудит по ссылке не найден / истёк / неопубликован -->
+    <div id="stepNotFound" class="hidden fade-in max-w-lg mx-auto px-4 pt-10 md:pt-16">
+        <div class="text-center mb-8">
+            <div class="flex flex-col items-center gap-0.5">
+                <div class="brand-logo-font text-xl text-[#e7e0ef]">Аврора</div>
+                <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+            </div>
+        </div>
+        <div class="glass-card rounded-2xl p-8 shadow-2xl text-center">
+            <span class="material-symbols-outlined text-4xl text-primary mb-3" style="display:block">link_off</span>
+            <h1 class="text-xl font-bold text-on-surface">Отчёт недоступен</h1>
+            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed">
+                Возможно, владелец отменил публикацию или ссылка устарела.
+                Аудиты хранятся 90 дней с момента создания.
+            </p>
+            <a href="/audit/" class="btn-primary block mt-6 py-3.5 rounded-xl text-white font-semibold text-center text-sm">
+                Сделать свой бесплатный аудит
+            </a>
+            <a href="/" class="block mt-3 py-2 text-on-surface-variant text-xs hover:text-on-surface transition-colors">
+                На главную aurora-career.ru
+            </a>
+        </div>
+    </div>
+
     <!-- Уже авторизован: без лид-магнита -->
     <div id="stepLoggedIn" class="hidden fade-in max-w-lg mx-auto px-4 pt-10 md:pt-16">
         <div class="text-center mb-8">
@@ -1141,10 +1180,8 @@ body.audit-has-sticky { padding-bottom: 84px; }
 
             <!-- Main: процесс размышления -->
             <div class="content-main loading-content">
-                <div id="loadingTypingWrap" class="typing-bubble-pro" aria-label="Аврора анализирует">
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
+                <div id="loadingTypingWrap" class="loading-spinner-wrap" aria-label="Аврора анализирует резюме">
+                    <span class="spinner-pro"></span>
                 </div>
 
                 <p id="loadingText" class="loading-text-pro">
@@ -1190,6 +1227,33 @@ body.audit-has-sticky { padding-bottom: 84px; }
                 Я проанализировала ваше резюме и готова рассказать,
                 почему рекрутеры могут его игнорировать — и как это исправить.
             </p>
+        </div>
+
+        <!-- Owner-only: «Поделиться» / «Удалить» / статус публикации.
+             Видно только владельцу аудита (по cookie aurora_audit_owner). -->
+        <div id="ownerActions" class="hidden glass-card rounded-2xl p-4 shadow-xl mb-4">
+            <div class="flex items-center gap-3">
+                <button onclick="openShareModal()"
+                        class="flex-1 btn-primary py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined" style="font-size:18px">share</span>
+                    <span id="shareBtnLabel">Поделиться результатом</span>
+                </button>
+                <button onclick="confirmDeleteAudit()" title="Удалить аудит"
+                        aria-label="Удалить аудит"
+                        class="w-12 h-12 flex items-center justify-center rounded-xl border border-outline/30 text-on-surface-variant hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined" style="font-size:20px">delete</span>
+                </button>
+            </div>
+            <div id="ownerSharedBanner" class="hidden mt-3 flex items-center justify-between gap-2">
+                <span class="text-on-surface-variant text-xs flex items-center gap-1.5 min-w-0">
+                    <span class="material-symbols-outlined text-primary flex-shrink-0" style="font-size:16px">public</span>
+                    <span class="truncate">Опубликовано · просмотров:&nbsp;<span id="ownerViewsCount" class="text-on-surface font-medium">0</span></span>
+                </span>
+                <button onclick="unshareAudit()"
+                        class="text-primary text-xs font-medium hover:underline whitespace-nowrap flex-shrink-0">
+                    Отменить публикацию
+                </button>
+            </div>
         </div>
 
         <!-- Score -->
@@ -1254,22 +1318,76 @@ body.audit-has-sticky { padding-bottom: 84px; }
 
 </div>
 
-<!-- Sticky CTA bar — появляется при скролле страницы результатов -->
+<!-- Sticky CTA bar — показывается ТОЛЬКО просматривающему чужой shared-аудит.
+     Владелец своего аудита видит вместо неё блок ownerActions внутри stepResult. -->
 <div id="auditStickyBar"
      class="fixed bottom-0 left-0 right-0 z-40 hidden translate-y-full transition-transform duration-300
             border-t border-outline/20 px-4 py-3 shadow-2xl
             flex items-center justify-between gap-3"
      style="background: rgba(21,18,28,0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);">
-    <span class="text-on-surface text-xs sm:text-sm leading-tight">
-        Хотите, чтобы Аврора отправляла отклики за вас?
+    <span class="text-on-surface text-xs sm:text-sm leading-tight min-w-0">
+        Узнай, как исправить резюме и начать получать офферы.
+        <span class="hidden sm:inline text-on-surface-variant">Анализ основан на реальном опыте HR.</span>
     </span>
-    <button onclick="goToRegister()"
-            class="btn-primary text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl whitespace-nowrap flex-shrink-0">
-        Попробовать бесплатно
-    </button>
+    <a href="/audit/"
+       class="btn-primary text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl whitespace-nowrap flex-shrink-0">
+        Получить свой бесплатно
+    </a>
+</div>
+
+<!-- Share modal: 152-ФЗ consent перед публикацией -->
+<div id="shareModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeShareModal()"></div>
+    <div class="relative glass-card rounded-2xl p-6 max-w-md w-full shadow-2xl z-10">
+        <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:22px">share</span>
+            Опубликовать результаты аудита
+        </h3>
+        <p class="text-on-surface-variant text-sm mt-3 leading-relaxed">
+            После публикации <strong class="text-on-surface">любой человек, получивший вашу ссылку</strong>, сможет увидеть:
+        </p>
+        <ul class="text-on-surface-variant text-sm mt-3 space-y-1 list-disc pl-5">
+            <li>имя из резюме (если оно было распознано)</li>
+            <li>оценку резюме и рекомендации Авроры</li>
+            <li>цитаты из вашего резюме, использованные в анализе</li>
+        </ul>
+        <p class="text-on-surface-variant text-xs mt-3 leading-relaxed">
+            Эти данные относятся к персональным. Публикация = их распространение третьим лицам.
+            Вы можете в любой момент <strong>отменить публикацию</strong> — ссылка сразу перестанет работать
+            для всех, кроме вас. Также вы можете полностью удалить аудит.
+        </p>
+        <label class="flex items-start gap-3 mt-5 cursor-pointer">
+            <input type="checkbox" id="shareConsentCheckbox" class="mt-0.5 w-4 h-4 flex-shrink-0">
+            <span class="text-on-surface text-xs leading-relaxed">
+                Я согласен(на) на публикацию результатов аудита и понимаю,
+                что они станут доступны всем, у кого есть ссылка.
+                С <button type="button" onclick="openLegalModal('privacy')" class="text-primary underline bg-transparent border-0 p-0 cursor-pointer">условиями обработки ПД</button> ознакомлен(а).
+            </span>
+        </label>
+        <div id="shareModalError" class="hidden text-red-400 text-xs mt-2"></div>
+        <div class="flex flex-col gap-2 mt-5">
+            <button id="sharePublishBtn" onclick="publishAudit()" disabled
+                    class="btn-primary py-3 rounded-xl text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                Опубликовать и скопировать ссылку
+            </button>
+            <button onclick="closeShareModal()"
+                    class="py-2 text-on-surface-variant text-sm hover:text-on-surface transition-colors">
+                Отмена
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast: уведомление о копировании ссылки -->
+<div id="auditToast"
+     class="fixed left-1/2 -translate-x-1/2 bottom-24 z-[60] hidden glass-card rounded-xl px-4 py-3 shadow-2xl
+            flex items-center gap-2 fade-in"
+     style="max-width:90vw">
+    <span class="material-symbols-outlined text-primary" style="font-size:18px">check_circle</span>
+    <span id="auditToastText" class="text-on-surface text-sm">Ссылка скопирована</span>
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=3.3"></script>
+<script src="audit.js?v=4.0"></script>
 </body>
 </html>

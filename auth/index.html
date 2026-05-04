@@ -99,6 +99,8 @@ tailwind.config = {
     .spinner { border: 2px solid rgba(204,190,255,0.2); border-top-color: #ccbeff;
                border-radius: 50%; width: 18px; height: 18px; animation: spin 0.6s linear infinite; display: inline-block; }
     @keyframes spin { to{transform:rotate(360deg)} }
+    .brand-logo-font { font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
+    .brand-tag { font-size: 11px; letter-spacing: 0.04em; color: #c4bfd6; font-weight: 400; }
 </style>
 <link rel="stylesheet" href="cookie-consent.css">
 <link rel="stylesheet" href="legal-modal.css">
@@ -110,9 +112,14 @@ tailwind.config = {
 
 <div class="auth-card rounded-2xl w-full max-w-md relative z-10 shadow-2xl">
     <!-- Logo -->
-    <div class="text-center pt-8 pb-2">
-        <h1 class="text-2xl font-bold text-primary">Aurora Career</h1>
-        <p class="text-on-surface-variant text-sm mt-1">Умный поиск работы</p>
+    <div class="flex items-center justify-center gap-3 pt-8 pb-2">
+        <img src="/favicon.png?v=3" alt="Аврора"
+             class="w-10 h-10 invert brightness-200 flex-shrink-0"
+             onerror="this.style.display='none'"/>
+        <div class="text-left leading-none">
+            <div class="brand-logo-font text-2xl text-[#f7f6fc]">Аврора</div>
+            <div class="brand-tag mt-1">Карьерный ИИ-Ассистент</div>
+        </div>
     </div>
 
     <!-- Tabs -->

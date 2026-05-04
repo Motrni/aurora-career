@@ -1,5 +1,6 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v3.3 — fix: SEO-блок видим только на #stepUpload (исключаем баг «SEO во время loading»)
+// v4.0 — sharing-флоу: постоянная ссылка ?id=, owner cookie, публикация с consent (152-ФЗ),
+//        страница 404 для просроченных/чужих ссылок, viewer sticky CTA, удаление аудита.
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
@@ -19,11 +20,14 @@ const AURORA_PORTRAITS = {
     empathy:  'audit/images/aurora/aurora-empathy.png',
 };
 
+const MY_AUDITS_LS_KEY = 'aurora_my_audits';
+
 let selectedFile = null;
 let turnstileToken = null;
 let userEmail = '';
 let turnstileReady = false;
 let _phaseTimer = null;
+let _currentAudit = null; // { public_id, is_owner, is_shared, views_count, share_url }
 
 // SEO-блок виден только когда показан #stepUpload (стартовый экран).
 // На loading / result / loggedIn — скрываем, чтобы не «торчал» снизу при скролле.
@@ -33,10 +37,47 @@ function setSeoVisibility(visible) {
 }
 
 // ============================================================================
+// MY AUDITS (localStorage) — резервный sticky-флаг владельца на случай,
+// если cookie аудит-владельца была очищена (cookie остаётся источником истины).
+// ============================================================================
+
+function loadMyAudits() {
+    try {
+        const raw = localStorage.getItem(MY_AUDITS_LS_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+    } catch (_) { return []; }
+}
+
+function rememberMyAudit(publicId) {
+    if (!publicId) return;
+    const list = loadMyAudits();
+    if (list.includes(publicId)) return;
+    list.push(publicId);
+    while (list.length > 50) list.shift(); // ограничиваем разбухание
+    try { localStorage.setItem(MY_AUDITS_LS_KEY, JSON.stringify(list)); } catch (_) {}
+}
+
+function forgetMyAudit(publicId) {
+    const list = loadMyAudits().filter(id => id !== publicId);
+    try { localStorage.setItem(MY_AUDITS_LS_KEY, JSON.stringify(list)); } catch (_) {}
+}
+
+// ============================================================================
 // INIT
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(location.search);
+    const auditId = params.get('id');
+
+    if (auditId) {
+        // Маршрут «открыть существующий аудит» — основной путь имеет приоритет
+        // над всеми остальными (даже над checkLoggedInUser).
+        bootstrapFromUrl(auditId);
+        return;
+    }
+
     await checkLoggedInUser();
     loadCounter();
     initDragDrop();
@@ -72,6 +113,68 @@ function loadCounter() {
             const el = document.getElementById('counterValue');
             if (el) el.textContent = '1 400+';
         });
+}
+
+// ============================================================================
+// BOOTSTRAP FROM URL — открытие существующего аудита по public_id
+// ============================================================================
+
+async function bootstrapFromUrl(publicId) {
+    // Сразу скрываем upload и SEO, показываем loading-экран без таймера фаз
+    // (для уже готового аудита фразы «анализирую…» неуместны).
+    document.getElementById('stepUpload').classList.add('hidden');
+    setSeoVisibility(false);
+    showLoadingScreen({ phases: false, customText: 'Открываем ваш разбор…' });
+
+    try {
+        const resp = await fetch(`${apiBase()}/api/audit/${encodeURIComponent(publicId)}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        if (resp.status === 404) {
+            stopLoadingPhases();
+            document.getElementById('stepLoading').classList.add('hidden');
+            showNotFound();
+            return;
+        }
+
+        if (!resp.ok) {
+            stopLoadingPhases();
+            showLoadingError('Не удалось загрузить отчёт. Попробуйте позже.');
+            return;
+        }
+
+        const data = await resp.json();
+        stopLoadingPhases();
+        document.getElementById('stepLoading').classList.add('hidden');
+
+        // Если фронт «помнит» этот аудит локально — считаем владельцем
+        // даже если сервер не отдал is_owner=true (на случай если cookie
+        // ещё не подтвердилась из-за SameSite на новом домене).
+        const localOwner = loadMyAudits().includes(data.public_id);
+        const isOwner = !!data.is_owner || localOwner;
+
+        showResult(data.result, null, {
+            public_id: data.public_id,
+            is_owner: isOwner,
+            is_shared: !!data.is_shared,
+            views_count: data.views_count || 0,
+            share_url: data.share_url,
+        });
+
+    } catch (e) {
+        stopLoadingPhases();
+        showLoadingError('Ошибка сети. Проверьте соединение.');
+    }
+}
+
+function showNotFound() {
+    document.getElementById('stepUpload').classList.add('hidden');
+    document.getElementById('stepLoading').classList.add('hidden');
+    document.getElementById('stepResult').classList.add('hidden');
+    setSeoVisibility(false);
+    document.getElementById('stepNotFound').classList.remove('hidden');
 }
 
 // ============================================================================
@@ -219,16 +322,13 @@ async function submitAudit() {
     if (privacyVersion) formData.append('consent_privacy_version', privacyVersion);
     if (turnstileToken) formData.append('captcha_token', turnstileToken);
 
-    // Сразу закрываем модалку и показываем экран загрузки
     closeEmailModal();
     showLoadingScreen();
     const startedAt = Date.now();
 
-    // Fetch в фоне с ретраями
     const result = await fetchAuditWithRetry(formData, 2);
 
-    // Минимум 8 с показа экрана «печатает» — но только при успехе.
-    // На ошибках/конфликтах не задерживаем пользователя.
+    // Минимум 8 с показа экрана «печатает» — только при успехе.
     if (result.type === 'success') {
         const elapsed = Date.now() - startedAt;
         const remain = LOADING_MIN_DURATION_MS - elapsed;
@@ -253,9 +353,24 @@ async function submitAudit() {
         return;
     }
 
-    // Успех — показываем результат
     document.getElementById('stepLoading').classList.add('hidden');
-    showResult(result.data.result, result.data.total_audits);
+
+    const publicId = result.data.public_id;
+    if (publicId) {
+        rememberMyAudit(publicId);
+        // Меняем URL без перезагрузки — теперь рефреш не теряет результат.
+        try { history.replaceState({}, '', `?id=${encodeURIComponent(publicId)}`); } catch (_) {}
+    }
+
+    showResult(result.data.result, result.data.total_audits, {
+        public_id: publicId,
+        is_owner: true,         // только что создал — точно владелец
+        is_shared: false,
+        views_count: 0,
+        share_url: publicId
+            ? `${location.origin}/audit/?id=${encodeURIComponent(publicId)}`
+            : null,
+    });
 }
 
 // ============================================================================
@@ -267,7 +382,6 @@ async function fetchAuditWithRetry(formData, maxRetries) {
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         if (attempt > 0) {
-            // Пауза перед ретраем
             await new Promise(r => setTimeout(r, 2000));
         }
 
@@ -275,33 +389,29 @@ async function fetchAuditWithRetry(formData, maxRetries) {
             const resp = await fetch(`${apiBase()}/api/audit/analyze`, {
                 method: 'POST',
                 body: formData,
+                credentials: 'include', // нужно для приёма Set-Cookie aurora_audit_owner
             });
 
             let data = {};
             const rawText = await resp.text();
             try { data = rawText ? JSON.parse(rawText) : {}; } catch (_) { data = {}; }
 
-            // 409 — не ретраим, специальная обработка
             if (resp.status === 409) {
                 return { type: 'conflict', data };
             }
 
-            // 4xx — не ретраим, ошибка валидации/логики
             if (resp.status >= 400 && resp.status < 500) {
                 return { type: 'error', message: data.detail || data.message || 'Произошла ошибка' };
             }
 
-            // 5xx — ретраим
             if (!resp.ok) {
                 lastError = data.detail || data.message || `Ошибка сервера (${resp.status})`;
                 continue;
             }
 
-            // Успех
             return { type: 'success', data };
 
         } catch (_) {
-            // Сетевая ошибка — ретраим
             lastError = 'Ошибка сети. Проверьте соединение.';
         }
     }
@@ -322,14 +432,17 @@ const LOADING_PHASES = [
 
 const LOADING_MIN_DURATION_MS = 8000;
 
-function showLoadingScreen() {
+function showLoadingScreen(opts) {
+    opts = opts || {};
     document.getElementById('stepUpload').classList.add('hidden');
     setSeoVisibility(false);
     const el = document.getElementById('stepLoading');
     el.classList.remove('hidden');
 
     const textEl = document.getElementById('loadingText');
-    if (textEl) textEl.textContent = LOADING_PHASES[0];
+    if (textEl) textEl.textContent = opts.customText || LOADING_PHASES[0];
+
+    if (opts.phases === false) return; // bootstrap-режим без ротации фраз
 
     let idx = 0;
     const stepMs = Math.max(1500, Math.floor(LOADING_MIN_DURATION_MS / LOADING_PHASES.length));
@@ -363,12 +476,10 @@ function showLoadingError(message) {
         errEl.classList.remove('hidden');
     }
     if (retryBtn) retryBtn.classList.remove('hidden');
-    // Скрываем «печатает», экран ошибки
     if (typingEl) typingEl.classList.add('hidden');
 }
 
 function retryAudit() {
-    // Сбрасываем состояние и возвращаем на экран загрузки файла
     disableStickyBar();
     selectedFile = null;
     turnstileToken = null;
@@ -396,7 +507,6 @@ function retryAudit() {
     const typingEl = document.getElementById('loadingTypingWrap');
     if (typingEl) typingEl.classList.remove('hidden');
 
-    // Сбрасываем Turnstile для следующей попытки
     if (window.turnstile) {
         const container = document.getElementById('turnstileContainer');
         if (container) window.turnstile.remove(container);
@@ -407,7 +517,10 @@ function retryAudit() {
 // RESULT
 // ============================================================================
 
-function showResult(result, totalAudits) {
+function showResult(result, totalAudits, opts) {
+    opts = opts || { is_owner: true, is_shared: false, views_count: 0, public_id: null };
+    _currentAudit = opts;
+
     document.getElementById('stepResult').classList.remove('hidden');
     setSeoVisibility(false);
 
@@ -422,7 +535,6 @@ function showResult(result, totalAudits) {
     if (portraitEl) {
         const sNum = Number(result && result.score) || 0;
         const newSrc = sNum >= 7 ? AURORA_PORTRAITS.happy : AURORA_PORTRAITS.empathy;
-        // Сбрасываем враппер (мог быть hidden из-за onerror предыдущего src)
         const wrapEl = document.getElementById('resultPortraitWrap');
         if (wrapEl) wrapEl.classList.remove('hidden');
         portraitEl.src = newSrc;
@@ -456,7 +568,6 @@ function showResult(result, totalAudits) {
     (result.critical_issues || []).forEach((issue, i) => {
         const card = document.createElement('details');
         card.className = 'issue-card glass-card rounded-xl p-4 shadow-lg group';
-        // Первая проблема развёрнута, остальные свёрнуты
         if (i === 0) card.open = true;
         card.innerHTML = `
             <summary class="cursor-pointer list-none flex items-start justify-between gap-3">
@@ -489,11 +600,41 @@ function showResult(result, totalAudits) {
         if (el) el.textContent = totalAudits.toLocaleString('ru-RU');
     }
 
-    enableStickyBar();
+    applyOwnerVsViewer(opts);
 }
 
 // ============================================================================
-// STICKY CTA BAR
+// OWNER vs VIEWER UI
+// ============================================================================
+
+function applyOwnerVsViewer(opts) {
+    const ownerActions = document.getElementById('ownerActions');
+    const ownerSharedBanner = document.getElementById('ownerSharedBanner');
+    const ownerViewsCount = document.getElementById('ownerViewsCount');
+    const shareBtnLabel = document.getElementById('shareBtnLabel');
+
+    if (opts.is_owner && ownerActions) {
+        ownerActions.classList.remove('hidden');
+
+        if (opts.is_shared) {
+            if (ownerSharedBanner) ownerSharedBanner.classList.remove('hidden');
+            if (ownerViewsCount) ownerViewsCount.textContent = String(opts.views_count || 0);
+            if (shareBtnLabel) shareBtnLabel.textContent = 'Скопировать ссылку';
+        } else {
+            if (ownerSharedBanner) ownerSharedBanner.classList.add('hidden');
+            if (shareBtnLabel) shareBtnLabel.textContent = 'Поделиться результатом';
+        }
+        // Owner НЕ видит sticky-CTA — у него свои контролы выше.
+        disableStickyBar();
+    } else {
+        if (ownerActions) ownerActions.classList.add('hidden');
+        // Viewer (чужой shared-аудит) — показываем sticky-бар «Получить свой».
+        enableStickyBar();
+    }
+}
+
+// ============================================================================
+// STICKY CTA BAR (только для viewer-а)
 // ============================================================================
 
 let _stickyHandler = null;
@@ -536,6 +677,182 @@ function disableStickyBar() {
         window.removeEventListener('scroll', _stickyHandler);
         _stickyHandler = null;
     }
+}
+
+// ============================================================================
+// SHARING — модалка с consent (152-ФЗ) + публикация / отзыв публикации
+// ============================================================================
+
+function openShareModal() {
+    if (!_currentAudit || !_currentAudit.public_id) return;
+
+    // Если уже опубликован — просто копируем ссылку без второго consent.
+    if (_currentAudit.is_shared) {
+        copyShareUrl(_currentAudit.share_url);
+        showToast('Ссылка скопирована');
+        return;
+    }
+
+    const modal = document.getElementById('shareModal');
+    const cb = document.getElementById('shareConsentCheckbox');
+    const btn = document.getElementById('sharePublishBtn');
+    const err = document.getElementById('shareModalError');
+
+    if (cb) cb.checked = false;
+    if (btn) btn.disabled = true;
+    if (err) err.classList.add('hidden');
+
+    if (cb && cb.dataset.bound !== '1') {
+        cb.dataset.bound = '1';
+        cb.addEventListener('change', () => {
+            if (btn) btn.disabled = !cb.checked;
+            if (cb.checked && err) err.classList.add('hidden');
+        });
+    }
+
+    modal.classList.remove('hidden');
+}
+
+function closeShareModal() {
+    document.getElementById('shareModal').classList.add('hidden');
+}
+
+async function publishAudit() {
+    const btn = document.getElementById('sharePublishBtn');
+    const err = document.getElementById('shareModalError');
+    if (err) err.classList.add('hidden');
+
+    if (!_currentAudit || !_currentAudit.public_id) {
+        showShareError('Аудит не загружен — обновите страницу.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Публикуем…';
+
+    try {
+        const resp = await fetch(
+            `${apiBase()}/api/audit/${encodeURIComponent(_currentAudit.public_id)}/share`,
+            {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ consent: true }),
+            }
+        );
+
+        if (!resp.ok) {
+            const data = await resp.json().catch(() => ({}));
+            showShareError(data.detail || data.message || 'Не удалось опубликовать');
+            return;
+        }
+
+        const data = await resp.json();
+        _currentAudit.is_shared = true;
+        _currentAudit.share_url = data.share_url;
+
+        await copyShareUrl(data.share_url);
+        closeShareModal();
+        showToast('Ссылка скопирована');
+        applyOwnerVsViewer(_currentAudit);
+
+    } catch (_) {
+        showShareError('Ошибка сети — попробуйте ещё раз.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Опубликовать и скопировать ссылку';
+    }
+}
+
+async function unshareAudit() {
+    if (!_currentAudit || !_currentAudit.public_id) return;
+    if (!confirm('Скрыть публикацию? Ссылка перестанет работать для всех, кроме вас.')) return;
+
+    try {
+        const resp = await fetch(
+            `${apiBase()}/api/audit/${encodeURIComponent(_currentAudit.public_id)}/unshare`,
+            { method: 'POST', credentials: 'include' }
+        );
+        if (!resp.ok) {
+            showToast('Не удалось скрыть публикацию');
+            return;
+        }
+        _currentAudit.is_shared = false;
+        applyOwnerVsViewer(_currentAudit);
+        showToast('Публикация скрыта');
+    } catch (_) {
+        showToast('Ошибка сети');
+    }
+}
+
+async function confirmDeleteAudit() {
+    if (!_currentAudit || !_currentAudit.public_id) return;
+    const msg = 'Удалить аудит навсегда?\n\nЭто действие необратимо. ' +
+        'Все данные о вашем разборе будут удалены из системы (152-ФЗ — право на забвение).';
+    if (!confirm(msg)) return;
+
+    try {
+        const resp = await fetch(
+            `${apiBase()}/api/audit/${encodeURIComponent(_currentAudit.public_id)}`,
+            { method: 'DELETE', credentials: 'include' }
+        );
+        if (!resp.ok) {
+            showToast('Не удалось удалить аудит');
+            return;
+        }
+
+        forgetMyAudit(_currentAudit.public_id);
+        _currentAudit = null;
+
+        // Чистим URL и показываем NotFound (страница уже не существует).
+        try { history.replaceState({}, '', '/audit/'); } catch (_) {}
+        document.getElementById('stepResult').classList.add('hidden');
+        showNotFound();
+        // Подменяем заголовок «Отчёт недоступен» на нейтральный.
+        const h = document.querySelector('#stepNotFound h1');
+        if (h) h.textContent = 'Аудит удалён';
+
+    } catch (_) {
+        showToast('Ошибка сети');
+    }
+}
+
+async function copyShareUrl(url) {
+    if (!url) return;
+    // Native Web Share — на мобилке откроет нативный шторку.
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Аудит резюме от Авроры',
+                text: 'Аврора разобрала моё резюме — вот результат:',
+                url,
+            });
+            return;
+        } catch (_) {
+            // Юзер закрыл шторку — fallback на копирование.
+        }
+    }
+    try { await navigator.clipboard.writeText(url); } catch (_) {
+        // Совсем старый браузер: показываем prompt
+        try { window.prompt('Скопируйте ссылку:', url); } catch (_) {}
+    }
+}
+
+function showShareError(msg) {
+    const err = document.getElementById('shareModalError');
+    if (!err) return;
+    err.textContent = msg;
+    err.classList.remove('hidden');
+}
+
+function showToast(msg) {
+    const toast = document.getElementById('auditToast');
+    const text = document.getElementById('auditToastText');
+    if (!toast) return;
+    if (text) text.textContent = msg;
+    toast.classList.remove('hidden');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.add('hidden'), 2400);
 }
 
 // ============================================================================
