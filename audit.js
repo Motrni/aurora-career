@@ -1,5 +1,5 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v2.5 — добавлен compliance-footer (152-ФЗ) внизу карточки
+// v2.8 — split-layout #stepUpload: Аврора слева, контент справа; mobile стэк
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
