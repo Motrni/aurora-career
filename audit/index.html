@@ -286,10 +286,11 @@ body.audit-has-sticky { padding-bottom: 84px; }
     /* === ⚙️ CSS-переменные для тонкой настройки Авроры на ПК ===
        Меняй прямо тут (или в DevTools на .audit-upload-root) — без перезагрузки.
        --aurora-height — высота картинки относительно колонки (100% = в рамку, >100% = крупнее)
-       --aurora-y      — вертикальное смещение в px (минус = выше, плюс = ниже)
+       --aurora-y      — вертикальное смещение В % ОТ ВЫСОТЫ КАРТИНКИ
+                         (масштабируется вместе с ней — halo не обрежется при растягивании окна)
        --aurora-x      — горизонтальное смещение в px (минус = левее, плюс = правее) */
     --aurora-height: 138%;
-    --aurora-y: 300px;
+    --aurora-y: 31%;
     --aurora-x: 0px;
 }
 
@@ -308,7 +309,7 @@ body.audit-has-sticky { padding-bottom: 84px; }
     max-width: none;
     object-fit: contain;
     object-position: center bottom;
-    transform: translate(var(--aurora-x, 0px), var(--aurora-y, 300px));
+    transform: translate(var(--aurora-x, 0px), var(--aurora-y, 31%));
     user-select: none;
     pointer-events: none;
     display: block;
@@ -1184,6 +1185,6 @@ body.audit-has-sticky { padding-bottom: 84px; }
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=3.0"></script>
+<script src="audit.js?v=3.1"></script>
 </body>
 </html>

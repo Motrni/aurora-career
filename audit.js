@@ -1,5 +1,5 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v3.0 — финальные параметры Авроры на ПК (height: 138%, y: 300px)
+// v3.1 — Aurora y-offset в % (масштабируется при resize, halo не обрезается)
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
