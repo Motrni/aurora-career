@@ -283,6 +283,14 @@ body.audit-has-sticky { padding-bottom: 84px; }
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: 100%;
     color: #fff;
+    /* === ⚙️ CSS-переменные для тонкой настройки Авроры на ПК ===
+       Меняй прямо тут (или в DevTools на .audit-upload-root) — без перезагрузки.
+       --aurora-height — высота картинки относительно колонки (100% = в рамку, >100% = крупнее)
+       --aurora-y      — вертикальное смещение в px (минус = выше, плюс = ниже)
+       --aurora-x      — горизонтальное смещение в px (минус = левее, плюс = правее) */
+    --aurora-height: 108%;
+    --aurora-y: 36px;
+    --aurora-x: 0px;
 }
 
 /* === Аврора (слева на ПК) === */
@@ -292,14 +300,15 @@ body.audit-has-sticky { padding-bottom: 84px; }
     height: 100%;
     display: flex;
     align-items: flex-end;
-    justify-content: flex-start;
+    justify-content: center;
 }
 .aurora-side-img {
-    height: 100%;
+    height: var(--aurora-height, 108%);
     width: auto;
     max-width: none;
     object-fit: contain;
-    object-position: left bottom;
+    object-position: center bottom;
+    transform: translate(var(--aurora-x, 0px), var(--aurora-y, 36px));
     user-select: none;
     pointer-events: none;
     display: block;
@@ -307,6 +316,8 @@ body.audit-has-sticky { padding-bottom: 84px; }
 
 /* === Контент (справа на ПК) === */
 .content-side {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     padding: clamp(28px, 4.2vw, 56px) clamp(32px, 5vw, 72px);
@@ -317,12 +328,24 @@ body.audit-has-sticky { padding-bottom: 84px; }
     -webkit-overflow-scrolling: touch;
 }
 
-/* Brand block (top) */
+/* Brand block (top): лого + текст */
 .brand-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+.brand-logo {
+    width: 36px;
+    height: 36px;
+    filter: invert(1) brightness(2);
+    flex-shrink: 0;
+}
+.brand-text {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    flex-shrink: 0;
+    line-height: 1;
 }
 .brand-name {
     font-size: clamp(28px, 2.8vw, 38px);
@@ -338,7 +361,7 @@ body.audit-has-sticky { padding-bottom: 84px; }
     letter-spacing: 0.04em;
     color: #c4bfd6;
     font-weight: 400;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 /* Main content (center) */
@@ -462,59 +485,80 @@ body.audit-has-sticky { padding-bottom: 84px; }
     text-decoration-color: #fff;
 }
 
-/* === Mobile / narrow: одна колонка, Аврора сверху, контент снизу === */
+/* === Mobile / narrow: Аврора задником на весь экран, текст внизу без карточки === */
 @media (max-width: 900px) {
     .audit-upload-root {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        display: block;
+        position: relative;
         height: 100dvh;
+        overflow: hidden;
     }
     .aurora-side {
-        height: clamp(220px, 32dvh, 320px);
-        align-items: center;
-        justify-content: center;
-        padding: 16px 0 0;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        height: 100%;
+        display: block;
     }
     .aurora-side-img {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
         height: 100%;
-        max-height: 100%;
         width: auto;
-        object-fit: contain;
+        max-width: none;
+        object-fit: cover;
         object-position: center top;
     }
     .content-side {
-        padding: 16px 22px max(20px, env(safe-area-inset-bottom, 20px));
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 2;
+        padding: 28px 22px max(20px, env(safe-area-inset-bottom, 20px));
+        gap: 12px;
         text-align: center;
-        gap: 14px;
         align-items: stretch;
+        /* Один тонкий разделитель сверху + плавный градиент к низу для читаемости */
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        background: linear-gradient(
+            180deg,
+            rgba(15, 10, 22, 0.55) 0%,
+            rgba(15, 10, 22, 0.85) 35%,
+            rgba(15, 10, 22, 0.95) 100%
+        );
+        backdrop-filter: blur(14px) saturate(160%);
+        -webkit-backdrop-filter: blur(14px) saturate(160%);
+        max-height: 56dvh;
     }
     .brand-block {
-        align-items: center;
-        text-align: center;
+        align-self: center;
+        gap: 10px;
     }
+    .brand-logo { width: 30px; height: 30px; }
+    .brand-name { font-size: 24px; }
+    .brand-tag { font-size: 11px; }
     .content-main {
         flex-grow: 0;
-        gap: 12px;
+        gap: 10px;
     }
-    .hero-h1 {
-        font-size: 22px;
-    }
-    .hero-tagline-pro {
-        font-size: 14px;
-    }
-    .drop-hint {
-        text-align: center;
-    }
-    .social-proof-pro {
-        text-align: center;
-    }
+    .hero-h1 { font-size: 20px; }
+    .hero-tagline-pro { font-size: 14px; }
+    .drop-zone-pro { padding: 16px 18px; }
+    .drop-zone-pro .drop-label { font-size: 16px; }
+    .drop-hint { text-align: center; }
+    .social-proof-pro { text-align: center; }
     .compliance-pro {
         justify-content: center;
         text-align: center;
+        font-size: 11px;
+        padding-top: 10px;
     }
 }
 
-/* Когда Аврора не загрузилась (fallback): убираем левую колонку и центруем контент */
+/* Когда Аврора не загрузилась (fallback): убираем колонку и центруем контент */
 .audit-upload-root.no-aurora {
     grid-template-columns: 1fr;
 }
@@ -524,6 +568,18 @@ body.audit-has-sticky { padding-bottom: 84px; }
     margin: 0 auto;
     align-items: center;
     text-align: center;
+}
+@media (max-width: 900px) {
+    .audit-upload-root.no-aurora .content-side {
+        position: relative;
+        max-height: none;
+        height: 100%;
+        justify-content: center;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border-top: 0;
+    }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -775,8 +831,12 @@ body.audit-has-sticky { padding-bottom: 84px; }
 
             <!-- Brand: top -->
             <div class="brand-block">
-                <div class="brand-name">Аврора</div>
-                <div class="brand-tag">Карьерный ИИ-Ассистент</div>
+                <img src="/favicon.png?v=3" alt="Аврора" class="brand-logo"
+                     onerror="this.style.display='none'">
+                <div class="brand-text">
+                    <div class="brand-name">Аврора</div>
+                    <div class="brand-tag">Карьерный ИИ-Ассистент</div>
+                </div>
             </div>
 
             <!-- Main content: center -->
@@ -1124,6 +1184,6 @@ body.audit-has-sticky { padding-bottom: 84px; }
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=2.8"></script>
+<script src="audit.js?v=2.9"></script>
 </body>
 </html>

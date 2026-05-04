@@ -1,5 +1,5 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v2.8 — split-layout #stepUpload: Аврора слева, контент справа; mobile стэк
+// v2.9 — ПК: Аврора по центру колонки + лого в бренде; mobile: задник в полный рост
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
