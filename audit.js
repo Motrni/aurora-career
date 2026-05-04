@@ -1,5 +1,5 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v3.1 — Aurora y-offset в % (масштабируется при resize, halo не обрезается)
+// v3.2 — #stepLoading в split-layout (Аврора слева, процесс справа); mobile задник
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {

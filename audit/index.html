@@ -486,6 +486,64 @@ body.audit-has-sticky { padding-bottom: 84px; }
     text-decoration-color: #fff;
 }
 
+/* === Loading content (#stepLoading) — typing bubble + текст === */
+.loading-content {
+    align-items: flex-start;
+}
+.typing-bubble-pro {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 16px 22px;
+    background: rgba(204, 190, 255, 0.14);
+    border: 1px solid rgba(204, 190, 255, 0.22);
+    border-radius: 22px 22px 22px 6px;
+    align-self: flex-start;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.typing-bubble-pro .typing-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ccbeff;
+    animation: typingDot 1.2s infinite ease-in-out;
+}
+.typing-bubble-pro .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-bubble-pro .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.loading-text-pro {
+    font-size: clamp(18px, 1.6vw, 24px);
+    color: #fff;
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 0;
+    transition: opacity 0.2s;
+    text-shadow: 0 1px 16px rgba(0, 0, 0, 0.5);
+}
+.loading-hint-pro {
+    font-size: clamp(13px, 1vw, 14px);
+    color: #998fb0;
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .loading-content {
+        align-items: center;
+        text-align: center;
+    }
+    .typing-bubble-pro {
+        align-self: center;
+        padding: 14px 20px;
+    }
+    .loading-text-pro {
+        font-size: 17px;
+    }
+    .loading-hint-pro {
+        font-size: 13px;
+    }
+}
+
 /* === Mobile / narrow: Аврора задником на весь экран, текст внизу без карточки === */
 @media (max-width: 900px) {
     .audit-upload-root {
@@ -1051,37 +1109,58 @@ body.audit-has-sticky { padding-bottom: 84px; }
         </div>
     </div>
 
-    <!-- STEP 2: Loading animation — Аврора «печатает» -->
-    <div id="stepLoading" class="hidden fade-in max-w-lg mx-auto px-4 pt-10 md:pt-16">
-        <div class="glass-card rounded-2xl px-8 pb-10 shadow-2xl text-center aurora-loading-card">
+    <!-- STEP 2: Loading — Аврора слева анализирует, справа процесс размышления -->
+    <div id="stepLoading" class="hidden fade-in audit-upload-root">
 
-            <!-- Большой аватар + bubble -->
-            <div id="loadingTypingWrap" class="typing-row mb-6">
-                <div class="typing-avatar typing-avatar-lg overflow-hidden flex-shrink-0">
-                    <img src="audit/images/aurora/aurora-thinking.png"
-                         style="width:100%;height:100%;object-fit:cover;display:block;"
-                         onerror="this.parentElement.innerHTML='<span style=\'font-size:32px;line-height:72px;\'>✨</span>';"
-                         alt="Аврора">
-                </div>
-                <div class="typing-bubble" aria-label="Аврора анализирует" style="padding: 18px 24px;">
-                    <span class="typing-dot" style="width:9px;height:9px;"></span>
-                    <span class="typing-dot" style="width:9px;height:9px;"></span>
-                    <span class="typing-dot" style="width:9px;height:9px;"></span>
+        <!-- Аврора thinking (слева на ПК / задник на мобилке) -->
+        <div class="aurora-side">
+            <img src="audit/images/aurora/aurora-thinking.png"
+                 class="aurora-side-img"
+                 alt="Аврора анализирует резюме"
+                 onerror="document.getElementById('stepLoading').classList.add('no-aurora')">
+        </div>
+
+        <!-- Контент справа на ПК / снизу на мобилке -->
+        <div class="content-side">
+
+            <!-- Brand: top -->
+            <div class="brand-block">
+                <img src="/favicon.png?v=3" alt="Аврора" class="brand-logo"
+                     onerror="this.style.display='none'">
+                <div class="brand-text">
+                    <div class="brand-name">Аврора</div>
+                    <div class="brand-tag">Карьерный ИИ-Ассистент</div>
                 </div>
             </div>
 
-            <p id="loadingText" class="text-on-surface font-medium text-base leading-relaxed">
-                Анализирую структуру резюме...
-            </p>
-            <p class="text-on-surface-variant text-xs mt-2 opacity-60">
-                Обычно занимает 20–40 секунд
-            </p>
+            <!-- Main: процесс размышления -->
+            <div class="content-main loading-content">
+                <div id="loadingTypingWrap" class="typing-bubble-pro" aria-label="Аврора анализирует">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
 
-            <p id="loadingError" class="text-error text-sm mt-5 hidden"></p>
-            <button id="loadingRetryBtn" onclick="retryAudit()"
-                    class="btn-primary mt-4 px-6 py-2.5 rounded-xl text-white text-sm font-semibold hidden">
-                Попробовать ещё раз
-            </button>
+                <p id="loadingText" class="loading-text-pro">
+                    Анализирую структуру резюме...
+                </p>
+                <p class="loading-hint-pro">Обычно занимает 20–40 секунд</p>
+
+                <p id="loadingError" class="text-error text-sm mt-2 hidden"></p>
+                <button id="loadingRetryBtn" onclick="retryAudit()"
+                        class="btn-primary mt-3 px-6 py-2.5 rounded-xl text-white text-sm font-semibold hidden">
+                    Попробовать ещё раз
+                </button>
+            </div>
+
+            <!-- Compliance footer: bottom -->
+            <div class="compliance-pro">
+                <span>&copy; 2026 Аврора · ИП Клепов В.&nbsp;С.</span>
+                <span class="sep">·</span>
+                <button type="button" onclick="openLegalModal('privacy')" class="legal-link">
+                    Политика конфиденциальности
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1185,6 +1264,6 @@ body.audit-has-sticky { padding-bottom: 84px; }
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=3.1"></script>
+<script src="audit.js?v=3.2"></script>
 </body>
 </html>
