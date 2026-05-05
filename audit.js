@@ -1,7 +1,13 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v4.1 — stepResult split-layout (Аврора слева на ПК / фоном на мобилке),
-//        viewer-приветствие с position_title и оценкой, аккордеоны collapsed-by-default,
-//        notFound с лого/кнопкой «На главную», getHomeUrl() для dev/prod.
+// v4.2 — фиксы по результатам пользовательского ревью stepResult:
+//        • aurora-happy уменьшена через CSS (height ≤ 100% колонки);
+//        • bootstrapFromUrl: deferred loading (350мс) — нет «моргания» при 404;
+//        • mobile stepResult: Аврора fixed top, контент в естественном flow;
+//        • greeting: убрана служебная строка, добавлены типография + акцент-полоса;
+//        • copyShareUrl: только clipboard, без navigator.share и prompt;
+//        • кнопка «Поделиться» → зелёная «Ссылка скопирована» до reload;
+//        • sticky-bar заменён на FAB-кнопку для viewer-а;
+//        • details: плавная анимация раскрытия (grid-template-rows 0fr→1fr).
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
@@ -130,11 +136,25 @@ function loadCounter() {
 // ============================================================================
 
 async function bootstrapFromUrl(publicId) {
-    // Сразу скрываем upload и SEO, показываем loading-экран без таймера фаз
-    // (для уже готового аудита фразы «анализирую…» неуместны).
+    // Сразу скрываем upload и SEO. Loading-экран показываем ОТЛОЖЕННО —
+    // только если запрос идёт дольше 350мс. На быстрый ответ (или 404)
+    // переключаемся напрямую на result/notfound — без моргания «Аврора думает».
     document.getElementById('stepUpload').classList.add('hidden');
     setSeoVisibility(false);
-    showLoadingScreen({ phases: false, customText: 'Открываем ваш разбор…' });
+
+    let loaderShown = false;
+    const loaderTimer = setTimeout(() => {
+        loaderShown = true;
+        showLoadingScreen({ phases: false, customText: 'Открываем ваш разбор…' });
+    }, 350);
+
+    const hideLoaderIfShown = () => {
+        clearTimeout(loaderTimer);
+        if (loaderShown) {
+            stopLoadingPhases();
+            document.getElementById('stepLoading').classList.add('hidden');
+        }
+    };
 
     try {
         const resp = await fetch(`${apiBase()}/api/audit/${encodeURIComponent(publicId)}`, {
@@ -143,21 +163,23 @@ async function bootstrapFromUrl(publicId) {
         });
 
         if (resp.status === 404) {
-            stopLoadingPhases();
-            document.getElementById('stepLoading').classList.add('hidden');
+            hideLoaderIfShown();
             showNotFound();
             return;
         }
 
         if (!resp.ok) {
+            // Для ошибки уместно показать «что-то пошло не так» поверх loading.
+            if (!loaderShown) {
+                showLoadingScreen({ phases: false, customText: 'Открываем ваш разбор…' });
+            }
             stopLoadingPhases();
             showLoadingError('Не удалось загрузить отчёт. Попробуйте позже.');
             return;
         }
 
         const data = await resp.json();
-        stopLoadingPhases();
-        document.getElementById('stepLoading').classList.add('hidden');
+        hideLoaderIfShown();
 
         // Если фронт «помнит» этот аудит локально — считаем владельцем
         // даже если сервер не отдал is_owner=true (на случай если cookie
@@ -174,6 +196,9 @@ async function bootstrapFromUrl(publicId) {
         });
 
     } catch (e) {
+        if (!loaderShown) {
+            showLoadingScreen({ phases: false, customText: 'Открываем ваш разбор…' });
+        }
         stopLoadingPhases();
         showLoadingError('Ошибка сети. Проверьте соединение.');
     }
@@ -663,41 +688,35 @@ function applyGreeting(result, opts) {
         ? result.critical_issues.length : 0;
     const positionTitle = String((result && result.position_title) || '').trim();
 
+    // Очищаем старые tailwind-классы, унаследованные между перерисовками.
+    introEl.classList.remove('max-w-xs', 'mx-auto');
+
     if (isOwner) {
         // Владелец / только что прошёл аудит — личное приветствие по имени.
         const rawName = (result && result.candidate_first_name) || '';
         const name = String(rawName).trim().split(/\s+/)[0] || '';
         greetEl.textContent = name ? `Добрый день, ${name}!` : 'Добрый день!';
-        introEl.classList.add('max-w-xs', 'mx-auto');
         introEl.innerHTML =
-            'Я Аврора — ваш личный карьерный ассистент.<br>' +
-            'Я проанализировала ваше резюме и готова рассказать, ' +
-            'почему рекрутеры могут его игнорировать — и как это исправить.';
+            '<span class="greet-line">Я Аврора — ваш <strong>личный карьерный ассистент</strong>.</span>' +
+            '<span class="greet-line">Проанализировала ваше резюме и готова рассказать, ' +
+            'почему рекрутеры могут его игнорировать — и как это исправить.</span>';
         return;
     }
 
-    // Viewer-режим: текст длиннее, разрешаем ширину родителя.
-    introEl.classList.remove('max-w-xs', 'mx-auto');
-
     // Viewer (открыл чужой опубликованный аудит) — без имени, обезличенно.
-    greetEl.textContent = 'Разбор резюме';
+    greetEl.textContent = positionTitle
+        ? `Разбор резюме «${esc(positionTitle)}»`
+        : 'Разбор резюме';
 
-    const titleHtml = positionTitle
-        ? `Резюме «<span class="text-on-surface font-medium">${esc(positionTitle)}</span>»`
-        : 'Это резюме';
-
-    const scoreHtml =
-        `<span class="text-primary font-semibold">${score}/10</span> ` +
-        `(${score} ${pluralPoints(score)})`;
-
-    const issuesHtml = issuesCount > 0
-        ? `и&nbsp;нашла <span class="text-on-surface font-medium">${issuesCount}</span> ${pluralIssues(issuesCount)}.`
-        : 'и&nbsp;готова показать слабые места.';
+    const scoreLine =
+        `Я оценила его в <span class="accent">${score}/10</span>` +
+        (issuesCount > 0
+            ? ` и нашла <strong>${issuesCount}</strong> ${pluralIssues(issuesCount)}.`
+            : '.');
 
     introEl.innerHTML =
-        'Я Аврора — карьерный ИИ-ассистент.<br>' +
-        `${titleHtml} я оценила в ${scoreHtml} ${issuesHtml}<br>` +
-        '<span class="text-outline text-xs">Ниже — что увидит рекрутер и почему рейтинг такой.</span>';
+        '<span class="greet-line">Я Аврора — карьерный ИИ-ассистент.</span>' +
+        `<span class="greet-line">${scoreLine}</span>`;
 }
 
 // ============================================================================
@@ -709,9 +728,16 @@ function applyOwnerVsViewer(opts) {
     const ownerSharedBanner = document.getElementById('ownerSharedBanner');
     const ownerViewsCount = document.getElementById('ownerViewsCount');
     const shareBtnLabel = document.getElementById('shareBtnLabel');
+    const shareBtn = document.getElementById('shareBtn');
+    const shareBtnIcon = document.getElementById('shareBtnIcon');
 
     if (opts.is_owner && ownerActions) {
         ownerActions.classList.remove('hidden');
+
+        // Сбрасываем «зелёное» состояние перед каждой перерисовкой.
+        // markShareButtonCopied() переустановит его, если только что копировали.
+        if (shareBtn) shareBtn.classList.remove('share-btn-copied');
+        if (shareBtnIcon) shareBtnIcon.textContent = 'share';
 
         if (opts.is_shared) {
             if (ownerSharedBanner) ownerSharedBanner.classList.remove('hidden');
@@ -722,11 +748,11 @@ function applyOwnerVsViewer(opts) {
             if (shareBtnLabel) shareBtnLabel.textContent = 'Поделиться результатом';
         }
         // Owner НЕ видит sticky-CTA — у него свои контролы выше.
-        disableStickyBar();
+        disableViewerCta();
     } else {
         if (ownerActions) ownerActions.classList.add('hidden');
-        // Viewer (чужой shared-аудит) — показываем sticky-бар «Получить свой».
-        enableStickyBar();
+        // Viewer (чужой shared-аудит) — показываем плавающий FAB «Получить свой».
+        enableViewerCta();
     }
 }
 
@@ -737,21 +763,24 @@ function applyOwnerVsViewer(opts) {
 // window.scrollY не реагирует. Решение: для viewer показываем sticky сразу
 // (его всё равно нужно показать — он не помешает, наоборот, пушит к конверсии).
 
-function enableStickyBar() {
-    const bar = document.getElementById('auditStickyBar');
-    if (!bar) return;
-    document.body.classList.add('audit-has-sticky');
-    bar.classList.remove('hidden');
-    bar.classList.remove('translate-y-full');
+// Viewer CTA (плавающая FAB-кнопка) — показывается только если открыли
+// чужой shared-аудит. Owner-у не показываем (у него свой #ownerActions).
+function enableViewerCta() {
+    const fab = document.getElementById('auditViewerFab');
+    if (!fab) return;
+    document.body.classList.add('audit-has-viewer-cta');
+    fab.classList.remove('hidden');
+}
+function disableViewerCta() {
+    const fab = document.getElementById('auditViewerFab');
+    if (!fab) return;
+    fab.classList.add('hidden');
+    document.body.classList.remove('audit-has-viewer-cta');
 }
 
-function disableStickyBar() {
-    const bar = document.getElementById('auditStickyBar');
-    if (!bar) return;
-    bar.classList.add('translate-y-full');
-    bar.classList.add('hidden');
-    document.body.classList.remove('audit-has-sticky');
-}
+// Backward-compat алиасы — чтобы старый код, который их вызывает, не падал.
+function enableStickyBar()  { enableViewerCta();  }
+function disableStickyBar() { disableViewerCta(); }
 
 // ============================================================================
 // SHARING — модалка с consent (152-ФЗ) + публикация / отзыв публикации
@@ -760,12 +789,9 @@ function disableStickyBar() {
 function openShareModal() {
     if (!_currentAudit || !_currentAudit.public_id) return;
 
-    // Если уже опубликован — просто копируем ссылку без второго consent.
-    if (_currentAudit.is_shared) {
-        copyShareUrl(_currentAudit.share_url);
-        showToast('Ссылка скопирована');
-        return;
-    }
+    // Уже опубликован — модалку не открываем (этот путь обрабатывается в
+    // onShareBtnClick: copy → зелёная кнопка). Здесь — только консент-сценарий.
+    if (_currentAudit.is_shared) return;
 
     const modal = document.getElementById('shareModal');
     const cb = document.getElementById('shareConsentCheckbox');
@@ -825,10 +851,15 @@ async function publishAudit() {
         _currentAudit.is_shared = true;
         _currentAudit.share_url = data.share_url;
 
-        await copyShareUrl(data.share_url);
+        const copied = await copyShareUrl(data.share_url);
         closeShareModal();
-        showToast('Ссылка скопирована');
         applyOwnerVsViewer(_currentAudit);
+        if (copied) {
+            // Та же зелёная галочка — единое поведение с повторным копированием.
+            markShareButtonCopied();
+        } else {
+            showToast('Опубликовано. Ссылка: ' + data.share_url);
+        }
 
     } catch (_) {
         showShareError('Ошибка сети — попробуйте ещё раз.');
@@ -891,25 +922,65 @@ async function confirmDeleteAudit() {
     }
 }
 
+// Копирует ссылку в буфер. БЕЗ navigator.share и без window.prompt —
+// чтобы не было «двух окон» поверх друг друга на iOS/macOS.
+// Возвращает true при успехе, false при ошибке.
 async function copyShareUrl(url) {
-    if (!url) return;
-    // Native Web Share — на мобилке откроет нативный шторку.
-    if (navigator.share) {
+    if (!url) return false;
+
+    // Современный путь.
+    if (navigator.clipboard && window.isSecureContext) {
         try {
-            await navigator.share({
-                title: 'Аудит резюме от Авроры',
-                text: 'Аврора разобрала моё резюме — вот результат:',
-                url,
-            });
-            return;
-        } catch (_) {
-            // Юзер закрыл шторку — fallback на копирование.
+            await navigator.clipboard.writeText(url);
+            return true;
+        } catch (_) { /* провалимся в legacy */ }
+    }
+
+    // Legacy fallback через скрытый textarea + execCommand('copy').
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, url.length);
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return !!ok;
+    } catch (_) {
+        return false;
+    }
+}
+
+// Метит кнопку «Поделиться» как успешно скопированную: зелёный фон,
+// иконка «check», лейбл «Ссылка скопирована». Сохраняется до reload.
+function markShareButtonCopied() {
+    const btn = document.getElementById('shareBtn');
+    const label = document.getElementById('shareBtnLabel');
+    const icon = document.getElementById('shareBtnIcon');
+    if (btn) btn.classList.add('share-btn-copied');
+    if (label) label.textContent = 'Ссылка скопирована';
+    if (icon) icon.textContent = 'check';
+}
+
+// Хэндлер клика на кнопку «Поделиться/Скопировать».
+// Если уже опубликовано — копируем сразу, без модалки.
+// Если ещё не опубликовано — открываем модалку с consent.
+async function onShareBtnClick() {
+    if (!_currentAudit || !_currentAudit.public_id) return;
+    if (_currentAudit.is_shared) {
+        const ok = await copyShareUrl(_currentAudit.share_url);
+        if (ok) {
+            markShareButtonCopied();
+        } else {
+            showToast('Не удалось скопировать. Попробуйте ещё раз');
         }
+        return;
     }
-    try { await navigator.clipboard.writeText(url); } catch (_) {
-        // Совсем старый браузер: показываем prompt
-        try { window.prompt('Скопируйте ссылку:', url); } catch (_) {}
-    }
+    openShareModal();
 }
 
 function showShareError(msg) {

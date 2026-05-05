@@ -242,9 +242,63 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
 /* Modal overlay */
 .modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
 
-/* Sticky CTA bar — отступ снизу у body, чтобы бар не перекрывал контент */
-body.audit-has-sticky { padding-bottom: 84px; }
-@media (min-width: 640px) { body.audit-has-sticky { padding-bottom: 72px; } }
+/* Floating CTA (FAB) для viewer-а: круглая «таблетка» внизу по центру.
+   Заметнее sticky-баннера и не перекрывает контент так широко. */
+.audit-viewer-fab {
+    position: fixed;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    background: linear-gradient(135deg, #7a5bf0 0%, #5a30d0 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 13px 22px;
+    border-radius: 999px;
+    border: 0;
+    box-shadow:
+        0 12px 32px rgba(101, 62, 219, 0.55),
+        0 4px 14px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    animation: auroraFabPulse 2.6s ease-in-out infinite;
+    max-width: calc(100vw - 24px);
+}
+.audit-viewer-fab:hover {
+    transform: translateX(-50%) translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow:
+        0 16px 40px rgba(101, 62, 219, 0.65),
+        0 6px 18px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+.audit-viewer-fab:active {
+    transform: translateX(-50%) translateY(0);
+}
+@keyframes auroraFabPulse {
+    0%, 100% {
+        box-shadow:
+            0 12px 32px rgba(101, 62, 219, 0.55),
+            0 4px 14px rgba(0, 0, 0, 0.35),
+            0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    }
+    50% {
+        box-shadow:
+            0 14px 38px rgba(101, 62, 219, 0.70),
+            0 6px 18px rgba(0, 0, 0, 0.40),
+            0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+            0 0 0 8px rgba(204, 190, 255, 0.10);
+    }
+}
+@media (max-width: 480px) {
+    .audit-viewer-fab { font-size: 13px; padding: 12px 18px; gap: 8px; }
+}
 
 /* ═══════════════════════════════════════════════════════
    Aurora portrait — общие утилиты
@@ -646,9 +700,16 @@ body.audit-has-sticky { padding-bottom: 84px; }
    — UI-блоки разбиты на свёрнутые аккордеоны (UX-skill: «прогрессивное раскрытие»)
    ═══════════════════════════════════════════════════════ */
 .audit-result-root {
-    /* Чуть «весомее» картинка для финального экрана: hero-моменту нужен герой */
-    --aurora-height: 132%;
-    --aurora-y: 22%;
+    /* Картинка вписывается в колонку без переливания (happy/empathy могут быть
+       более «квадратными», чем thinking/greeting — поэтому height ≤ 100%) */
+    --aurora-height: 100%;
+    --aurora-y: 0%;
+    --aurora-x: 0px;
+}
+.audit-result-root .aurora-side-img {
+    object-fit: contain;
+    object-position: center bottom;
+    max-width: 100%;
 }
 .audit-result-root .content-side.audit-result-content {
     /* Контент длиннее, чем экран — даём ему скроллиться внутри колонки */
@@ -659,8 +720,10 @@ body.audit-has-sticky { padding-bottom: 84px; }
     padding-bottom: clamp(28px, 3vw, 48px);
     scrollbar-gutter: stable;
 }
-body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
-    padding-bottom: 88px;
+/* Когда FAB виден — оставляем дополнительный отступ снизу,
+   чтобы кнопки/CTA внутри content-side не накрывались плавающим CTA */
+body.audit-has-viewer-cta .audit-result-root .content-side.audit-result-content {
+    padding-bottom: 96px;
 }
 
 /* Brand-link — кликабельный шильдик (на главную) */
@@ -679,10 +742,17 @@ body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
     outline-offset: 4px;
 }
 
-/* Greeting (обновлённый, не glass-card) */
+/* Greeting (обновлённый, не glass-card) — типография с акцентом-полоской */
 .audit-result-root .result-greeting {
     text-align: left;
     flex-shrink: 0;
+    position: relative;
+    padding-left: 16px;
+    border-left: 3px solid #ccbeff;
+    background: linear-gradient(90deg, rgba(204, 190, 255, 0.06) 0%, transparent 60%);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-radius: 0 8px 8px 0;
 }
 .audit-result-root .result-greet-h2 {
     font-size: clamp(22px, 2.2vw, 30px);
@@ -690,13 +760,31 @@ body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
     line-height: 1.18;
     color: #fff;
     letter-spacing: -0.015em;
-    margin: 0;
+    margin: 0 0 8px;
 }
 .audit-result-root .result-greet-p {
     font-size: clamp(14px, 1.05vw, 16px);
-    color: #cdc6e0;
-    margin: 10px 0 0;
-    line-height: 1.5;
+    color: #d8d3e6;
+    margin: 0;
+    line-height: 1.6;
+}
+.audit-result-root .result-greet-p .greet-line {
+    display: block;
+}
+.audit-result-root .result-greet-p .greet-line + .greet-line {
+    margin-top: 6px;
+}
+.audit-result-root .result-greet-p strong {
+    color: #fff;
+    font-weight: 600;
+}
+.audit-result-root .result-greet-p .accent {
+    color: #ccbeff;
+    font-weight: 600;
+}
+.audit-result-root .result-greet-p .muted {
+    color: #998fb0;
+    font-size: 0.92em;
 }
 
 /* Score-card: ядро результата, всегда раскрыто */
@@ -741,18 +829,34 @@ body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
     line-height: 1.4;
 }
 
-/* Аккордеоны: <details> в стиле «матовое стекло» */
-.audit-result-root details.result-accordion {
+/* Аккордеоны: <details> в стиле «матовое стекло».
+   Плавная анимация раскрытия через grid-template-rows: 0fr → 1fr.
+   Это рабочий «трюк» для нативного <details>: содержимое всегда в DOM
+   (см. правило ниже про display: block), а высота интерполируется gridом.
+   :not(.hidden) — чтобы Tailwind-класс .hidden (display:none) не перебивался
+   нашим display:grid (specificity у нас выше). */
+.audit-result-root details.result-accordion:not(.hidden) {
+    display: grid;
+    grid-template-rows: auto 0fr;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
     padding: 0;
     overflow: hidden;
-    transition: background 0.2s, border-color 0.2s;
+    transition:
+        grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+        background 0.22s ease,
+        border-color 0.22s ease;
 }
 .audit-result-root details.result-accordion[open] {
+    grid-template-rows: auto 1fr;
     background: rgba(255, 255, 255, 0.06);
     border-color: rgba(204, 190, 255, 0.22);
+}
+/* Force-показываем содержимое даже когда details закрыт, чтобы grid-анимация
+   могла двигать его высоту. Без этого браузер ставит display:none и трюк не работает. */
+.audit-result-root details.result-accordion > *:not(summary) {
+    display: block;
 }
 .audit-result-root details.result-accordion > summary {
     list-style: none;
@@ -816,10 +920,21 @@ body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
     color: #ccbeff;
 }
 .audit-result-root details.result-accordion .acc-body {
+    /* min-height: 0 + overflow: hidden — обязательны для grid-row аnимации,
+       иначе содержимое «торчит» за пределы свернутого аккордеона. */
+    min-height: 0;
+    overflow: hidden;
     padding: 0 18px 16px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     padding-top: 14px;
     margin-top: 0;
+    /* Текст плавно появляется/скрывается синхронно с раскрытием */
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+.audit-result-root details.result-accordion[open] .acc-body {
+    opacity: 1;
+    transition: opacity 0.22s ease 0.06s;
 }
 .audit-result-root details.result-accordion .acc-body p {
     font-size: 13px;
@@ -913,17 +1028,81 @@ body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
     flex-shrink: 0;
 }
 
-/* Mobile: Аврора фоном, контент снизу со скроллом */
+/* «Зелёное» состояние кнопки «Поделиться» после копирования.
+   Остаётся до reload — никаких таймеров (UX-решение: владельцу важно
+   быть уверенным, что ссылка точно скопировалась). */
+#shareBtn.share-btn-copied {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #fff !important;
+    cursor: default;
+    pointer-events: none;
+}
+#shareBtn.share-btn-copied:hover {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+/* Mobile (≤900px): особый паттерн скролла для stepResult.
+   — Аврора прибита сверху (position: fixed, занимает 50dvh «как обои»).
+   — Контент идёт обычным flow от 38dvh, body скроллится естественно.
+   — При прокрутке контент уходит вверх, Аврора визуально «остаётся фоном»;
+     ниже — естественный body-scroll, который раскрывает остальные блоки.
+   Это override базовых правил .aurora-side / .content-side для (max-width: 900px),
+   которые иначе делают всё position: absolute и ограничивают max-height. */
 @media (max-width: 900px) {
+    .audit-result-root {
+        display: block !important;
+        position: relative;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 100dvh;
+        overflow: visible !important;
+    }
+    .audit-result-root .aurora-side {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 52dvh;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .audit-result-root .aurora-side-img {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        height: 100%;
+        width: auto;
+        max-width: none;
+        object-fit: cover;
+        object-position: center top;
+    }
     .audit-result-root .content-side.audit-result-content {
-        max-height: 70dvh;
-        padding: 22px 18px max(80px, env(safe-area-inset-bottom, 18px));
-        gap: 12px;
+        position: relative;
+        z-index: 1;
+        margin-top: 38dvh; /* стартовая позиция «лист в нижней половине» */
+        max-height: none;
+        bottom: auto;
+        padding: 24px 18px max(110px, env(safe-area-inset-bottom, 18px));
+        gap: 14px;
         text-align: left;
         align-items: stretch;
+        background: linear-gradient(
+            180deg,
+            rgba(15, 10, 22, 0.0) 0%,
+            rgba(15, 10, 22, 0.85) 12%,
+            rgba(15, 10, 22, 0.97) 24%,
+            rgba(15, 10, 22, 1) 100%
+        );
+        border-top: 1px solid rgba(255, 255, 255, 0.10);
+        backdrop-filter: blur(18px) saturate(160%);
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+        overflow: visible;
+        scrollbar-gutter: auto;
     }
-    .audit-result-root .result-greet-h2 { font-size: 19px; }
-    .audit-result-root .result-greet-p { font-size: 13.5px; }
+    .audit-result-root .result-greet-h2 { font-size: 22px; }
+    .audit-result-root .result-greet-p { font-size: 14px; }
     .audit-result-root .result-score-num { font-size: 38px; }
     .audit-result-root .result-score-of { font-size: 18px; }
 }
@@ -1554,9 +1733,9 @@ body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
             <!-- Owner-only действия: «Поделиться» / «Удалить» / статус публикации -->
             <div id="ownerActions" class="hidden">
                 <div class="flex items-center gap-3">
-                    <button onclick="openShareModal()"
-                            class="flex-1 btn-primary py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined" style="font-size:18px">share</span>
+                    <button id="shareBtn" onclick="onShareBtnClick()"
+                            class="flex-1 btn-primary py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors">
+                        <span id="shareBtnIcon" class="material-symbols-outlined" style="font-size:18px">share</span>
                         <span id="shareBtnLabel">Поделиться результатом</span>
                     </button>
                     <button onclick="confirmDeleteAudit()" title="Удалить аудит"
@@ -1637,22 +1816,13 @@ body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
 
 </div>
 
-<!-- Sticky CTA bar — показывается ТОЛЬКО просматривающему чужой shared-аудит.
-     Владелец своего аудита видит вместо неё блок ownerActions внутри stepResult. -->
-<div id="auditStickyBar"
-     class="fixed bottom-0 left-0 right-0 z-40 hidden translate-y-full transition-transform duration-300
-            border-t border-outline/20 px-4 py-3 shadow-2xl
-            flex items-center justify-between gap-3"
-     style="background: rgba(21,18,28,0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);">
-    <span class="text-on-surface text-xs sm:text-sm leading-tight min-w-0">
-        Узнай, как исправить резюме и начать получать офферы.
-        <span class="hidden sm:inline text-on-surface-variant">Анализ основан на реальном опыте HR.</span>
-    </span>
-    <a href="/audit/"
-       class="btn-primary text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl whitespace-nowrap flex-shrink-0">
-        Получить свой бесплатно
-    </a>
-</div>
+<!-- Floating CTA — показывается ТОЛЬКО viewer-у (открыл чужой shared-аудит).
+     Owner своего аудита видит блок #ownerActions внутри stepResult. -->
+<a id="auditViewerFab" href="/audit/" class="audit-viewer-fab hidden">
+    <span class="material-symbols-outlined" style="font-size:20px">auto_awesome</span>
+    <span class="audit-viewer-fab-label">Бесплатный разбор моего резюме</span>
+    <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
+</a>
 
 <!-- Share modal: 152-ФЗ consent перед публикацией -->
 <div id="shareModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
@@ -1707,6 +1877,6 @@ body.audit-has-sticky .audit-result-root .content-side.audit-result-content {
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=4.1"></script>
+<script src="audit.js?v=4.2"></script>
 </body>
 </html>
