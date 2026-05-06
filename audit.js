@@ -1,13 +1,16 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
-// v4.2 — фиксы по результатам пользовательского ревью stepResult:
-//        • aurora-happy уменьшена через CSS (height ≤ 100% колонки);
-//        • bootstrapFromUrl: deferred loading (350мс) — нет «моргания» при 404;
-//        • mobile stepResult: Аврора fixed top, контент в естественном flow;
-//        • greeting: убрана служебная строка, добавлены типография + акцент-полоса;
-//        • copyShareUrl: только clipboard, без navigator.share и prompt;
-//        • кнопка «Поделиться» → зелёная «Ссылка скопирована» до reload;
-//        • sticky-bar заменён на FAB-кнопку для viewer-а;
-//        • details: плавная анимация раскрытия (grid-template-rows 0fr→1fr).
+// v4.3 — фиксы по фидбеку фаундера:
+//        • при заходе на /audit/ без id — авто-редирект на свой live-аудит
+//          (через localStorage → fallback на /api/audit/my-latest по cookie);
+//          это защищает от потери результата при «Назад» из формы регистрации;
+//        • квота — 3 попытки на (owner_token + email), 409 audit_limit_reached
+//          с заглушкой и CTA в кабинет Авроры;
+//        • soft-delete: «Удалить» теперь снимает аудит с сайта, но запись
+//          остаётся в БД для подсчёта квоты (закрывает обход «удалил → могу снова»);
+//        • после удаления — возврат на upload-экран (не «отчёт недоступен»),
+//          чтобы не пугать юзера, который сам только что удалил;
+//        • визуальный tooltip над корзиной + поясняющий текст;
+//        • aurora-happy: вернули --aurora-height: 128%.
 
 function apiBase() {
     if (window.AuroraSession && typeof window.AuroraSession.getApiBase === 'function') {
@@ -94,11 +97,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // Авто-редирект «у меня уже есть свой live-аудит → открой его».
+    // Это защищает от кейса: юзер случайно ушёл со страницы (back button,
+    // случайный клик на лого) → возвращается на /audit/ → не теряет результат
+    // и не запускает повторный анализ (что съест квоту в 3 попытки).
+    const ownId = await findMyOwnLiveAudit();
+    if (ownId) {
+        try { history.replaceState({}, '', `?id=${encodeURIComponent(ownId)}`); } catch (_) {}
+        bootstrapFromUrl(ownId);
+        return;
+    }
+
     await checkLoggedInUser();
     loadCounter();
     initDragDrop();
     initFileInput();
 });
+
+// Возвращает public_id живого аудита текущего пользователя, либо null.
+// Источники: localStorage (быстро) → /api/audit/my-latest по cookie (фолбэк).
+async function findMyOwnLiveAudit() {
+    // 1) localStorage — пробуем последний (most recent) и идём вверх.
+    const myList = loadMyAudits().slice().reverse();
+    for (const id of myList) {
+        try {
+            const r = await fetch(
+                `${apiBase()}/api/audit/${encodeURIComponent(id)}`,
+                { method: 'GET', credentials: 'include' }
+            );
+            if (r.ok) {
+                const data = await r.json().catch(() => null);
+                // Доверяем только если это реально наш (owner). Если кто-то подсунул
+                // чужой shared-id в localStorage — не редиректим.
+                if (data && (data.is_owner === true)) return id;
+            } else if (r.status === 404) {
+                // Аудит мёртвый (удалён / истёк) — забываем его, идём дальше.
+                forgetMyAudit(id);
+            }
+        } catch (_) { /* network — пропускаем, попробуем cookie-фолбэк */ }
+    }
+
+    // 2) Cookie-фолбэк: localStorage могло почиститься, но aurora_audit_owner
+    //    cookie живёт 90 дней. Сервер сам найдёт последний аудит этого owner-а.
+    try {
+        const r = await fetch(`${apiBase()}/api/audit/my-latest`, {
+            method: 'GET', credentials: 'include',
+        });
+        if (r.ok) {
+            const data = await r.json().catch(() => null);
+            if (data && data.public_id) {
+                rememberMyAudit(data.public_id);
+                return data.public_id;
+            }
+        }
+    } catch (_) { /* fallthrough */ }
+
+    return null;
+}
 
 async function checkLoggedInUser() {
     let r = await fetch(`${apiBase()}/api/auth/me`, { method: 'GET', credentials: 'include' });
@@ -382,7 +437,10 @@ async function submitAudit() {
     if (result.type === 'conflict') {
         document.getElementById('stepLoading').classList.add('hidden');
         const code = result.data.error;
-        if (code === 'email_already_used') {
+        if (code === 'audit_limit_reached') {
+            showLimitReached(result.data);
+        } else if (code === 'email_already_used') {
+            // Backward-compat: старая версия бэка возвращала этот код.
             showAlreadyUsed(result.data);
         } else {
             showRegisteredEmail(result.data);
@@ -892,8 +950,12 @@ async function unshareAudit() {
 
 async function confirmDeleteAudit() {
     if (!_currentAudit || !_currentAudit.public_id) return;
-    const msg = 'Удалить аудит навсегда?\n\nЭто действие необратимо. ' +
-        'Все данные о вашем разборе будут удалены из системы (152-ФЗ — право на забвение).';
+    const msg =
+        'Удалить разбор с сайта насовсем?\n\n' +
+        '• Этот разбор будет снят с сайта, ссылка перестанет работать (в т.ч. для тех, ' +
+        'кому вы её отправили).\n' +
+        '• Восстановить нельзя — данные удаляются по 152-ФЗ (право на забвение).\n' +
+        '• Бесплатно сделать новый разбор можно ещё несколько раз.';
     if (!confirm(msg)) return;
 
     try {
@@ -909,13 +971,23 @@ async function confirmDeleteAudit() {
         forgetMyAudit(_currentAudit.public_id);
         _currentAudit = null;
 
-        // Чистим URL и показываем NotFound (страница уже не существует).
+        // Чистим URL и возвращаем юзера на чистый /audit/ — пусть видит upload-экран,
+        // а не «отчёт недоступен» (он же сам только что удалил, не нужно пугать).
         try { history.replaceState({}, '', '/audit/'); } catch (_) {}
-        document.getElementById('stepResult').classList.add('hidden');
-        showNotFound();
-        // Подменяем заголовок «Отчёт недоступен» на нейтральный.
-        const h = document.querySelector('#stepNotFound h1');
-        if (h) h.textContent = 'Аудит удалён';
+        ['stepResult', 'stepLoading', 'stepNotFound', 'stepLoggedIn'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+        document.getElementById('stepUpload').classList.remove('hidden');
+        setSeoVisibility(true);
+
+        // Сбрасываем кэш-флаг «у меня уже создан аудит», иначе следующий
+        // submit будет восприниматься как retry (и UI покажет старый toast).
+        selectedFile = null;
+        turnstileToken = null;
+        userEmail = '';
+
+        showToast('Разбор удалён с сайта');
 
     } catch (_) {
         showToast('Ошибка сети');
@@ -1032,6 +1104,41 @@ function showAlreadyUsed(data) {
                class="btn-primary block mt-6 py-3.5 rounded-xl text-white font-semibold text-center text-sm">
                 Попробовать 10 откликов бесплатно
             </a>
+        </div>
+    `;
+}
+
+// 4-я (и последующие) попытка аудита для одного пользователя — мягкая стенка.
+// Не афишируем число «3» в UI до этого момента: лимит — анти-абуз, а не фича.
+// CTA ведёт в кабинет Авроры, где нормальный анализ резюме без квот.
+function showLimitReached(data) {
+    resetEmailModalButton();
+    disableStickyBar();
+    document.getElementById('stepUpload').classList.add('hidden');
+    setSeoVisibility(false);
+
+    const stepResult = document.getElementById('stepResult');
+    stepResult.classList.remove('hidden');
+    const msg = data && data.message
+        ? data.message
+        : 'Вы уже сделали несколько бесплатных разборов. В кабинете Авроры доступен полноценный анализ резюме без лимитов.';
+    const cta = (data && data.cta_url) || '/auth/?source=audit';
+    const ctaText = (data && data.cta_text) || 'Открыть Аврору';
+    stepResult.innerHTML = `
+        <div class="glass-card rounded-2xl p-8 shadow-2xl text-center fade-in">
+            <span class="material-symbols-outlined text-4xl text-primary mb-3" style="display:block">workspace_premium</span>
+            <h2 class="text-lg font-bold text-on-surface">Лимит бесплатных разборов исчерпан</h2>
+            <p class="text-on-surface-variant text-sm mt-3 leading-relaxed">
+                ${esc(msg)}
+            </p>
+            <a href="${cta.replace(/"/g, '')}"
+               class="btn-primary block mt-6 py-3.5 rounded-xl text-white font-semibold text-center text-sm">
+                ${esc(ctaText)}
+            </a>
+            <p class="text-on-surface-variant text-xs mt-4">
+                В кабинете Авроры есть полный анализ резюме —
+                с конкретными рекомендациями по каждому блоку.
+            </p>
         </div>
     `;
 }

@@ -700,16 +700,11 @@ input:focus { outline: none; border-color: #ccbeff !important; box-shadow: 0 0 0
    — UI-блоки разбиты на свёрнутые аккордеоны (UX-skill: «прогрессивное раскрытие»)
    ═══════════════════════════════════════════════════════ */
 .audit-result-root {
-    /* Картинка вписывается в колонку без переливания (happy/empathy могут быть
-       более «квадратными», чем thinking/greeting — поэтому height ≤ 100%) */
-    --aurora-height: 100%;
-    --aurora-y: 0%;
+    /* Финальный экран: «весомый» hero как на upload, но чуть скромнее (128%).
+       Возвращено по запросу — 100% было слишком мелко. */
+    --aurora-height: 128%;
+    --aurora-y: 22%;
     --aurora-x: 0px;
-}
-.audit-result-root .aurora-side-img {
-    object-fit: contain;
-    object-position: center bottom;
-    max-width: 100%;
 }
 .audit-result-root .content-side.audit-result-content {
     /* Контент длиннее, чем экран — даём ему скроллиться внутри колонки */
@@ -1026,6 +1021,42 @@ body.audit-has-viewer-cta .audit-result-root .content-side.audit-result-content 
     border-radius: 14px;
     padding: 14px;
     flex-shrink: 0;
+}
+.audit-result-root .owner-actions-hint .material-symbols-outlined {
+    font-size: 14px !important;
+    color: #998fb0;
+    margin-right: 2px;
+    vertical-align: -2px;
+}
+
+/* Кастомный CSS-tooltip над иконками с data-tip — без JS, не конфликтует
+   с native title (тот всё равно сработает на долгом hover, но наш
+   моментальный пузырёк дружелюбнее). */
+.owner-delete-btn[data-tip] { position: relative; }
+.owner-delete-btn[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    background: rgba(15, 10, 22, 0.96);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+    z-index: 10;
+    font-weight: 500;
+}
+.owner-delete-btn[data-tip]:hover::after,
+.owner-delete-btn[data-tip]:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* «Зелёное» состояние кнопки «Поделиться» после копирования.
@@ -1738,12 +1769,18 @@ body.audit-has-viewer-cta .audit-result-root .content-side.audit-result-content 
                         <span id="shareBtnIcon" class="material-symbols-outlined" style="font-size:18px">share</span>
                         <span id="shareBtnLabel">Поделиться результатом</span>
                     </button>
-                    <button onclick="confirmDeleteAudit()" title="Удалить аудит"
-                            aria-label="Удалить аудит"
-                            class="w-12 h-12 flex items-center justify-center rounded-xl border border-outline/30 text-on-surface-variant hover:bg-white/5 transition-colors">
+                    <button onclick="confirmDeleteAudit()"
+                            title="Удалить разбор с сайта насовсем — ссылка перестанет работать"
+                            aria-label="Удалить разбор с сайта насовсем"
+                            data-tip="Удалить с сайта"
+                            class="owner-delete-btn w-12 h-12 flex items-center justify-center rounded-xl border border-outline/30 text-on-surface-variant hover:bg-error/10 hover:border-error/40 hover:text-error transition-colors">
                         <span class="material-symbols-outlined" style="font-size:20px">delete</span>
                     </button>
                 </div>
+                <p class="owner-actions-hint text-on-surface-variant text-xs mt-2 leading-snug">
+                    <span class="material-symbols-outlined align-middle" style="font-size:14px">info</span>
+                    Удаление снимет ваш разбор с сайта насовсем, без возможности восстановления.
+                </p>
                 <div id="ownerSharedBanner" class="hidden mt-3 flex items-center justify-between gap-2">
                     <span class="text-on-surface-variant text-xs flex items-center gap-1.5 min-w-0">
                         <span class="material-symbols-outlined text-primary flex-shrink-0" style="font-size:16px">public</span>
@@ -1877,6 +1914,6 @@ body.audit-has-viewer-cta .audit-result-root .content-side.audit-result-content 
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=4.2"></script>
+<script src="audit.js?v=4.3"></script>
 </body>
 </html>
