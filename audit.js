@@ -1,4 +1,9 @@
 // audit.js — Лид-магнит «Бесплатный аудит резюме»
+// v4.4 — фиксы по фидбеку Ромы (раунд 2):
+//        • replaceState теперь с АБСОЛЮТНЫМ /audit/?id= — иначе на /audit
+//          без trailing slash relative resolve уносил юзера на /?id= (главную);
+//        • aurora-empathy/happy: убран дефолтный src в HTML, портрет ставится
+//          до показа stepResult — больше не моргает «happy → empathy».
 // v4.3 — фиксы по фидбеку фаундера:
 //        • при заходе на /audit/ без id — авто-редирект на свой live-аудит
 //          (через localStorage → fallback на /api/audit/my-latest по cookie);
@@ -103,7 +108,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // и не запускает повторный анализ (что съест квоту в 3 попытки).
     const ownId = await findMyOwnLiveAudit();
     if (ownId) {
-        try { history.replaceState({}, '', `?id=${encodeURIComponent(ownId)}`); } catch (_) {}
+        // АБСОЛЮТНЫЙ путь: если current URL — `/audit` без trailing slash,
+        // относительный `?id=` резолвнется в `/?id=` (и юзер улетит на главную).
+        try { history.replaceState({}, '', `/audit/?id=${encodeURIComponent(ownId)}`); } catch (_) {}
         bootstrapFromUrl(ownId);
         return;
     }
@@ -458,8 +465,9 @@ async function submitAudit() {
     const publicId = result.data.public_id;
     if (publicId) {
         rememberMyAudit(publicId);
-        // Меняем URL без перезагрузки — теперь рефреш не теряет результат.
-        try { history.replaceState({}, '', `?id=${encodeURIComponent(publicId)}`); } catch (_) {}
+        // АБСОЛЮТНЫЙ путь: relative `?id=...` от `/audit` без слеша
+        // резолвится в `/?id=...` и кидает юзера на главную.
+        try { history.replaceState({}, '', `/audit/?id=${encodeURIComponent(publicId)}`); } catch (_) {}
     }
 
     showResult(result.data.result, result.data.total_audits, {
@@ -621,6 +629,17 @@ function showResult(result, totalAudits, opts) {
     opts = opts || { is_owner: true, is_shared: false, views_count: 0, public_id: null };
     _currentAudit = opts;
 
+    // ПЕРВЫМ ДЕЛОМ ставим правильный src портрета (до показа stepResult).
+    // Иначе при low-score успевает мелькнуть placeholder/прошлая happy-картинка.
+    const portraitEl = document.getElementById('auroraPortraitResult');
+    if (portraitEl) {
+        const sNum = Number(result && result.score) || 0;
+        const targetSrc = sNum >= 7 ? AURORA_PORTRAITS.happy : AURORA_PORTRAITS.empathy;
+        if (portraitEl.getAttribute('src') !== targetSrc) {
+            portraitEl.src = targetSrc;
+        }
+    }
+
     document.getElementById('stepResult').classList.remove('hidden');
     setSeoVisibility(false);
 
@@ -629,13 +648,6 @@ function showResult(result, totalAudits, opts) {
     if (brandLink) brandLink.href = getHomeUrl();
 
     applyGreeting(result, opts);
-
-    // Аврора слева: happy если score >= 7, empathy иначе
-    const portraitEl = document.getElementById('auroraPortraitResult');
-    if (portraitEl) {
-        const sNum = Number(result && result.score) || 0;
-        portraitEl.src = sNum >= 7 ? AURORA_PORTRAITS.happy : AURORA_PORTRAITS.empathy;
-    }
 
     document.getElementById('scoreValue').textContent = result.score || '?';
     document.getElementById('verdictText').textContent = result.verdict || '';

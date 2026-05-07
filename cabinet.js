@@ -248,6 +248,10 @@ async function renderCabinet(user) {
     // updateNavAccess вызывается ПОСЛЕ loadResumeSelector, уже зная статус профиля
     updateNavAccess(user.subscription_status, activeResumeHasProfile);
 
+    // Карточка аудита резюме — отдельный fire-and-forget, не блокирует рендер.
+    // Откроется только если у юзера есть живой аудит, сделанный с тем же email.
+    loadAuditCard();
+
     document.getElementById('loadingSkeleton').style.display = 'none';
     document.getElementById('mainContent').style.display = '';
 
@@ -695,6 +699,152 @@ function weekdayShortRu(isoDate) {
     const s = dt.toLocaleDateString('ru-RU', { weekday: 'short' });
     if (!s) return '';
     return s.charAt(0).toLocaleUpperCase('ru-RU') + s.slice(1);
+}
+
+// ============================================================================
+// AUDIT CARD — открытие сохранённого аудита резюме (если он был сделан)
+// ============================================================================
+
+let _cabinetAudit = null;
+
+async function loadAuditCard() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/audit/by-user-email`);
+        if (!resp || !resp.ok) return; // 404 = аудита нет, тихо
+        const data = await resp.json();
+        if (data.status !== 'ok' || !data.result) return;
+
+        _cabinetAudit = data;
+
+        const card = document.getElementById('auditCard');
+        const scoreEl = document.getElementById('auditCardScore');
+        const deepLink = document.getElementById('auditModalDeepLink');
+        if (scoreEl) scoreEl.textContent = String(data.score || '?');
+        if (deepLink && data.public_id) {
+            deepLink.href = `/audit/?id=${encodeURIComponent(data.public_id)}`;
+        }
+        if (card) card.classList.remove('hidden');
+    } catch (_) { /* нет аудита — нет карточки, ОК */ }
+}
+
+function openAuditModal() {
+    if (!_cabinetAudit) return;
+    const modal = document.getElementById('auditModal');
+    const body  = document.getElementById('auditModalBody');
+    if (!modal || !body) return;
+    body.innerHTML = renderAuditModal(_cabinetAudit);
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAuditModal() {
+    const modal = document.getElementById('auditModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+// ESC закрывает модалку
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('auditModal');
+        if (modal && !modal.classList.contains('hidden')) closeAuditModal();
+    }
+});
+
+// Безопасный escape — простая версия, для текстовых полей из БД достаточно.
+function _escAudit(s) {
+    if (s == null) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function renderAuditModal(data) {
+    const r = data.result || {};
+    const score = data.score || r.score || '?';
+    const verdict = r.verdict || '';
+    const impression = r.recruiter_first_impression || '';
+    const algo = r.hh_algo_problems || '';
+    const issues = Array.isArray(r.critical_issues) ? r.critical_issues : [];
+    const created = data.created_at ? new Date(data.created_at) : null;
+    const createdStr = created
+        ? created.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '';
+
+    const issuesHtml = issues.map((it) => `
+        <details class="audit-modal-acc rounded-xl border border-outline-variant/15 bg-surface-container-highest">
+            <summary class="cursor-pointer list-none p-3.5 flex items-start gap-3">
+                <span class="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center" style="background:rgba(245,158,11,0.14);">
+                    <span class="material-symbols-outlined text-amber-400" style="font-size:16px">warning</span>
+                </span>
+                <span class="flex-1 min-w-0">
+                    <span class="block text-sm font-semibold text-on-surface leading-snug">${_escAudit(it.title || 'Критический момент')}</span>
+                    ${it.quote ? `<span class="block text-xs text-on-surface-variant mt-1 line-clamp-2">«${_escAudit(it.quote)}»</span>` : ''}
+                </span>
+                <span class="material-symbols-outlined text-outline acc-chev" style="font-size:18px">expand_more</span>
+            </summary>
+            <div class="px-3.5 pb-3.5 text-xs text-on-surface-variant leading-relaxed space-y-2 border-t border-outline-variant/10 pt-3">
+                ${it.quote ? `<p class="italic border-l-2 border-primary/40 pl-2.5">«${_escAudit(it.quote)}»</p>` : ''}
+                ${it.why_it_hurts ? `<p>${_escAudit(it.why_it_hurts)}</p>` : ''}
+                ${it.fix ? `<p class="text-primary font-medium">${_escAudit(it.fix)}</p>` : ''}
+            </div>
+        </details>
+    `).join('');
+
+    return `
+        <div class="flex items-center gap-4 p-4 rounded-xl border border-outline-variant/15" style="background:linear-gradient(135deg, rgba(101,62,219,0.10) 0%, rgba(50,30,100,0.04) 100%);">
+            <div class="text-3xl font-extrabold text-primary leading-none">${_escAudit(score)}<span class="text-base text-on-surface-variant">/10</span></div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm text-on-surface leading-snug">${_escAudit(verdict)}</p>
+                ${createdStr ? `<p class="text-[11px] text-on-surface-variant mt-1">Разбор от ${_escAudit(createdStr)}</p>` : ''}
+            </div>
+        </div>
+
+        ${impression ? `
+        <details class="audit-modal-acc rounded-xl border border-outline-variant/15 bg-surface-container-highest">
+            <summary class="cursor-pointer list-none p-3.5 flex items-start gap-3">
+                <span class="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center" style="background:rgba(101,62,219,0.12);">
+                    <span class="material-symbols-outlined text-primary" style="font-size:16px">visibility</span>
+                </span>
+                <span class="flex-1 min-w-0">
+                    <span class="block text-sm font-semibold text-on-surface">Первое впечатление рекрутера</span>
+                    <span class="block text-xs text-on-surface-variant mt-1">Что увидят за первые 6 секунд</span>
+                </span>
+                <span class="material-symbols-outlined text-outline acc-chev" style="font-size:18px">expand_more</span>
+            </summary>
+            <div class="px-3.5 pb-3.5 text-xs text-on-surface-variant leading-relaxed border-t border-outline-variant/10 pt-3">
+                ${_escAudit(impression)}
+            </div>
+        </details>` : ''}
+
+        ${issues.length > 0 ? `
+        <div>
+            <p class="text-xs uppercase tracking-wider text-on-surface-variant font-semibold mb-2 px-1">
+                Критические моменты — ${issues.length}
+            </p>
+            <div class="space-y-2">${issuesHtml}</div>
+        </div>` : ''}
+
+        ${algo ? `
+        <details class="audit-modal-acc rounded-xl border border-outline-variant/15 bg-surface-container-highest">
+            <summary class="cursor-pointer list-none p-3.5 flex items-start gap-3">
+                <span class="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center" style="background:rgba(101,62,219,0.12);">
+                    <span class="material-symbols-outlined text-primary" style="font-size:16px">query_stats</span>
+                </span>
+                <span class="flex-1 min-w-0">
+                    <span class="block text-sm font-semibold text-on-surface">Алгоритм hh.ru</span>
+                    <span class="block text-xs text-on-surface-variant mt-1">Почему резюме мало показывается рекрутерам</span>
+                </span>
+                <span class="material-symbols-outlined text-outline acc-chev" style="font-size:18px">expand_more</span>
+            </summary>
+            <div class="px-3.5 pb-3.5 text-xs text-on-surface-variant leading-relaxed border-t border-outline-variant/10 pt-3">
+                ${_escAudit(algo)}
+            </div>
+        </details>` : ''}
+    `;
 }
 
 async function loadDailyStats() {

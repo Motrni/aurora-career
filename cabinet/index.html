@@ -311,6 +311,22 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 @media (max-width: 1023px) {
     .cabinet-grid { grid-template-columns: 1fr !important; }
 }
+
+/* Audit modal — плавный chevron в аккордеонах + убрать нативный маркер */
+#auditModalBody details.audit-modal-acc > summary { list-style: none; }
+#auditModalBody details.audit-modal-acc > summary::-webkit-details-marker { display: none; }
+#auditModalBody details.audit-modal-acc .acc-chev {
+    transition: transform 0.2s ease;
+}
+#auditModalBody details.audit-modal-acc[open] .acc-chev {
+    transform: rotate(180deg);
+}
+#auditModalBody .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
 </style>
 <link rel="stylesheet" href="cookie-consent.css">
 <link rel="stylesheet" href="legal-modal.css">
@@ -621,6 +637,28 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                         </div>
                     </div>
                 </div>
+
+                <!-- Audit card — показывается только если у юзера есть живой аудит,
+                     сделанный с тем же email (см. cabinet.js: loadAuditCard).
+                     Открывает модалку с содержимым разбора (без Авроры). -->
+                <button type="button" id="auditCard" onclick="openAuditModal()"
+                        class="hidden text-left w-full p-5 md:p-6 rounded-2xl cab-card cab-nav-card cursor-pointer transition-all group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(101,62,219,0.10);">
+                            <span class="material-symbols-outlined text-primary/70 group-hover:text-primary transition-colors">analytics</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-medium text-on-surface">Аудит вашего резюме</span>
+                                <span class="text-xs text-primary font-semibold flex-shrink-0">
+                                    <span id="auditCardScore">—</span><span class="text-on-surface-variant">/10</span>
+                                </span>
+                            </div>
+                            <p class="text-on-surface-variant text-xs mt-0.5">Разбор от ИИ-ассистента — открыть результаты</p>
+                        </div>
+                        <span class="material-symbols-outlined text-outline text-xl group-hover:text-primary transition-colors">chevron_right</span>
+                    </div>
+                </button>
 
                 <!-- Navigation cards -->
                 <a href="/settings/" id="navSettings" class="block p-5 md:p-6 rounded-2xl cab-card cab-nav-card nav-locked cursor-pointer transition-all group">
@@ -989,8 +1027,35 @@ function toggleMobileMenu() {
     </div>
 </div>
 
+<!-- Audit modal — открывается из карточки #auditCard. Контент рисует cabinet.js#renderAuditModal -->
+<div id="auditModal" class="hidden fixed inset-0 z-[150] flex items-end md:items-center justify-center p-0 md:p-6" role="dialog" aria-modal="true" aria-labelledby="auditModalTitle">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeAuditModal()"></div>
+    <div class="relative w-full md:max-w-2xl max-h-[92dvh] md:max-h-[88dvh] overflow-hidden flex flex-col bg-surface-container border border-outline-variant/15 rounded-t-2xl md:rounded-2xl shadow-2xl z-10">
+        <!-- Sticky header -->
+        <div class="flex items-center gap-3 p-5 border-b border-outline-variant/10 flex-shrink-0">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(101,62,219,0.12);">
+                <span class="material-symbols-outlined text-primary" style="font-size:20px">analytics</span>
+            </div>
+            <h3 id="auditModalTitle" class="flex-1 text-base md:text-lg font-bold text-on-surface">Аудит вашего резюме</h3>
+            <button onclick="closeAuditModal()" aria-label="Закрыть"
+                    class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/5 transition-colors text-on-surface-variant">
+                <span class="material-symbols-outlined" style="font-size:20px">close</span>
+            </button>
+        </div>
+        <!-- Scrollable content (renders cabinet.js#renderAuditModal) -->
+        <div id="auditModalBody" class="flex-1 overflow-y-auto p-5 md:p-6 space-y-4"></div>
+        <!-- Sticky footer with deep-link to /audit/ -->
+        <div class="p-4 md:p-5 border-t border-outline-variant/10 flex-shrink-0 bg-surface-container/95 backdrop-blur">
+            <a id="auditModalDeepLink" href="/audit/"
+               class="btn-primary block py-3 rounded-xl text-white font-semibold text-center text-sm">
+                Открыть полный разбор
+            </a>
+        </div>
+    </div>
+</div>
+
 <script src="discount-banner.js?v=3"></script>
-<script src="cabinet.js?v=6.3"></script>
+<script src="cabinet.js?v=6.4"></script>
 <script src="support-widget.js?v=1"></script>
 </body>
 </html>

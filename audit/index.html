@@ -1720,10 +1720,13 @@ body.audit-has-viewer-cta .audit-result-root .content-side.audit-result-content 
     <!-- STEP 3: Result — split-layout с Авророй слева и контентом справа -->
     <div id="stepResult" class="hidden fade-in audit-upload-root audit-result-root">
 
-        <!-- Аврора слева на ПК / фоном на мобилке. Картинка меняется по score -->
+        <!-- Аврора слева на ПК / фоном на мобилке. Картинка меняется по score.
+             БЕЗ default src — иначе при low-score сначала моргает happy, потом
+             JS подменяет на empathy (двойная загрузка → визуальный flash).
+             1×1 transparent placeholder не грузит картинку, JS поставит верную. -->
         <div class="aurora-side">
             <img id="auroraPortraitResult"
-                 src="audit/images/aurora/aurora-happy.png"
+                 src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
                  class="aurora-side-img select-none"
                  alt="Аврора"
                  onerror="document.getElementById('stepResult').classList.add('no-aurora')">
@@ -1914,6 +1917,6 @@ body.audit-has-viewer-cta .audit-result-root .content-side.audit-result-content 
 </div>
 
 <script src="aurora-session.js?v=2"></script>
-<script src="audit.js?v=4.3"></script>
+<script src="audit.js?v=4.4"></script>
 </body>
 </html>
