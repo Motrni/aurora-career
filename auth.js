@@ -55,52 +55,53 @@ let currentOtpPurpose = 'email_verify';
 let resendTimerInterval = null;
 
 // ============================================================================
-// TAB SWITCHING
+// VIEW SWITCHING
 // ============================================================================
 
+function showAuthView(view) {
+    const loginView = document.getElementById('loginView');
+    const registerView = document.getElementById('registerView');
+    const tgPending = document.getElementById('tgLoginPending');
+    const tgError = document.getElementById('tgLoginError');
+    const tgSuccess = document.getElementById('tgSuccessSection');
+
+    [tgPending, tgError, tgSuccess].forEach(el => el?.classList.add('hidden'));
+    hideMessage?.();
+
+    if (view === 'register') {
+        loginView?.classList.add('hidden');
+        registerView?.classList.remove('hidden');
+        history.replaceState(null, '', '/auth/?register');
+    } else {
+        registerView?.classList.add('hidden');
+        loginView?.classList.remove('hidden');
+        history.replaceState(null, '', '/auth/');
+    }
+}
+
 function switchTab(tab) {
-    const forms = ['loginForm', 'registerForm', 'otpForm', 'forgotForm', 'resetForm', 'tgSuccessSection', 'tgLoginPending', 'tgLoginError'];
-    forms.forEach(f => {
+    const toHide = ['loginView', 'registerView', 'otpForm', 'forgotForm', 'resetForm', 'tgSuccessSection', 'tgLoginPending', 'tgLoginError'];
+    toHide.forEach(f => {
         const el = document.getElementById(f);
         if (el) el.classList.add('hidden');
     });
     hideMessage();
 
-    const tabLogin = document.getElementById('tabLogin');
-    const tabRegister = document.getElementById('tabRegister');
-    const tabsContainer = document.getElementById('authTabs');
-    const tgLoginBlock = document.getElementById('tgLoginBlock');
-
-    tabLogin.className = 'flex-1 pb-3 text-sm font-medium border-b-2 transition-colors tab-inactive';
-    tabRegister.className = 'flex-1 pb-3 text-sm font-medium border-b-2 transition-colors tab-inactive';
-
     switch (tab) {
         case 'login':
-            document.getElementById('loginForm').classList.remove('hidden');
-            tabLogin.className = tabLogin.className.replace('tab-inactive', 'tab-active');
-            tabsContainer.classList.remove('hidden');
-            if (tgLoginBlock) tgLoginBlock.classList.remove('hidden');
-            break;
+            showAuthView('login');
+            return;
         case 'register':
-            document.getElementById('registerForm').classList.remove('hidden');
-            tabRegister.className = tabRegister.className.replace('tab-inactive', 'tab-active');
-            tabsContainer.classList.remove('hidden');
-            if (tgLoginBlock) tgLoginBlock.classList.remove('hidden');
-            break;
+            showAuthView('register');
+            return;
         case 'otp':
             document.getElementById('otpForm').classList.remove('hidden');
-            tabsContainer.classList.add('hidden');
-            if (tgLoginBlock) tgLoginBlock.classList.add('hidden');
             break;
         case 'forgot':
             document.getElementById('forgotForm').classList.remove('hidden');
-            tabsContainer.classList.add('hidden');
-            if (tgLoginBlock) tgLoginBlock.classList.add('hidden');
             break;
         case 'reset':
             document.getElementById('resetForm').classList.remove('hidden');
-            tabsContainer.classList.add('hidden');
-            if (tgLoginBlock) tgLoginBlock.classList.add('hidden');
             break;
     }
 }
@@ -285,7 +286,7 @@ async function handleRegister(e) {
         }
 
         if (status === 409 && auditSource) {
-            switchTab('login');
+            showAuthView('login');
             const loginEmail = document.getElementById('loginEmail');
             if (loginEmail) loginEmail.value = email;
             showMessage('Вы уже в Авроре — войдите, чтобы продолжить', 'info');
@@ -495,12 +496,13 @@ function startResendTimer() {
 let _tgLoginEventSource = null;
 let _tgLoginToken = null;
 let _tgSuccessCallback = null;
+let _tgLoginHadConsent = false;
 
 function updateTgBotLoginButton() {
-    const btn = document.getElementById('tgLoginBtn');
-    const hint = document.getElementById('tgLoginHint');
-    const cp = document.getElementById('tgConsentPrivacy');
-    const co = document.getElementById('tgConsentOffer');
+    const btn = document.getElementById('tgLoginBtnRegister');
+    const hint = document.getElementById('tgRegisterHint');
+    const cp = document.getElementById('regConsentPrivacy');
+    const co = document.getElementById('regConsentOffer');
     if (!btn || !cp || !co) return;
     const ok = cp.checked && co.checked;
     btn.disabled = !ok;
@@ -510,38 +512,55 @@ function updateTgBotLoginButton() {
     if (hint) hint.style.display = ok ? 'none' : 'block';
 }
 
-window.startTelegramBotLogin = async function() {
-    const cp = document.getElementById('tgConsentPrivacy');
-    const co = document.getElementById('tgConsentOffer');
-    if (!cp?.checked || !co?.checked) {
-        showMessage('Отметьте оба пункта согласий');
-        return;
+window.startTelegramBotLogin = async function(withConsent = false) {
+    let consentPrivacy = false;
+    let consentOffer = false;
+
+    if (withConsent) {
+        const cp = document.getElementById('regConsentPrivacy');
+        const co = document.getElementById('regConsentOffer');
+        consentPrivacy = cp?.checked || false;
+        consentOffer = co?.checked || false;
+        if (!consentPrivacy || !consentOffer) {
+            showMessage('Отметьте оба пункта согласий');
+            return;
+        }
     }
-    const btn = document.getElementById('tgLoginBtn');
-    if (btn) btn.disabled = true;
+
+    const btnLogin = document.getElementById('tgLoginBtnLogin');
+    const btnRegister = document.getElementById('tgLoginBtnRegister');
+    if (btnLogin) btnLogin.disabled = true;
+    if (btnRegister) btnRegister.disabled = true;
+
     try {
         const resp = await fetch(`${API_BASE_URL}/api/auth/tg-bot/init`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ consent_privacy: true, consent_offer: true }),
+            body: JSON.stringify({
+                consent_privacy: consentPrivacy,
+                consent_offer: consentOffer,
+            }),
         });
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
             showMessage(err.detail || 'Не удалось начать вход');
-            if (btn) btn.disabled = false;
+            if (btnLogin) btnLogin.disabled = false;
+            if (btnRegister) btnRegister.disabled = false;
             updateTgBotLoginButton();
             return;
         }
         const data = await resp.json();
         _tgLoginToken = data.token;
+        _tgLoginHadConsent = withConsent;
+
+        const emojiEl = document.getElementById('tgLoginSyncEmoji');
+        if (emojiEl) emojiEl.textContent = data.sync_emoji || '';
 
         window.open(data.deep_link, '_blank');
 
-        document.getElementById('tgLoginBlock')?.classList.add('hidden');
-        document.getElementById('loginForm')?.classList.add('hidden');
-        document.getElementById('registerForm')?.classList.add('hidden');
-        document.getElementById('authTabs')?.classList.add('hidden');
+        document.getElementById('loginView')?.classList.add('hidden');
+        document.getElementById('registerView')?.classList.add('hidden');
 
         const pending = document.getElementById('tgLoginPending');
         if (pending) pending.classList.remove('hidden');
@@ -551,7 +570,8 @@ window.startTelegramBotLogin = async function() {
         _openTgLoginSse(data.token);
     } catch (e) {
         console.error('[TgBotLogin] init error', e);
-        if (btn) btn.disabled = false;
+        if (btnLogin) btnLogin.disabled = false;
+        if (btnRegister) btnRegister.disabled = false;
         updateTgBotLoginButton();
         showMessage('Ошибка сети. Попробуйте ещё раз.');
     }
@@ -594,14 +614,23 @@ function _openTgLoginSse(token) {
         _tgLoginEventSource = null;
         let reason = 'unknown';
         try { reason = JSON.parse(e.data).reason; } catch (_) {}
-        const messages = {
-            expired: 'Ссылка истекла. Попробуйте войти снова.',
-            rejected: 'Вы отклонили запрос входа.',
-            not_found: 'Ссылка не найдена. Попробуйте войти снова.',
-            already_consumed: 'Ссылка уже использована.',
-            timeout: 'Время ожидания истекло. Попробуйте войти снова.',
-        };
-        _showTgBotLoginError(messages[reason] || 'Не удалось войти. Попробуйте снова.');
+        if (reason === 'rejected' && !_tgLoginHadConsent) {
+            _showTgBotLoginError(
+                'Для создания нового аккаунта перейдите на страницу регистрации.',
+                true
+            );
+        } else if (reason === 'rejected') {
+            _showTgBotLoginError('Вы отклонили запрос входа.');
+        } else if (reason === 'expired') {
+            _showTgBotLoginError('Срок действия ссылки истёк. Попробуйте снова.');
+        } else {
+            const messages = {
+                not_found: 'Ссылка не найдена. Попробуйте войти снова.',
+                already_consumed: 'Ссылка уже использована.',
+                timeout: 'Время ожидания истекло. Попробуйте войти снова.',
+            };
+            _showTgBotLoginError(messages[reason] || 'Не удалось войти. Попробуйте снова.');
+        }
     });
 }
 
@@ -615,31 +644,36 @@ window.cancelTelegramBotLogin = function() {
 };
 
 window.resetTelegramBotLogin = function() {
+    if (_tgLoginEventSource) {
+        _tgLoginEventSource.close();
+        _tgLoginEventSource = null;
+    }
     document.getElementById('tgLoginPending')?.classList.add('hidden');
     document.getElementById('tgLoginError')?.classList.add('hidden');
-    document.getElementById('tgLoginBlock')?.classList.remove('hidden');
-    document.getElementById('authTabs')?.classList.remove('hidden');
-    const isLoginActive = document.getElementById('tabLogin')?.classList.contains('tab-active');
-    if (isLoginActive !== false) {
-        document.getElementById('loginForm')?.classList.remove('hidden');
-    } else {
-        document.getElementById('registerForm')?.classList.remove('hidden');
-    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    showAuthView(urlParams.has('register') ? 'register' : 'login');
+
+    const btnLogin = document.getElementById('tgLoginBtnLogin');
+    const btnRegister = document.getElementById('tgLoginBtnRegister');
+    if (btnLogin) btnLogin.disabled = false;
+    if (btnRegister) btnRegister.disabled = false;
     updateTgBotLoginButton();
 };
 
-function _showTgBotLoginError(text) {
+function _showTgBotLoginError(text, showRegisterLink = false) {
     document.getElementById('tgLoginPending')?.classList.add('hidden');
     const errEl = document.getElementById('tgLoginError');
     if (errEl) errEl.classList.remove('hidden');
     const errText = document.getElementById('tgLoginErrorText');
     if (errText) errText.textContent = text;
+    const regLink = document.getElementById('tgLoginRegisterLink');
+    if (regLink) regLink.classList.toggle('hidden', !showRegisterLink);
 }
 
 function showTelegramLoginSuccess(isNew, onContinue) {
-    const toHide = ['loginForm', 'registerForm', 'otpForm', 'forgotForm', 'resetForm', 'tgLoginBlock', 'tgLoginPending', 'tgLoginError'];
+    const toHide = ['loginView', 'registerView', 'otpForm', 'forgotForm', 'resetForm', 'tgLoginPending', 'tgLoginError'];
     toHide.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-    document.getElementById('authTabs')?.classList.add('hidden');
 
     const subtext = document.getElementById('tgSuccessSubtext');
     if (subtext) {
@@ -660,6 +694,14 @@ function tgSuccessContinue() {
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // URL routing: если ?register — показываем форму регистрации
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('register')) {
+        showAuthView('register');
+    } else {
+        showAuthView('login');
+    }
+
     const regEmail = document.getElementById('regEmail');
     if (regEmail) regEmail.addEventListener('input', updateRegPasswordChecks);
 
@@ -669,7 +711,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pendingRefCode = urlRef.trim();
         localStorage.setItem('aurora_ref_code', pendingRefCode);
         await _showRefBadge(pendingRefCode);
-        switchTab('register');
+        showAuthView('register');
     } else {
         const storedRef = localStorage.getItem('aurora_ref_code');
         if (storedRef) {
@@ -685,7 +727,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         auditSource = 'audit';
         if (urlEmail && regEmail) {
             regEmail.value = decodeURIComponent(urlEmail);
-            switchTab('register');
+            showAuthView('register');
             const regPwd = document.getElementById('regPassword');
             if (regPwd) regPwd.focus();
             updateRegPasswordChecks();
@@ -721,7 +763,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (_) {}
 
-    document.getElementById('tgConsentPrivacy')?.addEventListener('change', updateTgBotLoginButton);
-    document.getElementById('tgConsentOffer')?.addEventListener('change', updateTgBotLoginButton);
+    // Прикручиваем слушатели чекбоксов (register view)
+    document.getElementById('regConsentPrivacy')?.addEventListener('change', updateTgBotLoginButton);
+    document.getElementById('regConsentOffer')?.addEventListener('change', updateTgBotLoginButton);
     updateTgBotLoginButton();
 });
