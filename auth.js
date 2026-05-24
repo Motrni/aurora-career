@@ -59,13 +59,17 @@ let resendTimerInterval = null;
 // ============================================================================
 
 function switchTab(tab) {
-    const forms = ['loginForm', 'registerForm', 'otpForm', 'forgotForm', 'resetForm'];
-    forms.forEach(f => document.getElementById(f).classList.add('hidden'));
+    const forms = ['loginForm', 'registerForm', 'otpForm', 'forgotForm', 'resetForm', 'tgSuccessSection'];
+    forms.forEach(f => {
+        const el = document.getElementById(f);
+        if (el) el.classList.add('hidden');
+    });
     hideMessage();
 
     const tabLogin = document.getElementById('tabLogin');
     const tabRegister = document.getElementById('tabRegister');
     const tabsContainer = document.getElementById('authTabs');
+    const tgLoginBlock = document.getElementById('tgLoginBlock');
 
     tabLogin.className = 'flex-1 pb-3 text-sm font-medium border-b-2 transition-colors tab-inactive';
     tabRegister.className = 'flex-1 pb-3 text-sm font-medium border-b-2 transition-colors tab-inactive';
@@ -75,23 +79,28 @@ function switchTab(tab) {
             document.getElementById('loginForm').classList.remove('hidden');
             tabLogin.className = tabLogin.className.replace('tab-inactive', 'tab-active');
             tabsContainer.classList.remove('hidden');
+            if (tgLoginBlock) tgLoginBlock.classList.remove('hidden');
             break;
         case 'register':
             document.getElementById('registerForm').classList.remove('hidden');
             tabRegister.className = tabRegister.className.replace('tab-inactive', 'tab-active');
             tabsContainer.classList.remove('hidden');
+            if (tgLoginBlock) tgLoginBlock.classList.remove('hidden');
             break;
         case 'otp':
             document.getElementById('otpForm').classList.remove('hidden');
             tabsContainer.classList.add('hidden');
+            if (tgLoginBlock) tgLoginBlock.classList.add('hidden');
             break;
         case 'forgot':
             document.getElementById('forgotForm').classList.remove('hidden');
             tabsContainer.classList.add('hidden');
+            if (tgLoginBlock) tgLoginBlock.classList.add('hidden');
             break;
         case 'reset':
             document.getElementById('resetForm').classList.remove('hidden');
             tabsContainer.classList.add('hidden');
+            if (tgLoginBlock) tgLoginBlock.classList.add('hidden');
             break;
     }
 }
@@ -480,6 +489,119 @@ function startResendTimer() {
 }
 
 // ============================================================================
+// TELEGRAM LOGIN WIDGET
+// ============================================================================
+
+let _tgSuccessCallback = null;
+
+function updateTgLoginHint() {
+    const p = document.getElementById('tgConsentPrivacy');
+    const o = document.getElementById('tgConsentOffer');
+    const hint = document.getElementById('tgConsentHint');
+    if (!hint) return;
+    if (p && p.checked && o && o.checked) {
+        hint.style.opacity = '0';
+    } else {
+        hint.style.opacity = '1';
+    }
+}
+
+async function loadTelegramConfig() {
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/telegram-config`);
+        if (!resp.ok) throw new Error('Cannot fetch telegram config');
+        const data = await resp.json();
+        return data.bot_username;
+    } catch (e) {
+        console.error('Telegram config load failed', e);
+        return null;
+    }
+}
+
+async function initTelegramLoginWidget() {
+    const botUsername = await loadTelegramConfig();
+    if (!botUsername) return;
+    const container = document.getElementById('tgLoginContainer');
+    if (!container) return;
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.setAttribute('data-telegram-login', botUsername);
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    script.setAttribute('data-request-access', 'write');
+    script.setAttribute('data-radius', '8');
+    script.async = true;
+    container.appendChild(script);
+}
+
+window.onTelegramAuth = async function(user) {
+    const consentPrivacy = document.getElementById('tgConsentPrivacy');
+    const consentOffer = document.getElementById('tgConsentOffer');
+    if (!consentPrivacy || !consentOffer || !consentPrivacy.checked || !consentOffer.checked) {
+        showMessage('Отметьте оба пункта согласий, чтобы войти через Telegram');
+        return;
+    }
+    hideMessage();
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/telegram-login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                id: user.id,
+                first_name: user.first_name || null,
+                last_name: user.last_name || null,
+                username: user.username || null,
+                photo_url: user.photo_url || null,
+                auth_date: user.auth_date,
+                hash: user.hash,
+                consent_privacy: true,
+                consent_offer: true,
+            }),
+        });
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            showMessage(err.detail || 'Ошибка входа через Telegram');
+            return;
+        }
+        const data = await resp.json();
+        showTelegramLoginSuccess(data.is_new, () => {
+            window.location.href = data.redirect || '/cabinet/';
+        });
+    } catch (e) {
+        console.error('Telegram login failed', e);
+        showMessage('Ошибка сети. Попробуйте ещё раз.');
+    }
+};
+
+function showTelegramLoginSuccess(isNew, onContinue) {
+    const forms = ['loginForm', 'registerForm', 'otpForm', 'forgotForm', 'resetForm'];
+    forms.forEach(f => {
+        const el = document.getElementById(f);
+        if (el) el.classList.add('hidden');
+    });
+    const tgLoginBlock = document.getElementById('tgLoginBlock');
+    if (tgLoginBlock) tgLoginBlock.classList.add('hidden');
+    const tabs = document.getElementById('authTabs');
+    if (tabs) tabs.classList.add('hidden');
+
+    const subtext = document.getElementById('tgSuccessSubtext');
+    if (subtext) {
+        subtext.textContent = isNew
+            ? 'Аккаунт создан. Завершите настройку в личном кабинете.'
+            : 'Добро пожаловать обратно.';
+    }
+    const section = document.getElementById('tgSuccessSection');
+    if (section) section.classList.remove('hidden');
+
+    _tgSuccessCallback = onContinue;
+}
+
+function tgSuccessContinue() {
+    if (_tgSuccessCallback) _tgSuccessCallback();
+}
+
+// ============================================================================
 // INIT: CHECK IF ALREADY AUTHENTICATED
 // ============================================================================
 
@@ -544,4 +666,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     } catch (_) {}
+
+    initTelegramLoginWidget();
 });
