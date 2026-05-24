@@ -1,6 +1,6 @@
 /**
  * support-widget.js — Floating Support Chat Widget для Aurora.
- * Версия: 2.3
+ * Версия: 2.4
  *
  * - Кнопка справа внизу (как у Timeweb)
  * - Desktop: popup 380×520px над кнопкой
@@ -25,6 +25,11 @@
 
     var WELCOME = 'Привет! Опишите, что у вас случилось — мы обязательно ответим.';
     var Z_INDEX = 9999;
+    /* Поле ввода: до 3 строк без скролла, дальше — тонкий кастомный скролл */
+    var ASC_INPUT_MAX_LINES = 3;
+    var ASC_INPUT_LINE_PX = 19.5; /* 13px × line-height 1.5 */
+    var ASC_INPUT_PAD_V = 18;     /* padding 9+9 */
+    var ASC_INPUT_MAX_H = Math.ceil(ASC_INPUT_LINE_PX * ASC_INPUT_MAX_LINES + ASC_INPUT_PAD_V);
 
     /* ---- State ---- */
     var isOpen = false;
@@ -68,6 +73,18 @@
 
     function fmtTime(iso) {
         return new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function resizeSupportTextarea(ta) {
+        if (!ta) return;
+        ta.style.height = 'auto';
+        var nextH = Math.min(ta.scrollHeight, ASC_INPUT_MAX_H);
+        ta.style.height = nextH + 'px';
+        if (ta.scrollHeight > ASC_INPUT_MAX_H) {
+            ta.classList.add('asc-textarea--scroll');
+        } else {
+            ta.classList.remove('asc-textarea--scroll');
+        }
     }
 
     function fmtDate(iso) {
@@ -179,8 +196,16 @@
             'background:rgba(15,10,24,0.5);}',
             '.asc-textarea{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(90,48,208,0.25);',
             'color:#e7e0ef;padding:9px 13px;border-radius:12px;font-size:13px;',
-            'font-family:inherit;resize:none;min-height:38px;max-height:100px;',
-            'outline:none;transition:border-color 0.15s;line-height:1.5;}',
+            'font-family:inherit;resize:none;box-sizing:border-box;',
+            'min-height:38px;max-height:' + ASC_INPUT_MAX_H + 'px;',
+            'outline:none;transition:border-color 0.15s;line-height:1.5;',
+            'overflow-x:hidden;overflow-y:hidden;}',
+            '.asc-textarea.asc-textarea--scroll{overflow-y:auto;',
+            'scrollbar-width:thin;scrollbar-color:rgba(90,48,208,0.45) transparent;}',
+            '.asc-textarea::-webkit-scrollbar{width:4px;height:4px;}',
+            '.asc-textarea::-webkit-scrollbar-track{background:transparent;}',
+            '.asc-textarea::-webkit-scrollbar-thumb{background:rgba(90,48,208,0.45);border-radius:4px;}',
+            '.asc-textarea:not(.asc-textarea--scroll)::-webkit-scrollbar{display:none;}',
             '.asc-textarea:focus{border-color:rgba(90,48,208,0.6);}',
             '.asc-textarea::placeholder{color:rgba(202,195,215,0.35);}',
             '.asc-send-btn{width:38px;height:38px;border-radius:10px;border:none;flex-shrink:0;',
@@ -315,8 +340,7 @@
         var sb = document.getElementById('asc-send');
         ta.addEventListener('input', function () {
             sb.disabled = !ta.value.trim();
-            ta.style.height = 'auto';
-            ta.style.height = Math.min(ta.scrollHeight, 100) + 'px';
+            resizeSupportTextarea(ta);
         });
         ta.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -590,7 +614,7 @@
         scrollBottom(true);
 
         ta.value = '';
-        ta.style.height = 'auto';
+        resizeSupportTextarea(ta);
         sb.disabled = true;
 
         try {
