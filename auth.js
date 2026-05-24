@@ -59,7 +59,7 @@ let resendTimerInterval = null;
 // ============================================================================
 
 function switchTab(tab) {
-    const forms = ['loginForm', 'registerForm', 'otpForm', 'forgotForm', 'resetForm', 'tgSuccessSection'];
+    const forms = ['loginForm', 'registerForm', 'otpForm', 'forgotForm', 'resetForm', 'tgSuccessSection', 'tgLoginPending', 'tgLoginError'];
     forms.forEach(f => {
         const el = document.getElementById(f);
         if (el) el.classList.add('hidden');
@@ -489,101 +489,157 @@ function startResendTimer() {
 }
 
 // ============================================================================
-// TELEGRAM LOGIN WIDGET
+// TELEGRAM BOT DEEP-LINK AUTH
 // ============================================================================
 
+let _tgLoginEventSource = null;
+let _tgLoginToken = null;
 let _tgSuccessCallback = null;
 
-function updateTgLoginHint() {
-    const p = document.getElementById('tgConsentPrivacy');
-    const o = document.getElementById('tgConsentOffer');
-    const hint = document.getElementById('tgConsentHint');
-    if (!hint) return;
-    if (p && p.checked && o && o.checked) {
-        hint.style.opacity = '0';
-    } else {
-        hint.style.opacity = '1';
-    }
+function updateTgBotLoginButton() {
+    const btn = document.getElementById('tgLoginBtn');
+    const hint = document.getElementById('tgLoginHint');
+    const cp = document.getElementById('tgConsentPrivacy');
+    const co = document.getElementById('tgConsentOffer');
+    if (!btn || !cp || !co) return;
+    const ok = cp.checked && co.checked;
+    btn.disabled = !ok;
+    btn.classList.toggle('opacity-50', !ok);
+    btn.classList.toggle('cursor-not-allowed', !ok);
+    btn.classList.toggle('cursor-pointer', ok);
+    if (hint) hint.style.display = ok ? 'none' : 'block';
 }
 
-async function loadTelegramConfig() {
-    try {
-        const resp = await fetch(`${API_BASE_URL}/api/auth/telegram-config`);
-        if (!resp.ok) throw new Error('Cannot fetch telegram config');
-        const data = await resp.json();
-        return data.bot_username;
-    } catch (e) {
-        console.error('Telegram config load failed', e);
-        return null;
-    }
-}
-
-async function initTelegramLoginWidget() {
-    const botUsername = await loadTelegramConfig();
-    if (!botUsername) return;
-    const container = document.getElementById('tgLoginContainer');
-    if (!container) return;
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.setAttribute('data-telegram-login', botUsername);
-    script.setAttribute('data-size', 'large');
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-    script.setAttribute('data-request-access', 'write');
-    script.setAttribute('data-radius', '8');
-    script.async = true;
-    container.appendChild(script);
-}
-
-window.onTelegramAuth = async function(user) {
-    const consentPrivacy = document.getElementById('tgConsentPrivacy');
-    const consentOffer = document.getElementById('tgConsentOffer');
-    if (!consentPrivacy || !consentOffer || !consentPrivacy.checked || !consentOffer.checked) {
-        showMessage('Отметьте оба пункта согласий, чтобы войти через Telegram');
+window.startTelegramBotLogin = async function() {
+    const cp = document.getElementById('tgConsentPrivacy');
+    const co = document.getElementById('tgConsentOffer');
+    if (!cp?.checked || !co?.checked) {
+        showMessage('Отметьте оба пункта согласий');
         return;
     }
-    hideMessage();
+    const btn = document.getElementById('tgLoginBtn');
+    if (btn) btn.disabled = true;
     try {
-        const resp = await fetch(`${API_BASE_URL}/api/auth/telegram-login`, {
+        const resp = await fetch(`${API_BASE_URL}/api/auth/tg-bot/init`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({
-                id: user.id,
-                first_name: user.first_name || null,
-                last_name: user.last_name || null,
-                username: user.username || null,
-                photo_url: user.photo_url || null,
-                auth_date: user.auth_date,
-                hash: user.hash,
-                consent_privacy: true,
-                consent_offer: true,
-            }),
+            body: JSON.stringify({ consent_privacy: true, consent_offer: true }),
         });
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
-            showMessage(err.detail || 'Ошибка входа через Telegram');
+            showMessage(err.detail || 'Не удалось начать вход');
+            if (btn) btn.disabled = false;
+            updateTgBotLoginButton();
             return;
         }
         const data = await resp.json();
-        showTelegramLoginSuccess(data.is_new, () => {
-            window.location.href = data.redirect || '/cabinet/';
-        });
+        _tgLoginToken = data.token;
+
+        window.open(data.deep_link, '_blank');
+
+        document.getElementById('tgLoginBlock')?.classList.add('hidden');
+        document.getElementById('loginForm')?.classList.add('hidden');
+        document.getElementById('registerForm')?.classList.add('hidden');
+        document.getElementById('authTabs')?.classList.add('hidden');
+
+        const pending = document.getElementById('tgLoginPending');
+        if (pending) pending.classList.remove('hidden');
+        const link = document.getElementById('tgLoginPendingLink');
+        if (link) link.href = data.deep_link;
+
+        _openTgLoginSse(data.token);
     } catch (e) {
-        console.error('Telegram login failed', e);
+        console.error('[TgBotLogin] init error', e);
+        if (btn) btn.disabled = false;
+        updateTgBotLoginButton();
         showMessage('Ошибка сети. Попробуйте ещё раз.');
     }
 };
 
-function showTelegramLoginSuccess(isNew, onContinue) {
-    const forms = ['loginForm', 'registerForm', 'otpForm', 'forgotForm', 'resetForm'];
-    forms.forEach(f => {
-        const el = document.getElementById(f);
-        if (el) el.classList.add('hidden');
+function _openTgLoginSse(token) {
+    if (_tgLoginEventSource) {
+        _tgLoginEventSource.close();
+    }
+    const url = `${API_BASE_URL}/api/auth/tg-bot/wait?token=${encodeURIComponent(token)}`;
+    _tgLoginEventSource = new EventSource(url, { withCredentials: true });
+
+    _tgLoginEventSource.addEventListener('ready', async () => {
+        _tgLoginEventSource.close();
+        _tgLoginEventSource = null;
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/auth/tg-bot/redeem`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ token }),
+            });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                _showTgBotLoginError(err.detail || 'Не удалось завершить вход. Попробуйте снова.');
+                return;
+            }
+            const data = await resp.json();
+            showTelegramLoginSuccess(false, () => {
+                window.location.href = data.redirect || '/cabinet/';
+            });
+        } catch (err) {
+            console.error('[TgBotLogin] redeem error', err);
+            _showTgBotLoginError('Ошибка сети. Попробуйте снова.');
+        }
     });
-    const tgLoginBlock = document.getElementById('tgLoginBlock');
-    if (tgLoginBlock) tgLoginBlock.classList.add('hidden');
-    const tabs = document.getElementById('authTabs');
-    if (tabs) tabs.classList.add('hidden');
+
+    _tgLoginEventSource.addEventListener('failed', (e) => {
+        _tgLoginEventSource.close();
+        _tgLoginEventSource = null;
+        let reason = 'unknown';
+        try { reason = JSON.parse(e.data).reason; } catch (_) {}
+        const messages = {
+            expired: 'Ссылка истекла. Попробуйте войти снова.',
+            rejected: 'Вы отклонили запрос входа.',
+            not_found: 'Ссылка не найдена. Попробуйте войти снова.',
+            already_consumed: 'Ссылка уже использована.',
+            timeout: 'Время ожидания истекло. Попробуйте войти снова.',
+        };
+        _showTgBotLoginError(messages[reason] || 'Не удалось войти. Попробуйте снова.');
+    });
+}
+
+window.cancelTelegramBotLogin = function() {
+    if (_tgLoginEventSource) {
+        _tgLoginEventSource.close();
+        _tgLoginEventSource = null;
+    }
+    _tgLoginToken = null;
+    resetTelegramBotLogin();
+};
+
+window.resetTelegramBotLogin = function() {
+    document.getElementById('tgLoginPending')?.classList.add('hidden');
+    document.getElementById('tgLoginError')?.classList.add('hidden');
+    document.getElementById('tgLoginBlock')?.classList.remove('hidden');
+    document.getElementById('authTabs')?.classList.remove('hidden');
+    const isLoginActive = document.getElementById('tabLogin')?.classList.contains('tab-active');
+    if (isLoginActive !== false) {
+        document.getElementById('loginForm')?.classList.remove('hidden');
+    } else {
+        document.getElementById('registerForm')?.classList.remove('hidden');
+    }
+    updateTgBotLoginButton();
+};
+
+function _showTgBotLoginError(text) {
+    document.getElementById('tgLoginPending')?.classList.add('hidden');
+    const errEl = document.getElementById('tgLoginError');
+    if (errEl) errEl.classList.remove('hidden');
+    const errText = document.getElementById('tgLoginErrorText');
+    if (errText) errText.textContent = text;
+}
+
+function showTelegramLoginSuccess(isNew, onContinue) {
+    const toHide = ['loginForm', 'registerForm', 'otpForm', 'forgotForm', 'resetForm', 'tgLoginBlock', 'tgLoginPending', 'tgLoginError'];
+    toHide.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+    document.getElementById('authTabs')?.classList.add('hidden');
 
     const subtext = document.getElementById('tgSuccessSubtext');
     if (subtext) {
@@ -591,9 +647,7 @@ function showTelegramLoginSuccess(isNew, onContinue) {
             ? 'Аккаунт создан. Завершите настройку в личном кабинете.'
             : 'Добро пожаловать обратно.';
     }
-    const section = document.getElementById('tgSuccessSection');
-    if (section) section.classList.remove('hidden');
-
+    document.getElementById('tgSuccessSection')?.classList.remove('hidden');
     _tgSuccessCallback = onContinue;
 }
 
@@ -667,5 +721,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (_) {}
 
-    initTelegramLoginWidget();
+    document.getElementById('tgConsentPrivacy')?.addEventListener('change', updateTgBotLoginButton);
+    document.getElementById('tgConsentOffer')?.addEventListener('change', updateTgBotLoginButton);
+    updateTgBotLoginButton();
 });
