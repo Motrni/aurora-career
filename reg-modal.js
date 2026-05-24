@@ -320,12 +320,21 @@
 
     /**
      * Вызвать после получения данных /api/auth/me.
-     * @param {Object} meData — объект с полями has_password, email_verified, email.
+     * @param {Object} meData — объект с полями has_password, email_verified, email, has_telegram.
      */
     window.checkRegModal = function (meData) {
         if (!meData) return;
+        // Telegram — достаточный фактор аутентификации; модалка не навязывается
+        if (meData.has_telegram) return;
         if (!meData.has_password || !meData.email_verified) {
             _showModal(meData.has_password, meData.email_verified, meData.email);
         }
+    };
+
+    /**
+     * Открыть модалку вручную (например, по кнопке из баннера).
+     */
+    window.openRegModal = function () {
+        _showModal(false, false, '');
     };
 })();

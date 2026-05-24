@@ -225,6 +225,14 @@ async function renderCabinet(user) {
         if (mob) mob.classList.remove('hidden');
     }
 
+    // Ненавязчивый баннер: TG-юзер без email — предлагаем добавить для восстановления доступа
+    if (user.has_telegram && !user.email) {
+        const tgBanner = document.getElementById('tgEmailBanner');
+        const tgBannerMob = document.getElementById('tgEmailBannerMobile');
+        if (tgBanner) tgBanner.classList.remove('hidden');
+        if (tgBannerMob) tgBannerMob.classList.remove('hidden');
+    }
+
     const showTariffs =
         user.subscription_status === 'none' ||
         user.subscription_status === 'trial' ||

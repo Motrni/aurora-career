@@ -207,6 +207,10 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 @media (min-width: 1024px) { #hhLinkBannerMobile { display: none !important; } }
 @media (max-width: 1023px) { #hhLinkBanner      { display: none !important; } }
 
+/* TG Email Banner: мобильный — только до lg, десктопный — только от lg */
+@media (min-width: 1024px) { #tgEmailBannerMobile { display: none !important; } }
+@media (max-width: 1023px) { #tgEmailBanner       { display: none !important; } }
+
 /* Daily stats: Y-axis + narrow capsule bars */
 .stats-chart-area {
     --stats-chart-h: 9rem;
@@ -445,6 +449,26 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             <!-- Left column -->
             <div class="lg:col-span-7 flex flex-col gap-6 md:gap-8 min-w-0">
 
+                <!-- TG Email Banner — мягкое предложение добавить email (mobile only, lg: hidden via CSS) -->
+                <div id="tgEmailBannerMobile" class="hidden" style="animation: fadeIn 0.3s ease;">
+                    <div class="p-5 rounded-2xl border border-outline/20 relative overflow-hidden" style="background: linear-gradient(135deg, rgba(33,30,41,0.97), rgba(90,48,208,0.08));">
+                        <div class="absolute -right-8 -top-8 w-28 h-28 bg-primary-container/10 rounded-full blur-[40px] pointer-events-none"></div>
+                        <div class="relative z-10 flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style="background: rgba(90,48,208,0.15);">
+                                <span class="material-symbols-outlined text-primary text-xl">mail_lock</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h2 class="text-sm font-bold text-on-surface">Добавьте email для восстановления</h2>
+                                <p class="text-on-surface-variant text-xs mt-1 leading-relaxed">Это поможет восстановить доступ, если Telegram-аккаунт будет недоступен.</p>
+                                <button type="button" onclick="if(window.openRegModal) window.openRegModal();" class="inline-flex items-center gap-1.5 mt-3 text-primary text-xs font-medium hover:underline cursor-pointer transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                    Добавить email
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- HH Link Banner — mobile only (lg: hidden via CSS) -->
                 <div id="hhLinkBannerMobile" class="hidden" style="animation: fadeIn 0.3s ease;">
                     <div class="p-5 rounded-2xl border border-primary/25 relative overflow-hidden" style="background: linear-gradient(135deg, rgba(33,30,41,0.97), rgba(101,62,219,0.10));">
@@ -585,6 +609,26 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 
             <!-- Right column -->
             <div class="lg:col-span-5 flex flex-col gap-6 md:gap-8 min-w-0 lg:sticky lg:top-6 lg:self-start">
+
+                <!-- TG Email Banner — мягкое предложение добавить email (desktop only, shown via CSS) -->
+                <div id="tgEmailBanner" class="hidden" style="animation: fadeIn 0.3s ease;">
+                    <div class="p-5 rounded-2xl border border-outline/20 relative overflow-hidden" style="background: linear-gradient(135deg, rgba(33,30,41,0.97), rgba(90,48,208,0.08));">
+                        <div class="absolute -right-8 -top-8 w-28 h-28 bg-primary-container/10 rounded-full blur-[40px] pointer-events-none"></div>
+                        <div class="relative z-10 flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style="background: rgba(90,48,208,0.15);">
+                                <span class="material-symbols-outlined text-primary text-xl">mail_lock</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h2 class="text-sm font-bold text-on-surface">Добавьте email для восстановления</h2>
+                                <p class="text-on-surface-variant text-xs mt-1 leading-relaxed">Это поможет восстановить доступ, если Telegram-аккаунт будет недоступен.</p>
+                                <button type="button" onclick="if(window.openRegModal) window.openRegModal();" class="inline-flex items-center gap-1.5 mt-3 text-primary text-xs font-medium hover:underline cursor-pointer transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                    Добавить email
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- HH Link Banner (shown when subscription active but hh.ru not linked) -->
                 <div id="hhLinkBanner" class="hidden" style="animation: fadeIn 0.3s ease;">
@@ -1055,7 +1099,7 @@ function toggleMobileMenu() {
 </div>
 
 <script src="discount-banner.js?v=3"></script>
-<script src="cabinet.js?v=6.4"></script>
+<script src="cabinet.js?v=6.5"></script>
 <script src="support-widget.js?v=1"></script>
 </body>
 </html>
