@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.9.3 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.9.4 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  *
  * v3.8:   3-уровневая защита от блокировки popup при оплате (см. handlePurchase).
@@ -7,6 +7,8 @@
  * v3.9.1: трекинг tariff_modal_opened для воронки "интерес → оплата".
  * v3.9.2: тарифы видны и триальщикам — можно купить, не дожидаясь окончания триала
  *         (activate_paid_subscription корректно перезатирает trial → active).
+ * v3.9.4: кнопка «Обновить» в карточке «Резюме для откликов» — синхронизация списка с hh.ru
+ *         (POST /api/resumes/sync + poll /api/resumes/sync/status), как на /resume/.
  * v3.9.3: видимость #promoCard управляется флагом data.can_apply_promo (с бэка):
  *         - active: скрыто (скидка сгорит за 2 дня при подписке на 30+);
  *         - использован менторский промо: показано (плашка "применён");
@@ -277,6 +279,177 @@ async function renderCabinet(user) {
 
 let _resumeDropdownOpen = false;
 let _resumesList = [];
+let _cabinetResyncCooldownEndMs = 0;
+let _cabinetResyncCooldownTimer = null;
+let _cabinetSyncPolling = false;
+let _cabinetSyncPollTimer = null;
+
+function _formatCabinetResyncWait(totalSec) {
+    const s = Math.max(0, Math.ceil(totalSec));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    if (h > 0) return `${h} ч. ${m} мин.`;
+    if (m > 0) return `${m} мин.`;
+    return 'менее мин.';
+}
+
+function _isCabinetResyncOnCooldown() {
+    return Date.now() < _cabinetResyncCooldownEndMs;
+}
+
+function _applyCabinetResyncCooldown(secondsLeft) {
+    const sec = Number(secondsLeft) || 0;
+    _cabinetResyncCooldownEndMs = sec > 0 ? Date.now() + sec * 1000 : 0;
+    if (_cabinetResyncCooldownTimer) {
+        clearInterval(_cabinetResyncCooldownTimer);
+        _cabinetResyncCooldownTimer = null;
+    }
+    syncCabinetResyncUI();
+    if (_cabinetResyncCooldownEndMs > Date.now()) {
+        _cabinetResyncCooldownTimer = setInterval(() => {
+            syncCabinetResyncUI();
+            if (!_isCabinetResyncOnCooldown()) {
+                clearInterval(_cabinetResyncCooldownTimer);
+                _cabinetResyncCooldownTimer = null;
+                syncCabinetResyncUI();
+            }
+        }, 15000);
+    }
+}
+
+function syncCabinetResyncUI() {
+    const btn = document.getElementById('cabinetResumeSyncBtn');
+    const statusText = document.getElementById('cabinetResumeSyncStatus');
+    if (!btn || !statusText) return;
+    if (btn.classList.contains('syncing')) return;
+
+    const remainingSec = Math.ceil((_cabinetResyncCooldownEndMs - Date.now()) / 1000);
+    if (_cabinetResyncCooldownEndMs <= 0 || remainingSec <= 0) {
+        _cabinetResyncCooldownEndMs = 0;
+        btn.disabled = false;
+        statusText.textContent = 'Обновить с hh.ru';
+        return;
+    }
+
+    btn.disabled = true;
+    statusText.textContent = `Доступно через ${_formatCabinetResyncWait(remainingSec)}`;
+}
+
+async function syncCabinetResumes() {
+    const btn = document.getElementById('cabinetResumeSyncBtn');
+    const statusText = document.getElementById('cabinetResumeSyncStatus');
+    if (!btn || _cabinetSyncPolling) return;
+    if (btn.classList.contains('syncing') || _isCabinetResyncOnCooldown() || btn.disabled) return;
+
+    const label = btn.querySelector('.sync-btn-label');
+    btn.classList.add('syncing');
+    btn.disabled = true;
+    if (label) label.textContent = 'Синхронизация...';
+    if (statusText) statusText.textContent = 'Обновление...';
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/resumes/sync`, { method: 'POST' });
+        if (!resp) {
+            _cabinetSyncDone('Нет соединения');
+            return;
+        }
+        if (resp.status === 403) {
+            _cabinetSyncDone('Нет доступа');
+            return;
+        }
+        if (!resp.ok) {
+            _cabinetSyncDone('Ошибка');
+            return;
+        }
+
+        const data = await resp.json();
+        if (data.status === 'cooldown') {
+            _applyCabinetResyncCooldown(data.seconds_left || 0);
+            _cabinetSyncDone(null);
+            return;
+        }
+
+        _cabinetSyncPolling = true;
+        _pollCabinetSyncStatus();
+    } catch (e) {
+        console.error('[Cabinet] syncCabinetResumes error:', e);
+        _cabinetSyncDone('Ошибка');
+    }
+}
+window.syncCabinetResumes = syncCabinetResumes;
+
+function _pollCabinetSyncStatus(attempts = 0) {
+    if (_cabinetSyncPollTimer) clearTimeout(_cabinetSyncPollTimer);
+    const maxAttempts = 45;
+
+    _cabinetSyncPollTimer = setTimeout(async () => {
+        try {
+            const resp = await apiFetch(`${API_BASE_URL}/api/resumes/sync/status`);
+            if (!resp || !resp.ok) {
+                _cabinetSyncDone('Нет соединения');
+                return;
+            }
+            const data = await resp.json();
+            const status = data.status || 'idle';
+
+            if (status === 'complete') {
+                const hasProfile = await loadResumeSelector();
+                if (currentUser) {
+                    updateNavAccess(currentUser.subscription_status, hasProfile);
+                }
+                _cabinetSyncDone(null, 'Список обновлён с hh.ru');
+                return;
+            }
+
+            if (status === 'error_login') {
+                _cabinetSyncDone('Сессия hh.ru истекла');
+                return;
+            }
+
+            if (status === 'error_generic' || status.startsWith('error')) {
+                _cabinetSyncDone('Ошибка синхронизации');
+                return;
+            }
+
+            if (attempts >= maxAttempts) {
+                _cabinetSyncDone('Таймаут');
+                return;
+            }
+
+            _pollCabinetSyncStatus(attempts + 1);
+        } catch (e) {
+            console.error('[Cabinet] sync poll error:', e);
+            _cabinetSyncDone('Ошибка');
+        }
+    }, 2000);
+}
+
+function _cabinetSyncDone(transientStatusText, successStatusText) {
+    if (_cabinetSyncPollTimer) {
+        clearTimeout(_cabinetSyncPollTimer);
+        _cabinetSyncPollTimer = null;
+    }
+    _cabinetSyncPolling = false;
+
+    const btn = document.getElementById('cabinetResumeSyncBtn');
+    const statusText = document.getElementById('cabinetResumeSyncStatus');
+    if (btn) {
+        btn.classList.remove('syncing');
+        const btnLabel = btn.querySelector('.sync-btn-label');
+        if (btnLabel) btnLabel.textContent = 'Обновить';
+    }
+
+    syncCabinetResyncUI();
+    if (successStatusText && statusText) {
+        statusText.textContent = successStatusText;
+        setTimeout(() => syncCabinetResyncUI(), 3000);
+        return;
+    }
+    if (transientStatusText && statusText) {
+        statusText.textContent = transientStatusText;
+        setTimeout(() => syncCabinetResyncUI(), 4000);
+    }
+}
 
 async function loadResumeSelector() {
     try {
@@ -284,9 +457,14 @@ async function loadResumeSelector() {
         if (!resp || !resp.ok) return true;
         const data = await resp.json();
         _resumesList = data.resumes || [];
-        if (_resumesList.length === 0) return true;
+        _applyCabinetResyncCooldown(data.resync_seconds_left || 0);
 
         const card = document.getElementById('resumeSelectCard');
+        if (_resumesList.length === 0) {
+            if (card) card.classList.add('hidden');
+            return true;
+        }
+
         card.classList.remove('hidden');
 
         const active = _resumesList.find(r => r.is_active) || _resumesList[0];

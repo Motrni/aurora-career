@@ -203,6 +203,40 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     z-index: 25;
 }
 
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.sync-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 0.625rem;
+    border: 1.5px solid rgba(202,195,215,0.2);
+    color: rgba(202,195,215,0.7);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+    background: transparent;
+    white-space: nowrap;
+}
+.sync-btn:hover:not(:disabled) {
+    border-color: rgba(204,190,255,0.6);
+    color: #ccbeff;
+    background: rgba(90,48,208,0.1);
+}
+.sync-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.sync-btn:focus-visible {
+    outline: 2px solid rgba(204,190,255,0.5);
+    outline-offset: 2px;
+}
+.sync-btn.syncing .sync-icon {
+    animation: spin 0.9s linear infinite;
+}
+
 /* HH Link Banner: мобильный — только до lg, десктопный — только от lg */
 @media (min-width: 1024px) { #hhLinkBannerMobile { display: none !important; } }
 @media (max-width: 1023px) { #hhLinkBanner      { display: none !important; } }
@@ -652,11 +686,18 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 
                 <!-- Resume selector -->
                 <div id="resumeSelectCard" class="hidden p-5 md:p-6 rounded-2xl cab-card resume-select-card">
-                    <div class="flex items-center gap-4 mb-3">
+                    <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(101,62,219,0.10);">
                             <span class="material-symbols-outlined text-primary/70">description</span>
                         </div>
-                        <span class="text-sm font-medium text-on-surface">Резюме для откликов</span>
+                        <div class="min-w-0 flex-1">
+                            <span class="text-sm font-medium text-on-surface">Резюме для откликов</span>
+                            <p class="text-xs text-on-surface-variant mt-0.5" id="cabinetResumeSyncStatus">Обновить с hh.ru</p>
+                        </div>
+                        <button type="button" id="cabinetResumeSyncBtn" class="sync-btn shrink-0" onclick="syncCabinetResumes()" aria-label="Обновить список резюме с hh.ru">
+                            <span class="material-symbols-outlined text-base sync-icon">refresh</span>
+                            <span class="sync-btn-label">Обновить</span>
+                        </button>
                     </div>
 
                     <div class="relative" id="resumeDropdownWrap">
@@ -1099,7 +1140,7 @@ function toggleMobileMenu() {
 </div>
 
 <script src="discount-banner.js?v=3"></script>
-<script src="cabinet.js?v=6.5"></script>
+<script src="cabinet.js?v=6.6"></script>
 <script src="support-widget.js?v=2"></script>
 </body>
 </html>
