@@ -170,6 +170,168 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 }
 .price-per-day { font-size: 11px; color: #938ea0; }
 
+/* —— Тариф «Полный доступ»: изумрудный luxury —— */
+.tariff-card-emerald {
+    background: linear-gradient(160deg, rgba(16, 185, 129, 0.06) 0%, rgba(29, 26, 36, 0.92) 45%);
+    border: 1px solid rgba(52, 211, 153, 0.22);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.08), 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+.tariff-card-emerald:hover {
+    border-color: rgba(52, 211, 153, 0.35);
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.12);
+}
+.tariff-discount-strip {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(52, 211, 153, 0.22);
+}
+.tariff-discount-strip .tariff-discount-label { color: #6ee7b7; }
+.tariff-discount-strip .tariff-discount-timer { color: #e7e0ef; }
+.tariff-feature-check { color: #34d399 !important; }
+.tariff-hint-emerald { color: #6ee7b7 !important; }
+
+/* Селектор месяцев: бейджи над табами */
+.month-selector-wrap {
+    margin-bottom: 1.25rem;
+    padding-top: 1.35rem;
+}
+.month-selector-track {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(51, 65, 85, 0.5);
+}
+.month-tab-cell {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+.month-tab-badge {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% - 6px);
+    transform: translateX(-50%) translateY(0);
+    z-index: 2;
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.2;
+    padding: 2px 7px;
+    border-radius: 6px;
+    pointer-events: none;
+    opacity: 0.92;
+    transition:
+        transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+        padding 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+        font-size 0.28s ease,
+        opacity 0.2s ease;
+}
+.month-tab-badge--popular {
+    background: rgba(139, 92, 246, 0.9);
+    color: #f3e8ff;
+    border: 1px solid rgba(167, 139, 250, 0.5);
+}
+.month-tab-badge--best {
+    background: rgba(245, 158, 11, 0.92);
+    color: #1c1917;
+    border: 1px solid rgba(251, 191, 36, 0.55);
+}
+.month-tab-badge.is-active {
+    opacity: 1;
+    font-size: 10px;
+    padding: 3px 11px;
+    transform: translateX(-50%) translateY(-10px) scale(1.06);
+    clip-path: polygon(8% 100%, 92% 100%, 100% 0%, 0% 0%);
+}
+.month-tab {
+    width: 100%;
+    margin-top: 0;
+    padding: 0.55rem 0.35rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.month-tab:hover:not(.is-active) {
+    color: #cbd5e1;
+    background: rgba(51, 65, 85, 0.35);
+}
+.month-tab.is-active {
+    background: linear-gradient(180deg, #2dd4bf 0%, #10b981 100%);
+    color: #042f2e;
+    font-weight: 700;
+    box-shadow: 0 2px 12px rgba(16, 185, 129, 0.35);
+}
+
+.btn-emerald {
+    background: linear-gradient(135deg, #2dd4bf 0%, #10b981 55%, #059669 100%);
+    color: #042f2e;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.28);
+    transition: filter 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+.btn-emerald:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(16, 185, 129, 0.38);
+}
+.btn-emerald:active { transform: translateY(0); }
+
+.btn-trial-offer {
+    border-radius: 10px;
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    background: rgba(16, 185, 129, 0.06);
+    color: #6ee7b7;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-trial-offer:hover {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(52, 211, 153, 0.55);
+    color: #a7f3d0;
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.25), 0 4px 16px rgba(16, 185, 129, 0.15);
+}
+.btn-trial-offer:focus-visible {
+    outline: 2px solid #34d399;
+    outline-offset: 2px;
+}
+
+.btn-breakthrough-cta {
+    border-radius: 10px;
+    background: linear-gradient(135deg, #7c4dff 0%, #5a30d0 100%);
+    color: #e7deff;
+    box-shadow: 0 6px 20px rgba(124, 77, 255, 0.28);
+    transition: filter 0.2s ease, transform 0.15s ease;
+}
+.btn-breakthrough-cta:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* Модалка оплаты: прямоугольные блоки */
+.tariff-modal-card .tariff-modal-price-box {
+    border-radius: 10px;
+}
+.tariff-modal-card .tariff-modal-pay-btn {
+    border-radius: 10px;
+}
+.tariff-modal-card.tariff-modal--emerald .tariff-modal-pay-btn {
+    background: linear-gradient(135deg, #2dd4bf 0%, #10b981 100%);
+    color: #042f2e;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+}
+.tariff-modal-card.tariff-modal--breakthrough .tariff-modal-pay-btn {
+    background: linear-gradient(135deg, #7c4dff 0%, #5a30d0 100%);
+    color: #e7deff;
+    box-shadow: 0 8px 24px rgba(124, 77, 255, 0.3);
+}
+
 .cab-card {
     background: rgba(29, 26, 36, 0.65);
     backdrop-filter: blur(24px);
@@ -567,51 +729,45 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                 <div id="tariffGrid" class="hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-                        <!-- Левая карточка: стандартные тарифы -->
-                        <div id="mainTariffCard" class="p-5 md:p-6 rounded-2xl cab-card relative overflow-hidden flex flex-col">
-                            <!-- Плашка скидки (встроенная, замена большому баннеру) -->
-                            <div id="tariffDiscountStrip" class="hidden mb-4 flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold" style="background:rgba(101,62,219,0.12);border:1px solid rgba(204,190,255,0.2);">
-                                <span class="flex items-center gap-1.5 text-primary">
-                                    <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">local_offer</span>
+                        <!-- Левая карточка: стандартные тарифы (изумруд) -->
+                        <div id="mainTariffCard" class="tariff-card-emerald p-5 md:p-6 rounded-xl relative overflow-visible flex flex-col">
+                            <div id="tariffDiscountStrip" class="tariff-discount-strip hidden mb-4 flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold">
+                                <span class="tariff-discount-label flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm tariff-feature-check" style="font-variation-settings:'FILL' 1">local_offer</span>
                                     <span id="tariffDiscountLabel">Скидка активна</span>
                                 </span>
-                                <span class="font-mono tabular-nums text-on-surface" id="tariffDiscountTimer"></span>
+                                <span class="tariff-discount-timer font-mono tabular-nums" id="tariffDiscountTimer"></span>
                             </div>
 
                             <h3 class="text-base font-bold text-on-surface mb-1">Полный доступ к сервису</h3>
                             <p class="text-on-surface-variant text-xs mb-4 leading-relaxed">Все инструменты автоматизации Авроры для быстрого поиска работы.</p>
 
-                            <!-- Селектор периода -->
-                            <div id="tariffMonthSelector" class="flex gap-1 p-1 rounded-xl mb-5 self-start w-full" style="background:rgba(55,51,62,0.5);"></div>
+                            <div id="tariffMonthSelector" class="month-selector-wrap w-full"></div>
 
-                            <!-- Цена -->
                             <div class="mb-4">
                                 <div class="text-xs text-on-surface-variant/60 line-through hidden tabular-nums mb-0.5" id="tariffCardOldPrice"></div>
                                 <div class="flex items-baseline gap-1.5">
                                     <span class="text-3xl font-black text-on-surface tabular-nums" id="tariffCardPrice">—</span>
                                     <span class="text-on-surface-variant text-base">₽</span>
                                 </div>
-                                <p class="text-xs text-primary mt-1 font-medium" id="tariffCardHint"></p>
+                                <p class="text-xs tariff-hint-emerald mt-1 font-medium" id="tariffCardHint"></p>
                             </div>
 
-                            <!-- Фичи -->
                             <ul class="space-y-2 mb-5 flex-1 text-sm text-on-surface">
-                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-primary text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>20 автоматических откликов в день</li>
-                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-primary text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>Базовый ИИ-аудит вашего резюме</li>
-                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-primary text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>Генерация умных сопроводительных</li>
-                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-primary text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>Доступ к ручному отбору вакансий</li>
+                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined tariff-feature-check text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>20 автоматических откликов в день</li>
+                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined tariff-feature-check text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>Базовый ИИ-аудит вашего резюме</li>
+                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined tariff-feature-check text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>Генерация умных сопроводительных</li>
+                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined tariff-feature-check text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>Доступ к ручному отбору вакансий</li>
                             </ul>
 
-                            <!-- CTA -->
                             <button type="button" id="tariffCardBtn"
-                                    class="w-full py-3.5 rounded-xl luxury-gradient text-white font-bold text-sm cursor-pointer hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_8px_24px_rgba(90,48,208,0.3)]">
+                                    class="btn-emerald w-full py-3.5 text-sm cursor-pointer active:scale-[0.98]">
                                 Купить подписку
                             </button>
 
-                            <!-- Триал (если доступен) -->
                             <div id="trialInCard" class="hidden mt-3">
                                 <button type="button" id="trialCard" onclick="handleActivateTrial()"
-                                        class="w-full py-2.5 rounded-xl border border-primary/30 text-primary font-medium text-xs cursor-pointer hover:bg-primary/8 transition-colors">
+                                        class="btn-trial-offer w-full py-2.5 font-medium text-xs cursor-pointer">
                                     Попробовать бесплатно — 10 откликов без привязки карты
                                 </button>
                             </div>
@@ -621,12 +777,12 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                         <div id="breakthroughCardWrap" class="hidden flex flex-col">
                             <button type="button" id="breakthroughCard"
                                     onclick="showTariffModal('breakthrough')"
-                                    class="w-full h-full text-left p-5 md:p-6 rounded-2xl cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col"
+                                    class="w-full h-full text-left p-5 md:p-6 rounded-xl cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col"
                                     style="background:linear-gradient(135deg,rgba(90,48,208,0.20) 0%,rgba(33,30,41,0.97) 100%);border:1px solid rgba(204,190,255,0.30);box-shadow:0 0 0 1px rgba(204,190,255,0.12),0 0 32px rgba(101,62,219,0.22);">
                                 <div class="absolute -right-10 -top-10 w-44 h-44 rounded-full pointer-events-none" style="background:rgba(204,190,255,0.08);filter:blur(40px);"></div>
 
                                 <!-- Бейдж мест -->
-                                <div class="inline-flex items-center self-start mb-4 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider" style="background:rgba(255,82,82,0.18);color:#ff7070;border:1px solid rgba(255,82,82,0.30);">
+                                <div class="inline-flex items-center self-start mb-4 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider" style="background:rgba(255,82,82,0.18);color:#ff7070;border:1px solid rgba(255,82,82,0.30);">
                                     <span id="breakthroughSeatsBadge">Осталось 4 места</span>
                                 </div>
 
@@ -651,9 +807,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                                     <li class="flex items-center gap-2.5"><span class="text-[#ccbeff] text-base">★</span>Автоподнятие резюме + лимит 50/день</li>
                                 </ul>
 
-                                <!-- CTA -->
-                                <div class="w-full py-3.5 rounded-xl text-center font-bold text-sm"
-                                     style="background:linear-gradient(135deg,#7c4dff 0%,#5a30d0 100%);color:#e7deff;box-shadow:0 8px 24px rgba(124,77,255,0.30);">
+                                <div class="btn-breakthrough-cta w-full py-3.5 text-center font-bold text-sm pointer-events-none">
                                     Записаться
                                 </div>
                             </button>
@@ -1137,7 +1291,7 @@ function toggleMobileMenu() {
 <!-- Транзитная модалка тарифа -->
 <div id="tariffModal" class="pointer-events-none fixed inset-0 z-[150] flex items-center justify-center overflow-y-auto overscroll-contain p-4 md:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="tariffModalTitle">
     <div class="absolute inset-0 z-0 bg-[#100d17]/82 backdrop-blur-md opacity-0 transition-opacity duration-300 ease-out" id="tariffModalBackdrop" tabindex="-1"></div>
-    <div id="tariffModalCard" class="relative z-10 my-auto w-full max-w-md shrink-0 glass-panel rounded-2xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.55)] border border-white/5 scale-95 opacity-0 transition-all duration-300 ease-out">
+    <div id="tariffModalCard" class="tariff-modal-card relative z-10 my-auto w-full max-w-md shrink-0 glass-panel rounded-xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.55)] border border-white/5 scale-95 opacity-0 transition-all duration-300 ease-out">
         <div class="absolute -top-20 -right-20 w-56 h-56 bg-primary-container/20 rounded-full blur-[70px] pointer-events-none"></div>
         <div class="absolute -bottom-20 -left-20 w-56 h-56 bg-secondary-container/10 rounded-full blur-[70px] pointer-events-none"></div>
 
@@ -1158,13 +1312,13 @@ function toggleMobileMenu() {
         </div>
 
         <!-- Бейдж буста (показывается если included_boost) -->
-        <div id="tariffModalBoostBadge" class="hidden relative mx-6 mb-4 px-4 py-2.5 rounded-xl bg-[#653edb]/10 border border-[#653edb]/20 flex items-center gap-2.5">
+        <div id="tariffModalBoostBadge" class="hidden relative mx-6 mb-4 px-4 py-2.5 rounded-lg bg-[#653edb]/10 border border-[#653edb]/20 flex items-center gap-2.5">
             <span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings:'FILL' 1;">bolt</span>
             <p id="tariffModalBoostText" class="text-sm text-on-surface font-medium"></p>
         </div>
 
         <!-- Цена -->
-        <div class="relative mx-6 mb-5 px-4 py-3 rounded-xl bg-primary/8 border border-primary/15 flex items-baseline justify-between gap-2">
+        <div class="tariff-modal-price-box relative mx-6 mb-5 px-4 py-3 rounded-lg bg-surface-container/50 border border-outline-variant/20 flex items-baseline justify-between gap-2">
             <div>
                 <span id="tariffModalOldPrice" class="hidden text-sm text-on-surface-variant/60 line-through"></span>
                 <div class="flex items-baseline gap-1.5">
@@ -1177,7 +1331,7 @@ function toggleMobileMenu() {
 
         <!-- CTA -->
         <div class="relative px-6 pt-5 pb-6 space-y-3">
-            <button type="button" id="tariffModalPayBtn" class="w-full px-8 py-4 rounded-xl luxury-gradient text-white font-bold text-base shadow-[0_10px_30px_rgba(90,48,208,0.35)] hover:brightness-110 active:scale-[0.98] transition-all">
+            <button type="button" id="tariffModalPayBtn" class="tariff-modal-pay-btn w-full px-8 py-4 font-bold text-base hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer">
                 Перейти к оплате
             </button>
             <p id="tariffModalCpWarning" class="hidden text-[11px] text-[#ffb4ab]/85 leading-relaxed text-center">
@@ -1218,7 +1372,7 @@ function toggleMobileMenu() {
 </div>
 
 <script src="discount-banner.js?v=3"></script>
-<script src="cabinet.js?v=7.0"></script>
+<script src="cabinet.js?v=7.1"></script>
 <script src="support-widget.js?v=2"></script>
 </body>
 </html>

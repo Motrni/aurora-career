@@ -1812,25 +1812,29 @@ async function loadTariffs(user) {
         let selectedIdx = 0;
 
         function renderMonthSelector() {
-            selector.innerHTML = gridTariffs.map((t, i) => {
+            const cells = gridTariffs.map((t, i) => {
                 const months = Math.round(t.duration_days / 30);
                 const isSelected = i === selectedIdx;
                 const isPopular = !!t.is_popular;
                 const isBest = !isPopular && i === lastIdx && gridTariffs.length > 1;
-                let badge = '';
+                let badgeHtml = '';
                 if (isPopular) {
-                    badge = '<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:rgba(204,190,255,0.25);color:#ccbeff;">Популярный</span>';
+                    badgeHtml = `<span class="month-tab-badge month-tab-badge--popular${isSelected ? ' is-active' : ''}" aria-hidden="true">Популярный</span>`;
                 } else if (isBest) {
-                    badge = '<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:rgba(74,222,128,0.18);color:#4ade80;">Выгодно</span>';
+                    badgeHtml = `<span class="month-tab-badge month-tab-badge--best${isSelected ? ' is-active' : ''}" aria-hidden="true">Выгодно</span>`;
                 }
-                return `<button type="button"
-                    class="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${isSelected ? 'text-on-surface' : 'text-on-surface-variant hover:text-on-surface'}"
-                    style="${isSelected ? 'background:rgba(101,62,219,0.35);box-shadow:0 2px 8px rgba(90,48,208,0.25);' : ''}"
-                    onclick="selectTariffMonth(${i})"
-                    data-tariff-idx="${i}">
-                    ${months}\u00a0мес${badge}
-                </button>`;
+                return `<div class="month-tab-cell">
+                    ${badgeHtml}
+                    <button type="button"
+                        class="month-tab${isSelected ? ' is-active' : ''}"
+                        onclick="selectTariffMonth(${i})"
+                        data-tariff-idx="${i}"
+                        aria-pressed="${isSelected}">
+                        ${months}\u00a0мес.
+                    </button>
+                </div>`;
             }).join('');
+            selector.innerHTML = `<div class="month-selector-track" role="tablist">${cells}</div>`;
         }
 
         function renderTariffPrice() {
@@ -2127,6 +2131,13 @@ function showTariffModal(planCode) {
             && currentUser && currentUser.subscription_status === 'active')
             ? 'Перейти к оплате · улучшить тариф'
             : 'Перейти к оплате';
+    }
+
+    if (card) {
+        card.classList.remove('tariff-modal--emerald', 'tariff-modal--breakthrough');
+        card.classList.add(
+            planCode === 'breakthrough' ? 'tariff-modal--breakthrough' : 'tariff-modal--emerald'
+        );
     }
 
     const cpWarn = document.getElementById('tariffModalCpWarning');
