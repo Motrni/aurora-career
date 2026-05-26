@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.9.5 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.9.6 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  *
  * v3.8:   3-уровневая защита от блокировки popup при оплате (см. handlePurchase).
@@ -1705,22 +1705,31 @@ async function handleLogout() {
 }
 
 
+function pluralizeSeats(n) {
+    const v = Math.abs(Number(n) || 0);
+    const mod10 = v % 10;
+    const mod100 = v % 100;
+    if (mod10 === 1 && mod100 !== 11) return `${v} место`;
+    if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return `${v} места`;
+    return `${v} мест`;
+}
+
+let _breakthroughInfo = null;
+
 async function loadBreakthroughPremium(user) {
-    const premium = document.getElementById('breakthroughPremium');
+    const wrap = document.getElementById('breakthroughCardWrap');
     const activePanel = document.getElementById('breakthroughActivePanel');
     const autoBadge = document.getElementById('resumeAutoTouchBadge');
-    if (!premium) return;
+    if (!wrap) return;
 
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/breakthrough/info`);
         if (!resp || !resp.ok) return;
         const data = await resp.json();
-
-        const seatsEl = document.getElementById('breakthroughSeatsLeft');
-        if (seatsEl) seatsEl.textContent = String(data.seats_left ?? '—');
+        _breakthroughInfo = data;
 
         if (data.has_active_breakthrough) {
-            premium.classList.add('hidden');
+            wrap.classList.add('hidden');
             if (activePanel) {
                 activePanel.classList.remove('hidden');
                 const chatLink = document.getElementById('breakthroughChatLink');
@@ -1734,38 +1743,35 @@ async function loadBreakthroughPremium(user) {
         if (autoBadge) autoBadge.classList.add('hidden');
 
         if (!data.show_premium_card) {
-            premium.classList.add('hidden');
+            wrap.classList.add('hidden');
             return;
         }
 
-        premium.classList.remove('hidden');
+        wrap.classList.remove('hidden');
 
-        const priceEl = document.getElementById('breakthroughPrice');
-        const oldPriceEl = document.getElementById('breakthroughOldPrice');
-        const buyBtn = document.getElementById('breakthroughBuyBtn');
-        const cpWarn = document.getElementById('breakthroughCpWarning');
+        const seatsBadge = document.getElementById('breakthroughSeatsBadge');
+        if (seatsBadge) {
+            const seats = Number(data.seats_left ?? 0);
+            seatsBadge.textContent = `Осталось ${pluralizeSeats(seats)}`;
+        }
 
         const cur = Number(data.current_price || 0);
         const base = Number(data.base_price || 0);
-        if (priceEl) priceEl.textContent = cur.toLocaleString('ru-RU') + ' ₽';
+        const priceEl = document.getElementById('breakthroughCardPrice');
+        const oldPriceEl = document.getElementById('breakthroughCardOldPrice');
+        if (priceEl) priceEl.textContent = `${cur.toLocaleString('ru-RU')} ₽`;
         if (oldPriceEl) {
             if (data.is_loyal && base > cur) {
-                oldPriceEl.textContent = base.toLocaleString('ru-RU') + ' ₽';
+                oldPriceEl.textContent = `${base.toLocaleString('ru-RU')} ₽`;
                 oldPriceEl.classList.remove('hidden');
             } else {
                 oldPriceEl.classList.add('hidden');
             }
         }
 
-        if (buyBtn) {
-            buyBtn.textContent = user.subscription_status === 'active'
-                ? 'Улучшить тариф до «Прорыва»'
-                : 'Получить «Прорыв»';
-        }
-
-        if (cpWarn) {
-            const showWarn = user.subscription_status === 'active' && data.has_cp_recurrent;
-            cpWarn.classList.toggle('hidden', !showWarn);
+        const subtitleEl = document.getElementById('breakthroughCardSubtitle');
+        if (subtitleEl && user && user.subscription_status === 'active') {
+            subtitleEl.textContent = 'Улучшить тариф · наставничество с Романом';
         }
     } catch (e) {
         console.error('[Breakthrough] load error:', e);
@@ -1782,16 +1788,16 @@ async function loadTariffs() {
         if (!resp || !resp.ok) return;
 
         const data = await resp.json();
-        const tariffs = (data.tariffs || []).filter(t => t.plan_code !== 'breakthrough');
-        _loadedTariffs = tariffs;
+        _loadedTariffs = data.tariffs || [];
+        const gridTariffs = _loadedTariffs.filter(t => t.plan_code !== 'breakthrough');
 
-        if (tariffs.length === 0) {
+        if (gridTariffs.length === 0) {
             container.innerHTML = '';
             grid.classList.remove('hidden');
             return;
         }
 
-        container.innerHTML = tariffs.map((t) => {
+        container.innerHTML = gridTariffs.map((t) => {
             const hasDiscount = t.discounted_price != null && t.discounted_price < t.price;
             const showPrice = hasDiscount ? t.discounted_price : t.price;
             const pricePerDay = (showPrice / t.duration_days).toFixed(0);
@@ -2033,7 +2039,27 @@ function showTariffModal(planCode) {
         }
     }
 
-    if (payBtn) payBtn.dataset.plan = planCode;
+    if (payBtn) {
+        payBtn.dataset.plan = planCode;
+        payBtn.textContent = (planCode === 'breakthrough'
+            && currentUser && currentUser.subscription_status === 'active')
+            ? 'Перейти к оплате · улучшить тариф'
+            : 'Перейти к оплате';
+    }
+
+    const cpWarn = document.getElementById('tariffModalCpWarning');
+    const defaultNote = document.getElementById('tariffModalDefaultNote');
+    if (cpWarn && defaultNote) {
+        const isBreakthrough = planCode === 'breakthrough';
+        const hasCpRecurrent = !!(_breakthroughInfo && _breakthroughInfo.has_cp_recurrent);
+        if (isBreakthrough) {
+            defaultNote.textContent = '«Прорыв» оплачивается один раз на 90 дней. Без автопродления.';
+            cpWarn.classList.toggle('hidden', !hasCpRecurrent);
+        } else {
+            defaultNote.textContent = 'Безопасная оплата через CloudPayments. Отменить подписку можно в любой момент в личном кабинете.';
+            cpWarn.classList.add('hidden');
+        }
+    }
 
     modal.classList.remove('pointer-events-none');
     modal.setAttribute('aria-hidden', 'false');

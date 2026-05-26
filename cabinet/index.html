@@ -609,39 +609,36 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                     </div>
                 </div>
 
-                <!-- Премиум: тариф «Прорыв» (отдельно от основной сетки) -->
-                <section id="breakthroughPremium" class="hidden mt-2">
-                    <div class="relative overflow-hidden rounded-2xl p-6 md:p-8 border-2 border-[#ccbeff]/30 shadow-2xl"
-                         style="background: linear-gradient(135deg, #5a30d0 0%, #3e0c85 55%, #211e29 100%); box-shadow: 0 24px 48px rgba(90,48,208,0.35);">
-                        <div class="absolute -right-12 -top-12 w-40 h-40 rounded-full pointer-events-none" style="background: rgba(204,190,255,0.12); filter: blur(40px);"></div>
-                        <div class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold border border-[#ffb4ab]/40 text-[#ffb4ab]"
-                             style="background: rgba(255,180,171,0.12);">
-                            Осталось <span id="breakthroughSeatsLeft">—</span> мест
+                <!-- Прорыв: компактная премиум-карточка (того же размера, что и обычные тарифы) -->
+                <div id="breakthroughCardWrap" class="hidden">
+                    <button type="button" id="breakthroughCard"
+                            onclick="showTariffModal('breakthrough')"
+                            class="w-full text-left p-5 rounded-2xl cursor-pointer transition-all duration-200 relative overflow-hidden"
+                            style="background: linear-gradient(135deg, rgba(90,48,208,0.18) 0%, rgba(33,30,41,0.95) 100%); border: 1px solid rgba(204,190,255,0.35); box-shadow: 0 0 0 1px rgba(204,190,255,0.15), 0 0 24px rgba(101,62,219,0.25);">
+                        <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full pointer-events-none" style="background: rgba(204,190,255,0.10); filter: blur(32px);"></div>
+                        <div class="relative z-10 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg,#ccbeff 0%, #9b7aff 100%);">
+                                    <span class="material-symbols-outlined text-[#1e0060]" style="font-variation-settings:'FILL' 1">workspace_premium</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-sm font-semibold text-[#e7deff]">Прорыв</span>
+                                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#ffb4ab]/40 text-[#ffb4ab]" style="background: rgba(255,180,171,0.10);">
+                                            <span id="breakthroughSeatsBadge">—</span>
+                                        </span>
+                                    </div>
+                                    <p class="text-on-surface-variant text-xs mt-0.5 truncate" id="breakthroughCardSubtitle">Личное наставничество с Романом</p>
+                                </div>
+                            </div>
+                            <div class="text-right flex-shrink-0 ml-3">
+                                <div class="text-xs text-on-surface-variant/60 line-through hidden tabular-nums" id="breakthroughCardOldPrice"></div>
+                                <div class="text-lg font-bold text-[#ccbeff] tabular-nums" id="breakthroughCardPrice">—</div>
+                                <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/70 mt-0.5">3 месяца</div>
+                            </div>
                         </div>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-[#ccbeff]/80 mb-2">Личное наставничество</p>
-                        <h3 class="text-2xl md:text-3xl font-black text-[#e7deff] tracking-tight">Прорыв</h3>
-                        <p class="text-[#cac3d7] text-sm mt-2 max-w-xl">Полный доступ к Авроре с лимитом 50 откликов в день, автоподнятие резюме каждые 4 часа, еженедельные встречи и разборы с Романом — до победного оффера.</p>
-                        <ul class="mt-5 space-y-2 text-sm text-[#e7e0ef]">
-                            <li class="flex items-start gap-2"><span class="material-symbols-outlined text-[#ccbeff] text-lg shrink-0" style="font-variation-settings:'FILL' 1">check_circle</span>50 откликов в день</li>
-                            <li class="flex items-start gap-2"><span class="material-symbols-outlined text-[#ccbeff] text-lg shrink-0" style="font-variation-settings:'FILL' 1">arrow_circle_up</span>Автоподнятие резюме каждые 4 часа</li>
-                            <li class="flex items-start gap-2"><span class="material-symbols-outlined text-[#ccbeff] text-lg shrink-0" style="font-variation-settings:'FILL' 1">groups</span>Еженедельные встречи и групповые разборы</li>
-                            <li class="flex items-start gap-2"><span class="material-symbols-outlined text-[#ccbeff] text-lg shrink-0" style="font-variation-settings:'FILL' 1">psychology</span>Индивидуальная стратегия и упаковка резюме</li>
-                        </ul>
-                        <div class="mt-6 flex flex-wrap items-end gap-3" id="breakthroughPriceBlock">
-                            <div class="text-3xl font-black text-[#e7deff] tabular-nums" id="breakthroughPrice">—</div>
-                            <div class="text-sm text-[#cac3d7]/80 line-through hidden" id="breakthroughOldPrice"></div>
-                        </div>
-                        <p class="text-xs text-[#cac3d7]/70 mt-1">90 дней · автопродление · отмена в любой момент</p>
-                        <button type="button" id="breakthroughBuyBtn" onclick="handlePurchase('breakthrough')"
-                                class="mt-6 w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm cursor-pointer transition-all duration-200 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ccbeff]/60"
-                                style="background: linear-gradient(135deg, #ccbeff 0%, #9b7aff 100%); color: #1e0060;">
-                            Получить Прорыв
-                        </button>
-                        <p id="breakthroughCpWarning" class="hidden text-xs text-[#cac3d7]/75 mt-4 max-w-lg leading-relaxed">
-                            При переходе на тариф «Прорыв» текущая автоподписка будет отменена. Новая подписка подключается на 90 дней с автопродлением — отменить можно в любой момент в личном кабинете.
-                        </p>
-                    </div>
-                </section>
+                    </button>
+                </div>
 
                 <!-- Уже на Прорыве: чат + автоподнятие -->
                 <section id="breakthroughActivePanel" class="hidden mt-2">
@@ -1161,7 +1158,10 @@ function toggleMobileMenu() {
             <button type="button" id="tariffModalPayBtn" class="w-full px-8 py-4 rounded-xl luxury-gradient text-white font-bold text-base shadow-[0_10px_30px_rgba(90,48,208,0.35)] hover:brightness-110 active:scale-[0.98] transition-all">
                 Перейти к оплате
             </button>
-            <p class="text-center text-[11px] text-on-surface-variant/50 leading-relaxed">
+            <p id="tariffModalCpWarning" class="hidden text-[11px] text-[#ffb4ab]/85 leading-relaxed text-center">
+                У вас активна автоподписка на другой тариф. При оплате «Прорыва» она будет отменена — повторных списаний не будет.
+            </p>
+            <p id="tariffModalDefaultNote" class="text-center text-[11px] text-on-surface-variant/50 leading-relaxed">
                 Безопасная оплата через CloudPayments. Отменить подписку можно в любой момент в личном кабинете.
             </p>
         </div>
@@ -1196,7 +1196,7 @@ function toggleMobileMenu() {
 </div>
 
 <script src="discount-banner.js?v=3"></script>
-<script src="cabinet.js?v=6.7"></script>
+<script src="cabinet.js?v=6.8"></script>
 <script src="support-widget.js?v=2"></script>
 </body>
 </html>
