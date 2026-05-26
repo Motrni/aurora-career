@@ -1488,7 +1488,7 @@ async function loadReferralCodes() {
         slotsEl.innerHTML = data.slots.map(function(slot, i) {
             const num = i + 1;
             if (slot.used) {
-                return `<div class="p-3 rounded-xl border border-outline-variant/10" style="background:rgba(74,222,128,0.04)">
+                return `<div class="cab-inset p-3" style="background:rgba(74,222,128,0.06);border-color:rgba(74,222,128,0.2);">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-[#4ade80] text-lg" style="font-variation-settings:'FILL' 1;">check_circle</span>
                         <span class="text-sm text-on-surface font-medium">Код #${num}</span>
@@ -1498,7 +1498,7 @@ async function loadReferralCodes() {
                 </div>`;
             }
             const link = `${siteBase}/auth/?ref=${encodeURIComponent(slot.code)}`;
-            return `<div class="p-3 rounded-xl border border-outline-variant/10" style="background:rgba(204,190,255,0.03)">
+            return `<div class="cab-inset p-3" style="background:rgba(204,190,255,0.04);">
                 <div class="flex items-center gap-2 mb-2">
                     <span class="material-symbols-outlined text-primary text-lg">link</span>
                     <span class="text-sm text-on-surface font-medium">Код #${num}</span>
@@ -1811,7 +1811,47 @@ async function loadTariffs(user) {
         // Текущий выбранный индекс
         let selectedIdx = 0;
 
-        function renderMonthSelector() {
+        function updateMonthSelectorThumb() {
+            const track = selector.querySelector('.month-selector-track');
+            if (!track) return;
+            const thumb = track.querySelector('.month-selector-thumb');
+            const cell = track.querySelectorAll('.month-tab-cell')[selectedIdx];
+            if (!thumb || !cell) return;
+            const gap = 4;
+            const pad = 4;
+            const trackW = track.clientWidth;
+            const cellW = cell.offsetWidth;
+            const cellL = cell.offsetLeft;
+            thumb.style.width = `${cellW}px`;
+            thumb.style.left = `${cellL}px`;
+            if (trackW > 0 && cellW > 0) {
+                thumb.style.opacity = '1';
+            }
+        }
+
+        function syncMonthSelectorState() {
+            const track = selector.querySelector('.month-selector-track');
+            if (!track) return;
+            track.querySelectorAll('.month-tab-cell').forEach((cell, i) => {
+                const isSelected = i === selectedIdx;
+                const tab = cell.querySelector('.month-tab');
+                const badge = cell.querySelector('.month-tab-badge');
+                if (tab) {
+                    tab.classList.toggle('is-active', isSelected);
+                    tab.setAttribute('aria-pressed', String(isSelected));
+                }
+                if (badge) badge.classList.toggle('is-active', isSelected);
+            });
+            requestAnimationFrame(updateMonthSelectorThumb);
+        }
+
+        function renderMonthSelector(forceRebuild) {
+            const existingTrack = selector.querySelector('.month-selector-track');
+            if (existingTrack && !forceRebuild) {
+                syncMonthSelectorState();
+                return;
+            }
+
             const cells = gridTariffs.map((t, i) => {
                 const months = Math.round(t.duration_days / 30);
                 const isSelected = i === selectedIdx;
@@ -1834,7 +1874,25 @@ async function loadTariffs(user) {
                     </button>
                 </div>`;
             }).join('');
-            selector.innerHTML = `<div class="month-selector-track" role="tablist">${cells}</div>`;
+
+            selector.innerHTML = `<div class="month-selector-track" role="tablist">
+                <div class="month-selector-thumb" aria-hidden="true" style="opacity:0"></div>
+                ${cells}
+            </div>`;
+
+            requestAnimationFrame(() => {
+                updateMonthSelectorThumb();
+                requestAnimationFrame(updateMonthSelectorThumb);
+            });
+        }
+
+        if (!selector._monthThumbResizeBound) {
+            selector._monthThumbResizeBound = true;
+            window.addEventListener('resize', () => {
+                if (selector.querySelector('.month-selector-track')) {
+                    updateMonthSelectorThumb();
+                }
+            }, { passive: true });
         }
 
         function renderTariffPrice() {
@@ -1866,7 +1924,7 @@ async function loadTariffs(user) {
         // Экспортируем функцию переключения глобально для onclick
         window.selectTariffMonth = function(idx) {
             selectedIdx = idx;
-            renderMonthSelector();
+            renderMonthSelector(false);
             renderTariffPrice();
         };
 
@@ -1918,7 +1976,7 @@ async function loadTariffs(user) {
             trialInCard.classList.toggle('hidden', !canTrial);
         }
 
-        renderMonthSelector();
+        renderMonthSelector(true);
         renderTariffPrice();
         grid.classList.remove('hidden');
 
