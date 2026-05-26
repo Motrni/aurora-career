@@ -1712,6 +1712,31 @@ function pluralizeSeats(n) {
     return `${v} мест`;
 }
 
+/** «42 дня», «49 дней», «1 день» */
+function pluralizeDays(n) {
+    const v = Math.abs(Math.round(Number(n) || 0));
+    const mod10 = v % 10;
+    const mod100 = v % 100;
+    if (mod10 === 1 && mod100 !== 11) return `${v} день`;
+    if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return `${v} дня`;
+    return `${v} дней`;
+}
+
+const DISCOUNT_TIMER_HOURS_THRESHOLD = 48;
+
+/** >48 ч — дни со склонением; ≤48 ч — HH:MM:SS */
+function formatDiscountTimerRemaining(secondsRemaining) {
+    const sec = Math.max(0, Math.floor(secondsRemaining));
+    if (sec > DISCOUNT_TIMER_HOURS_THRESHOLD * 3600) {
+        const days = Math.max(1, Math.floor(sec / 86400));
+        return pluralizeDays(days);
+    }
+    const h = Math.floor(sec / 3600).toString().padStart(2, '0');
+    const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
+    const s = (sec % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+}
+
 let _breakthroughInfo = null;
 
 async function loadBreakthroughPremium(user) {
@@ -1817,16 +1842,32 @@ async function loadTariffs(user) {
             const thumb = track.querySelector('.month-selector-thumb');
             const cell = track.querySelectorAll('.month-tab-cell')[selectedIdx];
             if (!thumb || !cell) return;
-            const gap = 4;
-            const pad = 4;
-            const trackW = track.clientWidth;
             const cellW = cell.offsetWidth;
             const cellL = cell.offsetLeft;
+            if (cellW <= 0) return;
             thumb.style.width = `${cellW}px`;
             thumb.style.left = `${cellL}px`;
-            if (trackW > 0 && cellW > 0) {
-                thumb.style.opacity = '1';
+            thumb.style.opacity = '1';
+        }
+
+        function bindMonthThumbLayoutWatch() {
+            const track = selector.querySelector('.month-selector-track');
+            if (!track) return;
+            if (selector._monthThumbRO) {
+                selector._monthThumbRO.disconnect();
             }
+            const ro = new ResizeObserver(() => updateMonthSelectorThumb());
+            ro.observe(track);
+            selector._monthThumbRO = ro;
+        }
+
+        function refreshMonthSelectorHighlight() {
+            syncMonthSelectorState();
+            updateMonthSelectorThumb();
+            requestAnimationFrame(() => {
+                updateMonthSelectorThumb();
+                requestAnimationFrame(updateMonthSelectorThumb);
+            });
         }
 
         function syncMonthSelectorState() {
@@ -1880,10 +1921,8 @@ async function loadTariffs(user) {
                 ${cells}
             </div>`;
 
-            requestAnimationFrame(() => {
-                updateMonthSelectorThumb();
-                requestAnimationFrame(updateMonthSelectorThumb);
-            });
+            bindMonthThumbLayoutWatch();
+            refreshMonthSelectorHighlight();
         }
 
         if (!selector._monthThumbResizeBound) {
@@ -1949,10 +1988,12 @@ async function loadTariffs(user) {
                         discountStrip.classList.add('hidden');
                         return;
                     }
-                    const h = Math.floor(sec / 3600).toString().padStart(2, '0');
-                    const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
-                    const s = (sec % 60).toString().padStart(2, '0');
-                    if (timerEl) timerEl.textContent = `${h}:${m}:${s}`;
+                    if (timerEl) {
+                        timerEl.textContent = formatDiscountTimerRemaining(sec);
+                        const useClock = sec <= DISCOUNT_TIMER_HOURS_THRESHOLD * 3600;
+                        timerEl.classList.toggle('font-mono', useClock);
+                        timerEl.classList.toggle('tabular-nums', useClock);
+                    }
                     setTimeout(updateTimer, 1000);
                 };
                 if (labelEl) labelEl.textContent = `Скидка ${Math.round(d.percent)}% сгорит через:`;
@@ -1976,9 +2017,10 @@ async function loadTariffs(user) {
             trialInCard.classList.toggle('hidden', !canTrial);
         }
 
+        grid.classList.remove('hidden');
         renderMonthSelector(true);
         renderTariffPrice();
-        grid.classList.remove('hidden');
+        refreshMonthSelectorHighlight();
 
     } catch (e) {
         console.error('[Tariffs] Error:', e);
@@ -2170,7 +2212,14 @@ function showTariffModal(planCode) {
             oldPriceEl.classList.add('hidden');
         }
     }
-    if (metaEl) metaEl.textContent = `${t.duration_days} дней · ${pricePerDay}\u00a0₽/день`;
+    if (metaEl) {
+        const daysLabel = pluralizeDays(t.duration_days);
+        if (planCode === 'breakthrough') {
+            metaEl.textContent = daysLabel;
+        } else {
+            metaEl.textContent = `${daysLabel} · ${pricePerDay}\u00a0₽/день`;
+        }
+    }
 
     const hasBoost = t.included_boost_20 || t.included_boost_40;
     if (boostBadge) {
