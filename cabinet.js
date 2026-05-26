@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.9.4 — Логика личного кабинета Aurora Career.
+ * cabinet.js v3.9.5 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  *
  * v3.8:   3-уровневая защита от блокировки popup при оплате (см. handlePurchase).
@@ -247,6 +247,8 @@ async function renderCabinet(user) {
     } else {
         if (featuresBlock) featuresBlock.classList.add('hidden');
     }
+
+    await loadBreakthroughPremium(user);
 
     const hasAccess = user.subscription_status === 'trial' || user.subscription_status === 'active';
     let activeResumeHasProfile = true;
@@ -748,7 +750,12 @@ function updateSubscriptionCard(user) {
             badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#4ade80]/15 text-[#4ade80]';
             badge.classList.remove('hidden');
 
-            if (hasOnboarding) {
+            if (user.subscription && user.subscription.current_plan_code === 'breakthrough') {
+                title.textContent = 'Тариф «Прорыв»';
+                if (!hasOnboarding) {
+                    desc.textContent = 'Наставничество и 50 откликов в день. Закрытый чат — в блоке ниже.';
+                }
+            } else if (hasOnboarding) {
                 desc.textContent = 'Завершите первую настройку — привяжите hh.ru и выберите резюме.';
             } else {
                 desc.textContent = 'Все функции доступны. Управление поиском и откликами — в блоках справа.';
@@ -1697,6 +1704,75 @@ async function handleLogout() {
     window.location.href = '/auth/';
 }
 
+
+async function loadBreakthroughPremium(user) {
+    const premium = document.getElementById('breakthroughPremium');
+    const activePanel = document.getElementById('breakthroughActivePanel');
+    const autoBadge = document.getElementById('resumeAutoTouchBadge');
+    if (!premium) return;
+
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/breakthrough/info`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+
+        const seatsEl = document.getElementById('breakthroughSeatsLeft');
+        if (seatsEl) seatsEl.textContent = String(data.seats_left ?? '—');
+
+        if (data.has_active_breakthrough) {
+            premium.classList.add('hidden');
+            if (activePanel) {
+                activePanel.classList.remove('hidden');
+                const chatLink = document.getElementById('breakthroughChatLink');
+                if (chatLink && data.chat_url) chatLink.href = data.chat_url;
+            }
+            if (autoBadge) autoBadge.classList.remove('hidden');
+            return;
+        }
+
+        if (activePanel) activePanel.classList.add('hidden');
+        if (autoBadge) autoBadge.classList.add('hidden');
+
+        if (!data.show_premium_card) {
+            premium.classList.add('hidden');
+            return;
+        }
+
+        premium.classList.remove('hidden');
+
+        const priceEl = document.getElementById('breakthroughPrice');
+        const oldPriceEl = document.getElementById('breakthroughOldPrice');
+        const buyBtn = document.getElementById('breakthroughBuyBtn');
+        const cpWarn = document.getElementById('breakthroughCpWarning');
+
+        const cur = Number(data.current_price || 0);
+        const base = Number(data.base_price || 0);
+        if (priceEl) priceEl.textContent = cur.toLocaleString('ru-RU') + ' ₽';
+        if (oldPriceEl) {
+            if (data.is_loyal && base > cur) {
+                oldPriceEl.textContent = base.toLocaleString('ru-RU') + ' ₽';
+                oldPriceEl.classList.remove('hidden');
+            } else {
+                oldPriceEl.classList.add('hidden');
+            }
+        }
+
+        if (buyBtn) {
+            buyBtn.textContent = user.subscription_status === 'active'
+                ? 'Улучшить тариф до «Прорыва»'
+                : 'Получить «Прорыв»';
+        }
+
+        if (cpWarn) {
+            const showWarn = user.subscription_status === 'active' && data.has_cp_recurrent;
+            cpWarn.classList.toggle('hidden', !showWarn);
+        }
+    } catch (e) {
+        console.error('[Breakthrough] load error:', e);
+    }
+}
+
+
 async function loadTariffs() {
     const grid = document.getElementById('tariffGrid');
     const container = document.getElementById('paidTariffs');
@@ -1706,7 +1782,7 @@ async function loadTariffs() {
         if (!resp || !resp.ok) return;
 
         const data = await resp.json();
-        const tariffs = data.tariffs || [];
+        const tariffs = (data.tariffs || []).filter(t => t.plan_code !== 'breakthrough');
         _loadedTariffs = tariffs;
 
         if (tariffs.length === 0) {

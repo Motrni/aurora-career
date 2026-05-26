@@ -36,6 +36,7 @@ let toastAfterTimer = null;
 window.BOT_USERNAME = "Aurora_Career_Bot";
 
 document.addEventListener("DOMContentLoaded", async () => {
+    loadBreakthroughAutoTouchBadge();
     toggleGlobalLoading(true);
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -353,6 +354,23 @@ function updateResponsesResumeTitles(data) {
     if (manualEl) manualEl.textContent = label;
     if (clEl) clEl.textContent = label;
 }
+
+
+async function loadBreakthroughAutoTouchBadge() {
+    const el = document.getElementById('responsesAutoTouchBadge');
+    if (!el) return;
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/breakthrough/info`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+        if (data.auto_touch_enabled || data.has_active_breakthrough) {
+            el.classList.remove('hidden');
+        } else {
+            el.classList.add('hidden');
+        }
+    } catch (_) {}
+}
+
 
 function updateStatusPanel(data) {
     isAutopilotActive = data.is_active;
