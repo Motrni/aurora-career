@@ -216,7 +216,7 @@ a.cab-inset--accent:hover {
 /* Селектор месяцев */
 .month-selector-wrap {
     margin-bottom: 1.25rem;
-    padding-top: 1.5rem;
+    padding-top: 1.15rem;
 }
 .month-selector-track {
     position: relative;
@@ -226,6 +226,7 @@ a.cab-inset--accent:hover {
     border-radius: 10px;
     background: rgba(15, 23, 42, 0.85);
     border: 1px solid rgba(51, 65, 85, 0.5);
+    overflow: visible;
 }
 .month-selector-thumb {
     position: absolute;
@@ -254,7 +255,8 @@ a.cab-inset--accent:hover {
 .month-tab-badge {
     position: absolute;
     left: 50%;
-    bottom: calc(100% - 4px);
+    /* нижний край бейджа на верхней границе трека (над подписью месяца) */
+    bottom: calc(100% + 5px);
     z-index: 2;
     white-space: nowrap;
     font-size: 9px;
@@ -264,7 +266,7 @@ a.cab-inset--accent:hover {
     border-radius: 6px;
     pointer-events: none;
     opacity: 0.88;
-    transform: translateX(-50%) translateY(10px) scale(0.86, 0.82);
+    transform: translateX(-50%) translateY(-50%) scale(0.86, 0.82);
     transform-origin: center bottom;
     transition:
         transform 0.48s cubic-bezier(0.16, 1, 0.3, 1),
@@ -1419,7 +1421,7 @@ function toggleMobileMenu() {
 </div>
 
 <script src="discount-banner.js?v=3"></script>
-<script src="cabinet.js?v=7.2"></script>
+<script src="cabinet.js?v=7.3"></script>
 <script src="support-widget.js?v=2"></script>
 </body>
 </html>
