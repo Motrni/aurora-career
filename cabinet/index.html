@@ -563,81 +563,103 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                 </section>
                 </div>
 
-                <!-- Все тарифы включают -->
-                <div id="tariffFeatures" class="hidden p-5 rounded-2xl glass-panel border border-outline-variant/5 space-y-2.5">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant/60 mb-3">Все тарифы включают</p>
-                    <div class="flex items-start gap-2.5">
-                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
-                        <p class="text-sm text-on-surface leading-snug">До 20 откликов в день — автопилот или ручной режим на ваш выбор</p>
-                    </div>
-                    <div class="flex items-start gap-2.5">
-                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
-                        <p class="text-sm text-on-surface leading-snug">Сопроводительное письмо под каждую вакансию</p>
-                    </div>
-                    <div class="flex items-start gap-2.5">
-                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
-                        <p class="text-sm text-on-surface leading-snug">Анализ резюме</p>
-                    </div>
-                    <div class="flex items-start gap-2.5">
-                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
-                        <p class="text-sm text-on-surface leading-snug">Улучшение резюме через AI-интервью</p>
-                    </div>
-                    <div class="flex items-start gap-2.5">
-                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
-                        <p class="text-sm text-on-surface leading-snug">Нашли работу раньше срока — отмените подписку в один клик, новых списаний не будет</p>
-                    </div>
-                </div>
+                <!-- Двухколоночный грид: тарифы + Прорыв -->
+                <div id="tariffGrid" class="hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-                <!-- Tariff grid -->
-                <div id="tariffGrid" class="hidden space-y-3">
-                    <div class="p-5 rounded-2xl cab-card cursor-pointer transition-all" onclick="handleActivateTrial()" id="trialCard">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-[#653edb]/15 flex items-center justify-center flex-shrink-0">
-                                <span class="material-symbols-outlined text-primary">rocket_launch</span>
+                        <!-- Левая карточка: стандартные тарифы -->
+                        <div id="mainTariffCard" class="p-5 md:p-6 rounded-2xl cab-card relative overflow-hidden flex flex-col">
+                            <!-- Плашка скидки (встроенная, замена большому баннеру) -->
+                            <div id="tariffDiscountStrip" class="hidden mb-4 flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold" style="background:rgba(101,62,219,0.12);border:1px solid rgba(204,190,255,0.2);">
+                                <span class="flex items-center gap-1.5 text-primary">
+                                    <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">local_offer</span>
+                                    <span id="tariffDiscountLabel">Скидка активна</span>
+                                </span>
+                                <span class="font-mono tabular-nums text-on-surface" id="tariffDiscountTimer"></span>
                             </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm font-semibold text-on-surface">Попробовать: 10 откликов</span>
-                                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#653edb]/20 text-primary">Бесплатно</span>
+
+                            <h3 class="text-base font-bold text-on-surface mb-1">Полный доступ к сервису</h3>
+                            <p class="text-on-surface-variant text-xs mb-4 leading-relaxed">Все инструменты автоматизации Авроры для быстрого поиска работы.</p>
+
+                            <!-- Селектор периода -->
+                            <div id="tariffMonthSelector" class="flex gap-1 p-1 rounded-xl mb-5 self-start w-full" style="background:rgba(55,51,62,0.5);"></div>
+
+                            <!-- Цена -->
+                            <div class="mb-4">
+                                <div class="text-xs text-on-surface-variant/60 line-through hidden tabular-nums mb-0.5" id="tariffCardOldPrice"></div>
+                                <div class="flex items-baseline gap-1.5">
+                                    <span class="text-3xl font-black text-on-surface tabular-nums" id="tariffCardPrice">—</span>
+                                    <span class="text-on-surface-variant text-base">₽</span>
                                 </div>
-                                <p class="text-on-surface-variant text-xs mt-0.5">Без привязки карты. Аврора откликнется на 10 вакансий за вас.</p>
+                                <p class="text-xs text-primary mt-1 font-medium" id="tariffCardHint"></p>
+                            </div>
+
+                            <!-- Фичи -->
+                            <ul class="space-y-2 mb-5 flex-1 text-sm text-on-surface">
+                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-primary text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>20 автоматических откликов в день</li>
+                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-primary text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>Базовый ИИ-аудит вашего резюме</li>
+                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-primary text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>Генерация умных сопроводительных</li>
+                                <li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-primary text-[17px] shrink-0" style="font-variation-settings:'FILL' 1">check</span>Доступ к ручному отбору вакансий</li>
+                            </ul>
+
+                            <!-- CTA -->
+                            <button type="button" id="tariffCardBtn"
+                                    class="w-full py-3.5 rounded-xl luxury-gradient text-white font-bold text-sm cursor-pointer hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_8px_24px_rgba(90,48,208,0.3)]">
+                                Купить подписку
+                            </button>
+
+                            <!-- Триал (если доступен) -->
+                            <div id="trialInCard" class="hidden mt-3">
+                                <button type="button" id="trialCard" onclick="handleActivateTrial()"
+                                        class="w-full py-2.5 rounded-xl border border-primary/30 text-primary font-medium text-xs cursor-pointer hover:bg-primary/8 transition-colors">
+                                    Попробовать бесплатно — 10 откликов без привязки карты
+                                </button>
                             </div>
                         </div>
-                    </div>
-                    <div id="paidTariffs" class="space-y-3">
-                        <div class="skeleton skeleton-block" style="height: 64px; border-radius: 16px;"></div>
-                    </div>
-                </div>
 
-                <!-- Прорыв: компактная премиум-карточка (того же размера, что и обычные тарифы) -->
-                <div id="breakthroughCardWrap" class="hidden">
-                    <button type="button" id="breakthroughCard"
-                            onclick="showTariffModal('breakthrough')"
-                            class="w-full text-left p-5 rounded-2xl cursor-pointer transition-all duration-200 relative overflow-hidden"
-                            style="background: linear-gradient(135deg, rgba(90,48,208,0.18) 0%, rgba(33,30,41,0.95) 100%); border: 1px solid rgba(204,190,255,0.35); box-shadow: 0 0 0 1px rgba(204,190,255,0.15), 0 0 24px rgba(101,62,219,0.25);">
-                        <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full pointer-events-none" style="background: rgba(204,190,255,0.10); filter: blur(32px);"></div>
-                        <div class="relative z-10 flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg,#ccbeff 0%, #9b7aff 100%);">
-                                    <span class="material-symbols-outlined text-[#1e0060]" style="font-variation-settings:'FILL' 1">workspace_premium</span>
+                        <!-- Правая карточка: Прорыв -->
+                        <div id="breakthroughCardWrap" class="hidden flex flex-col">
+                            <button type="button" id="breakthroughCard"
+                                    onclick="showTariffModal('breakthrough')"
+                                    class="w-full h-full text-left p-5 md:p-6 rounded-2xl cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col"
+                                    style="background:linear-gradient(135deg,rgba(90,48,208,0.20) 0%,rgba(33,30,41,0.97) 100%);border:1px solid rgba(204,190,255,0.30);box-shadow:0 0 0 1px rgba(204,190,255,0.12),0 0 32px rgba(101,62,219,0.22);">
+                                <div class="absolute -right-10 -top-10 w-44 h-44 rounded-full pointer-events-none" style="background:rgba(204,190,255,0.08);filter:blur(40px);"></div>
+
+                                <!-- Бейдж мест -->
+                                <div class="inline-flex items-center self-start mb-4 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider" style="background:rgba(255,82,82,0.18);color:#ff7070;border:1px solid rgba(255,82,82,0.30);">
+                                    <span id="breakthroughSeatsBadge">Осталось 4 места</span>
                                 </div>
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-sm font-semibold text-[#e7deff]">Прорыв</span>
-                                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#ffb4ab]/40 text-[#ffb4ab]" style="background: rgba(255,180,171,0.10);">
-                                            <span id="breakthroughSeatsBadge">—</span>
-                                        </span>
+
+                                <h3 class="text-base font-bold text-[#e7deff] mb-1">Наставничество Прорыв</h3>
+                                <p class="text-[#cac3d7] text-xs mb-4 leading-relaxed">Личное сопровождение Романа. Для тех, кому нужна персональная стратегия.</p>
+
+                                <!-- Цена -->
+                                <div class="mb-4">
+                                    <div class="text-xs text-[#cac3d7]/60 line-through hidden tabular-nums mb-0.5" id="breakthroughCardOldPrice"></div>
+                                    <div class="flex items-baseline gap-1.5">
+                                        <span class="text-3xl font-black text-[#e7deff] tabular-nums" id="breakthroughCardPrice">24 990</span>
+                                        <span class="text-[#cac3d7] text-base">₽</span>
                                     </div>
-                                    <p class="text-on-surface-variant text-xs mt-0.5 truncate" id="breakthroughCardSubtitle">Личное наставничество с Романом</p>
+                                    <p class="text-xs text-[#ccbeff] mt-1 font-medium" id="breakthroughCardHint">Фиксированный доступ на 90 дней</p>
                                 </div>
-                            </div>
-                            <div class="text-right flex-shrink-0 ml-3">
-                                <div class="text-xs text-on-surface-variant/60 line-through hidden tabular-nums" id="breakthroughCardOldPrice"></div>
-                                <div class="text-lg font-bold text-[#ccbeff] tabular-nums" id="breakthroughCardPrice">—</div>
-                                <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/70 mt-0.5">3 месяца</div>
-                            </div>
+
+                                <!-- Фичи -->
+                                <ul class="space-y-2 mb-5 flex-1 text-sm text-[#e7e0ef]">
+                                    <li class="flex items-center gap-2.5"><span class="text-[#ccbeff] text-base">★</span>Еженедельные встречи и разборы</li>
+                                    <li class="flex items-center gap-2.5"><span class="text-[#ccbeff] text-base">★</span>Глубокая переработка резюме</li>
+                                    <li class="flex items-center gap-2.5"><span class="text-[#ccbeff] text-base">★</span>Подготовка к сложным HR-интервью</li>
+                                    <li class="flex items-center gap-2.5"><span class="text-[#ccbeff] text-base">★</span>Автоподнятие резюме + лимит 50/день</li>
+                                </ul>
+
+                                <!-- CTA -->
+                                <div class="w-full py-3.5 rounded-xl text-center font-bold text-sm"
+                                     style="background:linear-gradient(135deg,#7c4dff 0%,#5a30d0 100%);color:#e7deff;box-shadow:0 8px 24px rgba(124,77,255,0.30);">
+                                    Записаться
+                                </div>
+                            </button>
                         </div>
-                    </button>
+
+                    </div><!-- /grid -->
                 </div>
 
                 <!-- Уже на Прорыве: чат + автоподнятие -->
@@ -1196,7 +1218,7 @@ function toggleMobileMenu() {
 </div>
 
 <script src="discount-banner.js?v=3"></script>
-<script src="cabinet.js?v=6.8"></script>
+<script src="cabinet.js?v=7.0"></script>
 <script src="support-widget.js?v=2"></script>
 </body>
 </html>

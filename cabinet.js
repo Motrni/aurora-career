@@ -1,5 +1,5 @@
 /**
- * cabinet.js v3.9.6 — Логика личного кабинета Aurora Career.
+ * cabinet.js v4.0.0 — Логика личного кабинета Aurora Career.
  * Доступен всем авторизованным пользователям, включая subscription_status='none'.
  *
  * v3.8:   3-уровневая защита от блокировки popup при оплате (см. handlePurchase).
@@ -240,12 +240,8 @@ async function renderCabinet(user) {
         user.subscription_status === 'trial' ||
         user.subscription_status === 'ended_trial' ||
         user.subscription_status === 'ended_active';
-    const featuresBlock = document.getElementById('tariffFeatures');
     if (showTariffs) {
-        await loadTariffs();
-        if (featuresBlock) featuresBlock.classList.remove('hidden');
-    } else {
-        if (featuresBlock) featuresBlock.classList.add('hidden');
+        await loadTariffs(user);
     }
 
     await loadBreakthroughPremium(user);
@@ -1593,7 +1589,7 @@ async function applyPromoCode() {
             document.getElementById('promoAppliedMentor').textContent =
                 [data.mentor_name, data.benefit].filter(Boolean).join(' — ');
 
-            loadTariffs();
+            loadTariffs(currentUser);
         } else {
             errEl.textContent = data.detail || 'Не удалось применить промокод';
             errEl.classList.remove('hidden');
@@ -1673,6 +1669,8 @@ async function handleRevokeAll() {
 // ============================================================================
 
 function applyTrialCardVisibility(user) {
+    // trialCard теперь находится внутри #trialInCard, который управляется в loadTariffs.
+    // Оставляем функцию для обратной совместимости с другими вызывающими её местами.
     const trialCard = document.getElementById('trialCard');
     if (!trialCard) return;
     const show =
@@ -1759,19 +1757,21 @@ async function loadBreakthroughPremium(user) {
         const base = Number(data.base_price || 0);
         const priceEl = document.getElementById('breakthroughCardPrice');
         const oldPriceEl = document.getElementById('breakthroughCardOldPrice');
-        if (priceEl) priceEl.textContent = `${cur.toLocaleString('ru-RU')} ₽`;
+        const hintEl = document.getElementById('breakthroughCardHint');
+        if (priceEl) priceEl.textContent = cur.toLocaleString('ru-RU');
         if (oldPriceEl) {
             if (data.is_loyal && base > cur) {
-                oldPriceEl.textContent = `${base.toLocaleString('ru-RU')} ₽`;
+                oldPriceEl.textContent = `${base.toLocaleString('ru-RU')}\u00a0₽`;
                 oldPriceEl.classList.remove('hidden');
             } else {
                 oldPriceEl.classList.add('hidden');
             }
         }
-
-        const subtitleEl = document.getElementById('breakthroughCardSubtitle');
-        if (subtitleEl && user && user.subscription_status === 'active') {
-            subtitleEl.textContent = 'Улучшить тариф · наставничество с Романом';
+        if (hintEl) {
+            hintEl.textContent = data.is_loyal
+                ? `Спеццена для своих \u2212${Math.round(base - cur).toLocaleString('ru-RU')}\u00a0₽`
+                : 'Фиксированный доступ на 90 дней';
+            hintEl.style.color = data.is_loyal ? '#ccbeff' : '';
         }
     } catch (e) {
         console.error('[Breakthrough] load error:', e);
@@ -1779,9 +1779,15 @@ async function loadBreakthroughPremium(user) {
 }
 
 
-async function loadTariffs() {
+async function loadTariffs(user) {
     const grid = document.getElementById('tariffGrid');
-    const container = document.getElementById('paidTariffs');
+    const selector = document.getElementById('tariffMonthSelector');
+    const priceEl = document.getElementById('tariffCardPrice');
+    const oldPriceEl = document.getElementById('tariffCardOldPrice');
+    const hintEl = document.getElementById('tariffCardHint');
+    const buyBtn = document.getElementById('tariffCardBtn');
+    const trialInCard = document.getElementById('trialInCard');
+    const discountStrip = document.getElementById('tariffDiscountStrip');
 
     try {
         const resp = await apiFetch(`${API_BASE_URL}/api/tariffs`);
@@ -1792,48 +1798,124 @@ async function loadTariffs() {
         const gridTariffs = _loadedTariffs.filter(t => t.plan_code !== 'breakthrough');
 
         if (gridTariffs.length === 0) {
-            container.innerHTML = '';
             grid.classList.remove('hidden');
             return;
         }
 
-        container.innerHTML = gridTariffs.map((t) => {
+        // Сортируем по duration
+        gridTariffs.sort((a, b) => a.duration_days - b.duration_days);
+
+        // Определяем "выгодный" (последний) и "популярный" (is_popular или средний)
+        const lastIdx = gridTariffs.length - 1;
+
+        // Текущий выбранный индекс
+        let selectedIdx = 0;
+
+        function renderMonthSelector() {
+            selector.innerHTML = gridTariffs.map((t, i) => {
+                const months = Math.round(t.duration_days / 30);
+                const isSelected = i === selectedIdx;
+                const isPopular = !!t.is_popular;
+                const isBest = !isPopular && i === lastIdx && gridTariffs.length > 1;
+                let badge = '';
+                if (isPopular) {
+                    badge = '<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:rgba(204,190,255,0.25);color:#ccbeff;">Популярный</span>';
+                } else if (isBest) {
+                    badge = '<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:rgba(74,222,128,0.18);color:#4ade80;">Выгодно</span>';
+                }
+                return `<button type="button"
+                    class="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${isSelected ? 'text-on-surface' : 'text-on-surface-variant hover:text-on-surface'}"
+                    style="${isSelected ? 'background:rgba(101,62,219,0.35);box-shadow:0 2px 8px rgba(90,48,208,0.25);' : ''}"
+                    onclick="selectTariffMonth(${i})"
+                    data-tariff-idx="${i}">
+                    ${months}\u00a0мес${badge}
+                </button>`;
+            }).join('');
+        }
+
+        function renderTariffPrice() {
+            const t = gridTariffs[selectedIdx];
+            if (!t) return;
             const hasDiscount = t.discounted_price != null && t.discounted_price < t.price;
             const showPrice = hasDiscount ? t.discounted_price : t.price;
-            const pricePerDay = (showPrice / t.duration_days).toFixed(0);
-            const isPopular = !!t.is_popular;
-            const months = Math.round(t.duration_days / 30);
-            const monthLabel = 'мес';
-            const hasBoost = t.included_boost_20 || t.included_boost_40;
-            const boostAmount = t.included_boost_40 ? 40 : (t.included_boost_20 ? 20 : 0);
 
-            const priceHtml = hasDiscount
-                ? `<div class="text-xs text-on-surface-variant/60 line-through">${t.price.toLocaleString('ru-RU')} ₽</div>
-                   <div class="text-lg font-bold text-primary">${showPrice.toLocaleString('ru-RU')} ₽</div>`
-                : `<div class="text-lg font-bold text-on-surface">${t.price.toLocaleString('ru-RU')} ₽</div>`;
+            if (priceEl) priceEl.textContent = showPrice.toLocaleString('ru-RU');
+            if (oldPriceEl) {
+                if (hasDiscount) {
+                    oldPriceEl.textContent = t.price.toLocaleString('ru-RU') + '\u00a0₽';
+                    oldPriceEl.classList.remove('hidden');
+                } else {
+                    oldPriceEl.classList.add('hidden');
+                }
+            }
+            if (hintEl) {
+                if (hasDiscount && t.discount_percent) {
+                    hintEl.textContent = `Скидка ${Math.round(t.discount_percent)}% применена`;
+                } else {
+                    const hints = ['Идеально для старта', 'Популярный выбор', 'Максимальная выгода'];
+                    hintEl.textContent = hints[Math.min(selectedIdx, hints.length - 1)] || '';
+                }
+            }
+            if (buyBtn) buyBtn.dataset.plan = t.plan_code;
+        }
 
-            return `
-            <div class="p-5 rounded-2xl cab-card cursor-pointer transition-all ${isPopular ? 'tariff-popular' : ''}"
-                 onclick="showTariffModal('${escapeHtml(t.plan_code)}')" data-plan="${escapeHtml(t.plan_code)}">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(101,62,219,0.12);">
-                            <span class="material-symbols-outlined text-primary">${months <= 1 ? 'bolt' : months <= 2 ? 'speed' : 'workspace_premium'}</span>
-                        </div>
-                        <div>
-                            <span class="text-sm font-semibold text-on-surface">${escapeHtml(t.name)}</span>
-                            <p class="text-on-surface-variant text-xs mt-0.5">${t.duration_days} дней &#8226; ${pricePerDay} ₽/день</p>
-                            ${hasBoost ? `<p class="text-xs text-primary font-medium mt-0.5">Буст +${boostAmount} включён</p>` : ''}
-                        </div>
-                    </div>
-                    <div class="text-right flex-shrink-0 ml-3">
-                        ${priceHtml}
-                        <div class="price-per-day">${months} ${monthLabel}</div>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
+        // Экспортируем функцию переключения глобально для onclick
+        window.selectTariffMonth = function(idx) {
+            selectedIdx = idx;
+            renderMonthSelector();
+            renderTariffPrice();
+        };
 
+        // Кнопка "Купить"
+        if (buyBtn) {
+            buyBtn.onclick = function() {
+                const t = gridTariffs[selectedIdx];
+                if (t) showTariffModal(t.plan_code);
+            };
+        }
+
+        // Таймер скидки внутри карточки (заменяет большой DiscountBanner)
+        if (discountStrip && data.discount && data.discount.percent) {
+            const d = data.discount;
+            const labelEl = document.getElementById('tariffDiscountLabel');
+            const timerEl = document.getElementById('tariffDiscountTimer');
+
+            if (d.expires_at) {
+                const updateTimer = () => {
+                    const sec = Math.max(0, Math.floor((new Date(d.expires_at).getTime() - Date.now()) / 1000));
+                    if (sec <= 0) {
+                        discountStrip.classList.add('hidden');
+                        return;
+                    }
+                    const h = Math.floor(sec / 3600).toString().padStart(2, '0');
+                    const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
+                    const s = (sec % 60).toString().padStart(2, '0');
+                    if (timerEl) timerEl.textContent = `${h}:${m}:${s}`;
+                    setTimeout(updateTimer, 1000);
+                };
+                if (labelEl) labelEl.textContent = `Скидка ${Math.round(d.percent)}% сгорит через:`;
+                discountStrip.classList.remove('hidden');
+                updateTimer();
+            } else {
+                // Бессрочная welcome-скидка
+                if (labelEl) labelEl.textContent = `Скидка ${Math.round(d.percent)}% активна`;
+                if (timerEl) timerEl.textContent = '';
+                discountStrip.classList.remove('hidden');
+            }
+            // Скрываем старый большой баннер
+            const oldBanner = document.getElementById('discountBanner');
+            if (oldBanner) oldBanner.innerHTML = '';
+        }
+
+        // Триал
+        if (trialInCard) {
+            const canTrial = user && (user.can_start_trial === true ||
+                (user.can_start_trial === undefined && user.subscription_status === 'none'));
+            trialInCard.classList.toggle('hidden', !canTrial);
+        }
+
+        renderMonthSelector();
+        renderTariffPrice();
         grid.classList.remove('hidden');
 
     } catch (e) {
