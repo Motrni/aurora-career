@@ -186,6 +186,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
+                if (meData.discount && meData.discount.expires_at) {
+                    meDiscountExpiresAt = meData.discount.expires_at;
+                }
+                // Snapshot обновляем ДО любого редиректа.
+                if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+                    window.AuroraBootstrap.saveSnapshot({
+                        current_step: meData.current_step,
+                        has_access: meData.has_access,
+                        subscription_status: meData.subscription_status,
+                        need_reauth: meData.need_reauth,
+                        discount_expires_at: meDiscountExpiresAt,
+                    });
+                }
                 if (meData.need_reauth) {
                     window.location.href = '/reauth/';
                     return;
@@ -202,18 +215,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 authMode = 'jwt';
                 subscriptionStatus = meData.subscription_status || null;
                 isEndedTrial = subscriptionStatus === 'ended_trial';
-                if (meData.discount && meData.discount.expires_at) {
-                    meDiscountExpiresAt = meData.discount.expires_at;
-                }
-                if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
-                    window.AuroraBootstrap.saveSnapshot({
-                        current_step: meData.current_step,
-                        has_access: meData.has_access,
-                        subscription_status: meData.subscription_status,
-                        need_reauth: meData.need_reauth,
-                        discount_expires_at: meDiscountExpiresAt,
-                    });
-                }
                 if (window.AuroraBootstrap && window.AuroraBootstrap.revealPage) {
                     window.AuroraBootstrap.revealPage();
                 }

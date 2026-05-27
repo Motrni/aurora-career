@@ -16,9 +16,27 @@ class SettingsTour {
         this._clickBlocker = null;
     }
 
+    _markActive() {
+        window._auroraTourActive = true;
+        document.body.classList.add('tour-active');
+        try {
+            window.dispatchEvent(new CustomEvent('aurora:tour-start', { detail: { mode: this.mode } }));
+        } catch (_) {}
+    }
+
+    _markInactive() {
+        window._auroraTourActive = false;
+        document.body.classList.remove('tour-active');
+        document.body.classList.remove('tour-save-spotlight');
+        try {
+            window.dispatchEvent(new CustomEvent('aurora:tour-end', { detail: { mode: this.mode } }));
+        } catch (_) {}
+    }
+
     start() {
         if (!this.steps.length) return;
         this.currentIdx = 0;
+        this._markActive();
         this._injectCSS();
         this._createElements();
         this._showStep(0);
@@ -50,6 +68,7 @@ class SettingsTour {
             window.removeEventListener('resize', this._resizeHandler);
             this._resizeHandler = null;
         }
+        this._markInactive();
     }
 
     _injectCSS() {

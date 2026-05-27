@@ -126,6 +126,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (meResponse.ok) {
             const meData = await meResponse.json();
             if (meData.status === "ok") {
+                // Snapshot обновляем ДО любого редиректа, чтобы bootstrap
+                // на целевой странице не отбросил нас обратно по устаревшему step.
+                if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+                    window.AuroraBootstrap.saveSnapshot({
+                        current_step: meData.current_step,
+                        has_access: meData.has_access,
+                        subscription_status: meData.subscription_status,
+                        need_reauth: meData.need_reauth,
+                        discount_expires_at: meData.discount && meData.discount.expires_at,
+                    });
+                }
                 if (meData.need_reauth) {
                     window.location.href = '/reauth/';
                     return;
@@ -233,22 +244,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadAreasDict();
     loadSettings();
 
-    // 6. Save Logic (Search)
+    // 6. Save Logic — единая кнопка сохраняет всё что dirty (search + response)
     document.getElementById("saveBtn").addEventListener("click", async () => {
         if (_isOnboardingMode) {
             await handleOnboardingSave();
             return;
         }
-        await saveSettings();
-    });
-
-    // 6.1 Save Logic (Response)
-    document.getElementById("saveResponseBtn").addEventListener("click", async () => {
-        try {
-            await saveResponseSettings();
-        } catch (e) {
-            showError("Ошибка при сохранении настроек откликов. " + e.message);
-        }
+        await saveAllDirty();
     });
 
     // 7. Query Mode Logic
@@ -395,11 +397,18 @@ function serializeSearchForm() {
 }
 
 function updateSaveButtonState() {
-    const saveBtn = document.getElementById('saveBtn');
     if (!initialSearchState) return;
-
     const currentState = serializeSearchForm();
     _hasSearchChanges = currentState !== initialSearchState;
+    _refreshUnifiedSaveBtn();
+}
+
+const UNIFIED_SAVE_LABEL_DIRTY = "Сохранить настройки";
+const UNIFIED_SAVE_LABEL_CLEAN = "Нет изменений";
+
+function _refreshUnifiedSaveBtn() {
+    const saveBtn = document.getElementById('saveBtn');
+    if (!saveBtn) return;
 
     if (_isOnboardingMode) {
         _styleOnboardingSaveBtn();
@@ -407,13 +416,14 @@ function updateSaveButtonState() {
         return;
     }
 
-    if (_hasSearchChanges) {
+    const dirty = _hasSearchChanges || _hasResponseChanges;
+    if (dirty) {
         saveBtn.disabled = false;
-        saveBtn.innerText = SEARCH_SAVE_LABEL_DIRTY;
+        saveBtn.innerText = UNIFIED_SAVE_LABEL_DIRTY;
         saveBtn.style.opacity = "1";
     } else {
         saveBtn.disabled = true;
-        saveBtn.innerText = SEARCH_SAVE_LABEL_CLEAN;
+        saveBtn.innerText = UNIFIED_SAVE_LABEL_CLEAN;
         saveBtn.style.opacity = "0.5";
     }
     updateSaveBarFloatingState();
@@ -464,22 +474,54 @@ function captureResponseInitialState() {
 }
 
 function updateResponseSaveButtonState() {
-    const saveBtn = document.getElementById('saveResponseBtn');
-    if (!saveBtn || initialResponseState === null) return;
-
+    if (initialResponseState === null) return;
     const currentState = serializeResponseForm();
     _hasResponseChanges = currentState !== initialResponseState;
+    _refreshUnifiedSaveBtn();
+}
 
-    if (_hasResponseChanges) {
-        saveBtn.disabled = false;
-        saveBtn.innerText = RESPONSE_SAVE_LABEL_DIRTY;
-        saveBtn.style.opacity = "1";
-    } else {
-        saveBtn.disabled = true;
-        saveBtn.innerText = RESPONSE_SAVE_LABEL_CLEAN;
-        saveBtn.style.opacity = "0.5";
+async function saveAllDirty() {
+    const saveBtn = document.getElementById('saveBtn');
+    if (!saveBtn || saveBtn.disabled) return;
+
+    if (!_hasSearchChanges && !_hasResponseChanges) return;
+
+    const prevLabel = saveBtn.innerText;
+    saveBtn.disabled = true;
+    saveBtn.innerText = "Сохраняю...";
+    saveBtn.style.background = "";
+
+    let okSearch = true;
+    let okResponse = true;
+
+    try {
+        if (_hasSearchChanges) {
+            okSearch = await saveSettings();
+        }
+        if (okSearch && _hasResponseChanges) {
+            try {
+                await saveResponseSettings();
+                okResponse = !_hasResponseChanges;
+            } catch (e) {
+                okResponse = false;
+                showError("Ошибка при сохранении настроек откликов. " + (e && e.message ? e.message : ""));
+            }
+        }
+    } finally {
+        if (okSearch && okResponse) {
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Сохранено!";
+            saveBtn.style.background = "#4caf50";
+            setTimeout(() => {
+                saveBtn.style.background = "";
+                _refreshUnifiedSaveBtn();
+            }, 1800);
+        } else {
+            saveBtn.disabled = false;
+            saveBtn.innerText = prevLabel || UNIFIED_SAVE_LABEL_DIRTY;
+            _refreshUnifiedSaveBtn();
+        }
     }
-    updateSaveBarFloatingState();
 }
 
 function updateAllDirtyStates() {
@@ -559,71 +601,47 @@ function _applyFloatingToBar(bar, baseTopRefSetter, isDockedFlag, dockedSetter, 
     return docked;
 }
 
-function updateSaveBarFloatingState() {
-    const searchBar   = document.getElementById('searchActionBar');
-    const responseBar = document.getElementById('responseActionBar');
-    const hint        = document.getElementById('onboardingSaveHint');
+window.updateSaveBarFloatingState = function updateSaveBarFloatingState() {
+    const unifiedBar = document.getElementById('unifiedActionBar');
+    const hint = document.getElementById('onboardingSaveHint');
 
-    const activeTab = _detectActiveTab();
+    if (!unifiedBar) return;
 
-    // Бары неактивных вкладок — гасим всегда.
-    if (activeTab !== 'search') _clearActionBar('searchActionBar');
-    if (activeTab !== 'response') _clearActionBar('responseActionBar');
+    if (window._auroraTourActive && !document.body.classList.contains('tour-save-spotlight')) {
+        unifiedBar.classList.add('hidden');
+        unifiedBar.classList.remove('is-floating', 'is-docked');
+        document.body.classList.remove('has-floating-save');
+        if (hint) hint.classList.add('hidden');
+        return;
+    }
 
-    // --- Onboarding: всегда показываем search bar как floating ---
-    if (_isOnboardingMode && searchBar) {
-        _saveBarDocked = false;
-        searchBar.classList.add('is-floating');
-        searchBar.classList.remove('is-docked');
+    if (_isOnboardingMode) {
+        unifiedBar.classList.remove('hidden');
+        unifiedBar.classList.add('is-floating');
+        unifiedBar.classList.remove('is-docked');
         document.body.classList.add('has-floating-save');
-        _adjustSaveBarAboveFooter(searchBar);
+        _adjustSaveBarAboveFooter(unifiedBar);
         if (hint) hint.classList.remove('hidden');
+        _saveBarDocked = false;
         return;
     }
     if (hint) hint.classList.add('hidden');
 
-    // --- Активный SEARCH таб ---
-    if (activeTab === 'search' && searchBar) {
-        if (_hasSearchChanges) {
-            if (_saveBarBaseTop === null) refreshSaveBarBaseTop();
-            const scrollWindow = { baseTop: _saveBarBaseTop };
-            _applyFloatingToBar(
-                searchBar,
-                () => _saveBarBaseTop,
-                _saveBarDocked,
-                (v) => { _saveBarDocked = v; },
-                scrollWindow,
-            );
-        } else {
-            _saveBarDocked = false;
-            _clearActionBar('searchActionBar');
-            document.body.classList.remove('has-floating-save');
-        }
+    const dirty = _hasSearchChanges || _hasResponseChanges;
+    if (!dirty) {
+        unifiedBar.classList.add('hidden');
+        unifiedBar.classList.remove('is-floating', 'is-docked');
+        document.body.classList.remove('has-floating-save');
+        _saveBarDocked = false;
         return;
     }
 
-    // --- Активный RESPONSE таб ---
-    if (activeTab === 'response' && responseBar) {
-        if (_hasResponseChanges) {
-            if (_responseBarBaseTop === null) refreshResponseBarBaseTop();
-            const scrollWindow = { baseTop: _responseBarBaseTop };
-            _applyFloatingToBar(
-                responseBar,
-                () => _responseBarBaseTop,
-                _responseBarDocked,
-                (v) => { _responseBarDocked = v; },
-                scrollWindow,
-            );
-        } else {
-            _responseBarDocked = false;
-            _clearActionBar('responseActionBar');
-            document.body.classList.remove('has-floating-save');
-        }
-        return;
-    }
-
-    // Никакой активной вкладки нет — всё гасим
-    document.body.classList.remove('has-floating-save');
+    unifiedBar.classList.remove('hidden');
+    unifiedBar.classList.add('is-floating');
+    unifiedBar.classList.remove('is-docked');
+    document.body.classList.add('has-floating-save');
+    _adjustSaveBarAboveFooter(unifiedBar);
+    _saveBarDocked = false;
 }
 
 function _refreshBarBaseTop(barId, baseTopGetter, baseTopSetter) {
@@ -649,11 +667,11 @@ function _refreshBarBaseTop(barId, baseTopGetter, baseTopSetter) {
 }
 
 function refreshSaveBarBaseTop() {
-    _refreshBarBaseTop('searchActionBar', () => _saveBarBaseTop, (v) => { _saveBarBaseTop = v; });
+    // Унифицированный bar floating — baseTop не нужен (fixed-позиционирование).
 }
 
 function refreshResponseBarBaseTop() {
-    _refreshBarBaseTop('responseActionBar', () => _responseBarBaseTop, (v) => { _responseBarBaseTop = v; });
+    // Унифицированный bar floating — baseTop не нужен (fixed-позиционирование).
 }
 
 function requestSaveBarStateUpdate() {
@@ -1866,13 +1884,6 @@ async function saveSettings() {
         payload.sign = legacySign;
     }
 
-    const saveBtn = document.getElementById("saveBtn");
-    if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.textContent = "Сохраняю...";
-        saveBtn.style.background = "";
-    }
-
     try {
         const response = await authFetch(`${API_BASE_URL}/api/settings/update`, {
             method: "POST",
@@ -1883,11 +1894,6 @@ async function saveSettings() {
         const data = await response.json();
         if (data.status !== "ok") {
             throw new Error(data.error || "Ошибка сервера");
-        }
-
-        if (saveBtn) {
-            saveBtn.textContent = "Сохранено!";
-            saveBtn.style.background = "#4caf50";
         }
 
         initialSearchState = serializeSearchForm();
@@ -1903,29 +1909,13 @@ async function saveSettings() {
         const errDiv = document.getElementById("errorMsg");
         if (errDiv) errDiv.style.display = "none";
 
-        setTimeout(() => {
-            if (saveBtn) saveBtn.style.background = "";
-            if (!_isOnboardingMode) {
-                updateSaveButtonState();
-            }
-        }, 2000);
+        if (!_isOnboardingMode) {
+            _refreshUnifiedSaveBtn();
+        }
 
         return true;
     } catch (e) {
         console.error(e);
-        if (saveBtn) {
-            saveBtn.textContent = "Ошибка";
-            saveBtn.style.background = "#ff4d4d";
-            saveBtn.disabled = false;
-            setTimeout(() => {
-                saveBtn.style.background = "";
-                if (_isOnboardingMode) {
-                    saveBtn.textContent = "Сохранить и начать поиск";
-                } else {
-                    updateSaveButtonState();
-                }
-            }, 3000);
-        }
         showError(e.message || "Ошибка при сохранении.");
         return false;
     }
@@ -2171,13 +2161,7 @@ function updateFlatListCheckbox(id, checked) {
 
 // --- SAVE RESPONSE SETTINGS ---
 async function saveResponseSettings() {
-    const saveBtn = document.getElementById("saveResponseBtn");
-    const originalText = saveBtn.innerText;
-
     try {
-        saveBtn.disabled = true;
-        saveBtn.innerText = "Сохраняю...";
-
         // Collect Data — Hybrid auth
         const hideContacts = document.getElementById("contactHideCheckbox").checked;
         const genderSelect = document.getElementById("contactGenderSelect");
@@ -2236,41 +2220,22 @@ async function saveResponseSettings() {
         }
 
         if (data && data.status === "ok") {
-            saveBtn.innerText = "Сохранено!";
-            saveBtn.style.background = "#4caf50";
-
-            setTimeout(() => {
-                saveBtn.style.background = ""; // Reset
-                // Только теперь фиксируем новое "чистое" состояние и
-                // обновляем кнопку — это спрячет sticky bar и сбросит
-                // подсказку beforeunload. Если бы сделали раньше,
-                // updateResponseSaveButtonState мгновенно затёр бы
-                // "Сохранено!" на "Нет изменений".
-                if (typeof captureResponseInitialState === 'function') {
-                    captureResponseInitialState();
-                }
-                if (typeof updateResponseSaveButtonState === 'function') {
-                    updateResponseSaveButtonState();
-                }
-            }, 2000);
-        } else {
-            throw new Error((data && data.error) || "Ошибка сервера");
+            if (typeof captureResponseInitialState === 'function') {
+                captureResponseInitialState();
+            }
+            if (typeof updateResponseSaveButtonState === 'function') {
+                updateResponseSaveButtonState();
+            }
+            return true;
         }
+        throw new Error((data && data.error) || "Ошибка сервера");
 
     } catch (e) {
         console.error("[saveResponseSettings] failed:", e);
-        saveBtn.innerText = "Ошибка";
-        saveBtn.style.background = "#ff4d4d";
-        // Покажем понятный alert юзеру с реальным текстом ошибки
-        // (а не просто красную кнопку — он не поймёт что не так).
         try {
             alert("Не удалось сохранить настройки откликов:\n\n" + (e && e.message ? e.message : e));
-        } catch (_) { /* alert недоступен — окей */ }
-        setTimeout(() => {
-            saveBtn.innerText = "Сохранить настройки откликов";
-            saveBtn.style.background = "";
-            saveBtn.disabled = false;
-        }, 3000);
+        } catch (_) {}
+        throw e;
     }
 }
 
@@ -2755,9 +2720,15 @@ function activateOnboardingMode() {
                             credentials: 'include'
                         });
                         window._currentStep = 'onboarding_save_pending';
+                        if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+                            window.AuroraBootstrap.saveSnapshot({
+                                current_step: 'onboarding_save_pending',
+                            });
+                        }
                     } catch (e) {
                         console.error('[Tour] tour-done API error:', e);
                     }
+                    updateSaveBarFloatingState();
                 }
             });
             tour.start();
@@ -2803,6 +2774,15 @@ async function handleOnboardingSave() {
         _isOnboardingMode = false;
         _hasSearchChanges = false;
         _onboardingCompleting = false;
+
+        // Snapshot обновляем СРАЗУ — иначе bootstrap на /responses/ прочтёт
+        // старое onboarding_save_pending и кинет обратно на /settings/.
+        if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+            window.AuroraBootstrap.saveSnapshot({
+                current_step: 'onboarding_responses_tour',
+                has_access: true,
+            });
+        }
 
         _unlockNav();
         updateSaveBarFloatingState();
@@ -2856,6 +2836,12 @@ function showSettingsSavedPopup() {
     document.body.appendChild(overlay);
 
     document.getElementById('congratsGoResponsesBtn').addEventListener('click', () => {
+        if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+            window.AuroraBootstrap.saveSnapshot({
+                current_step: 'onboarding_responses_tour',
+                has_access: true,
+            });
+        }
         window.location.href = '/responses/';
     });
 }
@@ -2869,6 +2855,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    window.addEventListener('aurora:tour-start', updateSaveBarFloatingState);
+    window.addEventListener('aurora:tour-end', updateSaveBarFloatingState);
 
     // ============================================================
     // ЗАЩИТА ОТ ПОТЕРИ ДАННЫХ
@@ -2965,48 +2954,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Сохраняет ту вкладку(и), которая dirty. Возвращает true при успехе.
+    // Сохраняет всё dirty через единый saveAllDirty(). True при успехе.
     async function _saveDirtyTabs() {
-        const tasks = [];
-        if (_hasSearchChanges) {
-            // Search-форма сохраняется через клик по реальной кнопке —
-            // у неё своя обвязка (валидация, onboarding-состояние и т.п.)
-            const sBtn = document.getElementById('saveBtn');
-            if (sBtn && !sBtn.disabled) {
-                tasks.push(new Promise((resolve) => {
-                    // Хак: после клика отслеживаем кнопку до сброса dirty-state.
-                    sBtn.click();
-                    let elapsed = 0;
-                    const poll = () => {
-                        elapsed += 200;
-                        if (!_hasSearchChanges) return resolve(true);
-                        if (elapsed > 15000) return resolve(false); // 15s таймаут
-                        setTimeout(poll, 200);
-                    };
-                    poll();
-                }));
-            }
+        if (!_hasSearchChanges && !_hasResponseChanges) return true;
+        try {
+            await saveAllDirty();
+        } catch (e) {
+            console.error('[_saveDirtyTabs] saveAllDirty error:', e);
         }
-        if (_hasResponseChanges) {
-            // Response — тоже через click по кнопке (там async saveResponseSettings).
-            const rBtn = document.getElementById('saveResponseBtn');
-            if (rBtn && !rBtn.disabled) {
-                tasks.push(new Promise((resolve) => {
-                    rBtn.click();
-                    let elapsed = 0;
-                    const poll = () => {
-                        elapsed += 200;
-                        if (!_hasResponseChanges) return resolve(true);
-                        if (elapsed > 15000) return resolve(false);
-                        setTimeout(poll, 200);
-                    };
-                    poll();
-                }));
-            }
-        }
-        if (tasks.length === 0) return true;
-        const results = await Promise.all(tasks);
-        return results.every(Boolean);
+        return !_hasSearchChanges && !_hasResponseChanges;
     }
 
     // ---------- In-app navigation guard ----------

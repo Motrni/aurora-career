@@ -121,6 +121,11 @@ window.SETTINGS_TOUR_STEPS = [
         side: 'top',
         onBeforeShow: function () {
             window.switchMainTab('search');
+            // На последнем шаге save-bar обязан быть виден (его и подсвечиваем).
+            document.body.classList.add('tour-save-spotlight');
+            if (typeof window.updateSaveBarFloatingState === 'function') {
+                window.updateSaveBarFloatingState();
+            }
             var footer = document.querySelector('#saveBtn');
             if (footer) footer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }

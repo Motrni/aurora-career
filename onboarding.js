@@ -116,6 +116,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             checkRegModal(data);
         }
 
+        // Snapshot обновляем ДО любых редиректов — иначе bootstrap на целевой
+        // странице вернёт по устаревшему snapshot.
+        if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+            window.AuroraBootstrap.saveSnapshot({
+                current_step: data.current_step,
+                has_access: data.has_access,
+                subscription_status: data.subscription_status,
+                need_reauth: data.need_reauth,
+            });
+        }
+
         if (data.need_reauth) {
             window.location.href = '/reauth/';
             return;
@@ -130,15 +141,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.location.href = '/responses/';
             }
             return;
-        }
-
-        if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
-            window.AuroraBootstrap.saveSnapshot({
-                current_step: data.current_step,
-                has_access: data.has_access,
-                subscription_status: data.subscription_status,
-                need_reauth: data.need_reauth,
-            });
         }
         if (window.AuroraBootstrap && window.AuroraBootstrap.revealPage) {
             window.AuroraBootstrap.revealPage();

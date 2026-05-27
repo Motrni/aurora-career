@@ -7,6 +7,9 @@
 
     var SNAPSHOT_KEY = 'aurora_session_snapshot';
     var SNAPSHOT_TTL_MS = 60000;
+    var REDIRECT_LOG_KEY = 'aurora_redirect_log';
+    var REDIRECT_LOOP_WINDOW_MS = 3000;
+    var REDIRECT_LOOP_MAX = 2;
 
     function injectHideStyle() {
         if (document.getElementById('auroraBootstrapHide')) return;
@@ -34,6 +37,34 @@
         }
     }
 
+    function pushRedirectLog(target) {
+        try {
+            var raw = sessionStorage.getItem(REDIRECT_LOG_KEY);
+            var arr = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(arr)) arr = [];
+            var now = Date.now();
+            arr = arr.filter(function (e) { return e && (now - e.ts) < REDIRECT_LOOP_WINDOW_MS; });
+            arr.push({ target: target, ts: now });
+            sessionStorage.setItem(REDIRECT_LOG_KEY, JSON.stringify(arr));
+        } catch (e) { /* ignore */ }
+    }
+
+    function wouldLoop(target) {
+        try {
+            var raw = sessionStorage.getItem(REDIRECT_LOG_KEY);
+            if (!raw) return false;
+            var arr = JSON.parse(raw);
+            if (!Array.isArray(arr)) return false;
+            var now = Date.now();
+            var sameTarget = arr.filter(function (e) {
+                return e && e.target === target && (now - e.ts) < REDIRECT_LOOP_WINDOW_MS;
+            });
+            return sameTarget.length >= REDIRECT_LOOP_MAX;
+        } catch (e) {
+            return false;
+        }
+    }
+
     function redirectForSnapshot(d) {
         if (!d) return false;
         var cur = window.location.pathname;
@@ -51,24 +82,40 @@
             go = '/cabinet/';
         }
 
-        if (go) {
-            window.location.replace(go);
-            return true;
+        if (!go) return false;
+
+        if (wouldLoop(go)) {
+            // Подозрение на цикл — выбрасываем устаревший snapshot и показываем
+            // страницу как есть; финальный auth-flow развернёт пользователя сам.
+            try { sessionStorage.removeItem(SNAPSHOT_KEY); } catch (e) {}
+            try { console.warn('[AuroraBootstrap] redirect loop suppressed → ' + go); } catch (e) {}
+            return false;
         }
-        return false;
+
+        pushRedirectLog(go);
+        window.location.replace(go);
+        return true;
     }
 
     function saveSnapshot(data) {
         try {
+            var prev = readSnapshot() || {};
             var payload = {
-                current_step: data.current_step || null,
-                has_access: !!data.has_access,
-                subscription_status: data.subscription_status || null,
-                need_reauth: !!data.need_reauth,
-                discount_expires_at: data.discount_expires_at || null,
+                current_step: data.current_step !== undefined ? data.current_step : prev.current_step || null,
+                has_access: data.has_access !== undefined ? !!data.has_access : !!prev.has_access,
+                subscription_status: data.subscription_status !== undefined ? data.subscription_status : prev.subscription_status || null,
+                need_reauth: data.need_reauth !== undefined ? !!data.need_reauth : !!prev.need_reauth,
+                discount_expires_at: data.discount_expires_at !== undefined ? data.discount_expires_at : prev.discount_expires_at || null,
                 ts: Date.now(),
             };
             sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(payload));
+        } catch (e) { /* ignore */ }
+    }
+
+    function clearSnapshot() {
+        try {
+            sessionStorage.removeItem(SNAPSHOT_KEY);
+            sessionStorage.removeItem(REDIRECT_LOG_KEY);
         } catch (e) { /* ignore */ }
     }
 
@@ -83,5 +130,6 @@
         revealPage: revealPage,
         saveSnapshot: saveSnapshot,
         readSnapshot: readSnapshot,
+        clearSnapshot: clearSnapshot,
     };
 }(typeof window !== 'undefined' ? window : this));

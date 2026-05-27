@@ -6,7 +6,7 @@
 <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
 <title>Настройки | Аврора</title>
 <link rel="icon" type="image/png" href="favicon.png?v=3">
-<script src="aurora-bootstrap.js?v=1"></script>
+<script src="aurora-bootstrap.js?v=2"></script>
 <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -360,8 +360,7 @@ input[type="number"] { -moz-appearance: textfield; }
 /* Region chip inline style override handled by JS, keeping class for light-theme compat */
 .region-chip { border-radius: 12px; }
 
-#searchActionBar,
-#responseActionBar {
+#unifiedActionBar {
     transition: transform 0.24s ease, opacity 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
     transform-origin: center bottom;
 }
@@ -373,8 +372,7 @@ input[type="number"] { -moz-appearance: textfield; }
     from { opacity: 0.92; transform: translateY(18px) scale(0.97); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
-#searchActionBar.is-floating,
-#responseActionBar.is-floating {
+#unifiedActionBar.is-floating {
     position: fixed;
     left: 50%;
     right: auto;
@@ -389,19 +387,20 @@ input[type="number"] { -moz-appearance: textfield; }
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
     animation: saveBarRiseIn 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
-#searchActionBar.is-docked,
-#responseActionBar.is-docked {
+#unifiedActionBar.is-docked {
     animation: saveBarDockIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 body.has-floating-save {
     padding-bottom: 128px;
 }
+body.tour-active.has-floating-save {
+    padding-bottom: 0;
+}
 #onboardingSaveHint {
     color: #ccbeff;
 }
 @media (min-width: 768px) {
-    #searchActionBar.is-floating,
-    #responseActionBar.is-floating {
+    #unifiedActionBar.is-floating {
         bottom: 18px;
         width: min(700px, calc(100% - 40px));
     }
@@ -410,12 +409,9 @@ body.has-floating-save {
     }
 }
 @media (prefers-reduced-motion: reduce) {
-    #searchActionBar,
-    #searchActionBar.is-floating,
-    #searchActionBar.is-docked,
-    #responseActionBar,
-    #responseActionBar.is-floating,
-    #responseActionBar.is-docked {
+    #unifiedActionBar,
+    #unifiedActionBar.is-floating,
+    #unifiedActionBar.is-docked {
         animation: none !important;
         transition: none !important;
     }
@@ -771,24 +767,8 @@ body.has-floating-save {
 
             </div><!-- End grid -->
 
-            <!-- Action Bar -->
-            <div id="searchActionBar" class="mt-10 md:mt-16 flex flex-col md:flex-row md:flex-wrap items-center justify-between gap-4 md:gap-6 p-6 md:p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
-                <p id="onboardingSaveHint" class="hidden w-full text-center text-xs md:text-sm font-semibold -mt-1">
-                    Сохрани настройки и сможешь приступить к поиску
-                </p>
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                        <span class="material-symbols-outlined">verified</span>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-sm md:text-base">Настройки</h4>
-                        <p class="text-xs md:text-sm text-on-surface-variant">Изменения применятся в боте мгновенно</p>
-                    </div>
-                </div>
-                <div class="flex gap-3 md:gap-4 w-full md:w-auto">
-                    <button id="saveBtn" disabled class="flex-grow md:flex-none px-8 md:px-12 py-3 md:py-4 rounded-xl bg-primary-container text-on-primary-container font-bold shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed text-sm md:text-base">Нет изменений</button>
-                </div>
-            </div>
+            <!-- Legacy bar (заменён единым #unifiedActionBar ниже) -->
+            <div id="searchActionBar" class="hidden"></div>
 
         </div><!-- End searchSettingsTab -->
 
@@ -915,23 +895,33 @@ body.has-floating-save {
 
             </div><!-- End grid -->
 
-            <!-- Action Bar (sticky/floating, аналогично #searchActionBar) -->
-            <div id="responseActionBar" class="mt-10 md:mt-16 flex flex-col md:flex-row md:flex-wrap items-center justify-between gap-4 md:gap-6 p-6 md:p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                        <span class="material-symbols-outlined">verified</span>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-sm md:text-base">Настройки откликов</h4>
-                        <p class="text-xs md:text-sm text-on-surface-variant">Изменения применятся к новым откликам мгновенно</p>
-                    </div>
-                </div>
-                <div class="flex gap-3 md:gap-4 w-full md:w-auto">
-                    <button id="saveResponseBtn" disabled class="flex-grow md:flex-none px-8 md:px-12 py-3 md:py-4 rounded-xl bg-primary-container text-on-primary-container font-bold shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed text-sm md:text-base">Нет изменений</button>
-                </div>
+            <!-- Legacy bar (заменён единым #unifiedActionBar ниже) -->
+            <div id="responseActionBar" class="hidden">
+                <button id="saveResponseBtn" disabled class="hidden">Нет изменений</button>
             </div>
 
         </div><!-- End responseSettingsTab -->
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- UNIFIED ACTION BAR (вне табов, общий)   -->
+        <!-- ═══════════════════════════════════════ -->
+        <div id="unifiedActionBar" class="hidden mt-10 md:mt-16 flex flex-col md:flex-row md:flex-wrap items-center justify-between gap-4 md:gap-6 p-6 md:p-8 rounded-2xl bg-surface-container-high/50 border border-outline-variant/10 backdrop-blur-xl">
+            <p id="onboardingSaveHint" class="hidden w-full text-center text-xs md:text-sm font-semibold -mt-1">
+                Сохрани настройки и сможешь приступить к поиску
+            </p>
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                    <span class="material-symbols-outlined">verified</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm md:text-base">Настройки</h4>
+                    <p class="text-xs md:text-sm text-on-surface-variant">Кнопка сохраняет настройки поиска и откликов одновременно</p>
+                </div>
+            </div>
+            <div class="flex gap-3 md:gap-4 w-full md:w-auto">
+                <button id="saveBtn" disabled class="flex-grow md:flex-none px-8 md:px-12 py-3 md:py-4 rounded-xl bg-primary-container text-on-primary-container font-bold shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed text-sm md:text-base">Нет изменений</button>
+            </div>
+        </div>
 
         <!-- ============ ACCOUNT SECTION ============ -->
         <div id="accountSection" class="mt-8 md:mt-12 space-y-6">
@@ -1027,9 +1017,9 @@ function toggleMobileMenu() {
 
 <script src="aurora-session.js?v=3"></script>
 <script src="reg-modal.js?v=2"></script>
-<script src="settings-tour-steps.js?v=1.2"></script>
-<script src="settings-tour.js?v=1.1"></script>
-<script src="settings.js?v=6.6"></script>
+<script src="settings-tour-steps.js?v=1.3"></script>
+<script src="settings-tour.js?v=1.2"></script>
+<script src="settings.js?v=6.7"></script>
 <script src="support-widget.js?v=2"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
