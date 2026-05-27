@@ -2759,6 +2759,17 @@ async function handleOnboardingSave() {
         return;
     }
 
+    // Если response-таб тоже dirty (бывает после AI auto-fill при первом
+    // открытии формы) — сохраняем и его, иначе при редиректе на /responses/
+    // beforeunload-guard покажет пугающий браузерный confirm.
+    if (_hasResponseChanges) {
+        try {
+            await saveResponseSettings();
+        } catch (e) {
+            console.warn('[Onboarding] saveResponseSettings failed, продолжаем:', e);
+        }
+    }
+
     try {
         const resp = await authFetch(`${API_BASE_URL}/api/onboarding/complete-settings`, {
             method: 'POST',
@@ -2772,7 +2783,14 @@ async function handleOnboardingSave() {
 
         window._currentStep = 'onboarding_responses_tour';
         _isOnboardingMode = false;
+        // Жёстко обнуляем dirty-state обеих вкладок: онбординг успешно завершён,
+        // beforeunload/leave-guard не должны мешать переходу на /responses/.
         _hasSearchChanges = false;
+        _hasResponseChanges = false;
+        try {
+            initialSearchState = serializeSearchForm();
+            captureResponseInitialState();
+        } catch (_) {}
         _onboardingCompleting = false;
 
         // Snapshot обновляем СРАЗУ — иначе bootstrap на /responses/ прочтёт
@@ -2836,6 +2854,15 @@ function showSettingsSavedPopup() {
     document.body.appendChild(overlay);
 
     document.getElementById('congratsGoResponsesBtn').addEventListener('click', () => {
+        // Глушим оба guard'а (beforeunload + in-app модал), чтобы переход был
+        // безшовным. На этом моменте онбординг уже сохранён успешно.
+        window._skipLeaveGuard = true;
+        _hasSearchChanges = false;
+        _hasResponseChanges = false;
+        try {
+            initialSearchState = serializeSearchForm();
+            captureResponseInitialState();
+        } catch (_) {}
         if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
             window.AuroraBootstrap.saveSnapshot({
                 current_step: 'onboarding_responses_tour',
@@ -2874,6 +2901,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Срабатывает если есть unsaved-изменения В ЛЮБОЙ из вкладок (поиск/отклики).
 
     function _hasAnyUnsavedChanges() {
+        if (window._skipLeaveGuard) return false;
         return _hasSearchChanges || _hasResponseChanges;
     }
 

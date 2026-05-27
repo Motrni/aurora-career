@@ -217,6 +217,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('[Cabinet] Init error:', e);
         window.location.href = '/auth/';
     }
+
+    window.addEventListener('hashchange', function () {
+        if (window.location.hash === '#tariffGrid') scrollToTariffsIfNeeded();
+    });
 });
 
 // ============================================================================
@@ -281,12 +285,34 @@ async function renderCabinet(user) {
     document.getElementById('loadingSkeleton').style.display = 'none';
     document.getElementById('mainContent').style.display = '';
 
-    if (window.location.hash === '#tariffGrid') {
-        requestAnimationFrame(function () {
-            var grid = document.getElementById('tariffGrid');
-            if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
+    scrollToTariffsIfNeeded();
+}
+
+/** Скролл к блоку тарифов: по hash, флагу из discount-banner или после перехода с /responses/. */
+function scrollToTariffsIfNeeded() {
+    var needScroll = window.location.hash === '#tariffGrid';
+    try {
+        if (sessionStorage.getItem('aurora_scroll_tariffs') === '1') needScroll = true;
+    } catch (_) {}
+    if (!needScroll) return;
+
+    try { sessionStorage.removeItem('aurora_scroll_tariffs'); } catch (_) {}
+
+    function attempt() {
+        if (window.DiscountBanner && typeof window.DiscountBanner.scrollToTariffGrid === 'function') {
+            return window.DiscountBanner.scrollToTariffGrid();
+        }
+        var grid = document.getElementById('tariffGrid');
+        if (!grid || grid.classList.contains('hidden')) return false;
+        grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
     }
+
+    if (attempt()) return;
+    var tries = 0;
+    var timer = setInterval(function () {
+        if (attempt() || ++tries >= 60) clearInterval(timer);
+    }, 100);
 }
 
 // ============================================================================

@@ -159,14 +159,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Социальный буст, чтобы цифра не выглядела унизительно на этапе раннего трафика.
+// Считается отдельно от реального count в БД — реальный count приходит из API.
+const HH_CONNECTED_BASE_BOOST = 123;
+
+// Русское склонение: 1 пользователь / 2 пользователя / 5 пользователей.
+function _ruPluralUsers(n) {
+    const abs = Math.abs(n) % 100;
+    const last = abs % 10;
+    if (abs > 10 && abs < 20) return 'пользователей';
+    if (last === 1) return 'пользователь';
+    if (last >= 2 && last <= 4) return 'пользователя';
+    return 'пользователей';
+}
+
 function loadHhConnectedCount() {
     fetch(`${API_BASE_URL}/api/hh/connected-count`, { method: 'GET', credentials: 'include' })
         .then(r => r.ok ? r.json() : null)
         .then(data => {
-            if (!data || !data.count) return;
+            const realCount = (data && typeof data.count === 'number') ? data.count : 0;
+            const displayed = realCount + HH_CONNECTED_BASE_BOOST;
             const numEl = document.getElementById('hhConnectedNum');
+            const nounEl = document.getElementById('hhConnectedNoun');
             const wrapEl = document.getElementById('hhConnectedCount');
-            if (numEl) numEl.textContent = data.count.toLocaleString('ru-RU');
+            if (numEl) numEl.textContent = displayed.toLocaleString('ru-RU');
+            if (nounEl) nounEl.textContent = _ruPluralUsers(displayed);
             if (wrapEl) wrapEl.classList.remove('hidden');
         })
         .catch(() => {});

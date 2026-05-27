@@ -74,10 +74,10 @@
                             '</p>' +
                         '</div>' +
                     '</div>' +
-                    '<button id="dbCtaBtn" class="shrink-0 btn-primary text-white font-medium py-2.5 px-5 rounded-xl text-sm cursor-pointer whitespace-nowrap flex items-center gap-2">' +
+                    '<a id="dbCtaBtn" href="/cabinet/#tariffGrid" role="button" class="shrink-0 btn-primary text-white font-medium py-2.5 px-5 rounded-xl text-sm cursor-pointer whitespace-nowrap flex items-center gap-2 no-underline">' +
                         '<span class="material-symbols-outlined text-base" style="font-size:18px;">local_offer</span>' +
                         'Выбрать тариф со скидкой' +
-                    '</button>' +
+                    '</a>' +
                 '</div>' +
             '</div>';
     }
@@ -99,10 +99,10 @@
                             '</p>' +
                         '</div>' +
                     '</div>' +
-                    '<button id="dbCtaBtn" class="shrink-0 btn-primary text-white font-medium py-2.5 px-5 rounded-xl text-sm cursor-pointer whitespace-nowrap flex items-center gap-2">' +
+                    '<a id="dbCtaBtn" href="/cabinet/#tariffGrid" role="button" class="shrink-0 btn-primary text-white font-medium py-2.5 px-5 rounded-xl text-sm cursor-pointer whitespace-nowrap flex items-center gap-2 no-underline">' +
                         '<span class="material-symbols-outlined text-base" style="font-size:18px;">local_offer</span>' +
                         'Выбрать тариф со скидкой' +
-                    '</button>' +
+                    '</a>' +
                 '</div>' +
             '</div>';
     }
@@ -124,26 +124,47 @@
         if (el) el.innerHTML = '';
     }
 
-    function bindCtaButton(onCabinet) {
+    function _isCabinetPage() {
+        var p = window.location.pathname || '';
+        return p === '/cabinet' || p === '/cabinet/' || p.indexOf('/cabinet/') === 0;
+    }
+
+    function scrollToTariffGrid() {
+        var grid = document.getElementById('tariffGrid');
+        if (!grid || grid.classList.contains('hidden')) return false;
+        grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
+    }
+
+    function goToTariffs(e) {
+        if (_isCabinetPage()) {
+            if (e) e.preventDefault();
+            if (scrollToTariffGrid()) return;
+            var attempts = 0;
+            var timer = setInterval(function () {
+                if (scrollToTariffGrid() || ++attempts >= 60) clearInterval(timer);
+            }, 100);
+            return;
+        }
+        try { sessionStorage.setItem('aurora_scroll_tariffs', '1'); } catch (_) {}
+        // Для <a href="/cabinet/#tariffGrid"> браузер сам выполнит переход.
+    }
+
+    function bindCtaButton() {
         var ctaBtn = document.getElementById('dbCtaBtn');
         if (!ctaBtn) return;
-        ctaBtn.addEventListener('click', function () {
-            if (onCabinet) {
-                var grid = document.getElementById('tariffGrid');
-                if (grid) {
-                    grid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            } else {
-                window.location.href = '/cabinet/#tariffGrid';
-            }
-        });
+        if (_isCabinetPage()) {
+            ctaBtn.setAttribute('href', '#tariffGrid');
+        } else {
+            ctaBtn.setAttribute('href', '/cabinet/#tariffGrid');
+        }
+        ctaBtn.addEventListener('click', goToTariffs);
     }
 
     function init(discountData, opts) {
         if (!discountData || !discountData.percent) return;
 
         var percent = discountData.percent;
-        var onCabinet = (opts && opts.onCabinet) || false;
         var hasTimer = !!discountData.expires_at;
 
         destroy();
@@ -155,7 +176,7 @@
         // Welcome-режим: бессрочная скидка без таймера.
         if (!hasTimer) {
             container.innerHTML = buildWelcomeBannerHTML(percent);
-            bindCtaButton(onCabinet);
+            bindCtaButton();
             return;
         }
 
@@ -164,7 +185,7 @@
         if (remaining <= 0) return;
 
         container.innerHTML = buildTimerBannerHTML(percent);
-        bindCtaButton(onCabinet);
+        bindCtaButton();
 
         var circle = document.getElementById('dbProgressCircle');
         var ringTime = document.getElementById('dbRingTime');
@@ -203,6 +224,8 @@
     global.DiscountBanner = {
         init: init,
         destroy: destroy,
+        goToTariffs: goToTariffs,
+        scrollToTariffGrid: scrollToTariffGrid,
     };
 
 })(window);
