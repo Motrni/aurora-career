@@ -232,13 +232,19 @@ function appendEndedTrialFinalLogLine(done, endByLimit) {
     });
 }
 
+// Ключ sessionStorage намеренно с суффиксом v2 — это разово инвалидирует
+// старый флаг 'aurora_ended_trial_popup_shown' у тех, кто видел/закрыл
+// предыдущую версию попапа. Иначе при F5 они никогда не увидят обновлённый
+// (с 15% вместо 20%).
+const ENDED_TRIAL_POPUP_SHOWN_KEY = 'aurora_ended_trial_popup_shown_v2';
+
 function scheduleEndedTrialPopup() {
-    if (sessionStorage.getItem('aurora_ended_trial_popup_shown') === '1') return;
+    if (sessionStorage.getItem(ENDED_TRIAL_POPUP_SHOWN_KEY) === '1') return;
     setTimeout(showEndedTrialPopup, 1800);
 }
 
 function showEndedTrialPopup() {
-    if (sessionStorage.getItem('aurora_ended_trial_popup_shown') === '1') return;
+    if (sessionStorage.getItem(ENDED_TRIAL_POPUP_SHOWN_KEY) === '1') return;
     const popup = document.getElementById('endedTrialPopup');
     if (!popup) return;
     popup.hidden = false;
@@ -247,7 +253,7 @@ function showEndedTrialPopup() {
 }
 
 function dismissEndedTrialPopup() {
-    sessionStorage.setItem('aurora_ended_trial_popup_shown', '1');
+    sessionStorage.setItem(ENDED_TRIAL_POPUP_SHOWN_KEY, '1');
     const popup = document.getElementById('endedTrialPopup');
     if (popup) {
         popup.classList.remove('ended-trial-popup-visible');
