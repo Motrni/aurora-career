@@ -35,11 +35,21 @@ let toastAfterTimer = null;
 
 let subscriptionStatus = null;
 let isEndedTrial = false;
+let endedTrialSummary = null; // {done, limit, end_reason}
 let meDiscountExpiresAt = null;
 let endedTrialUILayoutApplied = false;
 let endedTrialFinalLogAppended = false;
 
 window.BOT_USERNAME = "Aurora_Career_Bot";
+
+function _goToTariffs(e) {
+    if (window.DiscountBanner && typeof window.DiscountBanner.goToTariffs === 'function') {
+        window.DiscountBanner.goToTariffs(e);
+        return;
+    }
+    try { sessionStorage.setItem('aurora_scroll_tariffs', '1'); } catch (_) {}
+    window.location.href = '/cabinet/#tariffGrid';
+}
 
 function _applySnapshotEndedTrialIfAny() {
     const snap = window.AuroraBootstrap && window.AuroraBootstrap.readSnapshot
@@ -48,14 +58,17 @@ function _applySnapshotEndedTrialIfAny() {
     if (snap && snap.subscription_status === 'ended_trial') {
         isEndedTrial = true;
         subscriptionStatus = 'ended_trial';
-        applyEndedTrialUI(true);
+        // На snapshot summary не приходит — рисуем дефолтную «10 из 10»,
+        // позже /api/auth/me или /api/campaign/status точно поправит.
+        applyEndedTrialUI(true, null);
     }
 }
 
-function applyEndedTrialUI(fromCache) {
-    if (endedTrialUILayoutApplied && !fromCache) return;
-    endedTrialUILayoutApplied = true;
+function applyEndedTrialUI(fromCache, summary) {
     isEndedTrial = true;
+    if (summary && typeof summary === 'object') {
+        endedTrialSummary = summary;
+    }
 
     const title = document.getElementById('progressTitle');
     const progressText = document.getElementById('progressText');
@@ -64,42 +77,113 @@ function applyEndedTrialUI(fromCache) {
     const toggleBtn = document.getElementById('toggleBtn');
     const panel = document.getElementById('autopilotStatusPanel');
     const content = document.getElementById('autopilotContent');
+    const manualContent = document.getElementById('manualContent');
+    const coverLetterContent = document.getElementById('coverLetterContent');
 
-    if (title) title.textContent = 'Тестовый запуск завершён';
-    if (progressText) {
-        progressText.innerHTML = 'Система успешно отправила 10 откликов.<br>Активируйте подписку для продолжения работы.';
+    const done = endedTrialSummary && typeof endedTrialSummary.done === 'number'
+        ? endedTrialSummary.done : 10;
+    const limit = endedTrialSummary && typeof endedTrialSummary.limit === 'number'
+        ? endedTrialSummary.limit : 10;
+    const endByLimit = !endedTrialSummary || endedTrialSummary.end_reason !== 'time';
+
+    // Заголовок и подзаголовок — разные тексты по причине завершения.
+    if (title) {
+        title.textContent = endByLimit ? 'Тестовый запуск завершён' : 'Тестовый период завершён';
     }
+    if (progressText) {
+        if (endByLimit) {
+            progressText.innerHTML =
+                'Система успешно отправила 10 откликов.<br>Активируйте подписку для продолжения работы.';
+        } else {
+            const noun = _ruWordResponses(done);
+            progressText.innerHTML =
+                `Время тестового периода закончилось. Вы успели отправить ${done} ${noun}.<br>` +
+                'Активируйте подписку, чтобы продолжить откликаться без ограничений.';
+        }
+    }
+
+    // Кнопка-заглушка: яркая, ведёт в тарифы.
     if (toggleText) toggleText.textContent = 'Включить полный доступ';
     if (toggleIcon) toggleIcon.textContent = 'workspace_premium';
     if (toggleBtn) {
         toggleBtn.dataset.endedTrial = '1';
         toggleBtn.disabled = false;
+        toggleBtn.style.boxShadow = '0 0 40px rgba(90,48,208,0.45)';
         toggleBtn.classList.remove('bg-red-600/80');
         toggleBtn.classList.add('bg-primary-container');
-        toggleBtn.onclick = function () {
-            window.location.href = '/cabinet/#tariffGrid';
-        };
+        toggleBtn.onclick = _goToTariffs;
     }
-    if (panel) panel.classList.add('ended-trial-locked');
-    if (content) content.classList.add('ended-trial-locked');
 
+    // Снимаем «серый» оверлей с панели — блок выглядит обычным,
+    // блокирует юзера только подмена кнопки на CTA.
+    if (panel) panel.classList.remove('ended-trial-locked');
+    if (content) content.classList.remove('ended-trial-locked');
+
+    // Прокидываем флаг в табы manual / cover-letter, CSS скрывает функционал.
+    if (manualContent) manualContent.classList.add('is-ended-trial');
+    if (coverLetterContent) coverLetterContent.classList.add('is-ended-trial');
+
+    // Ручной режим: кнопка «Показать вакансии» → «Включить полный доступ»
+    const manualBtn = document.getElementById('startManualSearchBtn');
+    const manualBtnText = document.getElementById('manualSearchBtnText');
+    if (manualBtn) {
+        manualBtn.dataset.endedTrial = '1';
+        manualBtn.disabled = false;
+        manualBtn.style.boxShadow = '0 0 40px rgba(90,48,208,0.45)';
+        manualBtn.onclick = _goToTariffs;
+        if (manualBtnText) manualBtnText.textContent = 'Включить полный доступ';
+        const icon = manualBtn.querySelector('.material-symbols-outlined');
+        if (icon) icon.textContent = 'workspace_premium';
+    }
+
+    // Сопровод: показываем CTA в quota-панели вместо формы.
+    const clCta = document.getElementById('clEndedTrialCta');
+    if (clCta) {
+        clCta.classList.remove('hidden');
+        clCta.onclick = _goToTariffs;
+    }
+    const clTitleEl = document.getElementById('clQuotaTitle');
+    if (clTitleEl) clTitleEl.textContent = 'Сопроводительные доступны на платной подписке';
+    const clSubEl = document.getElementById('clQuotaSubtitle');
+    if (clSubEl) {
+        clSubEl.textContent =
+            'Активируйте подписку, чтобы генерировать персональные сопроводительные одной кнопкой.';
+    }
+
+    // Боковой apsell-блок с бустом скрываем — он бесполезен без подписки.
     const boostBlock = document.getElementById('boostUpsellBlock');
     if (boostBlock) boostBlock.classList.add('hidden');
 
-    if (!fromCache) {
-        appendEndedTrialFinalLogLine();
+    // Прогресс-кольцо обновляем по реальному summary.
+    renderProgress(done, limit);
+
+    if (!fromCache && !endedTrialUILayoutApplied) {
+        appendEndedTrialFinalLogLine(done, endByLimit);
         scheduleEndedTrialPopup();
     }
+    endedTrialUILayoutApplied = true;
 }
 
-function appendEndedTrialFinalLogLine() {
+function _ruWordResponses(n) {
+    const abs = Math.abs(n) % 100;
+    const last = abs % 10;
+    if (abs > 10 && abs < 20) return 'откликов';
+    if (last === 1) return 'отклик';
+    if (last >= 2 && last <= 4) return 'отклика';
+    return 'откликов';
+}
+
+function appendEndedTrialFinalLogLine(done, endByLimit) {
     if (endedTrialFinalLogAppended) return;
     endedTrialFinalLogAppended = true;
     const logEmpty = document.getElementById('logEmpty');
     if (logEmpty) logEmpty.remove();
+    const msg = endByLimit
+        ? 'Успех. Отправлено 10 откликов. Тестовый лимит исчерпан. Автопилот остановлен до активации подписки.'
+        : `Тестовый период истёк. Отправлено ${done} ${_ruWordResponses(done)}. Автопилот остановлен до активации подписки.`;
     appendLogEntry({
         type: 'trial_complete',
-        vacancy_name: 'Успех. Отправлено 10 откликов. Тестовый лимит исчерпан. Автопилот остановлен до активации подписки.',
+        vacancy_name: msg,
         ts: new Date().toISOString(),
     });
 }
@@ -222,7 +306,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     window.AuroraSession.applyResumeNavLock(meData.subscription_status);
                 }
                 if (isEndedTrial) {
-                    applyEndedTrialUI(false);
+                    applyEndedTrialUI(false, meData.trial_summary || null);
                 }
                 window._responsesOnboardingTour = meData.current_step === 'onboarding_responses_tour';
                 if (typeof checkRegModal === 'function') checkRegModal(meData);
@@ -251,6 +335,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     propagateAuthToNavLinks();
     await initPage();
     initBoostModal();
+
+    const endedTrialTariffBtn = document.getElementById('endedTrialTariffBtn');
+    if (endedTrialTariffBtn) {
+        endedTrialTariffBtn.addEventListener('click', function (e) {
+            dismissEndedTrialPopup();
+            if (window.DiscountBanner && typeof window.DiscountBanner.goToTariffs === 'function') {
+                window.DiscountBanner.goToTariffs(e);
+            } else {
+                try { sessionStorage.setItem('aurora_scroll_tariffs', '1'); } catch (_) {}
+                window.location.href = '/cabinet/#tariffGrid';
+            }
+        });
+    }
 
 });
 
@@ -541,7 +638,7 @@ function updateStatusPanel(data) {
         subscriptionStatus = data.subscription_status;
         if (data.subscription_status === 'ended_trial') {
             isEndedTrial = true;
-            applyEndedTrialUI(false);
+            applyEndedTrialUI(false, data.trial_summary || null);
             return;
         }
     }
@@ -563,6 +660,14 @@ function updateStatusPanel(data) {
 }
 
 function applyNoProfileState(hasProfile) {
+    // В ended_trial кнопки превращены в CTA-заглушки «Включить полный доступ»
+    // и должны оставаться активными вне зависимости от наличия профиля.
+    if (isEndedTrial) {
+        const banner = document.getElementById('noProfileBanner');
+        if (banner) banner.classList.add('hidden');
+        return;
+    }
+
     const banner = document.getElementById('noProfileBanner');
     const toggleBtn = document.getElementById('toggleBtn');
     const resumeNowBtn = document.getElementById('resumeNowBtn');
@@ -588,10 +693,18 @@ function setProgressSpinnerVisible(visible) {
 
 function renderProgress(applied, limit) {
     if (isEndedTrial) {
-        document.getElementById("appliedCount").innerText = limit || 10;
-        document.getElementById("dailyLimit").innerText = limit || 10;
+        // applied/limit, переданные сюда из applyEndedTrialUI, уже отражают
+        // trial_summary (done из global_applications). Для прогрессивных
+        // пользователей (по 10/10) кольцо заполнено целиком, для тех, у кого
+        // триал закончился по времени с 3/10 — заполнено пропорционально.
+        const trialDone = Math.max(0, applied || 0);
+        const trialLimit = Math.max(1, limit || 10);
+        document.getElementById("appliedCount").innerText = trialDone;
+        document.getElementById("dailyLimit").innerText = trialLimit;
         const circumference = 364.4;
-        document.getElementById("progressCircle").style.strokeDashoffset = 0;
+        const pct = Math.min(trialDone / trialLimit, 1);
+        document.getElementById("progressCircle").style.strokeDashoffset =
+            circumference * (1 - pct);
         setProgressSpinnerVisible(false);
         return;
     }

@@ -192,6 +192,16 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
 
 /* Фиксированные радиусы (в tailwind-config rounded-xl = 3rem — не использовать для панелей) */
 .cab-radius-lg { border-radius: 16px; }
+
+/* Anchor scroll offset: компенсируем fixed-шапку (.fixed top-0 h-16 md:h-20) */
+#tariffGrid {
+    scroll-margin-top: 80px;
+}
+@media (min-width: 768px) {
+    #tariffGrid {
+        scroll-margin-top: 96px;
+    }
+}
 .cab-radius { border-radius: 12px; }
 .cab-radius-sm { border-radius: 10px; }
 

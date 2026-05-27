@@ -83,8 +83,29 @@ html { scroll-behavior: smooth; color-scheme: dark; scrollbar-gutter: stable; }
 body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0ef; min-width: 320px; overflow-x: hidden; }
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
 
+/* ended_trial: блок без серости. Блокируем только функциональные контролы
+   (см. #autopilotContent.is-ended-trial и т.п.) и подменяем кнопки на CTA-заглушку. */
 .ended-trial-locked { pointer-events: none; opacity: 0.68; filter: grayscale(0.12); }
 #toggleBtn[data-ended-trial="1"] { pointer-events: auto !important; opacity: 1 !important; filter: none; }
+
+/* Manual: при ended_trial показываем только верхнюю секцию и заменяем кнопку. */
+.is-ended-trial #manualSearchSkeleton,
+.is-ended-trial #manualSearchEmpty,
+.is-ended-trial #manualSearchError,
+.is-ended-trial #manualVacancyGrid,
+.is-ended-trial #manualLoadMoreSentinel,
+.is-ended-trial #manualEndOfResults,
+.is-ended-trial #manualSessionExpired,
+.is-ended-trial #manualSearchStats {
+    display: none !important;
+}
+
+/* Cover letter: при ended_trial скрываем форму ввода ссылки и текст,
+   а также авто-показ результата; история остаётся. */
+.is-ended-trial #clInputSection,
+.is-ended-trial #clResultSection {
+    display: none !important;
+}
 .ended-trial-popup-overlay {
     position: fixed; inset: 0; z-index: 10050;
     display: none; align-items: center; justify-content: center;
@@ -100,6 +121,35 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     transform: translateY(16px); transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .ended-trial-popup-overlay.ended-trial-popup-visible .ended-trial-popup-card { transform: translateY(0); }
+/* Блок скидки: прямоугольник с умеренным скруглением (не rounded-xl = 3rem → «капсула») */
+.ended-trial-popup-discount {
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 24px;
+    text-align: left;
+    background: linear-gradient(160deg, rgba(16, 185, 129, 0.14) 0%, rgba(16, 185, 129, 0.05) 55%, rgba(29, 26, 36, 0.4) 100%);
+    border: 1px solid rgba(52, 211, 153, 0.28);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.06);
+}
+.ended-trial-popup-discount-label {
+    color: #6ee7b7;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.ended-trial-popup-discount-text {
+    color: #cac3d7;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    margin: 0;
+}
+.ended-trial-popup-discount-timer {
+    color: #e7e0ef;
+    font-family: ui-monospace, monospace;
+    font-weight: 600;
+}
 @media (prefers-reduced-motion: reduce) {
     .ended-trial-popup-overlay, .ended-trial-popup-card { transition: none; }
 }
@@ -753,10 +803,16 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
                             </div>
                         </div>
                         <div class="text-center md:text-left">
-                            <h3 class="text-xl md:text-2xl font-bold text-on-surface mb-1">Генератор сопроводительных</h3>
-                            <p class="text-on-surface-variant text-sm md:text-base max-w-md">Вставьте ссылку на вакансию или текст — ИИ составит персональное сопроводительное на основе вашего резюме.</p>
+                            <h3 id="clQuotaTitle" class="text-xl md:text-2xl font-bold text-on-surface mb-1">Генератор сопроводительных</h3>
+                            <p id="clQuotaSubtitle" class="text-on-surface-variant text-sm md:text-base max-w-md">Вставьте ссылку на вакансию или текст — ИИ составит персональное сопроводительное на основе вашего резюме.</p>
                         </div>
                     </div>
+                    <button id="clEndedTrialCta" type="button" class="hidden shrink-0 px-8 md:px-10 py-4 md:py-5 rounded-xl bg-primary-container text-white font-bold text-base md:text-lg cursor-pointer transition-all duration-200 active:scale-95 shadow-[0_0_40px_rgba(90,48,208,0.3)] hover:shadow-[0_0_60px_rgba(90,48,208,0.5)]">
+                        <span class="flex items-center justify-center gap-3">
+                            <span>Включить полный доступ</span>
+                            <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">workspace_premium</span>
+                        </span>
+                    </button>
                 </div>
     
             <div id="responsesAutoTouchBadge" class="hidden relative z-10 w-full mt-3 p-3 rounded-xl border border-[#ccbeff]/25" style="background: rgba(90,48,208,0.12);">
@@ -775,7 +831,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             </section>
 
             <!-- Input Section -->
-            <section class="glass-panel p-6 md:p-8 rounded-xl relative overflow-hidden">
+            <section id="clInputSection" class="glass-panel p-6 md:p-8 rounded-xl relative overflow-hidden">
                 <div class="absolute -left-16 -bottom-16 w-48 h-48 bg-secondary-container/10 rounded-full blur-[80px] pointer-events-none"></div>
                 <div class="relative z-10 space-y-5">
                     <!-- Input Type Tabs -->
@@ -1102,14 +1158,14 @@ function toggleMobileMenu() {
             Аврора проанализировала сотни вакансий и успешно отправила ваши первые 10 откликов.
             Теперь система знает ваши сильные стороны и готова работать каждый день.
         </p>
-        <div class="rounded-xl border border-outline-variant/20 p-4 mb-6 text-left" style="background:rgba(90,48,208,0.12)">
-            <p class="text-xs font-bold uppercase tracking-wider text-primary mb-2">Скидка 20%</p>
-            <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+        <div class="ended-trial-popup-discount">
+            <p class="ended-trial-popup-discount-label">Скидка 20%</p>
+            <p class="ended-trial-popup-discount-text">
                 Сохраните свой прогресс. Дарим скидку 20% на любой тариф при оплате в ближайшие
-                <span id="discountTimer" class="font-mono text-on-surface font-semibold">48:00:00</span>.
+                <span id="discountTimer" class="ended-trial-popup-discount-timer">48:00:00</span>.
             </p>
         </div>
-        <button type="button" onclick="window.location.href='/cabinet/#tariffGrid'" class="w-full py-3.5 rounded-xl bg-primary-container text-white font-bold text-sm mb-3 cursor-pointer transition-all hover:brightness-110">
+        <button type="button" id="endedTrialTariffBtn" class="w-full py-3.5 rounded-xl bg-primary-container text-white font-bold text-sm mb-3 cursor-pointer transition-all hover:brightness-110">
             Выбрать тариф со скидкой
         </button>
         <button type="button" onclick="dismissEndedTrialPopup()" class="w-full py-2 text-sm text-on-surface-variant hover:text-on-surface cursor-pointer bg-transparent border-0">
@@ -1124,7 +1180,7 @@ function toggleMobileMenu() {
 <script src="settings-tour.js?v=2"></script>
 <script src="responses-tour-steps.js?v=1"></script>
 <script src="responses-tour.js?v=1"></script>
-<script src="responses.js?v=10.1"></script>
+<script src="responses.js?v=10.3"></script>
 <script src="manual-search.js?v=5.0"></script>
 <script src="cover-letter.js?v=1.2"></script>
 <script src="support-widget.js?v=2"></script>
