@@ -6,6 +6,7 @@
 <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
 <title>Первая настройка | Aurora Career</title>
 <link rel="icon" type="image/png" href="favicon.png?v=3">
+<script src="aurora-bootstrap.js?v=1"></script>
 <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -184,11 +185,21 @@ tailwind.config = {
     <div id="step1">
         <div class="glass-panel rounded-xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-outline-variant/10">
             <div class="flex flex-col items-center text-center space-y-7">
-                <div class="space-y-3">
-                    <h1 class="text-3xl font-bold tracking-tight text-on-surface">Привяжите аккаунт hh.ru</h1>
-                    <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
-                        Аврора отправляет отклики от вашего имени на hh.ru. Ваш пароль мы не видим и не храним — только рабочую сессию.
+                <div class="space-y-4 max-w-md mx-auto w-full">
+                    <h1 class="text-3xl font-bold tracking-tight text-on-surface text-center">Привяжите аккаунт hh.ru</h1>
+                    <p class="text-on-surface-variant text-sm leading-relaxed text-center">
+                        Аврора будет отправлять отклики от вашего имени. Это безопасно:
                     </p>
+                    <ul class="text-left text-sm text-on-surface-variant space-y-3 w-full">
+                        <li class="flex gap-3 items-start">
+                            <span class="material-symbols-outlined text-primary text-xl shrink-0">shield</span>
+                            <span>Мы не видим и не храним ваш пароль — используется только временная рабочая сессия.</span>
+                        </li>
+                        <li class="flex gap-3 items-start">
+                            <span class="material-symbols-outlined text-primary text-xl shrink-0">verified_user</span>
+                            <span>Ваш аккаунт не заблокируют — система работает по официальным алгоритмам и имитирует действия живого человека.</span>
+                        </li>
+                    </ul>
                     <p id="hhConnectedCount" class="text-on-surface-variant/60 text-xs hidden">
                         Уже подключили <span id="hhConnectedNum">...</span> пользователей
                     </p>

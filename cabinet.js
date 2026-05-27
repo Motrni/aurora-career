@@ -149,6 +149,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         currentUser = data;
 
+        if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+            window.AuroraBootstrap.saveSnapshot({
+                current_step: data.current_step,
+                has_access: data.has_access,
+                subscription_status: data.subscription_status,
+                need_reauth: data.need_reauth,
+                discount_expires_at: data.discount && data.discount.expires_at,
+            });
+        }
+        if (window.AuroraBootstrap && window.AuroraBootstrap.revealPage) {
+            window.AuroraBootstrap.revealPage();
+        }
+        if (window.AuroraSession && window.AuroraSession.applyResumeNavLock) {
+            window.AuroraSession.applyResumeNavLock(data.subscription_status);
+        }
+
         if (window.AuroraSession) {
             window.AuroraSession.startPing();
         }
@@ -177,6 +193,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (hasOnboarding) {
             if (data.current_step === 'onboarding_settings' || data.current_step === 'onboarding_save_pending') {
                 window.location.href = '/settings/';
+            } else if (data.current_step === 'onboarding_responses_tour') {
+                window.location.href = '/responses/';
             } else {
                 window.location.href = '/onboarding/';
             }
@@ -1238,7 +1256,7 @@ function initCabinetBoostModal() {
 // ============================================================================
 
 function updateNavAccess(status, activeResumeHasProfile = true) {
-    const hasAccess = status === 'trial' || status === 'active';
+    const hasAccess = status === 'trial' || status === 'active' || status === 'ended_trial' || status === 'ended_active';
     const hhLinked = !!(currentUser && currentUser.hh_linked);
     const navSettings = document.getElementById('navSettings');
     const navResponses = document.getElementById('navResponses');
@@ -1276,6 +1294,10 @@ function updateNavAccess(status, activeResumeHasProfile = true) {
         setProfileLock(true);
     }
     // Если !hhLinked — nav-locked остаётся (класс стоит в HTML по умолчанию)
+
+    if (window.AuroraSession && window.AuroraSession.applyResumeNavLock) {
+        window.AuroraSession.applyResumeNavLock(status);
+    }
 }
 
 function updateTelegramCard(hasTelegram) {

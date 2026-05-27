@@ -130,18 +130,34 @@ document.addEventListener("DOMContentLoaded", async () => {
                     window.location.href = '/reauth/';
                     return;
                 }
+                if (meData.current_step === 'onboarding_responses_tour') {
+                    window.location.href = '/responses/';
+                    return;
+                }
                 if (meData.current_step && meData.current_step.startsWith('onboarding_')
                     && meData.current_step !== 'onboarding_settings'
                     && meData.current_step !== 'onboarding_save_pending') {
                     window.location.href = '/onboarding/';
                     return;
                 }
-                if (!meData.has_access) {
-                    window.location.href = '/cabinet/';
-                    return;
-                }
                 authMode = 'jwt';
                 window._currentStep = meData.current_step || null;
+                window._subscriptionStatus = meData.subscription_status || null;
+                if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+                    window.AuroraBootstrap.saveSnapshot({
+                        current_step: meData.current_step,
+                        has_access: meData.has_access,
+                        subscription_status: meData.subscription_status,
+                        need_reauth: meData.need_reauth,
+                        discount_expires_at: meData.discount && meData.discount.expires_at,
+                    });
+                }
+                if (window.AuroraBootstrap && window.AuroraBootstrap.revealPage) {
+                    window.AuroraBootstrap.revealPage();
+                }
+                if (window.AuroraSession && window.AuroraSession.applyResumeNavLock) {
+                    window.AuroraSession.applyResumeNavLock(meData.subscription_status);
+                }
 
                 // Guard: если нет профиля у активного резюме — кидаем в кабинет
                 try {
@@ -2773,7 +2789,7 @@ async function handleOnboardingSave() {
     }
 
     try {
-        const resp = await authFetch(`${API_BASE_URL}/api/onboarding/complete`, {
+        const resp = await authFetch(`${API_BASE_URL}/api/onboarding/complete-settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
@@ -2783,14 +2799,14 @@ async function handleOnboardingSave() {
             throw new Error('Не удалось завершить онбординг');
         }
 
-        window._currentStep = null;
+        window._currentStep = 'onboarding_responses_tour';
         _isOnboardingMode = false;
         _hasSearchChanges = false;
         _onboardingCompleting = false;
 
         _unlockNav();
         updateSaveBarFloatingState();
-        showCongratsPopup();
+        showSettingsSavedPopup();
 
     } catch (e) {
         _onboardingCompleting = false;
@@ -2804,7 +2820,7 @@ async function handleOnboardingSave() {
     }
 }
 
-function showCongratsPopup() {
+function showSettingsSavedPopup() {
     const existing = document.getElementById('congratsOverlay');
     if (existing) existing.remove();
 
@@ -2823,35 +2839,24 @@ function showCongratsPopup() {
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             font-family: 'Inter', system-ui, sans-serif;
         ">
-            <div style="font-size:48px;margin-bottom:16px">🎉</div>
-            <h2 style="font-size:22px;font-weight:800;color:#e7e0ef;margin-bottom:10px;line-height:1.3">Поздравляем!</h2>
-            <p style="font-size:14px;color:#cac3d7;line-height:1.6;margin-bottom:8px">
-                Вы сделали все необходимые настройки.
+            <span class="material-symbols-outlined" style="font-size:48px;color:#ccbeff;margin-bottom:12px;display:block">check_circle</span>
+            <h2 style="font-size:22px;font-weight:800;color:#e7e0ef;margin-bottom:10px;line-height:1.3">Настройки сохранены</h2>
+            <p style="font-size:14px;color:#cac3d7;line-height:1.6;margin-bottom:24px">
+                Переходим к откликам — там вы запустите автопилот и увидите первые результаты.
             </p>
-            <p style="font-size:12px;color:#938ea0;line-height:1.5;margin-bottom:24px">
-                Если появятся вопросы — нажмите кнопку помощи внизу страницы.
-            </p>
-            <button id="congratsDismissBtn" style="
+            <button id="congratsGoResponsesBtn" style="
                 background: linear-gradient(to right, #5a30d0, #58309f);
                 color: #fff; border: none; border-radius: 12px;
                 padding: 12px 36px; font-size: 15px; font-weight: 700;
                 cursor: pointer; font-family: inherit;
                 transition: filter 0.2s;
-            ">Начать</button>
+            ">Готово, начать откликаться</button>
         </div>
     `;
     document.body.appendChild(overlay);
 
-    document.getElementById('congratsDismissBtn').addEventListener('click', () => {
-        overlay.remove();
-        const stepper = document.getElementById('onboardingStepper');
-        if (stepper) stepper.classList.add('hidden');
-        const saveBtn = document.getElementById('saveBtn');
-        if (saveBtn) {
-            saveBtn.style.background = '';
-            saveBtn.style.color = '';
-        }
-        initDirtyStateTracking();
+    document.getElementById('congratsGoResponsesBtn').addEventListener('click', () => {
+        window.location.href = '/responses/';
     });
 }
 

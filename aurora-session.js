@@ -91,11 +91,22 @@
                 return null;
             })
             .then(function (data) {
-                if (data && data.status === 'ok' && data.has_access === false) {
-                    var p = window.location.pathname;
-                    if (p !== '/cabinet/' && p !== '/cabinet') {
-                        window.location.href = '/cabinet/';
-                    }
+                if (!data || data.status !== 'ok') return;
+                if (global.AuroraBootstrap && global.AuroraBootstrap.saveSnapshot) {
+                    global.AuroraBootstrap.saveSnapshot({
+                        current_step: data.current_step,
+                        has_access: data.has_access,
+                        subscription_status: data.subscription_status,
+                        need_reauth: data.need_reauth,
+                        discount_expires_at: data.discount && data.discount.expires_at,
+                    });
+                }
+                if (global.AuroraSession.applyResumeNavLock) {
+                    global.AuroraSession.applyResumeNavLock(data.subscription_status);
+                }
+                var p = window.location.pathname;
+                if (data.has_access === false && (p.indexOf('/resume') === 0)) {
+                    window.location.href = '/cabinet/';
                 }
             })
             .catch(function () {});
@@ -142,6 +153,49 @@
         _beforeUnloadBound = true;
     }
 
+    function applyResumeNavLock(subscriptionStatus) {
+        var locked = subscriptionStatus === 'ended_trial' || subscriptionStatus === 'ended_active';
+        var tip = 'Доступно после активации тарифа';
+        document.querySelectorAll('a[href="/resume/"], a[href="/resume"]').forEach(function (el) {
+            if (locked) {
+                el.classList.add('nav-resume-locked');
+                el.setAttribute('aria-disabled', 'true');
+                el.dataset.resumeLockTip = tip;
+                if (!el._resumeLockBound) {
+                    el._resumeLockBound = true;
+                    el.addEventListener('click', function (e) {
+                        if (!el.classList.contains('nav-resume-locked')) return;
+                        e.preventDefault();
+                        if (global.AuroraSession.showResumeLockToast) {
+                            global.AuroraSession.showResumeLockToast(tip);
+                        }
+                    });
+                }
+            } else {
+                el.classList.remove('nav-resume-locked');
+                el.removeAttribute('aria-disabled');
+            }
+        });
+        if (!document.getElementById('auroraResumeLockCss')) {
+            var st = document.createElement('style');
+            st.id = 'auroraResumeLockCss';
+            st.textContent = 'a.nav-resume-locked{opacity:0.4!important;cursor:not-allowed!important;pointer-events:auto}';
+            document.head.appendChild(st);
+        }
+    }
+
+    function showResumeLockToast(message) {
+        var id = 'auroraResumeLockToast';
+        var existing = document.getElementById(id);
+        if (existing) existing.remove();
+        var t = document.createElement('div');
+        t.id = id;
+        t.textContent = message;
+        t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10001;padding:12px 20px;border-radius:12px;background:rgba(33,30,41,0.95);border:1px solid rgba(147,142,160,0.2);color:#cac3d7;font-size:13px;font-family:Inter,system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,0.45)';
+        document.body.appendChild(t);
+        setTimeout(function () { t.remove(); }, 3200);
+    }
+
     global.AuroraSession = {
         getApiBase: getApiBase,
         startPing: startPing,
@@ -149,6 +203,8 @@
         refreshNow: refreshNow,
         refreshOnce: refreshNow,
         isSessionDead: function () { return _sessionDead; },
+        applyResumeNavLock: applyResumeNavLock,
+        showResumeLockToast: showResumeLockToast,
     };
 
     // Устраняет FOUT для Material Symbols.

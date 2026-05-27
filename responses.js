@@ -33,9 +33,135 @@ let sseConnectedAt = null; // Момент подключения SSE — соб
 let toastHideTimer = null;
 let toastAfterTimer = null;
 
+let subscriptionStatus = null;
+let isEndedTrial = false;
+let meDiscountExpiresAt = null;
+let endedTrialUILayoutApplied = false;
+let endedTrialFinalLogAppended = false;
+
 window.BOT_USERNAME = "Aurora_Career_Bot";
 
+function _applySnapshotEndedTrialIfAny() {
+    const snap = window.AuroraBootstrap && window.AuroraBootstrap.readSnapshot
+        ? window.AuroraBootstrap.readSnapshot()
+        : null;
+    if (snap && snap.subscription_status === 'ended_trial') {
+        isEndedTrial = true;
+        subscriptionStatus = 'ended_trial';
+        applyEndedTrialUI(true);
+    }
+}
+
+function applyEndedTrialUI(fromCache) {
+    if (endedTrialUILayoutApplied && !fromCache) return;
+    endedTrialUILayoutApplied = true;
+    isEndedTrial = true;
+
+    const title = document.getElementById('progressTitle');
+    const progressText = document.getElementById('progressText');
+    const toggleText = document.getElementById('toggleBtnText');
+    const toggleIcon = document.getElementById('toggleBtnIcon');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const panel = document.getElementById('autopilotStatusPanel');
+    const content = document.getElementById('autopilotContent');
+
+    if (title) title.textContent = 'Тестовый запуск завершён';
+    if (progressText) {
+        progressText.innerHTML = 'Система успешно отправила 10 откликов.<br>Активируйте подписку для продолжения работы.';
+    }
+    if (toggleText) toggleText.textContent = 'Включить полный доступ';
+    if (toggleIcon) toggleIcon.textContent = 'workspace_premium';
+    if (toggleBtn) {
+        toggleBtn.dataset.endedTrial = '1';
+        toggleBtn.disabled = false;
+        toggleBtn.classList.remove('bg-red-600/80');
+        toggleBtn.classList.add('bg-primary-container');
+        toggleBtn.onclick = function () {
+            window.location.href = '/cabinet/#tariffGrid';
+        };
+    }
+    if (panel) panel.classList.add('ended-trial-locked');
+    if (content) content.classList.add('ended-trial-locked');
+
+    const boostBlock = document.getElementById('boostUpsellBlock');
+    if (boostBlock) boostBlock.classList.add('hidden');
+
+    if (!fromCache) {
+        appendEndedTrialFinalLogLine();
+        scheduleEndedTrialPopup();
+    }
+}
+
+function appendEndedTrialFinalLogLine() {
+    if (endedTrialFinalLogAppended) return;
+    endedTrialFinalLogAppended = true;
+    const logEmpty = document.getElementById('logEmpty');
+    if (logEmpty) logEmpty.remove();
+    appendLogEntry({
+        type: 'trial_complete',
+        vacancy_name: 'Успех. Отправлено 10 откликов. Тестовый лимит исчерпан. Автопилот остановлен до активации подписки.',
+        ts: new Date().toISOString(),
+    });
+}
+
+function scheduleEndedTrialPopup() {
+    if (sessionStorage.getItem('aurora_ended_trial_popup_shown') === '1') return;
+    setTimeout(showEndedTrialPopup, 1800);
+}
+
+function showEndedTrialPopup() {
+    if (sessionStorage.getItem('aurora_ended_trial_popup_shown') === '1') return;
+    const popup = document.getElementById('endedTrialPopup');
+    if (!popup) return;
+    popup.hidden = false;
+    popup.classList.add('ended-trial-popup-visible');
+    updateEndedTrialPopupTimer();
+}
+
+function dismissEndedTrialPopup() {
+    sessionStorage.setItem('aurora_ended_trial_popup_shown', '1');
+    const popup = document.getElementById('endedTrialPopup');
+    if (popup) {
+        popup.classList.remove('ended-trial-popup-visible');
+        popup.hidden = true;
+    }
+}
+
+function updateEndedTrialPopupTimer() {
+    const el = document.getElementById('discountTimer');
+    if (!el || !meDiscountExpiresAt) return;
+    const end = new Date(meDiscountExpiresAt).getTime();
+    const tick = () => {
+        const diff = Math.max(0, end - Date.now());
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        if (diff > 0) requestAnimationFrame(tick);
+    };
+    tick();
+}
+
+function startResponsesOnboardingTour() {
+    if (!window.startResponsesTour) return;
+    window.startResponsesTour({
+        mode: 'onboarding',
+        onComplete: async function () {
+            try {
+                await fetch(`${API_BASE_URL}/api/onboarding/complete-tour`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            } catch (e) {
+                console.error('[ResponsesTour] complete-tour failed', e);
+            }
+        },
+    });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+    _applySnapshotEndedTrialIfAny();
     loadBreakthroughAutoTouchBadge();
     toggleGlobalLoading(true);
 
@@ -64,7 +190,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     window.location.href = '/reauth/';
                     return;
                 }
-                if (meData.current_step && meData.current_step.startsWith('onboarding_')) {
+                if (meData.current_step && meData.current_step.startsWith('onboarding_')
+                    && meData.current_step !== 'onboarding_responses_tour') {
                     if (meData.current_step === 'onboarding_settings' || meData.current_step === 'onboarding_save_pending') {
                         window.location.href = '/settings/';
                     } else {
@@ -72,11 +199,31 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                     return;
                 }
-                if (!meData.has_access) {
-                    window.location.href = '/cabinet/';
-                    return;
-                }
                 authMode = 'jwt';
+                subscriptionStatus = meData.subscription_status || null;
+                isEndedTrial = subscriptionStatus === 'ended_trial';
+                if (meData.discount && meData.discount.expires_at) {
+                    meDiscountExpiresAt = meData.discount.expires_at;
+                }
+                if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+                    window.AuroraBootstrap.saveSnapshot({
+                        current_step: meData.current_step,
+                        has_access: meData.has_access,
+                        subscription_status: meData.subscription_status,
+                        need_reauth: meData.need_reauth,
+                        discount_expires_at: meDiscountExpiresAt,
+                    });
+                }
+                if (window.AuroraBootstrap && window.AuroraBootstrap.revealPage) {
+                    window.AuroraBootstrap.revealPage();
+                }
+                if (window.AuroraSession && window.AuroraSession.applyResumeNavLock) {
+                    window.AuroraSession.applyResumeNavLock(meData.subscription_status);
+                }
+                if (isEndedTrial) {
+                    applyEndedTrialUI(false);
+                }
+                window._responsesOnboardingTour = meData.current_step === 'onboarding_responses_tour';
                 if (typeof checkRegModal === 'function') checkRegModal(meData);
                 if (window.DiscountBanner && meData.discount) {
                     window.DiscountBanner.init(meData.discount, { onCabinet: false });
@@ -206,6 +353,12 @@ async function apiFetch(path, opts = {}) {
 
     if (resp.status === 403) {
         var subStatus = resp.headers.get('X-Sub-Status');
+        if (subStatus === 'ended_trial' || subStatus === 'ended_active') {
+            isEndedTrial = subStatus === 'ended_trial';
+            subscriptionStatus = subStatus;
+            applyEndedTrialUI(false);
+            return null;
+        }
         if (subStatus) {
             window.location.href = '/cabinet/';
             return null;
@@ -258,6 +411,13 @@ async function initPage() {
         const authQ = buildAuthParams();
         const url = `/api/campaign/status${authQ ? '?' + authQ : ''}`;
         const resp = await apiFetch(url);
+        if (!resp) {
+            toggleGlobalLoading(false);
+            if (window._responsesOnboardingTour) {
+                setTimeout(startResponsesOnboardingTour, 600);
+            }
+            return;
+        }
         if (!resp.ok) {
             if (shouldRedirectToHHReauth(resp.status, await resp.json().catch(() => ({})))) {
                 window.location.href = "/reauth/";
@@ -294,6 +454,9 @@ async function initPage() {
         showError("Не удалось загрузить данные. " + e.message);
     } finally {
         toggleGlobalLoading(false);
+        if (window._responsesOnboardingTour) {
+            setTimeout(startResponsesOnboardingTour, 600);
+        }
     }
 }
 
@@ -373,6 +536,14 @@ async function loadBreakthroughAutoTouchBadge() {
 
 
 function updateStatusPanel(data) {
+    if (data.subscription_status) {
+        subscriptionStatus = data.subscription_status;
+        if (data.subscription_status === 'ended_trial') {
+            isEndedTrial = true;
+            applyEndedTrialUI(false);
+            return;
+        }
+    }
     isAutopilotActive = data.is_active;
     isDailyPaused = !!data.autopilot_paused_daily_limit;
     dailyQuotaFull = !!data.daily_quota_full;
@@ -415,6 +586,15 @@ function setProgressSpinnerVisible(visible) {
 }
 
 function renderProgress(applied, limit) {
+    if (isEndedTrial) {
+        document.getElementById("appliedCount").innerText = limit || 10;
+        document.getElementById("dailyLimit").innerText = limit || 10;
+        const circumference = 364.4;
+        document.getElementById("progressCircle").style.strokeDashoffset = 0;
+        setProgressSpinnerVisible(false);
+        return;
+    }
+
     const pct = limit > 0 ? applied / limit : 0;
 
     document.getElementById("appliedCount").innerText = applied;
@@ -593,6 +773,17 @@ function updateToggleButton() {
     const icon = document.getElementById("toggleBtnIcon");
     const resumeBtn = document.getElementById("resumeNowBtn");
 
+    if (isEndedTrial || btn?.dataset.endedTrial === '1') {
+        if (text) text.innerText = 'Включить полный доступ';
+        if (icon) icon.innerText = 'workspace_premium';
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('bg-red-600/80');
+            btn.classList.add('bg-primary-container');
+        }
+        return;
+    }
+
     if (resumeBtn) {
         const showResume = isDailyPaused && !dailyQuotaFull;
         if (showResume) resumeBtn.classList.remove("hidden");
@@ -686,6 +877,10 @@ function stopStatusPolling() {
 // ============================================================================
 
 window.toggleAutopilot = async function () {
+    if (isEndedTrial) {
+        window.location.href = '/cabinet/#tariffGrid';
+        return;
+    }
     const btn = document.getElementById("toggleBtn");
     btn.disabled = true;
 
@@ -958,6 +1153,7 @@ const EVENT_CONFIG = {
     'autopilot_daily_sleep': { icon: 'bedtime', color: 'text-[#fbbf24]', label: 'Лимит на сегодня' },
     'daily_quota_reset': { icon: 'restart_alt', color: 'text-primary', label: 'Новый день' },
     'error':             { icon: 'error',          color: 'text-error',    label: 'Ошибка' },
+    'trial_complete':    { icon: 'check_circle',   color: 'text-[#4ade80]', label: 'Тест завершён' },
 };
 
 function appendLogEntry(evt) {
@@ -986,6 +1182,9 @@ function appendLogEntry(evt) {
 }
 
 function buildLogDescription(evt) {
+    if (evt.type === 'trial_complete') {
+        return `<span class="text-[#4ade80]">${esc(evt.vacancy_name || 'Тестовый лимит исчерпан')}</span>`;
+    }
     if (evt.type === 'vacancy_applied') {
         return `Успешный отклик: <span class="text-on-surface">${esc(evt.vacancy_name || '')} @ ${esc(evt.employer || '')}</span>`;
     }
@@ -1214,3 +1413,5 @@ async function handleNavLogout() {
     } catch (_) {}
     window.location.href = '/auth/';
 }
+
+window.dismissEndedTrialPopup = dismissEndedTrialPopup;

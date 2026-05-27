@@ -122,12 +122,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (!data.current_step || !data.current_step.startsWith('onboarding_')) {
-            if (!data.has_access) {
-                window.location.href = '/cabinet/';
-            } else {
+            if (data.current_step === 'onboarding_responses_tour') {
+                window.location.href = '/responses/';
+            } else if (data.has_access) {
                 window.location.href = '/settings/';
+            } else {
+                window.location.href = '/responses/';
             }
             return;
+        }
+
+        if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+            window.AuroraBootstrap.saveSnapshot({
+                current_step: data.current_step,
+                has_access: data.has_access,
+                subscription_status: data.subscription_status,
+                need_reauth: data.need_reauth,
+            });
+        }
+        if (window.AuroraBootstrap && window.AuroraBootstrap.revealPage) {
+            window.AuroraBootstrap.revealPage();
         }
 
         if (window.AuroraSession) {

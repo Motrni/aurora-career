@@ -15,6 +15,17 @@ function _getUrlParam(name) {
     return new URLSearchParams(window.location.search).get(name);
 }
 
+function _authRedirectTarget(data) {
+    if (data.need_reauth) return '/reauth/';
+    if (data.current_step === 'onboarding_settings' || data.current_step === 'onboarding_save_pending') {
+        return '/settings/';
+    }
+    if (data.current_step === 'onboarding_responses_tour') return '/responses/';
+    if (data.current_step && data.current_step.startsWith('onboarding_')) return '/onboarding/';
+    if (data.has_access) return '/settings/';
+    return '/responses/';
+}
+
 async function redirectBySubscription() {
     try {
         const resp = await fetch(`${API_BASE_URL}/api/auth/me`, {
@@ -23,20 +34,21 @@ async function redirectBySubscription() {
         if (resp.ok) {
             const data = await resp.json();
             if (data.status === 'ok') {
-                if (data.need_reauth) {
-                    window.location.href = '/reauth/';
-                } else if (data.current_step && data.current_step.startsWith('onboarding_')) {
-                    window.location.href = '/onboarding/';
-                } else if (!data.has_access) {
-                    window.location.href = '/cabinet/';
-                } else {
-                    window.location.href = '/settings/';
+                if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+                    window.AuroraBootstrap.saveSnapshot({
+                        current_step: data.current_step,
+                        has_access: data.has_access,
+                        subscription_status: data.subscription_status,
+                        need_reauth: data.need_reauth,
+                        discount_expires_at: data.discount && data.discount.expires_at,
+                    });
                 }
+                window.location.href = _authRedirectTarget(data);
                 return;
             }
         }
     } catch (_) {}
-    window.location.href = '/cabinet/';
+    window.location.href = '/onboarding/';
 }
 
 function togglePwdVis(inputId, btn) {
@@ -601,7 +613,7 @@ function _openTgLoginSse(token) {
             }
             const data = await resp.json();
             showTelegramLoginSuccess(false, () => {
-                window.location.href = data.redirect || '/cabinet/';
+                window.location.href = data.redirect || '/onboarding/';
             });
         } catch (err) {
             console.error('[TgBotLogin] redeem error', err);
@@ -751,13 +763,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (resp.ok) {
             const data = await resp.json();
             if (data.status === 'ok') {
-                if (data.need_reauth) {
-                    window.location.href = '/reauth/';
-                } else if (!data.has_access) {
-                    window.location.href = '/cabinet/';
-                } else {
-                    window.location.href = '/settings/';
-                }
+                window.location.href = _authRedirectTarget(data);
                 return;
             }
         }
