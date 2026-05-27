@@ -257,12 +257,12 @@ async function renderCabinet(user) {
         if (tgBannerMob) tgBannerMob.classList.remove('hidden');
     }
 
-    const showTariffs =
+    const showStandardTariffs =
         user.subscription_status === 'none' ||
         user.subscription_status === 'trial' ||
         user.subscription_status === 'ended_trial' ||
         user.subscription_status === 'ended_active';
-    if (showTariffs) {
+    if (showStandardTariffs) {
         await loadTariffs(user);
     }
 
@@ -1791,6 +1791,8 @@ async function loadBreakthroughPremium(user) {
     const wrap = document.getElementById('breakthroughCardWrap');
     const activePanel = document.getElementById('breakthroughActivePanel');
     const autoBadge = document.getElementById('resumeAutoTouchBadge');
+    const grid = document.getElementById('tariffGrid');
+    const gridLayout = document.getElementById('tariffGridLayout');
     if (!wrap) return;
 
     try {
@@ -1820,10 +1822,30 @@ async function loadBreakthroughPremium(user) {
 
         wrap.classList.remove('hidden');
 
+        // Режим карточки: solo (одна широкая для active) vs dual (рядом со стандартными)
+        const isUpgrade = user && user.subscription_status === 'active';
+        if (gridLayout) {
+            gridLayout.classList.toggle('tariff-grid--solo', isUpgrade);
+            gridLayout.classList.toggle('tariff-grid--dual', !isUpgrade);
+        }
+        if (isUpgrade && grid) grid.classList.remove('hidden');
+
+        // Верхний бейдж: места (none/trial/...) vs «Улучшить тариф» (active)
+        const topBadge = document.getElementById('breakthroughTopBadge');
         const seatsBadge = document.getElementById('breakthroughSeatsBadge');
-        if (seatsBadge) {
-            const seats = Number(data.seats_left ?? 0);
-            seatsBadge.textContent = `Осталось ${pluralizeSeats(seats)}`;
+        if (topBadge && seatsBadge) {
+            if (isUpgrade) {
+                topBadge.style.background = 'rgba(204,190,255,0.16)';
+                topBadge.style.color = '#e7deff';
+                topBadge.style.borderColor = 'rgba(204,190,255,0.32)';
+                seatsBadge.textContent = 'Улучшить тариф';
+            } else {
+                topBadge.style.background = 'rgba(255,82,82,0.18)';
+                topBadge.style.color = '#ff7070';
+                topBadge.style.borderColor = 'rgba(255,82,82,0.30)';
+                const seats = Number(data.seats_left ?? 0);
+                seatsBadge.textContent = `Осталось ${pluralizeSeats(seats)}`;
+            }
         }
 
         const cur = Number(data.current_price || 0);
@@ -1831,6 +1853,7 @@ async function loadBreakthroughPremium(user) {
         const priceEl = document.getElementById('breakthroughCardPrice');
         const oldPriceEl = document.getElementById('breakthroughCardOldPrice');
         const hintEl = document.getElementById('breakthroughCardHint');
+        const ctaBtn = document.getElementById('breakthroughCtaBtn');
         if (priceEl) priceEl.textContent = cur.toLocaleString('ru-RU');
         if (oldPriceEl) {
             if (data.is_loyal && base > cur) {
@@ -1845,6 +1868,9 @@ async function loadBreakthroughPremium(user) {
                 ? `Спеццена для своих \u2212${Math.round(base - cur).toLocaleString('ru-RU')}\u00a0₽`
                 : 'Фиксированный доступ на 90 дней';
             hintEl.style.color = data.is_loyal ? '#ccbeff' : '';
+        }
+        if (ctaBtn) {
+            ctaBtn.textContent = isUpgrade ? 'Перейти на тариф «Прорыв»' : 'Оплатить';
         }
     } catch (e) {
         console.error('[Breakthrough] load error:', e);
