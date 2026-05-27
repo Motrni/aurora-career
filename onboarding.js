@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         initOnboarding(data.current_step);
-        loadHhConnectedCount();
+        bindHhLoginEnterKeys();
 
     } catch (e) {
         console.error('[Onboarding] Init error:', e);
@@ -159,34 +159,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Социальный буст, чтобы цифра не выглядела унизительно на этапе раннего трафика.
-// Считается отдельно от реального count в БД — реальный count приходит из API.
-const HH_CONNECTED_BASE_BOOST = 123;
-
-// Русское склонение: 1 пользователь / 2 пользователя / 5 пользователей.
-function _ruPluralUsers(n) {
-    const abs = Math.abs(n) % 100;
-    const last = abs % 10;
-    if (abs > 10 && abs < 20) return 'пользователей';
-    if (last === 1) return 'пользователь';
-    if (last >= 2 && last <= 4) return 'пользователя';
-    return 'пользователей';
-}
-
-function loadHhConnectedCount() {
-    fetch(`${API_BASE_URL}/api/hh/connected-count`, { method: 'GET', credentials: 'include' })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-            const realCount = (data && typeof data.count === 'number') ? data.count : 0;
-            const displayed = realCount + HH_CONNECTED_BASE_BOOST;
-            const numEl = document.getElementById('hhConnectedNum');
-            const nounEl = document.getElementById('hhConnectedNoun');
-            const wrapEl = document.getElementById('hhConnectedCount');
-            if (numEl) numEl.textContent = displayed.toLocaleString('ru-RU');
-            if (nounEl) nounEl.textContent = _ruPluralUsers(displayed);
-            if (wrapEl) wrapEl.classList.remove('hidden');
-        })
-        .catch(() => {});
+// Enter в поле телефона/email отправляет форму так же, как клик по «Далее».
+function bindHhLoginEnterKeys() {
+    const phone = document.getElementById('hhPhoneInput');
+    const email = document.getElementById('hhEmailInput');
+    const submit = (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        if (typeof handleHhLogin === 'function') handleHhLogin();
+    };
+    if (phone) phone.addEventListener('keydown', submit);
+    if (email) email.addEventListener('keydown', submit);
 }
 
 function initOnboarding(step) {
@@ -400,6 +383,23 @@ function showOtpForm() {
     initCodeInput();
 }
 
+// Меняем текст в блоке «Подключаемся к hh.ru...» в зависимости от стадии,
+// чтобы юзер видел прогресс пока auth_service грызёт hh.ru и капчу.
+function updateWaitingText(status, serverMessage) {
+    const textEl = document.getElementById('hhWaitingCodeText');
+    const subEl = document.getElementById('hhWaitingCodeSubtext');
+    if (!textEl || !subEl) return;
+
+    const PRESETS = {
+        connecting:      { text: 'Подключаемся к hh.ru...',                sub: 'Это займёт 10–20 секунд' },
+        solving_captcha: { text: 'Проверяем защиту hh.ru...',              sub: 'Капча от hh.ru — пара секунд' },
+        waiting_otp:     { text: 'Ждём, когда hh.ru пришлёт код...',       sub: 'До минуты — hh.ru иногда тормозит' },
+    };
+    const preset = PRESETS[status] || PRESETS.connecting;
+    textEl.textContent = serverMessage || preset.text;
+    subEl.textContent = preset.sub;
+}
+
 function resetHhLogin() {
     stopPolling();
     document.getElementById('hhOtpForm').classList.add('hidden');
@@ -508,6 +508,13 @@ async function pollHhStatus() {
 
         const data = await resp.json();
         const status = data.status;
+
+        // Промежуточные статусы от auth_service: меняем текст спиннера,
+        // чтобы юзер видел прогресс, а не висел на «Подключаемся к hh.ru...».
+        if (status === 'connecting' || status === 'solving_captcha' || status === 'waiting_otp') {
+            updateWaitingText(status, data.message);
+            return;
+        }
 
         if (status === 'NEED_CODE') {
             if (document.getElementById('hhOtpForm').classList.contains('hidden')

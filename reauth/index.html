@@ -165,9 +165,6 @@ tailwind.config = {
                     <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
                         Аврора отправляет отклики от вашего имени на hh.ru. Ваш пароль мы не видим и не храним — только рабочую сессию.
                     </p>
-                    <p id="hhConnectedCount" class="text-on-surface-variant/60 text-xs hidden">
-                        Уже подключили <span id="hhConnectedNum">...</span> пользователей
-                    </p>
                 </div>
 
                 <div id="hhLoginForm" class="w-full space-y-4">
@@ -191,8 +188,8 @@ tailwind.config = {
                 <div id="hhWaitingCode" class="w-full py-4 hidden slide-in">
                     <div class="flex flex-col items-center gap-3">
                         <div class="spinner w-8 h-8"></div>
-                        <p class="text-on-surface text-sm font-medium">Подключаемся к hh.ru...</p>
-                        <p class="text-on-surface-variant text-xs">Это займёт 10–20 секунд</p>
+                        <p id="hhWaitingCodeText" class="text-on-surface text-sm font-medium">Подключаемся к hh.ru...</p>
+                        <p id="hhWaitingCodeSubtext" class="text-on-surface-variant text-xs">Это займёт 10–20 секунд</p>
                     </div>
                 </div>
 
@@ -289,7 +286,7 @@ tailwind.config = {
 </main>
 
 <script src="aurora-session.js?v=3"></script>
-<script src="reauth.js?v=1.4"></script>
+<script src="reauth.js?v=1.5"></script>
 <script src="support-widget.js?v=2"></script>
 </body>
 </html>

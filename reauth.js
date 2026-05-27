@@ -88,13 +88,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('loadingSkeleton').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
         showStep(1);
-        loadHhConnectedCount();
+        bindHhLoginEnterKeys();
 
     } catch (e) {
         console.error('[Reauth] Init error:', e);
         window.location.href = '/auth/';
     }
 });
+
+function bindHhLoginEnterKeys() {
+    const phone = document.getElementById('hhPhoneInput');
+    const email = document.getElementById('hhEmailInput');
+    const submit = (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        if (typeof handleHhLogin === 'function') handleHhLogin();
+    };
+    if (phone) phone.addEventListener('keydown', submit);
+    if (email) email.addEventListener('keydown', submit);
+}
 
 // ============================================================================
 // STEPPER (2 steps)
@@ -265,6 +277,21 @@ function showOtpForm() {
     initCodeInput();
 }
 
+function updateWaitingText(status, serverMessage) {
+    const textEl = document.getElementById('hhWaitingCodeText');
+    const subEl = document.getElementById('hhWaitingCodeSubtext');
+    if (!textEl || !subEl) return;
+
+    const PRESETS = {
+        connecting:      { text: 'Подключаемся к hh.ru...',                sub: 'Это займёт 10–20 секунд' },
+        solving_captcha: { text: 'Проверяем защиту hh.ru...',              sub: 'Капча от hh.ru — пара секунд' },
+        waiting_otp:     { text: 'Ждём, когда hh.ru пришлёт код...',       sub: 'До минуты — hh.ru иногда тормозит' },
+    };
+    const preset = PRESETS[status] || PRESETS.connecting;
+    textEl.textContent = serverMessage || preset.text;
+    subEl.textContent = preset.sub;
+}
+
 function initCodeInput() {
     const old = document.getElementById('otpCodeInput');
     const input = old.cloneNode(true);
@@ -363,6 +390,11 @@ async function pollReauthHhStatus() {
         const data = await resp.json();
         const status = data.status;
 
+        if (status === 'connecting' || status === 'solving_captcha' || status === 'waiting_otp') {
+            updateWaitingText(status, data.message);
+            return;
+        }
+
         if (status === 'NEED_CODE') {
             if (document.getElementById('hhOtpForm').classList.contains('hidden')
                 && document.getElementById('hhProcessing').classList.contains('hidden')) {
@@ -419,19 +451,6 @@ function stopPolling() {
         clearInterval(pollInterval);
         pollInterval = null;
     }
-}
-
-function loadHhConnectedCount() {
-    fetch(`${API_BASE_URL}/api/hh/connected-count`, { method: 'GET', credentials: 'include' })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-            if (!data || !data.count) return;
-            const numEl = document.getElementById('hhConnectedNum');
-            const wrapEl = document.getElementById('hhConnectedCount');
-            if (numEl) numEl.textContent = data.count.toLocaleString('ru-RU');
-            if (wrapEl) wrapEl.classList.remove('hidden');
-        })
-        .catch(() => {});
 }
 
 // ============================================================================
