@@ -37,7 +37,11 @@ let subscriptionStatus = null;
 let isEndedTrial = false;
 let endedTrialSummary = null; // {done, limit, end_reason}
 let meDiscountExpiresAt = null;
-let endedTrialUILayoutApplied = false;
+// Layout (тексты, иконки, классы) перерисовывается идемпотентно при каждом
+// applyEndedTrialUI — флаг ниже нужен только чтобы попап «Отличный старт»
+// и финальная лог-строка триггерились РОВНО один раз, когда у нас есть
+// «реальные» данные (а не первичный snapshot из sessionStorage).
+let endedTrialFinalActionsFired = false;
 let endedTrialFinalLogAppended = false;
 
 window.BOT_USERNAME = "Aurora_Career_Bot";
@@ -192,11 +196,15 @@ function applyEndedTrialUI(fromCache, summary) {
     // Прогресс-кольцо обновляем по реальному summary.
     renderProgress(done, limit);
 
-    if (!fromCache && !endedTrialUILayoutApplied) {
+    // Финальные действия (попап «Отличный старт» + лог-строка) запускаем строго
+    // на «реальных» данных от /api/auth/me или /api/campaign/status, а не на
+    // оптимистичном snapshot из sessionStorage — иначе на snapshot-вызове мы бы
+    // взвели флаг и заблокировали показ попапа на честном ответе сервера.
+    if (!fromCache && !endedTrialFinalActionsFired) {
+        endedTrialFinalActionsFired = true;
         appendEndedTrialFinalLogLine(done, endByLimit);
         scheduleEndedTrialPopup();
     }
-    endedTrialUILayoutApplied = true;
     bindToggleBtnHandler();
 }
 
