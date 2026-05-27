@@ -59,11 +59,10 @@
         try {
             const qs = buildAuthParams();
             const resp = await apiFetch(`/api/cart/count?${qs}`);
-            if (resp.ok) {
-                const data = await resp.json();
-                _cartCount = data.count || 0;
-                _updateFloatingBar();
-            }
+            if (!resp || !resp.ok) return;
+            const data = await resp.json();
+            _cartCount = data.count || 0;
+            _updateFloatingBar();
         } catch (e) {
             console.warn("[Cart] init count error:", e);
         }
@@ -196,6 +195,16 @@
     // ==================================================================
 
     window.startManualSearch = async function startManualSearch() {
+        const endedTrialBtn = document.getElementById('startManualSearchBtn');
+        if (endedTrialBtn && endedTrialBtn.dataset.endedTrial === '1') {
+            if (typeof window.goToTariffsPage === 'function') {
+                window.goToTariffsPage();
+            } else {
+                try { sessionStorage.setItem('aurora_scroll_tariffs', '1'); } catch (_) {}
+                window.location.href = '/cabinet/#tariffGrid';
+            }
+            return;
+        }
         if (_loading) return;
         const r = refs();
 

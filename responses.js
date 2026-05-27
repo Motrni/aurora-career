@@ -43,12 +43,47 @@ let endedTrialFinalLogAppended = false;
 window.BOT_USERNAME = "Aurora_Career_Bot";
 
 function _goToTariffs(e) {
-    if (window.DiscountBanner && typeof window.DiscountBanner.goToTariffs === 'function') {
-        window.DiscountBanner.goToTariffs(e);
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    const path = window.location.pathname || '';
+    const onCabinet = path === '/cabinet' || path === '/cabinet/' || path.indexOf('/cabinet/') === 0;
+    if (onCabinet) {
+        if (window.DiscountBanner && typeof window.DiscountBanner.goToTariffs === 'function') {
+            window.DiscountBanner.goToTariffs(e);
+        } else {
+            const grid = document.getElementById('tariffGrid');
+            if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         return;
     }
     try { sessionStorage.setItem('aurora_scroll_tariffs', '1'); } catch (_) {}
     window.location.href = '/cabinet/#tariffGrid';
+}
+
+// Для manual-search.js и других модулей на /responses/
+window.goToTariffsPage = _goToTariffs;
+
+function bindToggleBtnHandler() {
+    const btn = document.getElementById('toggleBtn');
+    if (!btn) return;
+    if (isEndedTrial || btn.dataset.endedTrial === '1') {
+        btn.onclick = _goToTariffs;
+    } else {
+        btn.onclick = function () { window.toggleAutopilot(); };
+    }
+}
+
+function bindManualSearchBtnHandler() {
+    const btn = document.getElementById('startManualSearchBtn');
+    if (!btn) return;
+    if (isEndedTrial || btn.dataset.endedTrial === '1') {
+        btn.dataset.endedTrial = '1';
+        btn.onclick = _goToTariffs;
+    } else {
+        btn.onclick = function () { window.startManualSearch(); };
+    }
 }
 
 function _applySnapshotEndedTrialIfAny() {
@@ -130,11 +165,11 @@ function applyEndedTrialUI(fromCache, summary) {
         manualBtn.dataset.endedTrial = '1';
         manualBtn.disabled = false;
         manualBtn.style.boxShadow = '0 0 40px rgba(90,48,208,0.45)';
-        manualBtn.onclick = _goToTariffs;
         if (manualBtnText) manualBtnText.textContent = 'Включить полный доступ';
         const icon = manualBtn.querySelector('.material-symbols-outlined');
         if (icon) icon.textContent = 'workspace_premium';
     }
+    bindManualSearchBtnHandler();
 
     // Сопровод: показываем CTA в quota-панели вместо формы.
     const clCta = document.getElementById('clEndedTrialCta');
@@ -162,6 +197,7 @@ function applyEndedTrialUI(fromCache, summary) {
         scheduleEndedTrialPopup();
     }
     endedTrialUILayoutApplied = true;
+    bindToggleBtnHandler();
 }
 
 function _ruWordResponses(n) {
@@ -335,17 +371,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     propagateAuthToNavLinks();
     await initPage();
     initBoostModal();
+    bindToggleBtnHandler();
+    bindManualSearchBtnHandler();
 
     const endedTrialTariffBtn = document.getElementById('endedTrialTariffBtn');
     if (endedTrialTariffBtn) {
         endedTrialTariffBtn.addEventListener('click', function (e) {
             dismissEndedTrialPopup();
-            if (window.DiscountBanner && typeof window.DiscountBanner.goToTariffs === 'function') {
-                window.DiscountBanner.goToTariffs(e);
-            } else {
-                try { sessionStorage.setItem('aurora_scroll_tariffs', '1'); } catch (_) {}
-                window.location.href = '/cabinet/#tariffGrid';
-            }
+            _goToTariffs(e);
         });
     }
 
@@ -621,7 +654,7 @@ async function loadBreakthroughAutoTouchBadge() {
     const el = document.getElementById('responsesAutoTouchBadge');
     if (!el) return;
     try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/breakthrough/info`);
+        const resp = await apiFetch('/api/breakthrough/info');
         if (!resp || !resp.ok) return;
         const data = await resp.json();
         if (data.auto_touch_enabled || data.has_active_breakthrough) {

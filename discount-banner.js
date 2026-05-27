@@ -146,8 +146,9 @@
             }, 100);
             return;
         }
+        if (e) e.preventDefault();
         try { sessionStorage.setItem('aurora_scroll_tariffs', '1'); } catch (_) {}
-        // Для <a href="/cabinet/#tariffGrid"> браузер сам выполнит переход.
+        window.location.href = '/cabinet/#tariffGrid';
     }
 
     function bindCtaButton() {
