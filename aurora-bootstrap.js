@@ -76,6 +76,8 @@
             if (cur.indexOf('/settings') !== 0) go = '/settings/';
         } else if (d.current_step === 'onboarding_responses_tour') {
             if (cur.indexOf('/responses') !== 0) go = '/responses/';
+        } else if (d.current_step && d.current_step.indexOf('reconfigure_') === 0) {
+            if (cur.indexOf('/reconfigure') !== 0) go = '/reconfigure/';
         } else if (d.current_step && d.current_step.indexOf('onboarding_') === 0) {
             if (cur.indexOf('/onboarding') !== 0) go = '/onboarding/';
         } else if (cur.indexOf('/resume') === 0 && !d.has_access) {

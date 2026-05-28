@@ -1,7 +1,6 @@
 /**
- * setup-profile.js v1.0 — Настройка поискового профиля из кабинета.
- * Отдельный от онбординга флоу: smart_cluster -> выбор ролей -> smart_query.
- * Не затрагивает current_step в таблице users.
+ * reconfigure.js — Перенастройка поискового профиля из /settings/.
+ * smart_cluster -> выбор ролей -> smart_query -> /settings/?profile_ready=1
  */
 
 const API_BASE_URL = window.AuroraSession
@@ -14,6 +13,7 @@ let currentRoles = [];
 let _rolesPollingId = null;
 let _queryPollingId = null;
 let _pollingStartedAt = null;
+let _profileQuota = { used: 0, limit: 2 };
 const POLLING_TIMEOUT_MS = 5 * 60 * 1000;
 
 async function apiFetch(url, options = {}) {
@@ -40,11 +40,80 @@ async function apiFetch(url, options = {}) {
     return resp;
 }
 
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+}
+
+function updateConfirmRolesBtn() {
+    const btn = document.getElementById('confirmRolesBtn');
+    const hint = document.getElementById('rolesHint');
+    if (!btn) return;
+
+    const likedCount = currentRoles.filter(r => r.active).length;
+    if (likedCount === 0) {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        if (hint) hint.classList.remove('hidden');
+    } else {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        if (hint) hint.classList.add('hidden');
+    }
+}
+
+function updateCancelModalText() {
+    const el = document.getElementById('cancelModalText');
+    if (!el) return;
+    const limit = _profileQuota.limit || 2;
+    const used = _profileQuota.used || 0;
+    const remaining = Math.max(0, limit - used);
+    el.textContent =
+        'Если вы выйдете сейчас, новый поисковый профиль не сохранится. ' +
+        `Попытка перенастройки на сегодня будет потрачена. ` +
+        (remaining > 0
+            ? `Сегодня у вас останется ${remaining} из ${limit} попыток.`
+            : `Сегодня доступных попыток больше не останется — продолжить можно завтра.`);
+}
+
+function showCancelModal() {
+    updateCancelModalText();
+    const modal = document.getElementById('cancelConfirmModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function hideCancelModal() {
+    const modal = document.getElementById('cancelConfirmModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function confirmCancelReconfigure() {
+    hideCancelModal();
+    try {
+        await apiFetch(`${API_BASE_URL}/api/reconfigure/cancel`, { method: 'POST' });
+    } catch (e) {
+        console.error('[Reconfigure] cancel error:', e);
+    }
+    if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+        window.AuroraBootstrap.saveSnapshot({ current_step: null });
+    }
+    window.location.href = '/settings/';
+}
+
 // ============================================================================
 // INIT
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const cancelBtn = document.getElementById('cancelReconfigureBtn');
+    const dismissBtn = document.getElementById('cancelModalDismiss');
+    const confirmBtn = document.getElementById('cancelModalConfirm');
+
+    if (cancelBtn) cancelBtn.addEventListener('click', showCancelModal);
+    if (dismissBtn) dismissBtn.addEventListener('click', hideCancelModal);
+    if (confirmBtn) confirmBtn.addEventListener('click', confirmCancelReconfigure);
+
     try {
         const meResp = await apiFetch(`${API_BASE_URL}/api/auth/me`);
         if (!meResp || !meResp.ok) {
@@ -53,99 +122,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const me = await meResp.json();
 
-        const hasAccess = me.subscription_status === 'trial' || me.subscription_status === 'active';
-        if (!hasAccess) {
-            window.location.href = '/cabinet/';
-            return;
-        }
-
-        if (me.current_step && me.current_step.startsWith('onboarding_')) {
-            window.location.href = '/onboarding/';
-            return;
-        }
-
-        const resumesResp = await apiFetch(`${API_BASE_URL}/api/resumes/list`);
-        if (!resumesResp || !resumesResp.ok) {
-            window.location.href = '/cabinet/';
-            return;
-        }
-        const resumesData = await resumesResp.json();
-        const activeResume = (resumesData.resumes || []).find(r => r.is_active);
-
-        if (activeResume && activeResume.has_custom_query) {
+        const step = me.current_step || '';
+        if (!step.startsWith('reconfigure_')) {
             window.location.href = '/settings/';
             return;
         }
+
+        if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+            window.AuroraBootstrap.saveSnapshot({ current_step: step });
+        }
+
+        try {
+            const quotaResp = await apiFetch(`${API_BASE_URL}/api/reconfigure/quota`);
+            if (quotaResp && quotaResp.ok) {
+                _profileQuota = await quotaResp.json();
+            }
+        } catch (_) {}
 
         document.getElementById('loadingSkeleton').style.display = 'none';
         document.getElementById('mainContent').classList.remove('hidden');
 
-        const rolesResp = await apiFetch(`${API_BASE_URL}/api/profile-setup/roles-status`);
-        if (rolesResp && rolesResp.ok) {
-            const rolesData = await rolesResp.json();
-            if (rolesData.status === 'ready') {
-                renderRoles(rolesData.roles);
-                return;
-            }
-            if (rolesData.status === 'pending') {
-                startRolesPolling();
-                startRotatingText();
-                return;
-            }
-        }
-
-        const queryResp = await apiFetch(`${API_BASE_URL}/api/profile-setup/query-status`);
-        if (queryResp && queryResp.ok) {
-            const queryData = await queryResp.json();
-            if (queryData.status === 'pending') {
-                showQueryGenerating();
-                startQueryPolling();
-                return;
-            }
-            if (queryData.status === 'complete') {
-                window.location.href = '/settings/?profile_ready=1';
-                return;
-            }
-        }
-
-        await startClustering();
-
-    } catch (e) {
-        console.error('[SetupProfile] Init error:', e);
-        window.location.href = '/cabinet/';
-    }
-});
-
-// ============================================================================
-// CLUSTERING
-// ============================================================================
-
-async function startClustering() {
-    startRotatingText();
-
-    try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/profile-setup/start`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!resp) return;
-
-        if (resp.status === 409) {
-            window.location.href = '/settings/';
+        if (step === 'reconfigure_roles_ready') {
+            await loadRolesFromServer();
             return;
         }
-
-        if (!resp.ok) {
-            console.error('[SetupProfile] start error:', resp.status);
+        if (step === 'reconfigure_query_generating') {
+            showQueryGenerating();
+            startQueryPolling();
+            return;
+        }
+        if (step === 'reconfigure_cluster_error') {
+            showRetryError();
             return;
         }
 
         startRolesPolling();
+        startRotatingText();
+        document.getElementById('clusteringLoading').classList.remove('hidden');
+
     } catch (e) {
-        console.error('[SetupProfile] startClustering error:', e);
+        console.error('[Reconfigure] Init error:', e);
+        window.location.href = '/settings/';
     }
-}
+});
+
+// ============================================================================
+// ROLES POLLING
+// ============================================================================
 
 const _rotatingPhrases = [
     'Ищу подходящие вакансии...',
@@ -175,10 +198,6 @@ function stopRotatingText() {
     }
 }
 
-// ============================================================================
-// ROLES POLLING
-// ============================================================================
-
 function startRolesPolling() {
     _pollingStartedAt = Date.now();
     _rolesPollingId = setInterval(async () => {
@@ -189,7 +208,7 @@ function startRolesPolling() {
             return;
         }
         try {
-            const resp = await apiFetch(`${API_BASE_URL}/api/profile-setup/roles-status`);
+            const resp = await apiFetch(`${API_BASE_URL}/api/reconfigure/roles-status`);
             if (!resp || !resp.ok) return;
             const data = await resp.json();
 
@@ -197,10 +216,10 @@ function startRolesPolling() {
                 stopRolesPolling();
                 stopRotatingText();
                 renderRoles(data.roles);
-            } else if (data.status === 'stale') {
+            } else if (data.status === 'error') {
                 stopRolesPolling();
                 stopRotatingText();
-                await startClustering();
+                showRetryError();
             }
         } catch (_) {}
     }, 3000);
@@ -210,6 +229,24 @@ function stopRolesPolling() {
     if (_rolesPollingId) {
         clearInterval(_rolesPollingId);
         _rolesPollingId = null;
+    }
+}
+
+async function loadRolesFromServer() {
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/reconfigure/roles-status`);
+        if (!resp || !resp.ok) return;
+        const data = await resp.json();
+        if (data.status === 'ready') {
+            renderRoles(data.roles);
+        } else if (data.status === 'pending') {
+            startRolesPolling();
+            startRotatingText();
+        } else if (data.status === 'error') {
+            showRetryError();
+        }
+    } catch (e) {
+        console.error('[Reconfigure] loadRoles error:', e);
     }
 }
 
@@ -225,6 +262,7 @@ function renderRoles(roles) {
 
     document.getElementById('clusteringLoading').classList.add('hidden');
     document.getElementById('rolesSection').classList.remove('hidden');
+    setCancelButtonVisible(true);
 
     const grid = document.getElementById('rolesGrid');
     grid.innerHTML = currentRoles.map((role, i) => `
@@ -242,22 +280,6 @@ function renderRoles(roles) {
 
     grid.addEventListener('mousemove', handleSpotlight);
     updateConfirmRolesBtn();
-}
-
-function updateConfirmRolesBtn() {
-    const btn = document.getElementById('confirmRolesBtn');
-    if (!btn) return;
-
-    const likedCount = currentRoles.filter(r => r.active).length;
-    if (likedCount === 0) {
-        btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-        btn.textContent = 'Выберите хотя бы одну роль';
-    } else {
-        btn.disabled = false;
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
-        btn.textContent = 'Далее';
-    }
 }
 
 function handleSpotlight(e) {
@@ -302,10 +324,6 @@ function toggleRole(idx, el) {
     updateConfirmRolesBtn();
 }
 
-// ============================================================================
-// CONFIRM ROLES
-// ============================================================================
-
 async function handleConfirmRoles() {
     const liked = currentRoles.filter(r => r.active).map(r => r.name);
     const disliked = currentRoles.filter(r => !r.active).map(r => r.name);
@@ -317,7 +335,7 @@ async function handleConfirmRoles() {
     btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></span> Сохраняем...';
 
     try {
-        const resp = await apiFetch(`${API_BASE_URL}/api/profile-setup/confirm-roles`, {
+        const resp = await apiFetch(`${API_BASE_URL}/api/reconfigure/confirm-roles`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ liked, disliked }),
@@ -328,12 +346,15 @@ async function handleConfirmRoles() {
             throw new Error(err.detail || 'Ошибка сохранения');
         }
 
+        if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+            window.AuroraBootstrap.saveSnapshot({ current_step: 'reconfigure_query_generating' });
+        }
+
         showQueryGenerating();
         startQueryPolling();
-
     } catch (e) {
-        console.error('[SetupProfile] confirmRoles error:', e);
-        btn.disabled = false;
+        console.error('[Reconfigure] confirmRoles error:', e);
+        updateConfirmRolesBtn();
         btn.textContent = 'Далее';
     }
 }
@@ -342,6 +363,11 @@ async function handleConfirmRoles() {
 // QUERY GENERATION
 // ============================================================================
 
+function setCancelButtonVisible(visible) {
+    const btn = document.getElementById('cancelReconfigureBtn');
+    if (btn) btn.classList.toggle('hidden', !visible);
+}
+
 function showQueryGenerating() {
     const wrapper = document.getElementById('contentWrapper');
     if (wrapper) wrapper.style.maxWidth = '480px';
@@ -349,6 +375,7 @@ function showQueryGenerating() {
     document.getElementById('clusteringLoading').classList.add('hidden');
     document.getElementById('rolesSection').classList.add('hidden');
     document.getElementById('queryGenerating').classList.remove('hidden');
+    setCancelButtonVisible(false);
 }
 
 function startQueryPolling() {
@@ -360,14 +387,17 @@ function startQueryPolling() {
             return;
         }
         try {
-            const resp = await apiFetch(`${API_BASE_URL}/api/profile-setup/query-status`);
+            const resp = await apiFetch(`${API_BASE_URL}/api/reconfigure/query-status`);
             if (!resp || !resp.ok) return;
             const data = await resp.json();
 
             if (data.status === 'complete') {
                 stopQueryPolling();
+                if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+                    window.AuroraBootstrap.saveSnapshot({ current_step: null });
+                }
                 window.location.href = '/settings/?profile_ready=1';
-            } else if (data.status === 'stale') {
+            } else if (data.status === 'error') {
                 stopQueryPolling();
                 showRetryError();
             }
@@ -389,13 +419,15 @@ function stopQueryPolling() {
 function showRetryError() {
     const loading = document.getElementById('clusteringLoading');
     const queryGen = document.getElementById('queryGenerating');
+    const rolesSec = document.getElementById('rolesSection');
     if (loading) loading.classList.add('hidden');
     if (queryGen) queryGen.classList.add('hidden');
+    if (rolesSec) rolesSec.classList.add('hidden');
 
-    let errorEl = document.getElementById('setupError');
+    let errorEl = document.getElementById('reconfigureError');
     if (!errorEl) {
         errorEl = document.createElement('div');
-        errorEl.id = 'setupError';
+        errorEl.id = 'reconfigureError';
         errorEl.className = 'fade-in';
         document.getElementById('contentWrapper').appendChild(errorEl);
     }
@@ -408,32 +440,37 @@ function showRetryError() {
                 <div class="space-y-3">
                     <h2 class="text-2xl font-bold tracking-tight text-on-surface">Что-то пошло не так</h2>
                     <p class="text-on-surface-variant text-sm leading-relaxed max-w-[320px] mx-auto">
-                        Анализ занял слишком много времени. Попробуйте запустить заново.
+                        Анализ занял слишком много времени или завершился с ошибкой. Попробуйте ещё раз.
                     </p>
                 </div>
-                <button onclick="retrySetup()" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold text-base cursor-pointer">
+                <button type="button" onclick="retryReconfigure()" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold text-base cursor-pointer transition-all duration-200">
                     Попробовать снова
                 </button>
             </div>
         </div>`;
 }
 
-async function retrySetup() {
-    const errorEl = document.getElementById('setupError');
+async function retryReconfigure() {
+    const errorEl = document.getElementById('reconfigureError');
     if (errorEl) errorEl.remove();
 
     const loading = document.getElementById('clusteringLoading');
     if (loading) loading.classList.remove('hidden');
 
-    await startClustering();
+    startRotatingText();
+    try {
+        const resp = await apiFetch(`${API_BASE_URL}/api/reconfigure/retry-profile`, { method: 'POST' });
+        if (!resp || !resp.ok) {
+            showRetryError();
+            return;
+        }
+        startRolesPolling();
+    } catch (e) {
+        console.error('[Reconfigure] retry error:', e);
+        showRetryError();
+    }
 }
 
-// ============================================================================
-// UTILS
-// ============================================================================
-
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str || '';
-    return div.innerHTML;
-}
+window.toggleRole = toggleRole;
+window.handleConfirmRoles = handleConfirmRoles;
+window.retryReconfigure = retryReconfigure;

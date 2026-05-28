@@ -1140,6 +1140,23 @@ function renderRoles(roles) {
     `).join('');
 
     grid.addEventListener('mousemove', handleSpotlight);
+    updateConfirmRolesBtn();
+}
+
+function updateConfirmRolesBtn() {
+    const btn = document.getElementById('confirmRolesBtn');
+    if (!btn) return;
+
+    const likedCount = currentRoles.filter(r => r.active).length;
+    if (likedCount === 0) {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.textContent = 'Выберите хотя бы одну роль';
+    } else {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.textContent = 'Далее';
+    }
 }
 
 function handleSpotlight(e) {
@@ -1181,16 +1198,14 @@ function toggleRole(idx, el) {
         icon.classList.add('text-error');
         icon.textContent = 'cancel';
     }
+    updateConfirmRolesBtn();
 }
 
 async function handleConfirmRoles() {
     const liked = currentRoles.filter(r => r.active).map(r => r.name);
     const disliked = currentRoles.filter(r => !r.active).map(r => r.name);
 
-    if (liked.length === 0) {
-        alert('Выберите хотя бы одну роль');
-        return;
-    }
+    if (liked.length === 0) return;
 
     const btn = document.getElementById('confirmRolesBtn');
     btn.disabled = true;

@@ -326,6 +326,134 @@ function dismissProfileReadyBanner() {
     window.history.replaceState({}, '', url.toString());
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   RECONFIGURE SEARCH PROFILE
+   ═══════════════════════════════════════════════════════════════ */
+
+let _reconfigureQuota = { used: 0, limit: 2, can_start: false };
+let _reconfigureInitDone = false;
+
+function renderReconfigureQuotaHint() {
+    const hint = document.getElementById('reconfigureQuotaHint');
+    const btn = document.getElementById('reconfigureProfileBtn');
+    if (!hint || !btn) return;
+
+    const used = _reconfigureQuota.used || 0;
+    const limit = _reconfigureQuota.limit || 2;
+    const remaining = Math.max(0, limit - used);
+
+    if (remaining > 0) {
+        hint.textContent =
+            `Доступно сегодня: ${remaining} из ${limit}. ` +
+            `Можно изменять поисковый профиль ${limit} раза в день.`;
+        btn.disabled = !_reconfigureQuota.can_start;
+    } else {
+        hint.textContent =
+            `Лимит на сегодня исчерпан (${used} из ${limit}). Новая перенастройка будет доступна завтра.`;
+        btn.disabled = true;
+    }
+}
+
+async function initReconfigureProfile() {
+    if (_reconfigureInitDone || _isOnboardingMode) return;
+    _reconfigureInitDone = true;
+
+    const block = document.getElementById('reconfigureProfileBlock');
+    const btn = document.getElementById('reconfigureProfileBtn');
+    if (!block || !btn) return;
+
+    if (window._currentStep && String(window._currentStep).startsWith('reconfigure_')) {
+        window.location.href = '/reconfigure/';
+        return;
+    }
+
+    try {
+        const resp = await authFetch(`${API_BASE_URL}/api/reconfigure/quota`);
+        if (!resp || !resp.ok) {
+            block.classList.add('hidden');
+            return;
+        }
+        _reconfigureQuota = await resp.json();
+        renderReconfigureQuotaHint();
+    } catch (e) {
+        console.warn('[Reconfigure] quota load failed:', e);
+        block.classList.add('hidden');
+        return;
+    }
+
+    const modal = document.getElementById('reconfigureStartModal');
+    const dismissBtn = document.getElementById('reconfigureStartDismiss');
+    const confirmBtn = document.getElementById('reconfigureStartConfirm');
+
+    btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        const quotaLine = document.getElementById('reconfigureStartModalQuota');
+        if (quotaLine) {
+            const remaining = Math.max(0, (_reconfigureQuota.limit || 2) - (_reconfigureQuota.used || 0));
+            quotaLine.textContent =
+                remaining > 0
+                    ? `Будет использована 1 попытка. Останется ${remaining - 1} из ${_reconfigureQuota.limit} на сегодня.`
+                    : 'На сегодня попыток не осталось.';
+        }
+        if (modal) modal.classList.remove('hidden');
+    });
+
+    if (dismissBtn) {
+        dismissBtn.addEventListener('click', () => {
+            if (modal) modal.classList.add('hidden');
+        });
+    }
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+            confirmBtn.disabled = true;
+            try {
+                const resp = await authFetch(`${API_BASE_URL}/api/reconfigure/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                if (!resp) return;
+
+                if (resp.status === 429) {
+                    const err = await resp.json().catch(() => ({}));
+                    const detail = err.detail || {};
+                    if (typeof detail === 'object') {
+                        _reconfigureQuota.used = detail.used ?? _reconfigureQuota.used;
+                        _reconfigureQuota.limit = detail.limit ?? _reconfigureQuota.limit;
+                        _reconfigureQuota.can_start = false;
+                    }
+                    renderReconfigureQuotaHint();
+                    if (modal) modal.classList.add('hidden');
+                    return;
+                }
+
+                if (!resp.ok) {
+                    console.error('[Reconfigure] start failed:', resp.status);
+                    return;
+                }
+
+                const data = await resp.json();
+                _reconfigureQuota.used = data.used ?? _reconfigureQuota.used;
+                _reconfigureQuota.limit = data.limit ?? _reconfigureQuota.limit;
+
+                if (window.AuroraBootstrap && window.AuroraBootstrap.saveSnapshot) {
+                    window.AuroraBootstrap.saveSnapshot({ current_step: 'reconfigure_search_profile' });
+                }
+                window.location.href = '/reconfigure/';
+            } catch (e) {
+                console.error('[Reconfigure] start error:', e);
+            } finally {
+                confirmBtn.disabled = false;
+            }
+        });
+    }
+}
+
+function hideReconfigureBlockForOnboarding() {
+    const block = document.getElementById('reconfigureProfileBlock');
+    if (block) block.classList.add('hidden');
+}
+
 // --- TAB SWITCHING LOGIC ---
 window.switchMainTab = function (tabName) {
     // 1. Update Tabs UI
@@ -1532,6 +1660,8 @@ function tryInitTree() {
                 activateOnboardingMode();
             } else if (window._currentStep === 'onboarding_save_pending') {
                 activateOnboardingSavePending();
+            } else {
+                initReconfigureProfile();
             }
             requestSaveBarStateUpdate();
         }, 100);
@@ -2699,6 +2829,7 @@ function _styleOnboardingSaveBtn() {
 
 function activateOnboardingMode() {
     _isOnboardingMode = true;
+    hideReconfigureBlockForOnboarding();
 
     const stepper = document.getElementById('onboardingStepper');
     if (stepper) stepper.classList.remove('hidden');
@@ -2738,6 +2869,7 @@ function activateOnboardingMode() {
 
 function activateOnboardingSavePending() {
     _isOnboardingMode = true;
+    hideReconfigureBlockForOnboarding();
 
     const stepper = document.getElementById('onboardingStepper');
     if (stepper) stepper.classList.remove('hidden');
