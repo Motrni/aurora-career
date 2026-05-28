@@ -314,11 +314,45 @@ input:indeterminate {
 .mobile-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
 .mobile-menu.open { transform: translateX(0); }
 
-/* Mode buttons (Simple / Boolean) — pill style matching tabs */
-.mode-btn { transition: all 0.2s; cursor: pointer; }
+/* Aurora control radius: прямоугольные кнопки с мягкими углами (как карточки/алерты), НЕ pill */
+:root {
+    --aurora-radius-control: 12px;
+    --aurora-radius-card: 16px;
+}
+.aurora-btn {
+    border-radius: var(--aurora-radius-control) !important;
+}
+.aurora-segment-track {
+    border-radius: var(--aurora-radius-control);
+    padding: 4px;
+}
+.aurora-segment-btn {
+    border-radius: 10px;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+.aurora-segment-btn.active {
+    background: #5a30d0;
+    color: #cec0ff;
+    box-shadow: 0 4px 15px rgba(90,48,208,0.3);
+}
+.aurora-segment-btn:not(.active) {
+    background: transparent;
+    color: #cac3d7;
+}
+.aurora-segment-btn:not(.active):hover { color: #e7e0ef; }
+
+/* Mode buttons (Simple / Boolean) */
+.mode-btn { transition: all 0.2s; cursor: pointer; border-radius: 10px; }
 .mode-btn.active { background: #5a30d0; color: #cec0ff; box-shadow: 0 4px 15px rgba(90,48,208,0.3); }
 .mode-btn:not(.active) { background: transparent; color: #cac3d7; }
 .mode-btn:not(.active):hover { color: #e7e0ef; }
+
+@media (min-width: 1024px) {
+    .search-settings-grid {
+        grid-template-rows: auto auto;
+    }
+}
 
 /* Advanced textarea */
 .advanced-textarea {
@@ -557,9 +591,9 @@ body.tour-active.has-floating-save {
             <div>
                 <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface" id="pageTitle">Настройки поиска</h1>
             </div>
-            <div id="tabSwitcher" class="p-1.5 bg-surface-container-low rounded-full flex self-start">
-                <div class="px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap" id="tab-btn-search" onclick="switchMainTab('search')">Настройки поиска</div>
-                <div class="px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap" id="tab-btn-response" onclick="switchMainTab('response')">Настройки откликов</div>
+            <div id="tabSwitcher" class="p-1 bg-surface-container-low aurora-segment-track flex self-start">
+                <div class="px-4 sm:px-6 md:px-8 py-2.5 md:py-3 aurora-segment-btn active text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap" id="tab-btn-search" onclick="switchMainTab('search')">Настройки поиска</div>
+                <div class="px-4 sm:px-6 md:px-8 py-2.5 md:py-3 aurora-segment-btn text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap" id="tab-btn-response" onclick="switchMainTab('response')">Настройки откликов</div>
             </div>
         </div>
 
@@ -571,13 +605,10 @@ body.tour-active.has-floating-save {
             <!-- Vacancy Counter: mobile-first (above grid on mobile, inside right col on desktop) -->
             <div id="vacancyCounterMobileSlot" class="mb-6 lg:hidden"></div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start desktop-grid">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start desktop-grid search-settings-grid">
 
-                <!-- Left Column -->
-                <div class="lg:col-span-8 space-y-8 md:space-y-12">
-
-                    <!-- Zone 1: Experience / Salary / Schedule -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 zone1-grid">
+                    <!-- Row 1: Zone 1 -->
+                    <div class="lg:col-span-8 lg:row-start-1 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 zone1-grid">
 
                         <!-- Experience -->
                         <section id="experienceSection" class="p-5 md:p-6 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 backdrop-blur-md space-y-4">
@@ -641,13 +672,36 @@ body.tour-active.has-floating-save {
                         </section>
                     </div>
 
-                    <!-- Advanced Search -->
+                    <!-- Row 1: Vacancy counter (desktop) -->
+                    <div id="vacancyCounterDesktopSlot" class="lg:col-span-4 lg:row-start-1 hidden lg:block">
+                    <div id="vacancyCounterPanel" class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-primary-container to-secondary-container text-white shadow-2xl relative overflow-hidden group" style="display: none;">
+                        <div class="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-150 duration-700"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span id="vacancyStatusDot" class="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                <span id="vacancyStatusText" class="text-xs font-bold tracking-widest uppercase opacity-80">Обновление</span>
+                            </div>
+                            <div class="text-5xl md:text-6xl font-black tracking-tighter mb-1 vacancy-label">
+                                <span id="vacancyCountValue">...</span>
+                            </div>
+                            <div class="text-lg font-medium opacity-90">Найдено вакансий</div>
+                            <div class="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-white/10 flex justify-end">
+                                <a id="vacancyLink" href="#" target="_blank" class="text-sm font-bold flex items-center gap-1 hover:underline text-white/90">
+                                    Посмотреть на hh.ru <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- Row 2: Search query + employers -->
+                    <div class="lg:col-span-8 lg:row-start-2 space-y-6 md:space-y-8">
                     <section id="queryModeSection" class="space-y-4 p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5">
-                        <div class="flex justify-between items-center mb-2">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-2">
                             <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Настройка поиска</h2>
-                            <div class="p-1.5 bg-surface-container-highest/50 rounded-full flex">
-                                <button type="button" class="px-5 py-2 rounded-full text-sm font-semibold transition-all mode-btn active cursor-pointer" id="modeSimpleBtn" data-mode="simple" onclick="window.switchQueryMode('simple')">Простой</button>
-                                <button type="button" class="px-5 py-2 rounded-full text-sm font-semibold transition-all mode-btn cursor-pointer" id="modeAdvancedBtn" data-mode="advanced" onclick="window.switchQueryMode('advanced')">Boolean</button>
+                            <div class="p-1 bg-surface-container-highest/50 aurora-segment-track flex self-start sm:self-auto">
+                                <button type="button" class="px-5 py-2 text-sm font-semibold mode-btn aurora-segment-btn active cursor-pointer" id="modeSimpleBtn" data-mode="simple" onclick="window.switchQueryMode('simple')">Простой</button>
+                                <button type="button" class="px-5 py-2 text-sm font-semibold mode-btn aurora-segment-btn cursor-pointer" id="modeAdvancedBtn" data-mode="advanced" onclick="window.switchQueryMode('advanced')">Boolean</button>
                             </div>
                         </div>
 
@@ -687,7 +741,7 @@ body.tour-active.has-floating-save {
                                     </p>
                                 </div>
                                 <button type="button" id="reconfigureProfileBtn"
-                                        class="px-5 py-2.5 rounded-xl bg-surface-container-high border border-primary/30 text-primary text-sm font-semibold hover:bg-primary/10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
+                                        class="aurora-btn px-5 py-2.5 bg-surface-container-high border border-primary/30 text-primary text-sm font-semibold hover:bg-primary/10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
                                     Настроить заново
                                 </button>
                             </div>
@@ -707,7 +761,7 @@ body.tour-active.has-floating-save {
                             <button
                                 type="button"
                                 id="ignoredEmployerApplyBtn"
-                                class="sm:w-auto px-6 py-3 rounded-xl bg-primary-container text-on-primary-container font-semibold hover:opacity-90 transition-all cursor-pointer"
+                                class="aurora-btn sm:w-auto px-6 py-3 bg-primary-container text-on-primary-container font-semibold hover:opacity-90 transition-all cursor-pointer"
                             >
                                 Применить
                             </button>
@@ -717,37 +771,11 @@ body.tour-active.has-floating-save {
                         </div>
                         <div id="ignoredEmployersChips" class="tags-container min-h-[56px]"></div>
                     </section>
-
-                </div><!-- End left column -->
-
-                <!-- Right Column -->
-                <div class="lg:col-span-4 space-y-6 md:space-y-8">
-
-                    <!-- Desktop slot for vacancy counter -->
-                    <div id="vacancyCounterDesktopSlot">
-                    <!-- Vacancy Counter -->
-                    <div id="vacancyCounterPanel" class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-primary-container to-secondary-container text-white shadow-2xl relative overflow-hidden group" style="display: none;">
-                        <div class="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-150 duration-700"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span id="vacancyStatusDot" class="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
-                                <span id="vacancyStatusText" class="text-xs font-bold tracking-widest uppercase opacity-80">Обновление</span>
-                            </div>
-                            <div class="text-5xl md:text-6xl font-black tracking-tighter mb-1 vacancy-label">
-                                <span id="vacancyCountValue">...</span>
-                            </div>
-                            <div class="text-lg font-medium opacity-90">Найдено вакансий</div>
-                            <div class="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-white/10 flex justify-end">
-                                <a id="vacancyLink" href="#" target="_blank" class="text-sm font-bold flex items-center gap-1 hover:underline text-white/90">
-                                    Посмотреть на hh.ru <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                                </a>
-                            </div>
-                        </div>
                     </div>
-                    </div><!-- End vacancyCounterDesktopSlot -->
 
-                    <!-- Region Search -->
-                    <section id="regionSection" class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                    <!-- Row 2: Region + industries (верх выровнен с «Настройка поиска») -->
+                    <div class="lg:col-span-4 lg:row-start-2 space-y-6 md:space-y-8">
+                    <section id="regionSection" class="space-y-4 p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Регион поиска</h2>
                         <div id="regionContainer" class="flex flex-col" style="height: 320px;">
                             <div class="mb-3">
@@ -768,7 +796,7 @@ body.tour-active.has-floating-save {
                     </section>
 
                     <!-- Industry -->
-                    <section id="industrySection" class="space-y-4 p-5 md:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5">
+                    <section id="industrySection" class="space-y-4 p-6 md:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/5">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface/80">Отрасли компаний</h2>
                         <div id="industryContainer" class="flex flex-col" style="height: 400px;">
                             <div class="relative mb-3">
@@ -778,10 +806,9 @@ body.tour-active.has-floating-save {
                             <div id="industryTree" class="overflow-y-auto flex-grow custom-scrollbar"></div>
                         </div>
                     </section>
+                    </div>
 
-                </div><!-- End right column -->
-
-            </div><!-- End grid -->
+            </div><!-- End search-settings-grid -->
 
             <!-- Legacy bar (заменён единым #unifiedActionBar ниже) -->
             <div id="searchActionBar" class="hidden"></div>
@@ -935,7 +962,7 @@ body.tour-active.has-floating-save {
                 </div>
             </div>
             <div class="flex gap-3 md:gap-4 w-full md:w-auto">
-                <button id="saveBtn" disabled class="flex-grow md:flex-none px-8 md:px-12 py-3 md:py-4 rounded-xl bg-primary-container text-on-primary-container font-bold shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed text-sm md:text-base">Нет изменений</button>
+                <button id="saveBtn" disabled class="aurora-btn flex-grow md:flex-none px-8 md:px-12 py-3 md:py-4 bg-primary-container text-on-primary-container font-bold shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed text-sm md:text-base">Нет изменений</button>
             </div>
         </div>
 
@@ -1006,11 +1033,11 @@ body.tour-active.has-floating-save {
         <p id="reconfigureStartModalQuota" class="text-xs text-on-surface-variant/70 mb-6"></p>
         <div class="flex flex-col-reverse sm:flex-row gap-3">
             <button type="button" id="reconfigureStartDismiss"
-                    class="flex-1 px-5 py-3 rounded-xl border border-outline-variant/30 text-on-surface font-semibold hover:bg-surface-container-high transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
+                    class="aurora-btn flex-1 px-5 py-3 border border-outline-variant/30 text-on-surface font-semibold hover:bg-surface-container-high transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
                 Отмена
             </button>
             <button type="button" id="reconfigureStartConfirm"
-                    class="flex-1 px-5 py-3 rounded-xl btn-primary text-white font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
+                    class="aurora-btn flex-1 px-5 py-3 btn-primary text-white font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
                 Начать
             </button>
         </div>
@@ -1055,7 +1082,7 @@ function toggleMobileMenu() {
 <script src="reg-modal.js?v=2"></script>
 <script src="settings-tour-steps.js?v=1.3"></script>
 <script src="settings-tour.js?v=1.2"></script>
-<script src="settings.js?v=6.9"></script>
+<script src="settings.js?v=6.10"></script>
 <script src="support-widget.js?v=2"></script>
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -1112,8 +1139,8 @@ window.switchMainTab = function(tabName) {
     const responseBtn = document.getElementById('tab-btn-response');
     const title = document.getElementById('pageTitle');
 
-    const activeClass = 'px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full bg-primary-container text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap';
-    const inactiveClass = 'px-4 sm:px-6 md:px-8 py-2.5 md:py-3 rounded-full text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap';
+    const activeClass = 'px-4 sm:px-6 md:px-8 py-2.5 md:py-3 aurora-segment-btn active text-on-primary-container font-semibold transition-all shadow-lg cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap';
+    const inactiveClass = 'px-4 sm:px-6 md:px-8 py-2.5 md:py-3 aurora-segment-btn text-on-surface-variant hover:text-on-surface transition-all cursor-pointer text-xs sm:text-sm text-center whitespace-nowrap';
 
     if (tabName === 'search') {
         searchBtn.className = activeClass;
@@ -1156,15 +1183,15 @@ window.switchMainTab = function(tabName) {
 
         <div class="flex flex-col-reverse md:flex-row gap-2 md:gap-3 md:justify-end">
             <button id="leaveConfirmStay"
-                class="px-4 md:px-5 py-2.5 md:py-3 rounded-xl bg-surface-container-highest text-on-surface text-sm font-semibold hover:bg-surface-container-high transition-colors">
+                class="aurora-btn px-4 md:px-5 py-2.5 md:py-3 bg-surface-container-highest text-on-surface text-sm font-semibold hover:bg-surface-container-high transition-colors cursor-pointer">
                 Остаться на странице
             </button>
             <button id="leaveConfirmDiscard"
-                class="px-4 md:px-5 py-2.5 md:py-3 rounded-xl bg-error/15 text-error text-sm font-semibold hover:bg-error/25 transition-colors">
+                class="aurora-btn px-4 md:px-5 py-2.5 md:py-3 bg-error/15 text-error text-sm font-semibold hover:bg-error/25 transition-colors cursor-pointer">
                 Уйти без сохранения
             </button>
             <button id="leaveConfirmSave"
-                class="px-4 md:px-5 py-2.5 md:py-3 rounded-xl bg-primary-container text-on-primary-container text-sm font-bold shadow-lg shadow-primary-container/30 hover:scale-[1.02] active:scale-95 transition-all">
+                class="aurora-btn px-4 md:px-5 py-2.5 md:py-3 bg-primary-container text-on-primary-container text-sm font-bold shadow-lg shadow-primary-container/30 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
                 Сохранить и уйти
             </button>
         </div>
