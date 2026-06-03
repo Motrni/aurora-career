@@ -22,7 +22,7 @@
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
-<meta name="version" content="2.1.0">
+<meta name="version" content="3.0.0">
 
 <link rel="icon" type="image/png" href="favicon.png?v=3">
 
@@ -32,170 +32,165 @@
 <script>(function(){var s=document.createElement('style');s.textContent='.material-symbols-outlined{visibility:hidden}';document.head.appendChild(s);document.fonts.ready.then(function(){s.parentNode&&s.parentNode.removeChild(s)});})()</script>
 
 <script>
-    tailwind.config = {
-        darkMode: "class",
-        theme: {
-            extend: {
-                colors: {
-                    "outline": "#938ea0",
-                    "on-secondary-container": "#c7aaff",
-                    "on-secondary": "#3e0c85",
-                    "primary-container": "#5a30d0",
-                    "on-secondary-fixed": "#250059",
-                    "tertiary": "#ccbeff",
-                    "tertiary-fixed": "#e7deff",
-                    "on-surface": "#e7e0ef",
-                    "surface-container-low": "#1d1a24",
-                    "on-primary-container": "#cec0ff",
-                    "surface-bright": "#3b3743",
-                    "surface-variant": "#37333e",
-                    "background": "#15121c",
-                    "on-error": "#690005",
-                    "on-background": "#e7e0ef",
-                    "inverse-primary": "#653edb",
-                    "on-tertiary-container": "#cec0ff",
-                    "tertiary-container": "#5a30d0",
-                    "on-tertiary-fixed": "#1e0060",
-                    "on-tertiary": "#350097",
-                    "on-tertiary-fixed-variant": "#4c1bc3",
-                    "on-secondary-fixed-variant": "#552d9c",
-                    "primary-fixed": "#e7deff",
-                    "surface-dim": "#15121c",
-                    "on-primary-fixed": "#1e0060",
-                    "surface-container-lowest": "#100d17",
-                    "secondary-fixed": "#ebddff",
-                    "primary-fixed-dim": "#ccbeff",
-                    "on-surface-variant": "#cac3d7",
-                    "surface": "#15121c",
-                    "secondary-fixed-dim": "#d3bbff",
-                    "secondary-container": "#58309f",
-                    "on-primary-fixed-variant": "#4c1bc3",
-                    "primary": "#ccbeff",
-                    "inverse-on-surface": "#322f3a",
-                    "error-container": "#93000a",
-                    "tertiary-fixed-dim": "#ccbeff",
-                    "surface-container-highest": "#37333e",
-                    "error": "#ffb4ab",
-                    "surface-container": "#211e29",
-                    "on-primary": "#350097",
-                    "surface-tint": "#ccbeff",
-                    "surface-container-high": "#2c2833",
-                    "outline-variant": "#484455",
-                    "inverse-surface": "#e7e0ef",
-                    "on-error-container": "#ffdad6",
-                    "secondary": "#d3bbff"
-                },
-                fontFamily: {
-                    "headline": ["Inter"],
-                    "body": ["Inter"],
-                    "label": ["Inter"]
-                },
-                borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "outline": "#938ea0",
+                "on-secondary-container": "#c7aaff",
+                "on-secondary": "#3e0c85",
+                "primary-container": "#5a30d0",
+                "on-secondary-fixed": "#250059",
+                "tertiary": "#ccbeff",
+                "on-surface": "#e7e0ef",
+                "surface-container-low": "#1d1a24",
+                "surface-bright": "#3b3743",
+                "surface-variant": "#37333e",
+                "background": "#15121c",
+                "on-error": "#690005",
+                "on-background": "#e7e0ef",
+                "on-surface-variant": "#cac3d7",
+                "surface": "#15121c",
+                "secondary-container": "#58309f",
+                "primary-fixed-dim": "#ccbeff",
+                "primary": "#ccbeff",
+                "error-container": "#93000a",
+                "surface-container": "#211e29",
+                "on-primary": "#350097",
+                "surface-container-high": "#2c2833",
+                "surface-container-highest": "#37333e",
+                "surface-container-lowest": "#100d17",
+                "error": "#ffb4ab",
+                "secondary": "#d3bbff",
+                "inverse-surface": "#e7e0ef",
+                "inverse-on-surface": "#322f3a",
             },
+            fontFamily: { "headline": ["Inter"], "body": ["Inter"], "label": ["Inter"] },
         },
-    }
+    },
+}
 </script>
+
 <style>
-    html {
-        scroll-behavior: smooth;
-        color-scheme: dark;
+    html { scroll-behavior: smooth; color-scheme: dark; }
+    body { font-family: 'Inter', sans-serif; background-color: #0a0b1e; min-width: 320px; overflow-x: hidden; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+
+    /* ── Loading Screen ── */
+    #loading-screen { transition: opacity 0.5s ease; }
+    #loading-screen.ls-hidden { opacity: 0; pointer-events: none; }
+    @keyframes loading-bar-anim { from { width: 0% } to { width: 100% } }
+    .ls-bar { animation: loading-bar-anim 1.8s ease-in-out forwards; width: 0%; }
+
+    /* ── Scroll To Top ── */
+    #scroll-top-btn {
+        opacity: 0; transform: translateY(20px); pointer-events: none;
+        transition: opacity 0.3s ease, transform 0.3s ease;
     }
-    body { font-family: 'Inter', sans-serif; background-color: #15121c; min-width: 320px; }
-    .glass-card {
-        background: rgba(55, 51, 62, 0.4);
-        backdrop-filter: blur(40px);
-        -webkit-backdrop-filter: blur(40px);
+    #scroll-top-btn.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+    /* ── Card Hover Glow ── */
+    .card-wrap { position: relative; }
+    .card-glow {
+        position: absolute; inset: -2px; border-radius: 18px;
+        background: linear-gradient(135deg, #22d3ee, #a855f7);
+        opacity: 0; filter: blur(5px);
+        transition: opacity 0.5s ease;
+        z-index: 0; pointer-events: none;
     }
-    .light-leak {
-        position: absolute;
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, rgba(90, 48, 208, 0.15) 0%, rgba(21, 18, 28, 0) 70%);
-        border-radius: 50%;
-        z-index: -1;
-        filter: blur(60px);
+    .card-wrap:hover .card-glow { opacity: 1; }
+
+    /* ── Scroll Animations ── */
+    .sa {
+        opacity: 0; transform: translateY(50px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
     }
-    .hero-glow-left {
-        position: absolute;
-        width: 800px;
-        height: 800px;
-        left: -200px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: radial-gradient(circle, rgba(90, 48, 208, 0.12) 0%, rgba(204, 190, 255, 0.05) 30%, rgba(0, 0, 0, 0) 70%);
-        pointer-events: none;
-        z-index: 1;
+    .sa.vis { opacity: 1; transform: translateY(0); }
+    .sa.d1 { transition-delay: 0.1s; }
+    .sa.d2 { transition-delay: 0.2s; }
+    .sa.d3 { transition-delay: 0.3s; }
+    .sa.d4 { transition-delay: 0.4s; }
+
+    /* ── Keyframes ── */
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+    .anim-spin { animation: spin-slow 20s linear infinite; }
+
+    @keyframes glow-pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50%  { transform: scale(1.2); opacity: 0.2; }
     }
-    .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    .anim-glow { animation: glow-pulse 3s ease-in-out infinite; }
+
+    @keyframes float-up {
+        0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.15; }
+        50%       { transform: translateY(-100px) rotate(180deg); opacity: 0; }
     }
 
+    @keyframes twinkle {
+        0%, 100% { opacity: var(--op, 0.3); }
+        50%  { opacity: 0.05; }
+    }
+
+    @keyframes icon-pulse {
+        0%, 100% { transform: scale(1); }
+        50%  { transform: scale(1.1); }
+    }
+
+    @keyframes gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50%  { background-position: 100% 50%; }
+    }
+    .cta-bg {
+        background: linear-gradient(to right, #22d3ee, #a855f7, #22d3ee);
+        background-size: 200% 100%;
+        animation: gradient-shift 5s linear infinite;
+    }
+
+    @keyframes shimmer {
+        0%   { left: -150%; }
+        100% { left: 350%; }
+    }
+    .cta-shimmer {
+        position: absolute; top: 0; bottom: 0; width: 50%;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent);
+        transform: skewX(-12deg);
+        animation: shimmer 2.5s ease infinite 1s;
+    }
+
+    @keyframes pricing-glow {
+        0%, 100% { box-shadow: 0 0 24px rgba(34,211,238,0.35), 0 0 48px rgba(168,85,247,0.2); }
+        50%  { box-shadow: 0 0 36px rgba(34,211,238,0.55), 0 0 72px rgba(168,85,247,0.3); }
+    }
+    .pricing-featured { animation: pricing-glow 3s ease-in-out infinite; }
+
+    /* ── Mobile Menu ── */
+    .mob-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+    .mob-menu.open { transform: translateX(0); }
+    .burger span { display:block; width:24px; height:2px; background:#e7e0ef; transition: all 0.3s ease; }
+    .burger.active span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+    .burger.active span:nth-child(2) { opacity: 0; }
+    .burger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+    /* ── Modals ── */
     .modal-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(16, 13, 23, 0.8);
-        backdrop-filter: blur(12px);
-        z-index: 100;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
+        display: none; position: fixed; inset: 0;
+        background: rgba(10,11,30,0.85); backdrop-filter: blur(12px);
+        z-index: 100; align-items: center; justify-content: center; padding: 16px;
     }
     .modal-overlay.active { display: flex; }
     body.modal-open { overflow: hidden; }
-
-    .brand-logo-font {
-        font-family: 'Inter', sans-serif;
-        font-weight: 900;
-        letter-spacing: -0.05em;
-        text-transform: uppercase;
+    .glass-card {
+        background: rgba(30,41,82,0.7);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
     }
 
-    .burger-btn span {
-        display: block;
-        width: 24px;
-        height: 2px;
-        background: #e7e0ef;
-        transition: all 0.3s ease;
-    }
-    .burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-    .burger-btn.active span:nth-child(2) { opacity: 0; }
-    .burger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
-
-    .mobile-menu {
-        transform: translateX(100%);
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .mobile-menu.open { transform: translateX(0); }
-
-    .comparison-card { display: none; }
-    @media (max-width: 767px) {
-        .comparison-table { display: none; }
-        .comparison-card { display: block; }
-    }
-
-    /* Тонкий скролл в стиле Aurora (модалки и длинный контент) */
-    .aurora-scroll {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(90, 48, 208, 0.55) rgba(16, 13, 23, 0.85);
-    }
-    .aurora-scroll::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    .aurora-scroll::-webkit-scrollbar-track {
-        background: rgba(16, 13, 23, 0.6);
-        border-radius: 9999px;
-        margin: 8px 0;
-    }
-    .aurora-scroll::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, rgba(90, 48, 208, 0.7), rgba(204, 190, 255, 0.35));
-        border-radius: 9999px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .aurora-scroll::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, rgba(90, 48, 208, 0.9), rgba(204, 190, 255, 0.5));
-    }
+    /* ── Scrollbar ── */
+    .aurora-scroll { scrollbar-width: thin; scrollbar-color: rgba(168,85,247,0.55) rgba(10,11,30,0.85); }
+    .aurora-scroll::-webkit-scrollbar { width: 6px; }
+    .aurora-scroll::-webkit-scrollbar-track { background: rgba(10,11,30,0.6); border-radius: 9999px; margin: 8px 0; }
+    .aurora-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg,rgba(168,85,247,0.7),rgba(34,211,238,0.35)); border-radius: 9999px; }
 </style>
 
 <link rel="stylesheet" href="cookie-consent.css">
@@ -203,244 +198,891 @@
 <script src="legal-modal.js?v=1.0"></script>
 <script src="cookie-consent.js?v=1.1"></script>
 </head>
-<body class="text-on-surface selection:bg-primary/30 selection:text-primary overflow-x-hidden">
 
-<!-- Navigation -->
-<nav class="fixed top-0 w-full z-50 bg-[#000000]/40 backdrop-blur-3xl font-['Inter'] tracking-tight antialiased flex justify-between items-center px-5 md:px-16 lg:px-24 h-16 md:h-20 max-w-none shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
-    <div class="flex items-center gap-2 md:gap-3">
-        <img alt="Aurora Logo" class="w-7 h-7 md:w-8 md:h-8 invert brightness-200" src="favicon.png?v=3"/>
-        <div class="flex flex-col leading-tight">
-            <div class="brand-logo-font text-xl md:text-2xl text-[#e7e0ef]">Аврора</div>
-            <div class="text-[9px] md:text-[10px] text-[#cac3d7] font-light tracking-wide">Карьерный ИИ-Ассистент</div>
+<body>
+
+<!-- ══════════════════════════════════════════
+     LOADING SCREEN
+══════════════════════════════════════════ -->
+<div id="loading-screen" class="fixed inset-0 z-[200] flex items-center justify-center"
+     style="background:linear-gradient(135deg,#0a0b1e 0%,#1e2952 50%,#3a2a5e 100%)">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 anim-glow"
+             style="width:800px;height:800px;background:radial-gradient(circle,rgba(34,211,238,0.1) 0%,rgba(168,85,247,0.1) 50%,transparent 70%);border-radius:50%"></div>
+    </div>
+    <div class="relative text-center">
+        <div class="flex items-center justify-center gap-3 mb-8">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+                 style="filter:drop-shadow(0 0 8px rgba(79,209,197,0.5))">
+                <path d="M24 4L8 14V34L24 44L40 34V14L24 4Z" stroke="url(#lg-ls)" stroke-width="2" fill="none"/>
+                <path d="M24 14L16 19V29L24 34L32 29V19L24 14Z" fill="url(#lg-ls)" opacity="0.6"/>
+                <circle cx="24" cy="24" r="4" fill="#4fd1c5"/>
+                <defs>
+                    <linearGradient id="lg-ls" x1="8" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#4fd1c5"/><stop offset="1" stop-color="#7c3aed"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span class="text-3xl font-bold tracking-widest text-white">АВРОРА</span>
         </div>
+        <div class="overflow-hidden h-1 rounded-full mx-auto" style="max-width:280px;background:rgba(255,255,255,0.1)">
+            <div class="ls-bar h-full rounded-full" style="background:linear-gradient(to right,#22d3ee,#a855f7)"></div>
+        </div>
+        <p class="mt-6 text-sm" style="color:rgba(255,255,255,0.6)">Загрузка...</p>
     </div>
-    <div id="nav-links" class="hidden md:flex gap-8 items-center font-['Inter'] tracking-tight text-sm font-medium">
-        <a class="nav-link text-[#ccbeff] border-b-2 border-[#5a30d0] pb-1 transition-colors duration-300" href="#opportunities" data-section="opportunities">Возможности</a>
-        <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#insights" data-section="insights">Проблемы поиска</a>
-        <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#network" data-section="network">Как это работает?</a>
-        <a class="nav-link text-[#cac3d7] border-b-2 border-transparent pb-1 hover:text-[#e7e0ef] transition-colors duration-300" href="#archive" data-section="archive">Стоимость</a>
-    </div>
-    <div class="hidden md:flex gap-3 items-center">
-        <button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-[#ccbeff]/10 transition-all duration-300 active:scale-95 ease-out" onclick="toggleModal('join-modal')">Попробовать бесплатно</button>
-        <a id="authBtn" href="/auth/" class="text-[#cac3d7] border border-white/10 px-5 py-2.5 rounded-full text-sm font-semibold hover:text-[#e7e0ef] hover:border-[#ccbeff]/30 hover:bg-[#ccbeff]/5 transition-all duration-300 active:scale-95 ease-out" style="min-width:90px;text-align:center">Вход</a>
-    </div>
-    <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
-        <span></span><span></span><span></span>
-    </button>
-</nav>
-
-<!-- Mobile Menu -->
-<div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 bg-[#100d17]/95 backdrop-blur-2xl pt-20 px-5 flex flex-col gap-2 md:hidden">
-    <button onclick="toggleMobileMenu(); toggleModal('join-modal');" class="w-full bg-gradient-to-tr from-primary-container to-secondary-container text-white py-4 rounded-xl text-base font-bold mt-4 mb-2 text-center">Попробовать бесплатно</button>
-    <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()" class="w-full text-center border border-white/10 text-[#cac3d7] py-3.5 rounded-xl text-base font-semibold mb-2 hover:text-[#e7e0ef] transition-colors">Вход</a>
-    <a href="#opportunities" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Возможности</a>
-    <a href="#insights" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Проблемы поиска</a>
-    <a href="#network" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Как это работает?</a>
-    <a href="#archive" onclick="toggleMobileMenu()" class="text-on-surface text-base font-medium py-3.5 border-b border-white/5">Стоимость</a>
 </div>
 
-<main class="relative">
+<!-- ══════════════════════════════════════════
+     SCROLL PROGRESS BAR
+══════════════════════════════════════════ -->
+<div id="scroll-progress" class="fixed top-0 left-0 h-[3px] z-50"
+     style="background:linear-gradient(to right,#22d3ee,#a855f7,#22d3ee);width:0%;transition:width 0.1s linear"></div>
 
-<!-- Hero Section -->
-<section class="min-h-screen flex flex-col items-center justify-center pt-24 md:pt-32 pb-12 md:pb-20 px-5 md:px-16 lg:px-24 relative overflow-hidden bg-[#000000]" id="opportunities">
-    <div class="hero-glow-left"></div>
-    <div class="max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-10 gap-8 md:gap-12 items-center relative z-10">
-        <div class="md:col-span-6 lg:col-span-7 space-y-6 md:space-y-12 text-left">
-            <div class="inline-block px-4 md:px-6 py-1.5 md:py-2 rounded-full border border-white/10 bg-white/5 text-primary font-medium tracking-wide text-xs md:text-sm">
-                ИНТЕЛЛЕКТУАЛЬНЫЙ ПОИСК РАБОТЫ
+<!-- ══════════════════════════════════════════
+     STARS BACKGROUND
+══════════════════════════════════════════ -->
+<div id="stars-bg" class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0"></div>
+
+<!-- ══════════════════════════════════════════
+     FLOATING ELEMENTS
+══════════════════════════════════════════ -->
+<div id="float-bg" class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0"></div>
+
+<!-- ══════════════════════════════════════════
+     SCROLL TO TOP
+══════════════════════════════════════════ -->
+<button id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+        class="fixed bottom-8 right-8 z-40 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer border-0"
+        style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 4px 20px rgba(34,211,238,0.3)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 15l-6-6-6 6"/>
+    </svg>
+</button>
+
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+<header class="fixed top-0 left-0 right-0 z-50"
+        style="background:rgba(10,11,30,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(34,211,238,0.1)">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-3 no-underline">
+            <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+                 style="filter:drop-shadow(0 0 6px rgba(79,209,197,0.5))">
+                <path d="M24 4L8 14V34L24 44L40 34V14L24 4Z" stroke="url(#lg-h)" stroke-width="2" fill="none"/>
+                <path d="M24 14L16 19V29L24 34L32 29V19L24 14Z" fill="url(#lg-h)" opacity="0.6"/>
+                <circle cx="24" cy="24" r="4" fill="#4fd1c5"/>
+                <defs>
+                    <linearGradient id="lg-h" x1="8" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#4fd1c5"/><stop offset="1" stop-color="#7c3aed"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span class="text-xl font-bold tracking-widest text-white">АВРОРА</span>
+        </a>
+
+        <!-- Desktop Nav -->
+        <nav class="hidden md:flex items-center gap-8">
+            <a href="#features" class="text-sm font-medium transition-colors duration-200 hover:text-white"
+               style="color:rgba(255,255,255,0.8)">Возможности</a>
+            <a href="#how-it-works" class="text-sm font-medium transition-colors duration-200 hover:text-white"
+               style="color:rgba(255,255,255,0.8)">Как работает</a>
+        </nav>
+
+        <!-- Auth -->
+        <div class="hidden md:flex items-center gap-1">
+            <a id="authBtn" href="/auth/"
+               class="px-4 py-2 text-sm font-medium transition-colors duration-200 hover:text-white"
+               style="color:rgba(255,255,255,0.8)">Вход</a>
+            <span style="color:rgba(255,255,255,0.4)">/</span>
+            <button onclick="toggleModal('join-modal')"
+                    class="px-4 py-2 text-sm font-medium transition-colors duration-200 hover:text-white bg-transparent border-0 cursor-pointer"
+                    style="color:rgba(255,255,255,0.8)">Регистрация</button>
+        </div>
+
+        <!-- Burger -->
+        <button id="burger-btn" class="burger flex md:hidden flex-col gap-[6px] p-2 -mr-2 bg-transparent border-0 cursor-pointer"
+                onclick="toggleMobileMenu()">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     MOBILE MENU
+══════════════════════════════════════════ -->
+<div id="mobile-menu"
+     class="mob-menu fixed inset-0 z-40 pt-20 px-6 flex flex-col gap-2 md:hidden"
+     style="background:rgba(10,11,30,0.97);backdrop-filter:blur(20px)">
+    <a href="#features" onclick="toggleMobileMenu()" class="text-lg font-medium py-3.5 hover:text-white transition-colors"
+       style="color:rgba(255,255,255,0.9);border-bottom:1px solid rgba(34,211,238,0.1)">Возможности</a>
+    <a href="#how-it-works" onclick="toggleMobileMenu()" class="text-lg font-medium py-3.5 hover:text-white transition-colors"
+       style="color:rgba(255,255,255,0.9);border-bottom:1px solid rgba(34,211,238,0.1)">Как работает</a>
+    <div class="pt-4 mt-2 flex flex-col gap-3" style="border-top:1px solid rgba(34,211,238,0.1)">
+        <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()"
+           class="w-full text-center py-3.5 rounded-[12px] text-sm font-semibold hover:text-white transition-colors"
+           style="border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.8)">Вход</a>
+        <button onclick="toggleMobileMenu();toggleModal('join-modal');"
+                class="w-full py-3.5 rounded-[12px] font-bold text-white text-sm cursor-pointer border-0"
+                style="background:linear-gradient(135deg,#22d3ee,#a855f7)">Регистрация</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════ -->
+<main style="position:relative;z-index:1">
+
+<!-- ── HERO ── -->
+<section id="hero" class="pt-32 pb-24 px-6 relative overflow-hidden"
+         style="background:linear-gradient(135deg,#0a0b1e 0%,#1e2952 55%,#3a2a5e 100%)">
+    <div class="absolute inset-0 pointer-events-none"
+         style="background:radial-gradient(ellipse at top right,rgba(168,85,247,0.15) 0%,transparent 60%)"></div>
+    <div class="absolute inset-0 pointer-events-none"
+         style="background:radial-gradient(ellipse at bottom left,rgba(34,211,238,0.08) 0%,transparent 60%)"></div>
+
+    <div class="max-w-7xl mx-auto relative">
+        <div class="grid lg:grid-cols-[3fr_2fr] gap-16 items-center">
+
+            <!-- Left -->
+            <div class="space-y-8 sa">
+                <h1 class="font-bold leading-tight text-white"
+                    style="font-size:clamp(2.5rem,5vw,3.75rem)">
+                    АВРОРА. Карьерная ИИ-система
+                </h1>
+                <p style="font-size:1.25rem;color:rgba(255,255,255,0.8);line-height:1.75">
+                    Сервис, который анализирует ваш опыт, подстраивает резюме под требования эйчаров и сам отправляет отклики, пока вы отдыхаете.
+                </p>
             </div>
-            <h1 class="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-on-surface leading-[0.95]">
-                Ваша карьера <br/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">на автопилоте.</span>
-            </h1>
-            <p class="text-base sm:text-lg md:text-2xl text-on-surface-variant max-w-2xl font-light leading-relaxed">
-                Система, которая сама ищет вакансии, адаптирует резюме и отправляет отклики, пока вы отдыхаете.
+
+            <!-- Right — Video Preview -->
+            <div class="flex justify-center lg:justify-end sa d2">
+                <div class="relative" style="width:192px;height:192px">
+                    <!-- Glow blur -->
+                    <div class="absolute inset-0 rounded-full anim-glow"
+                         style="background:linear-gradient(135deg,#22d3ee,#a855f7);filter:blur(40px)"></div>
+                    <!-- Rotating ring -->
+                    <div class="absolute inset-0 anim-spin" style="border-radius:50%">
+                        <div style="width:100%;height:100%;padding:2px;border-radius:50%;background:conic-gradient(from 0deg,#22d3ee,#a855f7,#22d3ee)">
+                            <div style="width:100%;height:100%;border-radius:50%;background:#0a0b1e"></div>
+                        </div>
+                    </div>
+                    <!-- Inner -->
+                    <div class="absolute overflow-hidden cursor-pointer" style="inset:10px;border-radius:50%"
+                         onclick="toggleModal('join-modal')">
+                        <div class="w-full h-full flex items-center justify-center"
+                             style="background:linear-gradient(135deg,#374151,#4b5563)">
+                            <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6b7280,#9ca3af)"></div>
+                        </div>
+                        <!-- Play overlay -->
+                        <div class="absolute inset-0 flex items-center justify-center"
+                             style="background:rgba(0,0,0,0.2);backdrop-filter:blur(2px)">
+                            <div class="flex items-center justify-center"
+                                 style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 0 30px rgba(34,211,238,0.5)">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="white" style="margin-left:3px">
+                                    <polygon points="5,3 19,12 5,21"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Bottom text -->
+                    <div class="absolute text-center" style="bottom:-48px;left:0;right:0">
+                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.6)">
+                            Познакомьтесь<br>с Авророй за 1 минуту.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── STATS ── -->
+<section id="stats" class="py-16 px-6" style="background:#0a0b1e">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <!-- Stat 1 -->
+            <div class="card-wrap sa">
+                <div class="card-glow"></div>
+                <div class="relative p-6 rounded-[16px]"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="space-y-4">
+                        <div class="inline-flex p-3 rounded-[10px]"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">send</span>
+                        </div>
+                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Отправлено откликов:</p>
+                        <p class="text-3xl font-bold counter" data-target="997537"
+                           style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">0</p>
+                    </div>
+                    <div class="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
+                         style="background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent)"></div>
+                </div>
+            </div>
+
+            <!-- Stat 2 -->
+            <div class="card-wrap sa d1">
+                <div class="card-glow"></div>
+                <div class="relative p-6 rounded-[16px]"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="space-y-4">
+                        <div class="inline-flex p-3 rounded-[10px]"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite 0.3s">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">description</span>
+                        </div>
+                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Написано сопроводительных:</p>
+                        <p class="text-3xl font-bold counter" data-target="125430"
+                           style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">0</p>
+                    </div>
+                    <div class="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
+                         style="background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent)"></div>
+                </div>
+            </div>
+
+            <!-- Stat 3 -->
+            <div class="card-wrap sa d2">
+                <div class="card-glow"></div>
+                <div class="relative p-6 rounded-[16px]"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="space-y-4">
+                        <div class="inline-flex p-3 rounded-[10px]"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite 0.6s">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">schedule</span>
+                        </div>
+                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Сэкономлено часов:</p>
+                        <p class="text-3xl font-bold counter" data-target="83120"
+                           style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">0</p>
+                    </div>
+                    <div class="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
+                         style="background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent)"></div>
+                </div>
+            </div>
+
+            <!-- Stat 4 -->
+            <div class="card-wrap sa d3">
+                <div class="card-glow"></div>
+                <div class="relative p-6 rounded-[16px]"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="space-y-4">
+                        <div class="inline-flex p-3 rounded-[10px]"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite 0.9s">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">group</span>
+                        </div>
+                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Специалистов в поиске:</p>
+                        <p class="text-3xl font-bold counter" data-target="1842"
+                           style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">0</p>
+                    </div>
+                    <div class="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
+                         style="background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="py-20 px-6" style="background:#0a0b1e">
+    <div class="max-w-4xl mx-auto text-center">
+        <div class="sa">
+            <button onclick="toggleModal('join-modal')"
+                    class="relative overflow-hidden rounded-[16px] cursor-pointer border-0 hover:scale-105 active:scale-95 transition-transform duration-200"
+                    style="padding:20px 48px">
+                <div class="cta-bg absolute inset-0 rounded-[16px]"></div>
+                <div class="absolute inset-0 rounded-[16px]"
+                     style="background:linear-gradient(135deg,#22d3ee,#a855f7);filter:blur(32px);opacity:0.5"></div>
+                <div class="cta-shimmer"></div>
+                <span class="relative flex items-center justify-center gap-3 text-lg font-bold text-white uppercase tracking-wide">
+                    Получить 10 бесплатных откликов
+                </span>
+            </button>
+        </div>
+        <p class="mt-8 text-sm sa d2" style="color:rgba(255,255,255,0.5)">
+            Используем защищенный шлюз авторизации.
+        </p>
+    </div>
+</section>
+
+<!-- ── SECURITY / FEATURES ── -->
+<section id="features" class="py-24 px-6" style="background:#0a0b1e">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16 sa">
+            <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">
+                Работает безопасно. Как обычный пользователь.
+            </h2>
+            <p class="text-xl max-w-3xl mx-auto mt-4" style="color:rgba(255,255,255,0.7)">
+                Доверьте рутину системе и начните получать приглашения уже на этой неделе.
             </p>
-            <div class="flex flex-col sm:flex-row gap-4 md:gap-6 pt-4 md:pt-8">
-                <button onclick="toggleModal('join-modal')" class="bg-gradient-to-tr from-primary-container to-secondary-container text-white px-8 md:px-12 py-4 md:py-5 rounded-xl text-base md:text-lg font-bold shadow-[0_30px_60px_rgba(90,48,208,0.2)] hover:scale-[1.02] transition-transform duration-300 text-center cursor-pointer">
-                    Попробовать бесплатно
-                </button>
-                <a href="#insights" class="glass-card text-on-surface px-8 md:px-12 py-4 md:py-5 rounded-xl text-base md:text-lg font-semibold border border-white/10 hover:bg-white/10 transition-colors text-center">
-                    Как это работает
-                </a>
-            </div>
         </div>
-        <div class="hidden md:flex md:col-span-4 lg:col-span-3 items-stretch justify-center">
-            <div class="relative w-full overflow-hidden bg-black">
-                <video autoplay muted loop playsinline class="w-full h-full object-cover" src="aurora-hero.mp4?v=3"></video>
-                <div class="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-black pointer-events-none"></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            <!-- Card 1 -->
+            <div class="card-wrap sa">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6">
+                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">security</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Без передачи паролей.</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Мы используем безопасные методы авторизации и никогда не храним ваши данные.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="card-wrap sa d1">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6">
+                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">schedule</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Алгоритмы имитируют поведение человека.</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Без блокировок. Система соблюдает лимиты площадок, чтобы ваш аккаунт был в безопасности.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="card-wrap sa d2">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6 relative">
+                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">task</span>
+                        </div>
+                        <div class="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                             style="background:#a855f7">
+                            <span class="text-white text-xs font-bold">✓</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Полный контроль.</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Инструмент не удаляет отклики и не меняет оригинальное резюме. Всё управление — в ваших руках.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Problem Statement Section -->
-<section class="py-16 md:py-32 px-5 md:px-16 lg:px-24 bg-surface-container-low" id="insights">
+<!-- ── TEAM ── -->
+<section id="team" class="py-24 px-6" style="background:#0a0b1e">
     <div class="max-w-7xl mx-auto">
-        <div class="mb-10 md:mb-20">
-            <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4 md:mb-6">Поиск работы — это вторая работа.<br/><span class="text-on-surface-variant">Скучная и бесплатная.</span></h2>
+        <div class="text-center mb-16 sa">
+            <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">Кто стоит за алгоритмами Авроры</h2>
+            <p class="text-xl max-w-3xl mx-auto" style="color:rgba(255,255,255,0.7)">
+                Мы объединили опыт HR-директора и системного инженера, чтобы сделать процесс поиска работы прозрачным и предсказуемым.
+            </p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-            <div class="bg-surface-container-lowest p-6 md:p-10 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
-                <span class="material-symbols-outlined text-4xl md:text-5xl mb-4 md:mb-6 text-primary">groups</span>
-                <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Бешеная конкуренция</h3>
-                <p class="text-on-surface-variant text-sm md:text-base leading-relaxed">Сотни кандидатов на одну позицию. Ваше резюме просто теряется в общем потоке.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+            <!-- Founder 1 -->
+            <div class="card-wrap sa">
+                <div class="card-glow" style="border-radius:18px"></div>
+                <div class="relative rounded-[16px] overflow-hidden"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2)">
+                    <div class="relative flex items-center justify-center overflow-hidden"
+                         style="height:320px;background:linear-gradient(135deg,#374151,#4b5563)">
+                        <div class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center"
+                             style="background:rgba(255,255,255,0.1);backdrop-filter:blur(4px)">
+                            <span class="material-symbols-outlined" style="color:rgba(255,255,255,0.6);font-size:24px">account_circle</span>
+                        </div>
+                        <div class="w-32 h-32 rounded-full"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <h3 class="text-2xl font-bold mb-2 text-white">Роман Изотов,<br>основатель.</h3>
+                        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
+                            Карьерный консультант с опытом в IT-рекрутменте более 5 лет. Знаю изнутри, как мыслят работодатели и почему резюме закрывают за 6 секунд. Отвечаю за продуктовую логику сервиса.
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div class="bg-surface-container-lowest p-6 md:p-10 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
-                <span class="material-symbols-outlined text-4xl md:text-5xl mb-4 md:mb-6 text-primary">local_fire_department</span>
-                <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Рутина выжигает</h3>
-                <p class="text-on-surface-variant text-sm md:text-base leading-relaxed">Бесконечное заполнение анкет и корректировка сопроводительных писем убивают мотивацию.</p>
+
+            <!-- Founder 2 -->
+            <div class="card-wrap sa d1">
+                <div class="card-glow" style="border-radius:18px"></div>
+                <div class="relative rounded-[16px] overflow-hidden"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2)">
+                    <div class="relative flex items-center justify-center overflow-hidden"
+                         style="height:320px;background:linear-gradient(135deg,#374151,#4b5563)">
+                        <div class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center"
+                             style="background:rgba(255,255,255,0.1);backdrop-filter:blur(4px)">
+                            <span class="material-symbols-outlined" style="color:rgba(255,255,255,0.6);font-size:24px">account_circle</span>
+                        </div>
+                        <div class="w-32 h-32 rounded-full"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <h3 class="text-2xl font-bold mb-2 text-white">Вадим Клепов,<br>технический директор.</h3>
+                        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
+                            Отвечаю за стабильность архитектуры и точность парсинга. Лично протестировал инструмент на собственном поиске работы, чтобы вычистить ошибки под капотом.
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div class="bg-surface-container-lowest p-6 md:p-10 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-high transition-colors duration-500 border border-white/5">
-                <span class="material-symbols-outlined text-4xl md:text-5xl mb-4 md:mb-6 text-primary">notifications_off</span>
-                <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Тишина в ответ</h3>
-                <p class="text-on-surface-variant text-sm md:text-base leading-relaxed">Месяцы ожиданий без обратной связи. Вы даже не знаете, прочитали ли ваше письмо.</p>
+
+            <!-- Online разборы -->
+            <div class="card-wrap sa d2">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] flex flex-col justify-center items-center text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px);min-height:420px">
+                    <div class="mb-6">
+                        <div class="w-24 h-24 rounded-[16px] flex items-center justify-center mx-auto"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:48px">videocam</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Открытые онлайн-разборы</h3>
+                    <p class="mb-3" style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Открытые разборы резюме с создателем сервиса.
+                    </p>
+                    <p class="text-sm mb-8" style="color:rgba(255,255,255,0.6);line-height:1.7">
+                        Раз в две недели Роман Изотов бесплатно разбирает профили пользователей в прямом эфире. Ищем слепые зоны, исправляем формулировки и настраиваем алгоритм для точных попаданий.
+                    </p>
+                    <button onclick="window.open('https://t.me/AuroraCareer','_blank')"
+                            class="px-8 py-4 rounded-[12px] font-bold text-white uppercase tracking-wide cursor-pointer border-0 hover:scale-105 active:scale-95 transition-transform"
+                            style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 8px 24px rgba(34,211,238,0.3)">
+                        Записаться на следующий<br>эфир (бесплатно)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Solution Section -->
-<section class="py-16 md:py-32 px-5 md:px-16 lg:px-24" id="network">
+<!-- ── PRICING ── -->
+<section id="pricing" class="py-24 px-6" style="background:#0a0b1e">
     <div class="max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-24 gap-4 md:gap-8">
-            <h2 class="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter">Аврора меняет <br/>правила игры.</h2>
-            <p class="text-base md:text-xl text-on-surface-variant max-w-md font-light">Мы автоматизировали каждый этап, чтобы вы сосредоточились только на интервью.</p>
+        <div class="text-center mb-16 sa">
+            <h2 class="text-4xl lg:text-5xl font-bold text-white">Математика вашей карьеры</h2>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            <div class="col-span-1 lg:col-span-2 bg-surface-container-low rounded-xl p-6 md:p-10 flex flex-col md:flex-row gap-6 md:gap-12 items-center overflow-hidden relative">
-                <div class="flex-1 space-y-4 md:space-y-6 z-10">
-                    <h3 class="text-2xl md:text-3xl font-bold">Улучшение вашего резюме</h3>
-                    <p class="text-on-surface-variant text-sm md:text-lg">ИИ анализирует описание вакансии и точечно адаптирует ваш опыт, чтобы пройти ATS-фильтры на 100%.</p>
-                </div>
-                <div class="w-full md:flex-1 h-48 md:h-64 bg-surface-variant rounded-lg border border-white/5 relative overflow-hidden">
-                    <img alt="Minimalist clean resume layout on screen" class="w-full h-full object-cover opacity-60" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5rZkY7NLWNpN-jFMtEBfgSvWr25R2RI4WqevXDAwDVOdRs-X5emymvoDeILmmCC-QIEZseziPLE8SJAAiU5KhQUpMjZ3fWKkKkNtccxXa7OzvQaORpctJfQ78_hSOwChvuqaZbrxpyXr8jekIvvwIidefprMUVk8yWlFGw1pqf8OyZxyh3xkF8QPJPuwNh7iRuUSiOHX-XNEt64i13d1w2xEKnkfvbbwN54U6c8X18pGZNtskGfsLOh_-a27iQi7B-N1b0CYirYg"/>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            <!-- Консультант -->
+            <div class="card-wrap sa">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6">
+                        <div class="w-24 h-24 rounded-[16px] flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(107,114,128,0.4),rgba(75,85,99,0.4))">
+                            <span class="material-symbols-outlined" style="color:#9ca3af;font-size:48px">account_circle</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-6 text-white">Консультант</h3>
+                    <div class="mb-8">
+                        <div class="text-4xl font-bold text-white">от 50 000 руб</div>
+                    </div>
+                    <div class="space-y-3 flex-grow" style="color:rgba(255,255,255,0.7);font-size:0.875rem">
+                        <p>*Скорость: Низкая</p>
+                        <p>*Объем: Ограниченный</p>
+                    </div>
                 </div>
             </div>
-            <div class="bg-primary-container/20 rounded-xl p-6 md:p-10 flex flex-col justify-between gap-6 border border-primary/10">
-                <span class="material-symbols-outlined text-3xl md:text-4xl text-primary" data-weight="fill">bolt</span>
-                <div>
-                    <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Мгновенный поиск</h3>
-                    <p class="text-on-surface-variant text-sm md:text-base">Мониторинг 50+ площадок одновременно. Система находит вакансию раньше, чем вы успеете обновить ленту.</p>
+
+            <!-- Самостоятельно -->
+            <div class="card-wrap sa d1">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6">
+                        <div class="relative w-24 h-24 rounded-[16px] flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(107,114,128,0.4),rgba(75,85,99,0.4))">
+                            <span class="material-symbols-outlined" style="color:#9ca3af;font-size:48px">settings</span>
+                            <div class="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                                 style="background:#6b7280">
+                                <span class="material-symbols-outlined text-white" style="font-size:16px">account_circle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-6 text-white">Самостоятельно</h3>
+                    <div class="mb-8">
+                        <div class="text-4xl font-bold text-white">0 руб</div>
+                    </div>
+                    <div class="space-y-3 flex-grow" style="color:rgba(255,255,255,0.7);font-size:0.875rem">
+                        <p>*Скорость: Зависит от вас</p>
+                        <p>*Объем: Малый</p>
+                    </div>
                 </div>
             </div>
-            <div class="bg-surface-container-high rounded-xl p-6 md:p-10 flex flex-col justify-between gap-6">
-                <span class="material-symbols-outlined text-3xl md:text-4xl text-secondary">mail</span>
-                <div>
-                    <h3 class="text-xl md:text-2xl font-bold mb-2 md:mb-4">Письма, которые работают</h3>
-                    <p class="text-on-surface-variant text-sm md:text-base">Создание персонализированных сопроводительных писем, на которые рекрутеры отвечают «Да».</p>
-                </div>
-            </div>
-            <div class="col-span-1 lg:col-span-2 bg-surface-container-lowest border border-white/5 rounded-xl p-6 md:p-10 flex flex-col justify-center">
-                <h3 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Бесшовная интеграция</h3>
-                <p class="text-on-surface-variant text-sm md:text-lg mb-6 md:mb-8">Подключите свои профили и позвольте системе управлять потоком откликов. Полный контроль в одном окне.</p>
-                <div class="flex gap-3 md:gap-4">
-                    <div class="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined text-xl md:text-2xl">link</span></div>
-                    <div class="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined text-xl md:text-2xl">sync</span></div>
-                    <div class="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white/5 flex items-center justify-center"><span class="material-symbols-outlined text-xl md:text-2xl">verified</span></div>
+
+            <!-- Аврора (Featured) -->
+            <div class="sa d2" style="position:relative">
+                <div class="absolute -inset-0.5 rounded-[18px]"
+                     style="background:linear-gradient(135deg,#22d3ee,#a855f7);filter:blur(5px)"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center pricing-featured"
+                     style="background:linear-gradient(135deg,#1e2952,#2a3562);border:2px solid rgba(34,211,238,0.6)">
+                    <div class="mb-6">
+                        <div class="relative w-24 h-24 rounded-[16px] flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.3),rgba(168,85,247,0.3))">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:48px">rocket_launch</span>
+                            <div class="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                                 style="background:#a855f7">
+                                <span class="material-symbols-outlined text-white" style="font-size:16px">settings</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-6 text-white">Система Аврора</h3>
+                    <div class="mb-8">
+                        <div class="text-4xl font-bold"
+                             style="background:linear-gradient(to right,#22d3ee,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+                            от 2 900 руб
+                        </div>
+                    </div>
+                    <div class="space-y-3 flex-grow" style="color:rgba(255,255,255,0.9);font-size:0.875rem">
+                        <p>Скорость: <strong class="text-white">Максимальная</strong></p>
+                        <p>Объем: <strong class="text-white">Неограниченный</strong></p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
 
-<!-- Comparison Section -->
-<section class="py-16 md:py-32 px-5 md:px-16 lg:px-24 bg-surface-container-lowest" id="archive">
-    <div class="max-w-5xl mx-auto">
-        <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-center mb-10 md:mb-20">Математика вашей карьеры</h2>
-
-        <!-- Desktop table -->
-        <div class="comparison-table overflow-x-auto">
-            <table class="w-full text-left border-separate border-spacing-y-4">
-                <thead>
-                    <tr class="text-on-surface-variant uppercase text-xs tracking-widest">
-                        <th class="px-8 py-4 font-medium">Параметр</th>
-                        <th class="px-8 py-4 font-medium">Консультант</th>
-                        <th class="px-8 py-4 font-medium">Самостоятельно</th>
-                        <th class="px-8 py-4 font-medium text-primary">Система Аврора</th>
-                    </tr>
-                </thead>
-                <tbody class="text-lg">
-                    <tr class="bg-surface-container-low rounded-xl group transition-all">
-                        <td class="px-8 py-10 rounded-l-xl font-semibold">Цена / мес</td>
-                        <td class="px-8 py-10">от 50 000 ₽</td>
-                        <td class="px-8 py-10">0 ₽</td>
-                        <td class="px-8 py-10 rounded-r-xl text-primary font-bold">от 2 900 ₽</td>
-                    </tr>
-                    <tr class="bg-surface-container-low rounded-xl">
-                        <td class="px-8 py-10 rounded-l-xl font-semibold">Скорость поиска</td>
-                        <td class="px-8 py-10">Низкая</td>
-                        <td class="px-8 py-10">Зависит от вас</td>
-                        <td class="px-8 py-10 rounded-r-xl text-primary font-bold">Максимальная</td>
-                    </tr>
-                    <tr class="bg-surface-container-low rounded-xl">
-                        <td class="px-8 py-10 rounded-l-xl font-semibold">Объем откликов</td>
-                        <td class="px-8 py-10">Ограничен</td>
-                        <td class="px-8 py-10">Мало</td>
-                        <td class="px-8 py-10 rounded-r-xl text-primary font-bold">Неограничен</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Mobile cards -->
-        <div class="comparison-card space-y-4">
-            <div class="bg-surface-container-low rounded-xl p-5 space-y-3">
-                <div class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Цена / мес</div>
-                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Консультант</span><span>от 50 000 ₽</span></div>
-                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Самостоятельно</span><span>0 ₽</span></div>
-                <div class="flex justify-between items-center border-t border-white/5 pt-3"><span class="text-primary text-sm font-semibold">Система Аврора</span><span class="text-primary font-bold">от 2 900 ₽</span></div>
-            </div>
-            <div class="bg-surface-container-low rounded-xl p-5 space-y-3">
-                <div class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Скорость поиска</div>
-                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Консультант</span><span>Низкая</span></div>
-                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Самостоятельно</span><span>Зависит от вас</span></div>
-                <div class="flex justify-between items-center border-t border-white/5 pt-3"><span class="text-primary text-sm font-semibold">Система Аврора</span><span class="text-primary font-bold">Максимальная</span></div>
-            </div>
-            <div class="bg-surface-container-low rounded-xl p-5 space-y-3">
-                <div class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Объем откликов</div>
-                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Консультант</span><span>Ограничен</span></div>
-                <div class="flex justify-between items-center"><span class="text-on-surface-variant text-sm">Самостоятельно</span><span>Мало</span></div>
-                <div class="flex justify-between items-center border-t border-white/5 pt-3"><span class="text-primary text-sm font-semibold">Система Аврора</span><span class="text-primary font-bold">Неограничен</span></div>
-            </div>
+        <div class="text-center mt-12 sa d4">
+            <a href="/auth/" class="inline-flex items-center gap-2 text-sm transition-colors hover:underline"
+               style="color:#22d3ee">
+                Перейти к функционалу <span>↑</span>
+            </a>
         </div>
     </div>
 </section>
 
-<!-- Security Section -->
-<section class="py-16 md:py-32 px-5 md:px-16 lg:px-24 relative overflow-hidden">
-    <div class="light-leak top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30"></div>
-    <div class="max-w-4xl mx-auto text-center space-y-8 md:space-y-12">
-        <h2 class="text-3xl md:text-5xl font-black">Работает безопасно</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-            <div class="space-y-3 md:space-y-4">
-                <div class="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto text-primary">
-                    <span class="material-symbols-outlined text-2xl md:text-3xl">fingerprint</span>
+<!-- ── HOW IT WORKS ── -->
+<section id="how-it-works" class="py-24 px-6 relative overflow-hidden" style="background:#0a0b1e">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16 sa">
+            <h2 class="text-4xl lg:text-5xl font-bold text-white">Как это работает (Актуальный функционал)</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            <!-- Step 1 -->
+            <div class="card-wrap sa">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6 rounded-[12px] flex items-center justify-center"
+                         style="height:192px;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(168,85,247,0.1));border:1px solid rgba(34,211,238,0.2)">
+                        <span class="material-symbols-outlined" style="color:rgba(34,211,238,0.45);font-size:80px">search</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Шаг 1. ИИ-Аудит резюме.</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Вы загружаете текущее резюме в систему. Алгоритм проводит диагностику, находит слабые зоны и показывает, чего не хватает для прохождения фильтра рекрутеров.
+                    </p>
                 </div>
-                <h3 class="text-xl md:text-2xl font-bold">Как обычный пользователь</h3>
-                <p class="text-on-surface-variant text-sm md:text-base">Алгоритмы имитируют поведение человека, чтобы площадки не блокировали ваш аккаунт.</p>
             </div>
-            <div class="space-y-3 md:space-y-4">
-                <div class="w-14 h-14 md:w-16 md:h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto text-secondary">
-                    <span class="material-symbols-outlined text-2xl md:text-3xl">key_off</span>
+
+            <!-- Step 2 -->
+            <div class="card-wrap sa d1">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6 rounded-[12px] flex items-center justify-center"
+                         style="height:192px;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(168,85,247,0.1));border:1px solid rgba(34,211,238,0.2)">
+                        <span class="material-symbols-outlined" style="color:rgba(34,211,238,0.45);font-size:80px">edit_note</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Шаг 2. Подстройка под вакансию.</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Инструмент анализирует описание конкретной вакансии и адаптирует ваш опыт, чтобы пройти автоматические фильтры на 100%. Система сама пишет персонализированные сопроводительные письма.
+                    </p>
                 </div>
-                <h3 class="text-xl md:text-2xl font-bold">Без передачи паролей</h3>
-                <p class="text-on-surface-variant text-sm md:text-base">Мы используем безопасные методы авторизации и никогда не храним ваши конфиденциальные данные.</p>
             </div>
+
+            <!-- Step 3 -->
+            <div class="card-wrap sa d2">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6 rounded-[12px] flex items-center justify-center"
+                         style="height:192px;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(168,85,247,0.1));border:1px solid rgba(34,211,238,0.2)">
+                        <span class="material-symbols-outlined" style="color:rgba(34,211,238,0.45);font-size:80px">my_location</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Шаг 3. Умный поиск и автоотклики.</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Инструмент мониторит топовые площадки, находит релевантные вакансии и отправляет отклики. Вы привязываете свой профиль и получаете полный контроль над воронкой в одном окне.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-12 sa d3">
+            <span style="color:#22d3ee;font-size:1.5rem">↓</span>
         </div>
     </div>
 </section>
 
-<!-- Final CTA Section -->
-<section class="py-16 md:py-40 px-5 md:px-16 lg:px-24">
-    <div class="max-w-6xl mx-auto glass-card rounded-xl p-8 sm:p-12 md:p-20 relative overflow-hidden text-center">
-        <div class="absolute inset-0 bg-gradient-to-br from-primary-container/20 to-transparent pointer-events-none"></div>
-        <div class="relative z-10 space-y-5 md:space-y-8">
-            <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter">Доверьте рутину системе.</h2>
-            <p class="text-base sm:text-lg md:text-2xl text-on-surface-variant font-light max-w-2xl mx-auto">Начните получать приглашения на работу мечты уже на этой неделе.</p>
-            <div class="pt-4 md:pt-8">
-                <button onclick="toggleModal('join-modal')" class="bg-on-surface text-background px-10 md:px-16 py-4 md:py-6 rounded-xl text-base md:text-xl font-bold hover:scale-105 transition-transform duration-300 inline-block text-center cursor-pointer">
-                    Попробовать бесплатно
-                </button>
+<!-- ── RESULTS ── -->
+<section id="results" class="py-24 px-6" style="background:#0a0b1e">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16 sa">
+            <h2 class="text-4xl lg:text-5xl font-bold text-white">Результаты работы алгоритмов</h2>
+        </div>
+        <div class="space-y-6">
+
+            <!-- Result 1 -->
+            <div class="card-wrap sa">
+                <div class="card-glow"></div>
+                <div class="relative p-6 lg:p-8 rounded-[16px]"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="grid lg:grid-cols-[2fr_1fr] gap-6 items-start">
+                        <div>
+                            <h3 class="text-xl lg:text-2xl font-bold mb-3 text-white">
+                                Свел поиск работы к понятной математике: 282 отклика = 2 оффера
+                            </h3>
+                            <p class="text-sm mb-1" style="color:rgba(255,255,255,0.7)">Полная воронка от нашего пользователя.</p>
+                            <p class="text-sm" style="color:rgba(255,255,255,0.7)">Активный поиск занял ровно месяц.</p>
+                        </div>
+                        <div class="flex flex-col gap-3">
+                            <div class="space-y-2">
+                                <div class="rounded-[8px] p-2 text-center text-sm font-bold text-white"
+                                     style="background:linear-gradient(to right,#22d3ee,#06b6d4)">282 ОТКЛИКА</div>
+                                <div class="rounded-[8px] p-2 text-center text-sm font-bold text-white ml-4"
+                                     style="background:linear-gradient(to right,#06b6d4,#a855f7)">7 СОБЕСЕДОВАНИЙ</div>
+                                <div class="rounded-[8px] p-2 text-center text-sm font-bold text-white ml-8"
+                                     style="background:linear-gradient(to right,#a855f7,#9333ea)">2 ОФФЕРА</div>
+                            </div>
+                            <div class="rounded-[8px] p-3"
+                                 style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="w-6 h-6 rounded-full"
+                                         style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
+                                    <div class="text-xs font-bold text-white">Антон</div>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="rounded p-1.5 text-xs"
+                                         style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
+                                        282 отклика → 7 собеседований
+                                    </div>
+                                    <div class="rounded p-1.5 text-xs"
+                                         style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
+                                        2 оффера ✓
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result 2 -->
+            <div class="card-wrap sa d1">
+                <div class="card-glow"></div>
+                <div class="relative p-6 lg:p-8 rounded-[16px]"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="grid lg:grid-cols-[1fr_2fr] gap-6 items-start">
+                        <div class="flex items-center gap-3 justify-center">
+                            <div class="text-center">
+                                <div class="rounded-[8px] p-3"
+                                     style="background:rgba(34,211,238,0.2);border:1px solid rgba(34,211,238,0.3)">
+                                    <div class="text-2xl font-bold text-white">9</div>
+                                    <div class="text-xs" style="color:rgba(255,255,255,0.6)">Dec</div>
+                                </div>
+                            </div>
+                            <div class="text-2xl font-bold" style="color:#22d3ee">→</div>
+                            <div class="text-center">
+                                <div class="rounded-[8px] p-3"
+                                     style="background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.3)">
+                                    <div class="text-2xl font-bold text-white">17</div>
+                                    <div class="text-xs" style="color:rgba(255,255,255,0.6)">Dec</div>
+                                    <div class="mt-1 px-2 py-0.5 rounded text-[10px] font-bold text-white"
+                                         style="background:#a855f7">ОФФЕР</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl lg:text-2xl font-bold mb-3 text-white">
+                                От запуска до оффера на полную удаленку — 8 дней
+                            </h3>
+                            <p class="text-sm mb-3" style="color:rgba(255,255,255,0.7)">
+                                SA/BA аналитик получил удаленную работу, когда все говорили, что удаленки больше нет.
+                            </p>
+                            <div class="rounded-[8px] p-3"
+                                 style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="w-6 h-6 rounded-full"
+                                         style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
+                                    <div class="text-xs font-bold text-white">Станислав</div>
+                                </div>
+                                <div class="rounded p-2 text-xs leading-relaxed"
+                                     style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
+                                    От запуска до оффера на полную удаленку — 8 дней. Я наконец-то получил удаленную работу...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result 3 -->
+            <div class="card-wrap sa d2">
+                <div class="card-glow"></div>
+                <div class="relative p-6 lg:p-8 rounded-[16px]"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="grid lg:grid-cols-[2fr_1fr] gap-6 items-start">
+                        <div>
+                            <h3 class="text-xl lg:text-2xl font-bold mb-3 text-white">
+                                Аврора пробивает фильтры НН и некомпетентность первичного отбора
+                            </h3>
+                            <p class="text-sm" style="color:rgba(255,255,255,0.7)">
+                                Честный отзыв о том, почему ручной точечный поиск сейчас проигрывает умной автоматизации.
+                            </p>
+                        </div>
+                        <div class="rounded-[8px] p-3"
+                             style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-6 h-6 rounded-full"
+                                     style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
+                                <div class="text-xs font-bold text-white">Рустем</div>
+                            </div>
+                            <div class="rounded p-2 text-xs leading-relaxed"
+                                 style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
+                                Ручной точечный поиск проигрывает умной автоматизации — это факт...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-12 sa d3">
+            <a href="#how-it-works" class="inline-flex items-center gap-2 text-sm hover:underline transition-colors"
+               style="color:#22d3ee">
+                Узнайте, как мы это сделали <span>↓</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ── PROBLEMS ── -->
+<section id="problems" class="py-24 px-6" style="background:#0a0b1e">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16 sa">
+            <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">
+                Поиск работы — это вторая работа.
+            </h2>
+            <h3 class="text-3xl lg:text-4xl font-bold" style="color:rgba(255,255,255,0.9)">
+                Скучная и бесплатная.
+            </h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            <!-- Problem 1 — Конкуренция -->
+            <div class="card-wrap sa">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6">
+                        <div class="w-48 h-48 rounded-[12px] flex items-center justify-center p-4 relative overflow-hidden"
+                             style="background:linear-gradient(135deg,rgba(55,65,81,0.4),rgba(31,41,55,0.4))">
+                            <!-- Grid of resumes -->
+                            <div class="absolute inset-2 grid grid-cols-3 gap-1" style="opacity:0.3">
+                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
+                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
+                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
+                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
+                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
+                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
+                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
+                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
+                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
+                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
+                            </div>
+                            <!-- Featured resume -->
+                            <div class="absolute flex flex-col items-center p-2 rounded-[8px]"
+                                 style="width:72px;height:100px;background:linear-gradient(135deg,rgba(34,211,238,0.3),rgba(168,85,247,0.3));border:2px solid rgba(34,211,238,0.5)">
+                                <div class="w-8 h-8 rounded-full mb-2" style="background:rgba(34,211,238,0.5)"></div>
+                                <div class="w-full h-1 rounded mb-1" style="background:rgba(34,211,238,0.3)"></div>
+                                <div class="rounded mb-1" style="width:75%;height:4px;background:rgba(34,211,238,0.3)"></div>
+                                <div class="w-full h-1 rounded" style="background:rgba(34,211,238,0.3)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Бешеная конкуренция</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Сотни кандидатов на одну позицию. Ваше резюме просто теряется в общем потоке.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Problem 2 — Рутина -->
+            <div class="card-wrap sa d1">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6">
+                        <div class="relative w-48 h-48 rounded-[12px] flex items-center justify-center p-4"
+                             style="background:linear-gradient(135deg,rgba(55,65,81,0.4),rgba(31,41,55,0.4))">
+                            <div class="relative">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 rounded-full mb-2"
+                                         style="background:linear-gradient(135deg,#6b7280,#4b5563)"></div>
+                                    <div class="w-20 h-24 rounded-[8px]"
+                                         style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
+                                </div>
+                                <span class="absolute material-symbols-outlined"
+                                      style="color:#f97316;font-size:32px;top:-8px;right:-24px">local_fire_department</span>
+                                <span class="absolute material-symbols-outlined"
+                                      style="color:#fb923c;font-size:24px;top:-16px;left:32px">local_fire_department</span>
+                                <span class="absolute material-symbols-outlined"
+                                      style="color:#ef4444;font-size:28px;top:8px;left:-24px">local_fire_department</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Рутина выжигает</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Бесконечное заполнение анкет и корректировка писем убивают мотивацию.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Problem 3 — Тишина -->
+            <div class="card-wrap sa d2">
+                <div class="card-glow"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6">
+                        <div class="relative w-48 h-48 rounded-[12px] flex items-center justify-center p-4"
+                             style="background:linear-gradient(135deg,rgba(55,65,81,0.4),rgba(31,41,55,0.4))">
+                            <div class="relative">
+                                <div class="w-32 h-24 rounded-[8px] flex items-center justify-center"
+                                     style="background:linear-gradient(135deg,rgba(168,85,247,0.3),rgba(147,51,234,0.3));border:2px solid rgba(168,85,247,0.4)">
+                                    <span class="material-symbols-outlined" style="color:#c4b5fd;font-size:48px">mail</span>
+                                </div>
+                                <div class="absolute flex items-center justify-center rounded-full"
+                                     style="width:48px;height:48px;top:-16px;left:-16px;background:rgba(34,211,238,0.2);border:2px solid rgba(34,211,238,0.4)">
+                                    <span class="material-symbols-outlined" style="color:#67e8f9;font-size:20px">schedule</span>
+                                </div>
+                                <div class="absolute font-bold" style="color:#c4b5fd;font-size:2rem;top:-8px;right:-24px">?</div>
+                                <div class="absolute font-bold" style="color:rgba(196,181,253,0.7);font-size:1.5rem;top:32px;right:-32px">?</div>
+                                <div class="absolute font-bold" style="color:#f87171;font-size:1.25rem;bottom:-16px;right:16px">✕</div>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Тишина в ответ</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Месяцы ожиданий без обратной связи. Вы даже не знаете, прочитали ли ваше письмо.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -448,66 +1090,70 @@
 
 </main>
 
-<!-- Footer -->
-<footer class="bg-[#100d17] w-full relative border-t border-[#ccbeff]/10 py-10 md:py-14 px-5 md:px-16 lg:px-24">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-10 w-full">
-
-        <!-- Brand + Legal entity -->
-        <div class="flex flex-col gap-5 order-2 md:order-1">
-            <div class="flex items-center gap-2 md:gap-3">
-                <img alt="Aurora Logo" class="w-5 h-5 md:w-6 md:h-6 invert brightness-150" src="favicon.png?v=3"/>
-                <div class="flex flex-col leading-tight">
-                    <div class="brand-logo-font text-base md:text-lg text-[#ccbeff]">Аврора</div>
-                    <div class="text-[8px] md:text-[9px] text-[#cac3d7]/70 font-light tracking-wide">Карьерный ИИ-Ассистент</div>
-                </div>
-            </div>
-            <div class="text-[11px] md:text-xs text-[#cac3d7]/50 leading-relaxed font-['Inter'] space-y-0.5">
-                <div>ИП Клепов Вадим Сергеевич</div>
-                <div>ОГРНИП 326220200010610, ИНН 220415989252</div>
-            </div>
-            <div class="text-[10px] md:text-xs uppercase tracking-widest text-[#cac3d7]/60 font-['Inter']">&copy; 2026 Аврора</div>
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="py-16 px-6" style="background:rgba(10,11,30,0.5);backdrop-filter:blur(4px);border-top:1px solid rgba(34,211,238,0.1)">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold tracking-widest" style="color:rgba(255,255,255,0.9)">AVRORA</h2>
         </div>
-
-        <!-- Legal links -->
-        <nav class="flex flex-col sm:flex-row gap-6 md:gap-10 font-['Inter'] text-sm order-1 md:order-2">
-            <button type="button" onclick="openLegalModal('privacy')" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group cursor-pointer bg-transparent border-0 p-0 font-inherit text-left">
-                <span>Политика конфиденциальности</span>
-                <svg class="w-3.5 h-3.5 text-[#ccbeff]/60 group-hover:text-[#ccbeff] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="7" y1="17" x2="17" y2="7"/>
-                    <polyline points="7 7 17 7 17 17"/>
-                </svg>
-            </button>
-            <button type="button" onclick="openLegalModal('offer')" class="text-[#cac3d7] hover:text-[#ccbeff] transition-colors duration-300 inline-flex items-center gap-1.5 group cursor-pointer bg-transparent border-0 p-0 font-inherit text-left">
-                <span>Оферта</span>
-                <svg class="w-3.5 h-3.5 text-[#ccbeff]/60 group-hover:text-[#ccbeff] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="7" y1="17" x2="17" y2="7"/>
-                    <polyline points="7 7 17 7 17 17"/>
-                </svg>
-            </button>
-        </nav>
-
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-sm"
+             style="color:rgba(255,255,255,0.6)">
+            <div class="text-center md:text-left">
+                <p class="mb-1">ИП Клепов Вадим Сергеевич | ИНН</p>
+                <p>220415598925 | ОГРНИП 326220200010610</p>
+            </div>
+            <div class="text-center">
+                <p>© 2026 Аврора. Все права защищены.</p>
+            </div>
+            <div class="flex gap-6 items-center">
+                <button type="button" onclick="openLegalModal('offer')"
+                        class="cursor-pointer bg-transparent border-0 p-0 text-sm hover:text-white transition-colors"
+                        style="color:rgba(255,255,255,0.6);font-family:inherit">
+                    Оферта
+                </button>
+                <span style="color:rgba(255,255,255,0.4)">|</span>
+                <button type="button" onclick="openLegalModal('privacy')"
+                        class="cursor-pointer bg-transparent border-0 p-0 text-sm hover:text-white transition-colors"
+                        style="color:rgba(255,255,255,0.6);font-family:inherit">
+                    Политика конфиденциальности
+                </button>
+            </div>
+        </div>
     </div>
 </footer>
 
-<!-- Join / Telegram Modal -->
-<div class="modal-overlay" id="join-modal" onclick="if(event.target === this) toggleModal('join-modal')">
-    <div class="glass-card max-w-lg w-full p-6 md:p-10 rounded-2xl md:rounded-3xl border border-white/10 relative shadow-2xl">
-        <button class="absolute top-4 right-4 md:top-6 md:right-6 text-on-surface-variant hover:text-white transition-colors" onclick="toggleModal('join-modal')">
-            <span class="material-symbols-outlined">close</span>
+<!-- ══════════════════════════════════════════
+     JOIN MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="join-modal" onclick="if(event.target===this)toggleModal('join-modal')">
+    <div class="glass-card max-w-lg w-full p-6 md:p-10 rounded-[16px] relative shadow-2xl"
+         style="border:1px solid rgba(34,211,238,0.2)">
+        <button class="absolute top-4 right-4 md:top-6 md:right-6 bg-transparent border-0 cursor-pointer transition-colors hover:text-white"
+                style="color:rgba(255,255,255,0.6)" onclick="toggleModal('join-modal')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
         </button>
         <div class="text-center space-y-4 md:space-y-6">
-            <div class="w-14 h-14 md:w-16 md:h-16 bg-primary-container/20 rounded-2xl flex items-center justify-center mx-auto text-primary">
-                <span class="material-symbols-outlined text-2xl md:text-3xl">rocket_launch</span>
+            <div class="w-14 h-14 md:w-16 md:h-16 rounded-[16px] flex items-center justify-center mx-auto"
+                 style="background:rgba(34,211,238,0.2)">
+                <span class="material-symbols-outlined" style="color:#22d3ee;font-size:32px">rocket_launch</span>
             </div>
-            <h3 class="text-xl md:text-2xl font-bold">Начните прямо сейчас</h3>
-            <p class="text-on-surface-variant leading-relaxed text-sm md:text-lg">
+            <h3 class="text-xl md:text-2xl font-bold text-white">Начните прямо сейчас</h3>
+            <p class="leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7)">
                 Зарегистрируйтесь и получите 10 бесплатных откликов, или присоединяйтесь к нашему сообществу в Telegram.
             </p>
             <div class="pt-2 md:pt-4 flex flex-col gap-3">
-                <a class="inline-block bg-gradient-to-tr from-primary-container to-secondary-container text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base hover:scale-105 transition-transform" href="/auth/">
+                <a class="inline-block text-white px-6 md:px-8 py-3 md:py-4 rounded-[12px] font-bold text-sm md:text-base hover:scale-105 transition-transform text-center"
+                   href="/auth/" style="background:linear-gradient(135deg,#22d3ee,#a855f7)">
                     Попробовать 10 откликов бесплатно
                 </a>
-                <a class="inline-block bg-surface-container-high text-on-surface px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold text-sm md:text-base border border-white/10 hover:bg-white/10 transition-colors" href="https://t.me/AuroraCareer" target="_blank">
+                <a class="inline-block px-6 md:px-8 py-3 md:py-4 rounded-[12px] font-semibold text-sm md:text-base hover:bg-white/10 transition-colors text-center"
+                   href="https://t.me/AuroraCareer" target="_blank"
+                   style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.1)">
                     Присоединиться к сообществу
                 </a>
             </div>
@@ -515,139 +1161,185 @@
     </div>
 </div>
 
-<!-- Info Modal (Dynamic Content) -->
-<div class="modal-overlay" id="info-modal" onclick="if(event.target === this) toggleModal('info-modal')">
-    <div class="glass-card aurora-scroll max-w-xl w-full p-6 md:p-10 rounded-2xl md:rounded-3xl border border-white/10 relative shadow-2xl max-h-[85vh] overflow-y-auto overscroll-contain">
-        <button class="absolute top-4 right-4 md:top-6 md:right-6 text-on-surface-variant hover:text-white transition-colors" onclick="toggleModal('info-modal')">
-            <span class="material-symbols-outlined">close</span>
+<!-- ══════════════════════════════════════════
+     INFO MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="info-modal" onclick="if(event.target===this)toggleModal('info-modal')">
+    <div class="glass-card aurora-scroll max-w-xl w-full p-6 md:p-10 rounded-[16px] relative shadow-2xl"
+         style="border:1px solid rgba(34,211,238,0.2);max-height:85vh;overflow-y:auto;overscroll-behavior:contain">
+        <button class="absolute top-4 right-4 md:top-6 md:right-6 bg-transparent border-0 cursor-pointer transition-colors hover:text-white"
+                style="color:rgba(255,255,255,0.6)" onclick="toggleModal('info-modal')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
         </button>
         <div class="space-y-4 md:space-y-6">
-            <h3 class="text-2xl md:text-3xl font-black tracking-tight" id="info-modal-title"></h3>
-            <div class="text-on-surface-variant space-y-3 md:space-y-4 leading-relaxed text-sm md:text-base" id="info-modal-body"></div>
+            <h3 class="text-2xl md:text-3xl font-black tracking-tight text-white" id="info-modal-title"></h3>
+            <div class="space-y-3 md:space-y-4 leading-relaxed text-sm md:text-base"
+                 id="info-modal-body" style="color:rgba(255,255,255,0.7)"></div>
             <div class="pt-2 md:pt-4 flex justify-end">
-                <button class="px-5 md:px-6 py-2 border border-white/10 rounded-lg hover:bg-white/5 transition-colors text-sm md:text-base" onclick="toggleModal('info-modal')">Понятно</button>
+                <button class="px-5 md:px-6 py-2 rounded-[8px] hover:bg-white/5 transition-colors text-sm bg-transparent cursor-pointer"
+                        style="border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);font-family:inherit"
+                        onclick="toggleModal('info-modal')">Понятно</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- ══════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════ -->
 <script>
-    function toggleModal(id) {
-        const modal = document.getElementById(id);
-        modal.classList.toggle('active');
-        document.body.classList.toggle('modal-open');
+/* ── Modal & Menu ── */
+function toggleModal(id) {
+    var modal = document.getElementById(id);
+    modal.classList.toggle('active');
+    document.body.classList.toggle('modal-open');
+}
+
+function toggleMobileMenu() {
+    document.getElementById('burger-btn').classList.toggle('active');
+    document.getElementById('mobile-menu').classList.toggle('open');
+    document.body.classList.toggle('modal-open');
+}
+
+/* ── Info Modal Data ── */
+var infoContent = {
+    editorial: {
+        title: 'Редакция',
+        body: '<p><strong style="color:white">О проекте Аврора</strong></p><p>Аврора — продукт, созданный командой инженеров и специалистов по подбору персонала. Мы верим, что поиск работы должен быть таким же простым, как заказ такси: вы указываете, куда хотите попасть, а система доставляет вас.</p><p><strong style="color:white">Контакты</strong></p><p>По вопросам сотрудничества: <a href="https://t.me/auroracareer" target="_blank" style="color:#22d3ee">@auroracareer</a> в Telegram.</p>'
+    },
+    support: {
+        title: 'Поддержка',
+        body: '<p><strong style="color:white">Как с нами связаться</strong></p><p>Самый быстрый способ получить помощь — написать нам в Telegram. Мы отвечаем в течение нескольких часов в рабочее время.</p><p class="pt-2"><a href="https://t.me/auroracareer" target="_blank" class="inline-block px-6 py-3 rounded-[12px] font-semibold text-sm" style="background:rgba(34,211,238,0.2);color:#22d3ee">Написать в поддержку</a></p><p><strong style="color:white">Частые вопросы</strong></p><p><em>Как начать пользоваться?</em><br>Перейдите по ссылке /auth/ и следуйте инструкциям.</p><p><em>Безопасно ли это?</em><br>Да. Мы имитируем поведение обычного пользователя и не запрашиваем ваши пароли.</p><p><em>Могу ли я отменить подписку?</em><br>Да, в любой момент через бота или обратившись в поддержку.</p>'
+    }
+};
+
+function openInfoModal(key) {
+    var data = infoContent[key];
+    if (!data) return;
+    document.getElementById('info-modal-title').innerText = data.title;
+    document.getElementById('info-modal-body').innerHTML = data.body;
+    toggleModal('info-modal');
+}
+
+/* ── Auth State ── */
+document.addEventListener('DOMContentLoaded', function() {
+    var h = window.location.hostname;
+    var apiBase = (h.indexOf('twc1.net') !== -1 || h.indexOf('aurora-develop') !== -1)
+        ? 'https://api.aurora-develop.ru'
+        : 'https://api.aurora-career.ru';
+    var btn = document.getElementById('authBtn');
+    var btnM = document.getElementById('authBtnMobile');
+
+    function setLoggedIn() {
+        if (btn) { btn.textContent = 'Кабинет'; btn.href = '/cabinet/'; }
+        if (btnM) { btnM.textContent = 'Кабинет'; btnM.href = '/cabinet/'; }
     }
 
-    function toggleMobileMenu() {
-        document.getElementById('burger-btn').classList.toggle('active');
-        document.getElementById('mobile-menu').classList.toggle('open');
-        document.body.classList.toggle('modal-open');
-    }
-
-    const infoContent = {
-        editorial: {
-            title: 'Редакция',
-            body: `
-                <p><strong>О проекте Аврора</strong></p>
-                <p>Аврора — продукт, созданный командой инженеров и специалистов по подбору персонала. Мы верим, что поиск работы должен быть таким же простым, как заказ такси: вы указываете, куда хотите попасть, а система доставляет вас.</p>
-                <p><strong>Наша миссия</strong></p>
-                <p>Освободить специалистов от рутины поиска работы, чтобы они могли сосредоточиться на том, что действительно важно — на подготовке к собеседованиям и развитии карьеры.</p>
-                <p><strong>Принципы работы</strong></p>
-                <p>Прозрачность — вы всегда видите, что система делает от вашего имени. Безопасность — мы не храним пароли и не совершаем действий без вашего согласия. Эффективность — каждый отклик адаптируется под конкретную вакансию с помощью AI.</p>
-                <p><strong>Контакты редакции</strong></p>
-                <p>По вопросам сотрудничества и предложениям: <a href="https://t.me/auroracareer" target="_blank" class="text-primary hover:underline">@auroracareer</a> в Telegram.</p>
-            `
-        },
-        support: {
-            title: 'Поддержка',
-            body: `
-                <p><strong>Как с нами связаться</strong></p>
-                <p>Самый быстрый способ получить помощь — написать нам в Telegram. Мы отвечаем в течение нескольких часов в рабочее время.</p>
-                <p class="pt-2">
-                    <a href="https://t.me/auroracareer" target="_blank" class="inline-block bg-primary/10 text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/20 transition-colors text-sm">
-                        Написать в поддержку
-                    </a>
-                </p>
-                <p><strong>Частые вопросы</strong></p>
-                <p><em>Как начать пользоваться?</em><br/>Запустите нашего бота в Telegram и следуйте инструкциям. Бот проведёт вас через настройку профиля и запуск автоматических откликов.</p>
-                <p><em>Безопасно ли это?</em><br/>Да. Мы имитируем поведение обычного пользователя и не запрашиваем ваши пароли. Подробнее в разделе «Конфиденциальность».</p>
-                <p><em>Могу ли я отменить подписку?</em><br/>Да, вы можете отменить подписку в любой момент через бота или обратившись в поддержку.</p>
-                <p><em>На каких площадках работает Аврора?</em><br/>Система мониторит более 50 площадок, включая крупнейшие российские и международные сайты по поиску работы.</p>
-            `
-        }
-    };
-
-    function openInfoModal(key) {
-        const data = infoContent[key];
-        if (!data) return;
-        document.getElementById('info-modal-title').innerText = data.title;
-        document.getElementById('info-modal-body').innerHTML = data.body;
-        toggleModal('info-modal');
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var navLinks = document.querySelectorAll('.nav-link');
-        var sections = document.querySelectorAll('section[id]');
-
-        function setActiveLink(sectionId) {
-            navLinks.forEach(function(link) {
-                if (link.dataset.section === sectionId) {
-                    link.classList.remove('text-[#cac3d7]', 'border-transparent');
-                    link.classList.add('text-[#ccbeff]', 'border-[#5a30d0]');
-                } else {
-                    link.classList.remove('text-[#ccbeff]', 'border-[#5a30d0]');
-                    link.classList.add('text-[#cac3d7]', 'border-transparent');
-                }
-            });
-        }
-
-        var observer = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
-                if (entry.isIntersecting) {
-                    setActiveLink(entry.target.id);
-                }
-            });
-        }, { rootMargin: '-40% 0px -55% 0px' });
-
-        sections.forEach(function(section) { observer.observe(section); });
-
-        (function checkAuthState() {
-            var h = window.location.hostname;
-            var apiBase = (h.indexOf('twc1.net') !== -1 || h.indexOf('aurora-develop') !== -1)
-                ? 'https://api.aurora-develop.ru'
-                : 'https://api.aurora-career.ru';
-            var btn = document.getElementById('authBtn');
-            var btnMobile = document.getElementById('authBtnMobile');
-
-            function reveal() {
-                if (btn) { btn.style.transition = 'opacity 0.25s ease'; btn.style.opacity = '1'; }
-                if (btnMobile) { btnMobile.style.transition = 'opacity 0.25s ease'; btnMobile.style.opacity = '1'; }
+    fetch(apiBase + '/api/auth/me', { method: 'GET', credentials: 'include' })
+        .then(function(r) {
+            if (r.ok) return r.json();
+            if (r.status === 401) {
+                return fetch(apiBase + '/api/auth/refresh', { method: 'POST', credentials: 'include' })
+                    .then(function(r2) {
+                        if (!r2.ok) return null;
+                        return fetch(apiBase + '/api/auth/me', { credentials: 'include' })
+                            .then(function(r3) { return r3.ok ? r3.json() : null; });
+                    });
             }
-            function setLoggedIn() {
-                if (btn) { btn.textContent = 'Кабинет'; btn.href = '/cabinet/'; }
-                if (btnMobile) { btnMobile.textContent = 'Кабинет'; btnMobile.href = '/cabinet/'; }
-            }
+            return null;
+        })
+        .then(function(d) { if (d && d.status === 'ok') setLoggedIn(); })
+        .catch(function() {});
+});
 
-            fetch(apiBase + '/api/auth/me', { method: 'GET', credentials: 'include' })
-                .then(function(resp) {
-                    if (resp.ok) return resp.json();
-                    if (resp.status === 401) {
-                        return fetch(apiBase + '/api/auth/refresh', { method: 'POST', credentials: 'include' })
-                            .then(function(refreshResp) {
-                                if (!refreshResp.ok) return null;
-                                return fetch(apiBase + '/api/auth/me', { method: 'GET', credentials: 'include' })
-                                    .then(function(r) { return r.ok ? r.json() : null; });
-                            });
-                    }
-                    return null;
-                })
-                .then(function(data) {
-                    if (data && data.status === 'ok') setLoggedIn();
-                })
-                .catch(function() {})
-                .finally(reveal);
-        })();
+/* ── Loading Screen ── */
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        var ls = document.getElementById('loading-screen');
+        ls.classList.add('ls-hidden');
+        setTimeout(function() { ls.style.display = 'none'; }, 520);
+    }, 2000);
+});
+
+/* ── Stars ── */
+(function() {
+    var c = document.getElementById('stars-bg');
+    for (var i = 0; i < 50; i++) {
+        var s = document.createElement('div');
+        var op = (Math.random() * 0.4 + 0.1).toFixed(2);
+        var dur = (Math.random() * 3 + 2).toFixed(1);
+        var del = (Math.random() * 3).toFixed(1);
+        s.style.cssText = 'position:absolute;width:3px;height:3px;background:white;border-radius:50%;'
+            + 'left:' + (Math.random()*100).toFixed(1) + '%;'
+            + 'top:' + (Math.random()*100).toFixed(1) + '%;'
+            + '--op:' + op + ';opacity:' + op + ';'
+            + 'animation:twinkle ' + dur + 's ease-in-out infinite ' + del + 's';
+        c.appendChild(s);
+    }
+})();
+
+/* ── Floating Elements ── */
+(function() {
+    var c = document.getElementById('float-bg');
+    var shapes = [
+        {sz:40,x:10,y:20,dl:0,dr:20},  {sz:60,x:80,y:40,dl:2,dr:25},
+        {sz:30,x:15,y:70,dl:4,dr:18},  {sz:50,x:85,y:80,dl:1,dr:22},
+        {sz:35,x:50,y:15,dl:3,dr:24},  {sz:45,x:25,y:50,dl:5,dr:20}
+    ];
+    shapes.forEach(function(s) {
+        var el = document.createElement('div');
+        el.style.cssText = 'position:absolute;'
+            + 'width:' + s.sz + 'px;height:' + s.sz + 'px;'
+            + 'left:' + s.x + '%;top:' + s.y + '%;'
+            + 'border-radius:50%;'
+            + 'border:2px solid rgba(34,211,238,0.15);'
+            + 'background:radial-gradient(circle,rgba(34,211,238,0.08) 0%,transparent 70%);'
+            + 'animation:float-up ' + s.dr + 's ease-in-out infinite ' + s.dl + 's';
+        c.appendChild(el);
     });
+})();
+
+/* ── Scroll Progress ── */
+window.addEventListener('scroll', function() {
+    var scrolled = document.documentElement.scrollTop || document.body.scrollTop;
+    var total = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    document.getElementById('scroll-progress').style.width = ((scrolled / total) * 100) + '%';
+    var btn = document.getElementById('scroll-top-btn');
+    if (scrolled > 300) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+}, { passive: true });
+
+/* ── Scroll Animations ── */
+var saObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+        if (e.isIntersecting) { e.target.classList.add('vis'); }
+    });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.sa').forEach(function(el) { saObserver.observe(el); });
+
+/* ── Animated Counters ── */
+var cntObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+        if (!e.isIntersecting || e.target.dataset.counted) return;
+        e.target.dataset.counted = '1';
+        var target = parseInt(e.target.dataset.target, 10);
+        var duration = 2000;
+        var step = target / (duration / 16);
+        var current = 0;
+        var timer = setInterval(function() {
+            current += step;
+            if (current >= target) { current = target; clearInterval(timer); }
+            e.target.textContent = Math.floor(current).toLocaleString('ru-RU').replace(/,/g, '\u00a0');
+        }, 16);
+    });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.counter').forEach(function(el) { cntObserver.observe(el); });
 </script>
+
 </body>
 </html>
