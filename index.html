@@ -193,6 +193,9 @@ tailwind.config = {
         display: flex !important;
         background: rgba(5,6,18,0);
         pointer-events: none;
+        /* Переопределяем backdrop-filter у .modal-overlay — иначе страница в блюре */
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
         transition: background 0.55s ease;
     }
     #video-modal.active {
@@ -1284,18 +1287,38 @@ function videoApiBase() {
 
 function openVideoModal() {
     var modal = document.getElementById('video-modal');
+    var shell = modal.querySelector('.video-shell');
     var video = document.getElementById('promo-video');
+
+    // Lazily assign src — src не сбрасываем, чтобы currentTime сохранялся между открытиями
     if (!video.src) {
         video.src = videoApiBase() + '/video/aurora-intro.mp4';
     }
+
+    // Вычисляем transform-origin так, чтобы раскрытие шло из центра кружка, а не из центра экрана
+    var trigger = document.querySelector('[aria-label="Смотреть видео про Аврору"]');
+    if (trigger) {
+        var tr     = trigger.getBoundingClientRect();
+        var vw     = window.innerWidth;
+        var vh     = window.innerHeight;
+        var shellW = Math.min(vw * 0.94, 1100);
+        var shellH = shellW * 9 / 16;
+        // Натуральный (без transform) центр shell внутри flex-контейнера
+        var shellLeft = (vw - shellW) / 2;
+        var shellTop  = (vh - shellH) / 2;
+        var circleCX  = tr.left + tr.width  / 2;
+        var circleCY  = tr.top  + tr.height / 2;
+        shell.style.transformOrigin = (circleCX - shellLeft) + 'px ' + (circleCY - shellTop) + 'px';
+    } else {
+        shell.style.transformOrigin = '50% 50%';
+    }
+
     document.body.classList.add('modal-open');
-    /* Двойной rAF: первый кадр — браузер рисует начальное состояние (кружок, scale 0.13),
-       второй — добавляем класс и CSS-переход запускается плавно. */
+    // Двойной rAF: первый кадр браузер рендерит начальное состояние (кружок),
+    // второй — добавляем .active и CSS-переход запускается плавно
     requestAnimationFrame(function() {
         requestAnimationFrame(function() {
             modal.classList.add('active');
-            var p = video.play();
-            if (p && p.catch) { p.catch(function() {}); }
         });
     });
 }
