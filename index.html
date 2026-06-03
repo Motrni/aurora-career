@@ -22,7 +22,7 @@
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
-<meta name="version" content="3.0.0">
+<meta name="version" content="3.1.0">
 
 <link rel="icon" type="image/png" href="favicon.png?v=3">
 
@@ -186,6 +186,34 @@ tailwind.config = {
         -webkit-backdrop-filter: blur(40px);
     }
 
+    /* ── Video Lightbox ── */
+    #video-modal { background: rgba(5,6,18,0.92); }
+    .video-shell {
+        position: relative;
+        width: min(94vw, 1100px);
+        aspect-ratio: 16 / 9;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #000;
+        box-shadow: 0 0 0 1px rgba(34,211,238,0.25), 0 30px 80px rgba(0,0,0,0.6);
+        transform: scale(0.4);
+        opacity: 0;
+        transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.35s ease;
+    }
+    #video-modal.active .video-shell { transform: scale(1); opacity: 1; }
+    .video-shell video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+    .video-close {
+        position: absolute; top: 12px; right: 12px; z-index: 5;
+        width: 40px; height: 40px; border-radius: 9999px; border: 0; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(10,11,30,0.65); backdrop-filter: blur(8px);
+        color: #fff; transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .video-close:hover { background: rgba(168,85,247,0.7); transform: scale(1.08); }
+    @media (prefers-reduced-motion: reduce) {
+        .video-shell { transition: opacity 0.2s ease; transform: none; }
+    }
+
     /* ── Scrollbar ── */
     .aurora-scroll { scrollbar-width: thin; scrollbar-color: rgba(168,85,247,0.55) rgba(10,11,30,0.85); }
     .aurora-scroll::-webkit-scrollbar { width: 6px; }
@@ -235,8 +263,8 @@ tailwind.config = {
 <!-- ══════════════════════════════════════════
      SCROLL PROGRESS BAR
 ══════════════════════════════════════════ -->
-<div id="scroll-progress" class="fixed top-0 left-0 h-[3px] z-50"
-     style="background:linear-gradient(to right,#22d3ee,#a855f7,#22d3ee);width:0%;transition:width 0.1s linear"></div>
+<div id="scroll-progress" class="fixed top-0 left-0 h-[3px]"
+     style="background:linear-gradient(to right,#22d3ee,#a855f7,#22d3ee);width:0%;transition:width 0.1s linear;z-index:999"></div>
 
 <!-- ══════════════════════════════════════════
      STARS BACKGROUND
@@ -370,7 +398,9 @@ tailwind.config = {
                     </div>
                     <!-- Inner -->
                     <div class="absolute overflow-hidden cursor-pointer" style="inset:10px;border-radius:50%"
-                         onclick="toggleModal('join-modal')">
+                         onclick="openVideoModal()" role="button" tabindex="0"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openVideoModal();}"
+                         aria-label="Смотреть видео про Аврору">
                         <div class="w-full h-full flex items-center justify-center"
                              style="background:linear-gradient(135deg,#374151,#4b5563)">
                             <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6b7280,#9ca3af)"></div>
@@ -1125,6 +1155,22 @@ tailwind.config = {
 </footer>
 
 <!-- ══════════════════════════════════════════
+     VIDEO LIGHTBOX
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="video-modal" onclick="if(event.target===this)closeVideoModal()">
+    <div class="video-shell">
+        <button type="button" class="video-close" onclick="closeVideoModal()" aria-label="Закрыть видео">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+        <video id="promo-video" controls playsinline preload="none"
+               controlslist="nodownload" disablepictureinpicture></video>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
      JOIN MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="join-modal" onclick="if(event.target===this)toggleModal('join-modal')">
@@ -1204,6 +1250,43 @@ function toggleMobileMenu() {
     document.body.classList.toggle('modal-open');
 }
 
+/* ── Video Lightbox ── */
+function videoApiBase() {
+    var h = window.location.hostname;
+    return (h.indexOf('twc1.net') !== -1 || h.indexOf('aurora-develop') !== -1)
+        ? 'https://api.aurora-develop.ru'
+        : 'https://api.aurora-career.ru';
+}
+
+function openVideoModal() {
+    var modal = document.getElementById('video-modal');
+    var video = document.getElementById('promo-video');
+    if (!video.src) {
+        video.src = videoApiBase() + '/video/aurora-intro.mp4';
+    }
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+    var p = video.play();
+    if (p && p.catch) { p.catch(function() {}); }
+}
+
+function closeVideoModal() {
+    var modal = document.getElementById('video-modal');
+    var video = document.getElementById('promo-video');
+    if (document.fullscreenElement) {
+        if (document.exitFullscreen) { document.exitFullscreen(); }
+    }
+    try { video.pause(); } catch (e) {}
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('video-modal').classList.contains('active')) {
+        closeVideoModal();
+    }
+});
+
 /* ── Info Modal Data ── */
 var infoContent = {
     editorial: {
@@ -1230,6 +1313,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var apiBase = (h.indexOf('twc1.net') !== -1 || h.indexOf('aurora-develop') !== -1)
         ? 'https://api.aurora-develop.ru'
         : 'https://api.aurora-career.ru';
+    var pv = document.getElementById('promo-video');
+    if (pv) { pv.poster = apiBase + '/video/aurora-intro-poster.jpg'; }
+
     var btn = document.getElementById('authBtn');
     var btnM = document.getElementById('authBtnMobile');
 
