@@ -244,6 +244,30 @@ tailwind.config = {
     .aurora-scroll::-webkit-scrollbar { width: 6px; }
     .aurora-scroll::-webkit-scrollbar-track { background: rgba(10,11,30,0.6); border-radius: 9999px; margin: 8px 0; }
     .aurora-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg,rgba(168,85,247,0.7),rgba(34,211,238,0.35)); border-radius: 9999px; }
+
+    /* Воронка в блоке «Результаты» */
+    .funnel-bar {
+        text-align: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #fff;
+        padding: 0.625rem 0;
+    }
+    .funnel-bar-1 {
+        width: 100%;
+        background: linear-gradient(to right, #22d3ee, #06b6d4);
+        clip-path: polygon(0% 0%, 100% 0%, 88% 100%, 12% 100%);
+    }
+    .funnel-bar-2 {
+        width: 78%;
+        background: linear-gradient(to right, #06b6d4, #a855f7);
+        clip-path: polygon(0% 0%, 100% 0%, 86% 100%, 14% 100%);
+    }
+    .funnel-bar-3 {
+        width: 54%;
+        background: linear-gradient(to right, #a855f7, #9333ea);
+        clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%);
+    }
 </style>
 
 <link rel="stylesheet" href="cookie-consent.css">
@@ -296,7 +320,7 @@ tailwind.config = {
 <!-- ══════════════════════════════════════════
      SCROLL TO TOP
 ══════════════════════════════════════════ -->
-<button id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+<button type="button" id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})"
         class="fixed bottom-8 right-8 z-40 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer border-0"
         style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 4px 20px rgba(34,211,238,0.3)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
@@ -338,7 +362,7 @@ tailwind.config = {
         </div>
 
         <!-- Burger -->
-        <button id="burger-btn" class="burger flex md:hidden p-2 -mr-2 bg-transparent border-0 cursor-pointer"
+        <button type="button" id="burger-btn" class="burger flex md:hidden p-2 -mr-2 bg-transparent border-0 cursor-pointer"
                 onclick="toggleMobileMenu()">
             <span></span><span></span><span></span>
         </button>
@@ -888,23 +912,11 @@ tailwind.config = {
                         </div>
                         <!-- Воронка -->
                         <div class="flex flex-col items-center justify-center gap-0 w-full py-2">
-                            <div class="w-full text-center text-xs font-bold text-white py-2.5"
-                                 style="background:linear-gradient(to right,#22d3ee,#06b6d4);
-                                        clip-path:polygon(0% 0%,100% 0%,88% 100%,12% 100%)">
-                                282 ОТКЛИКА
-                            </div>
+                            <div class="funnel-bar funnel-bar-1">282 ОТКЛИКА</div>
                             <div class="text-base leading-none my-0.5" style="color:#22d3ee">▼</div>
-                            <div class="text-center text-xs font-bold text-white py-2.5"
-                                 style="width:78%;background:linear-gradient(to right,#06b6d4,#a855f7);
-                                        clip-path:polygon(0% 0%,100% 0%,86% 100%,14% 100%)">
-                                7 СОБЕСЕДОВАНИЙ
-                            </div>
+                            <div class="funnel-bar funnel-bar-2">7 СОБЕСЕДОВАНИЙ</div>
                             <div class="text-base leading-none my-0.5" style="color:#a855f7">▼</div>
-                            <div class="text-center text-xs font-bold text-white py-2.5"
-                                 style="width:54%;background:linear-gradient(to right,#a855f7,#9333ea);
-                                        clip-path:polygon(0% 0%,100% 0%,80% 100%,20% 100%)">
-                                2 ОФФЕРА
-                            </div>
+                            <div class="funnel-bar funnel-bar-3">2 ОФФЕРА</div>
                         </div>
                         <!-- Чат -->
                         <div class="rounded-[8px] p-3 h-full flex flex-col justify-center"
