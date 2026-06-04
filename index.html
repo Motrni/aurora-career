@@ -888,12 +888,13 @@ tailwind.config = {
         </div>
         <div class="space-y-6">
 
-            <!-- Result 1 -->
+            <!-- Result 1: Текст | Воронка | Чат -->
             <div class="card-wrap sa">
                 <div class="card-glow"></div>
                 <div class="relative p-6 lg:p-8 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="grid lg:grid-cols-[2fr_1fr] gap-6 items-start">
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px);min-height:200px">
+                    <div class="grid lg:grid-cols-3 gap-6 items-center h-full">
+                        <!-- Текст -->
                         <div>
                             <h3 class="text-xl lg:text-2xl font-bold mb-3 text-white">
                                 Свел поиск работы к понятной математике: 282 отклика = 2 оффера
@@ -901,31 +902,42 @@ tailwind.config = {
                             <p class="text-sm mb-1" style="color:rgba(255,255,255,0.7)">Полная воронка от нашего пользователя.</p>
                             <p class="text-sm" style="color:rgba(255,255,255,0.7)">Активный поиск занял ровно месяц.</p>
                         </div>
-                        <div class="flex flex-col gap-3">
-                            <div class="space-y-2">
-                                <div class="rounded-[8px] p-2 text-center text-sm font-bold text-white"
-                                     style="background:linear-gradient(to right,#22d3ee,#06b6d4)">282 ОТКЛИКА</div>
-                                <div class="rounded-[8px] p-2 text-center text-sm font-bold text-white ml-4"
-                                     style="background:linear-gradient(to right,#06b6d4,#a855f7)">7 СОБЕСЕДОВАНИЙ</div>
-                                <div class="rounded-[8px] p-2 text-center text-sm font-bold text-white ml-8"
-                                     style="background:linear-gradient(to right,#a855f7,#9333ea)">2 ОФФЕРА</div>
+                        <!-- Воронка -->
+                        <div class="flex flex-col items-center justify-center gap-0 w-full py-2">
+                            <div class="w-full text-center text-xs font-bold text-white py-2.5"
+                                 style="background:linear-gradient(to right,#22d3ee,#06b6d4);
+                                        clip-path:polygon(0% 0%,100% 0%,88% 100%,12% 100%)">
+                                282 ОТКЛИКА
                             </div>
-                            <div class="rounded-[8px] p-3"
-                                 style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="w-6 h-6 rounded-full"
-                                         style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
-                                    <div class="text-xs font-bold text-white">Антон</div>
+                            <div class="text-base leading-none my-0.5" style="color:#22d3ee">▼</div>
+                            <div class="text-center text-xs font-bold text-white py-2.5"
+                                 style="width:78%;background:linear-gradient(to right,#06b6d4,#a855f7);
+                                        clip-path:polygon(0% 0%,100% 0%,86% 100%,14% 100%)">
+                                7 СОБЕСЕДОВАНИЙ
+                            </div>
+                            <div class="text-base leading-none my-0.5" style="color:#a855f7">▼</div>
+                            <div class="text-center text-xs font-bold text-white py-2.5"
+                                 style="width:54%;background:linear-gradient(to right,#a855f7,#9333ea);
+                                        clip-path:polygon(0% 0%,100% 0%,80% 100%,20% 100%)">
+                                2 ОФФЕРА
+                            </div>
+                        </div>
+                        <!-- Чат -->
+                        <div class="rounded-[8px] p-3 h-full flex flex-col justify-center"
+                             style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-6 h-6 rounded-full flex-shrink-0"
+                                     style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
+                                <div class="text-xs font-bold text-white">Антон</div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="rounded p-2 text-xs"
+                                     style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
+                                    282 отклика → 7 собеседований
                                 </div>
-                                <div class="space-y-1">
-                                    <div class="rounded p-1.5 text-xs"
-                                         style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
-                                        282 отклика → 7 собеседований
-                                    </div>
-                                    <div class="rounded p-1.5 text-xs"
-                                         style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
-                                        2 оффера ✓
-                                    </div>
+                                <div class="rounded p-2 text-xs"
+                                     style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
+                                    2 оффера ✓
                                 </div>
                             </div>
                         </div>
@@ -933,62 +945,68 @@ tailwind.config = {
                 </div>
             </div>
 
-            <!-- Result 2 -->
+            <!-- Result 2: Календарь | Чат | Текст -->
             <div class="card-wrap sa d1">
                 <div class="card-glow"></div>
                 <div class="relative p-6 lg:p-8 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="grid lg:grid-cols-[1fr_2fr] gap-6 items-start">
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px);min-height:200px">
+                    <div class="grid lg:grid-cols-3 gap-6 items-center h-full">
+                        <!-- Календарь -->
                         <div class="flex items-center gap-3 justify-center">
                             <div class="text-center">
-                                <div class="rounded-[8px] p-3"
+                                <div class="text-[10px] font-bold text-white mb-1 text-center"
+                                     style="color:rgba(255,255,255,0.5)">DEC</div>
+                                <div class="rounded-[8px] px-4 py-3"
                                      style="background:rgba(34,211,238,0.2);border:1px solid rgba(34,211,238,0.3)">
-                                    <div class="text-2xl font-bold text-white">9</div>
-                                    <div class="text-xs" style="color:rgba(255,255,255,0.6)">Dec</div>
+                                    <div class="text-3xl font-bold text-white">9</div>
                                 </div>
                             </div>
-                            <div class="text-2xl font-bold" style="color:#22d3ee">→</div>
+                            <div class="text-xl font-bold flex-shrink-0" style="color:#22d3ee">→</div>
                             <div class="text-center">
-                                <div class="rounded-[8px] p-3"
+                                <div class="text-[10px] font-bold mb-1 text-center"
+                                     style="color:rgba(255,255,255,0.5)">DEC</div>
+                                <div class="rounded-[8px] px-4 py-3"
                                      style="background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.3)">
-                                    <div class="text-2xl font-bold text-white">17</div>
-                                    <div class="text-xs" style="color:rgba(255,255,255,0.6)">Dec</div>
-                                    <div class="mt-1 px-2 py-0.5 rounded text-[10px] font-bold text-white"
-                                         style="background:#a855f7">ОФФЕР</div>
+                                    <div class="text-3xl font-bold text-white">17</div>
                                 </div>
+                                <div class="mt-2 px-2 py-0.5 rounded text-[10px] font-bold text-white text-center"
+                                     style="background:#a855f7">ОФФЕР</div>
                             </div>
                         </div>
+                        <!-- Чат -->
+                        <div class="rounded-[8px] p-3 h-full flex flex-col justify-center"
+                             style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-6 h-6 rounded-full flex-shrink-0"
+                                     style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
+                                <div class="text-xs font-bold text-white">Станислав</div>
+                            </div>
+                            <div class="rounded p-2 text-xs leading-relaxed"
+                                 style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
+                                От запуска до оффера на полную удаленку — 8 дней. Наконец-то получил удаленную работу, когда все говорили, что удаленки больше нет.
+                            </div>
+                        </div>
+                        <!-- Текст -->
                         <div>
                             <h3 class="text-xl lg:text-2xl font-bold mb-3 text-white">
                                 От запуска до оффера на полную удаленку — 8 дней
                             </h3>
-                            <p class="text-sm mb-3" style="color:rgba(255,255,255,0.7)">
+                            <p class="text-sm" style="color:rgba(255,255,255,0.7)">
                                 SA/BA аналитик получил удаленную работу, когда все говорили, что удаленки больше нет.
                             </p>
-                            <div class="rounded-[8px] p-3"
-                                 style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="w-6 h-6 rounded-full"
-                                         style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
-                                    <div class="text-xs font-bold text-white">Станислав</div>
-                                </div>
-                                <div class="rounded p-2 text-xs leading-relaxed"
-                                     style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
-                                    От запуска до оффера на полную удаленку — 8 дней. Я наконец-то получил удаленную работу...
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Result 3 -->
+            <!-- Result 3: Текст | Чат -->
             <div class="card-wrap sa d2">
                 <div class="card-glow"></div>
                 <div class="relative p-6 lg:p-8 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="grid lg:grid-cols-[2fr_1fr] gap-6 items-start">
-                        <div>
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px);min-height:200px">
+                    <div class="grid lg:grid-cols-3 gap-6 items-center h-full">
+                        <!-- Текст занимает 2 колонки -->
+                        <div class="lg:col-span-2">
                             <h3 class="text-xl lg:text-2xl font-bold mb-3 text-white">
                                 Аврора пробивает фильтры НН и некомпетентность первичного отбора
                             </h3>
@@ -996,10 +1014,11 @@ tailwind.config = {
                                 Честный отзыв о том, почему ручной точечный поиск сейчас проигрывает умной автоматизации.
                             </p>
                         </div>
-                        <div class="rounded-[8px] p-3"
+                        <!-- Чат -->
+                        <div class="rounded-[8px] p-3 h-full flex flex-col justify-center"
                              style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-6 h-6 rounded-full"
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-6 h-6 rounded-full flex-shrink-0"
                                      style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
                                 <div class="text-xs font-bold text-white">Рустем</div>
                             </div>
