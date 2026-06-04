@@ -6,6 +6,7 @@
 <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
 <title>Резюме | Аврора</title>
 <link rel="icon" type="image/png" href="favicon.png?v=3">
+<link rel="stylesheet" href="burger-menu.css?v=1">
 <script src="aurora-bootstrap.js?v=3"></script>
 <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
@@ -154,10 +155,6 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
     line-height: 1.4;
 }
 
-.burger-btn span { display: block; width: 24px; height: 2px; background: #e7e0ef; transition: all 0.3s ease; }
-.burger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-.burger-btn.active span:nth-child(2) { opacity: 0; }
-.burger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
 .mobile-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
 .mobile-menu.open { transform: translateX(0); }
 
@@ -423,7 +420,7 @@ body { font-family: 'Inter', sans-serif; background-color: #15121c; color: #e7e0
             <button onclick="handleNavLogout()" class="hidden md:flex items-center gap-1.5 text-[#e7e0ef] hover:text-[#ccbeff] transition-colors cursor-pointer" title="Выйти">
                 <span class="material-symbols-outlined text-xl">logout</span>
             </button>
-            <button id="burger-btn" class="burger-btn flex md:hidden flex-col gap-[6px] p-2 -mr-2" onclick="toggleMobileMenu()">
+            <button id="burger-btn" class="burger-btn flex md:hidden p-2 -mr-2 cursor-pointer" onclick="toggleMobileMenu()">
                 <span></span><span></span><span></span>
             </button>
         </div>
