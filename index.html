@@ -200,16 +200,70 @@ tailwind.config = {
     }
     #scroll-top-btn.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-    /* ── Card Hover Glow ── */
+    /* ── Card wrapper (scroll animation host) ── */
     .card-wrap { position: relative; }
-    .card-glow {
-        position: absolute; inset: -2px; border-radius: 18px;
-        background: linear-gradient(135deg, #22d3ee, #a855f7);
-        opacity: 0; filter: blur(5px);
-        transition: opacity 0.5s ease;
-        z-index: 0; pointer-events: none;
+
+    /* ── Unified glass cards ── */
+    .glass-card {
+        position: relative;
+        border-radius: 20px;
+        background: linear-gradient(160deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255,255,255,.12);
+        box-shadow:
+            0 10px 30px rgba(0,0,0,.35),
+            inset 0 1px 0 rgba(255,255,255,.18);
+        overflow: hidden;
+        transition: box-shadow .25s ease, transform .25s cubic-bezier(.2,.7,.2,1);
     }
-    .card-wrap:hover .card-glow { opacity: 1; }
+    .glass-card:hover {
+        box-shadow:
+            0 18px 50px rgba(74,123,255,.35),
+            inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .glass-card::after {
+        content: "";
+        position: absolute;
+        top: -30px;
+        right: -30px;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(139,92,246,.25), transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .glass-card--no-glow::after { display: none; }
+    .glass-card-inner { position: relative; z-index: 1; }
+
+    /* Interactive tilt + glare — только карточки статистики */
+    .glass-card--interactive {
+        transform-style: preserve-3d;
+        will-change: transform;
+    }
+    .glass-card--interactive .glare {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity .25s ease;
+        mix-blend-mode: overlay;
+        z-index: 2;
+        background: radial-gradient(220px circle at var(--mx,50%) var(--my,0%),
+            rgba(255,255,255,.18), transparent 60%);
+    }
+    .glass-card--interactive:hover .glare { opacity: 1; }
+    .glass-card--interactive .stat-icon { transform: translateZ(40px); }
+    .glass-card--interactive .stat-num { transform: translateZ(30px); }
+
+    /* Modal panels (не путать с карточками лендинга) */
+    .glass-panel {
+        background: rgba(30,41,82,0.7);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+    }
 
     /* ── Scroll Animations ── */
     .sa {
@@ -292,11 +346,6 @@ tailwind.config = {
     body.modal-open #video-modal,
     body.modal-open #legal-modal-backdrop,
     body.modal-open .burger { pointer-events: auto; }
-    .glass-card {
-        background: rgba(30,41,82,0.7);
-        backdrop-filter: blur(40px);
-        -webkit-backdrop-filter: blur(40px);
-    }
 
     /* ── Video Lightbox ── */
     /* Оверлей всегда display:flex, скрыт через opacity+pointer-events.
@@ -400,9 +449,6 @@ tailwind.config = {
         display: flex;
         flex-direction: column;
         height: 100%;
-        background: linear-gradient(135deg, rgba(30,41,82,0.85), rgba(42,53,98,0.85));
-        border: 1px solid rgba(34,211,238,0.2);
-        border-radius: 16px;
         overflow: hidden;
     }
     .card-photo-wrap {
@@ -454,13 +500,7 @@ tailwind.config = {
     .team-card .card-body p { flex: 1; }
     .team-card .card-cta { margin-top: auto; }
 
-    /* Плашка «Открытые онлайн-разборы» */
-    .team-reviews-panel {
-        background: linear-gradient(135deg, rgba(30,41,82,0.85), rgba(42,53,98,0.85));
-        border: 1px solid rgba(34,211,238,0.2);
-        border-radius: 16px;
-        backdrop-filter: blur(4px);
-    }
+    /* Плашка «Открытые онлайн-разборы» — наследует .glass-card */
     .team-reviews-icon {
         width: 72px;
         height: 72px;
@@ -472,9 +512,22 @@ tailwind.config = {
         background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(168,85,247,0.2));
     }
 
+    .team-card.glass-card .card-photo-wrap,
+    .team-card.glass-card .card-photo {
+        border-radius: 20px 20px 0 0;
+    }
+
     /* FAQ accordion custom markers and rotation */
     details.faq-item summary::-webkit-details-marker { display: none; }
     details.faq-item[open] .faq-chevron { transform: rotate(180deg); }
+    details.faq-item[open] summary.glass-card {
+        border-radius: 20px 20px 0 0;
+        border-bottom-color: transparent;
+        box-shadow: none;
+    }
+    details.faq-item[open] summary.glass-card:hover {
+        box-shadow: none;
+    }
 </style>
 
 <link rel="stylesheet" href="cookie-consent.css">
@@ -679,77 +732,65 @@ tailwind.config = {
 
             <!-- Stat 1 -->
             <div class="card-wrap sa">
-                <div class="card-glow"></div>
-                <div class="relative p-6 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="space-y-4">
-                        <div class="inline-flex p-3 rounded-[10px]"
+                <div class="glass-card glass-card--interactive relative p-6">
+                    <span class="glare"></span>
+                    <div class="glass-card-inner space-y-4">
+                        <div class="stat-icon inline-flex p-3 rounded-[10px]"
                              style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite">
                             <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">send</span>
                         </div>
-                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Отправлено откликов:</p>
-                        <p class="text-3xl font-bold counter" data-count-to="997537"
+                        <p class="stat-label" style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Отправлено откликов:</p>
+                        <p class="stat-num text-3xl font-bold counter stat-value" data-count-to="997537"
                            style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">997&nbsp;537</p>
                     </div>
-                    <div class="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
-                         style="background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent)"></div>
                 </div>
             </div>
 
             <!-- Stat 2 -->
             <div class="card-wrap sa d1">
-                <div class="card-glow"></div>
-                <div class="relative p-6 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="space-y-4">
-                        <div class="inline-flex p-3 rounded-[10px]"
+                <div class="glass-card glass-card--interactive relative p-6">
+                    <span class="glare"></span>
+                    <div class="glass-card-inner space-y-4">
+                        <div class="stat-icon inline-flex p-3 rounded-[10px]"
                              style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite 0.3s">
                             <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">description</span>
                         </div>
-                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Написано сопроводительных:</p>
-                        <p class="text-3xl font-bold counter" data-count-to="125430"
+                        <p class="stat-label" style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Написано сопроводительных:</p>
+                        <p class="stat-num text-3xl font-bold counter stat-value" data-count-to="125430"
                            style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">125&nbsp;430</p>
                     </div>
-                    <div class="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
-                         style="background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent)"></div>
                 </div>
             </div>
 
             <!-- Stat 3 -->
             <div class="card-wrap sa d2">
-                <div class="card-glow"></div>
-                <div class="relative p-6 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="space-y-4">
-                        <div class="inline-flex p-3 rounded-[10px]"
+                <div class="glass-card glass-card--interactive relative p-6">
+                    <span class="glare"></span>
+                    <div class="glass-card-inner space-y-4">
+                        <div class="stat-icon inline-flex p-3 rounded-[10px]"
                              style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite 0.6s">
                             <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">schedule</span>
                         </div>
-                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Сэкономлено часов:</p>
-                        <p class="text-3xl font-bold counter" data-count-to="83120"
+                        <p class="stat-label" style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Сэкономлено часов:</p>
+                        <p class="stat-num text-3xl font-bold counter stat-value" data-count-to="83120"
                            style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">83&nbsp;120</p>
                     </div>
-                    <div class="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
-                         style="background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent)"></div>
                 </div>
             </div>
 
             <!-- Stat 4 -->
             <div class="card-wrap sa d3">
-                <div class="card-glow"></div>
-                <div class="relative p-6 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="space-y-4">
-                        <div class="inline-flex p-3 rounded-[10px]"
+                <div class="glass-card glass-card--interactive relative p-6">
+                    <span class="glare"></span>
+                    <div class="glass-card-inner space-y-4">
+                        <div class="stat-icon inline-flex p-3 rounded-[10px]"
                              style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite 0.9s">
                             <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">group</span>
                         </div>
-                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Специалистов в поиске:</p>
-                        <p class="text-3xl font-bold counter" data-count-to="1842"
+                        <p class="stat-label" style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Специалистов в поиске:</p>
+                        <p class="stat-num text-3xl font-bold counter stat-value" data-count-to="1842"
                            style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">1&nbsp;842</p>
                     </div>
-                    <div class="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
-                         style="background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent)"></div>
                 </div>
             </div>
         </div>
@@ -771,9 +812,7 @@ tailwind.config = {
 
             <!-- Problem 1 — Конкуренция (Parallax Effect) -->
             <div class="card-wrap sa h-full parallax-card">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col justify-end min-h-[380px] overflow-hidden"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card glass-card--no-glow relative p-8 h-full flex flex-col justify-end min-h-[380px] overflow-hidden">
                     
                     <!-- Parallax Background Layer with Mask -->
                     <div class="absolute inset-x-0 top-0 overflow-hidden pointer-events-none" 
@@ -799,9 +838,7 @@ tailwind.config = {
 
             <!-- Problem 2 — Рутина (Parallax Effect with Fallback) -->
             <div class="card-wrap sa d1 h-full parallax-card">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col justify-end min-h-[380px] overflow-hidden"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card glass-card--no-glow relative p-8 h-full flex flex-col justify-end min-h-[380px] overflow-hidden">
                     
                     <!-- Parallax Background Layer with Mask -->
                     <div id="pain-routine-img-container" class="absolute inset-x-0 top-0 overflow-hidden pointer-events-none" 
@@ -848,9 +885,7 @@ tailwind.config = {
 
             <!-- Problem 3 — Тишина (Parallax Effect with Fallback) -->
             <div class="card-wrap sa d2 h-full parallax-card">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col justify-end min-h-[380px] overflow-hidden"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card glass-card--no-glow relative p-8 h-full flex flex-col justify-end min-h-[380px] overflow-hidden">
                     
                     <!-- Parallax Background Layer with Mask -->
                     <div id="pain-silence-img-container" class="absolute inset-x-0 top-0 overflow-hidden pointer-events-none" 
@@ -907,9 +942,7 @@ tailwind.config = {
 
             <!-- Step 1 -->
             <div class="card-wrap sa">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card relative p-8 h-full flex flex-col">
                     <div class="mb-6 w-full rounded-[12px] overflow-hidden aspect-video"
                          style="border:1px solid rgba(34,211,238,0.2)">
                         <img src="images/how-it-works-step1-resume-audit.png?v=1"
@@ -926,9 +959,7 @@ tailwind.config = {
 
             <!-- Step 2 -->
             <div class="card-wrap sa d1">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card relative p-8 h-full flex flex-col">
                     <div class="mb-6 w-full rounded-[12px] overflow-hidden aspect-video"
                          style="border:1px solid rgba(34,211,238,0.2)">
                         <img src="images/how-it-works-step2.png?v=1"
@@ -945,9 +976,7 @@ tailwind.config = {
 
             <!-- Step 3 -->
             <div class="card-wrap sa d2">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card relative p-8 h-full flex flex-col">
                     <div class="mb-6 w-full rounded-[12px] overflow-hidden aspect-video"
                          style="border:1px solid rgba(34,211,238,0.2)">
                         <img src="images/how-it-works-step3.png?v=1"
@@ -979,9 +1008,7 @@ tailwind.config = {
 
             <!-- Result 1: Текст | Воронка | Чат -->
             <div class="card-wrap sa">
-                <div class="card-glow"></div>
-                <div class="relative p-6 lg:p-8 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px);min-height:200px">
+                <div class="glass-card relative p-6 lg:p-8 min-h-[200px]">
                     <div class="grid lg:grid-cols-3 gap-6 items-center h-full">
                         <!-- Текст -->
                         <div>
@@ -1024,9 +1051,7 @@ tailwind.config = {
 
             <!-- Result 2: Календарь | Чат | Текст -->
             <div class="card-wrap sa d1">
-                <div class="card-glow"></div>
-                <div class="relative p-6 lg:p-8 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px);min-height:200px">
+                <div class="glass-card relative p-6 lg:p-8 min-h-[200px]">
                     <div class="grid lg:grid-cols-3 gap-6 items-center h-full">
                         <!-- Календарь -->
                         <div class="flex items-center gap-3 justify-center">
@@ -1078,9 +1103,7 @@ tailwind.config = {
 
             <!-- Result 3: Текст | Чат -->
             <div class="card-wrap sa d2">
-                <div class="card-glow"></div>
-                <div class="relative p-6 lg:p-8 rounded-[16px]"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px);min-height:200px">
+                <div class="glass-card relative p-6 lg:p-8 min-h-[200px]">
                     <div class="grid lg:grid-cols-3 gap-6 items-center h-full">
                         <!-- Текст занимает 2 колонки -->
                         <div class="lg:col-span-2">
@@ -1128,9 +1151,7 @@ tailwind.config = {
 
             <!-- Консультант -->
             <div class="card-wrap sa">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
                     <div class="mb-6">
                         <div class="w-24 h-24 rounded-[16px] flex items-center justify-center"
                              style="background:linear-gradient(135deg,rgba(107,114,128,0.4),rgba(75,85,99,0.4))">
@@ -1150,9 +1171,7 @@ tailwind.config = {
 
             <!-- Самостоятельно -->
             <div class="card-wrap sa d1">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
                     <div class="mb-6">
                         <div class="relative w-24 h-24 rounded-[16px] flex items-center justify-center"
                              style="background:linear-gradient(135deg,rgba(107,114,128,0.4),rgba(75,85,99,0.4))">
@@ -1178,8 +1197,8 @@ tailwind.config = {
             <div class="sa d2" style="position:relative">
                 <div class="absolute -inset-0.5 rounded-[18px]"
                      style="background:linear-gradient(135deg,#22d3ee,#a855f7);filter:blur(5px)"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center pricing-featured"
-                     style="background:linear-gradient(135deg,#1e2952,#2a3562);border:2px solid rgba(34,211,238,0.6)">
+                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center pricing-featured"
+                     style="border:2px solid rgba(34,211,238,0.6)">
                     <div class="mb-6">
                         <div class="relative w-24 h-24 rounded-[16px] flex items-center justify-center"
                              style="background:linear-gradient(135deg,rgba(34,211,238,0.3),rgba(168,85,247,0.3))">
@@ -1229,9 +1248,7 @@ tailwind.config = {
 
             <!-- Card 1 -->
             <div class="card-wrap sa">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
                     <div class="mb-6">
                         <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
                              style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
@@ -1247,9 +1264,7 @@ tailwind.config = {
 
             <!-- Card 2 -->
             <div class="card-wrap sa d1">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
                     <div class="mb-6">
                         <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
                              style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
@@ -1265,9 +1280,7 @@ tailwind.config = {
 
             <!-- Card 3 -->
             <div class="card-wrap sa d2">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
                     <div class="mb-6 relative">
                         <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
                              style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
@@ -1302,8 +1315,7 @@ tailwind.config = {
 
             <!-- Founder 1 -->
             <div class="card-wrap sa h-full">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <div class="team-card relative">
+                <div class="team-card glass-card glass-card--no-glow relative">
                     <div class="card-photo-wrap">
                         <img class="card-photo" src="images/team-roman.jpg?v=1"
                              alt="Роман Изотов, сооснователь Аврора"
@@ -1322,8 +1334,7 @@ tailwind.config = {
 
             <!-- Founder 2 -->
             <div class="card-wrap sa d1 h-full">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <div class="team-card relative">
+                <div class="team-card glass-card glass-card--no-glow relative">
                     <div class="card-photo-wrap">
                         <img class="card-photo" src="images/team-vadim.jpg?v=1"
                              alt="Вадим Клепов, технический сооснователь Аврора"
@@ -1343,8 +1354,7 @@ tailwind.config = {
 
         <!-- Открытые онлайн-разборы — широкая плашка -->
         <div class="card-wrap sa d2 mt-8">
-            <div class="card-glow" style="border-radius:18px"></div>
-            <div class="team-reviews-panel relative p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div class="team-reviews-panel glass-card relative p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6 flex-1 text-center sm:text-left">
                     <div class="team-reviews-icon">
                         <span class="material-symbols-outlined" style="color:#22d3ee;font-size:36px">videocam</span>
@@ -1378,97 +1388,79 @@ tailwind.config = {
         <div class="space-y-6">
 
             <!-- FAQ 1 -->
-            <details class="faq-item group card-wrap sa" style="border-radius:16px">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <summary class="relative p-6 md:p-8 rounded-[16px] cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none"
-                         style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+            <details class="faq-item group card-wrap sa" style="border-radius:20px">
+                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
                     <h3 class="text-lg md:text-xl font-bold text-white pr-4">Это безопасно для моего аккаунта на hh.ru?</h3>
                     <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
                     </span>
                 </summary>
-                <div class="faq-content p-6 md:p-8 pt-0 -mt-2 rounded-b-[16px] relative z-10 leading-relaxed text-sm md:text-base"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border-left:1px solid rgba(34,211,238,0.2);border-right:1px solid rgba(34,211,238,0.2);border-bottom:1px solid rgba(34,211,238,0.2);color:rgba(255,255,255,0.7)">
+                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
                     Да. Система работает в щадящем режиме, соблюдает лимиты площадок и не совершает действий, которые отличали бы её активность от активности обычного пользователя. Мы не храним ваши пароли и используем защищённые методы авторизации.
                 </div>
             </details>
 
             <!-- FAQ 2 -->
-            <details class="faq-item group card-wrap sa d1" style="border-radius:16px">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <summary class="relative p-6 md:p-8 rounded-[16px] cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none"
-                         style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+            <details class="faq-item group card-wrap sa d1" style="border-radius:20px">
+                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
                     <h3 class="text-lg md:text-xl font-bold text-white pr-4">Сколько откликов отправляет система?</h3>
                     <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
                     </span>
                 </summary>
-                <div class="faq-content p-6 md:p-8 pt-0 -mt-2 rounded-b-[16px] relative z-10 leading-relaxed text-sm md:text-base"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border-left:1px solid rgba(34,211,238,0.2);border-right:1px solid rgba(34,211,238,0.2);border-bottom:1px solid rgba(34,211,238,0.2);color:rgba(255,255,255,0.7)">
+                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
                     Объём зависит от тарифа и ваших настроек: вы сами задаёте фильтры вакансий, желаемую интенсивность и стоп-условия. Система не превышает дневные лимиты площадок.
                 </div>
             </details>
 
             <!-- FAQ 3 -->
-            <details class="faq-item group card-wrap sa d2" style="border-radius:16px">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <summary class="relative p-6 md:p-8 rounded-[16px] cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none"
-                         style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+            <details class="faq-item group card-wrap sa d2" style="border-radius:20px">
+                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
                     <h3 class="text-lg md:text-xl font-bold text-white pr-4">Чем это лучше ручного поиска?</h3>
                     <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
                     </span>
                 </summary>
-                <div class="faq-content p-6 md:p-8 pt-0 -mt-2 rounded-b-[16px] relative z-10 leading-relaxed text-sm md:text-base"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border-left:1px solid rgba(34,211,238,0.2);border-right:1px solid rgba(34,211,238,0.2);border-bottom:1px solid rgba(34,211,238,0.2);color:rgba(255,255,255,0.7)">
+                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
                     Скоростью и охватом. Вручную кандидат отправляет 5–10 осмысленных откликов в день, система — десятки, и к каждому пишет персонализированное сопроводительное письмо. Ваше время уходит на собеседования, а не на рутину.
                 </div>
             </details>
 
             <!-- FAQ 4 -->
-            <details class="faq-item group card-wrap sa d1" style="border-radius:16px">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <summary class="relative p-6 md:p-8 rounded-[16px] cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none"
-                         style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+            <details class="faq-item group card-wrap sa d1" style="border-radius:20px">
+                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
                     <h3 class="text-lg md:text-xl font-bold text-white pr-4">Система меняет моё резюме?</h3>
                     <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
                     </span>
                 </summary>
-                <div class="faq-content p-6 md:p-8 pt-0 -mt-2 rounded-b-[16px] relative z-10 leading-relaxed text-sm md:text-base"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border-left:1px solid rgba(34,211,238,0.2);border-right:1px solid rgba(34,211,238,0.2);border-bottom:1px solid rgba(34,211,238,0.2);color:rgba(255,255,255,0.7)">
+                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
                     Нет. Оригинальное резюме остаётся нетронутым. Система готовит адаптированные версии под конкретные вакансии и показывает их вам — управление всегда в ваших руках.
                 </div>
             </details>
 
             <!-- FAQ 5 -->
-            <details class="faq-item group card-wrap sa d2" style="border-radius:16px">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <summary class="relative p-6 md:p-8 rounded-[16px] cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none"
-                         style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+            <details class="faq-item group card-wrap sa d2" style="border-radius:20px">
+                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
                     <h3 class="text-lg md:text-xl font-bold text-white pr-4">Как быстро ждать результатов?</h3>
                     <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
                     </span>
                 </summary>
-                <div class="faq-content p-6 md:p-8 pt-0 -mt-2 rounded-b-[16px] relative z-10 leading-relaxed text-sm md:text-base"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border-left:1px solid rgba(34,211,238,0.2);border-right:1px solid rgba(34,211,238,0.2);border-bottom:1px solid rgba(34,211,238,0.2);color:rgba(255,255,255,0.7)">
+                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
                     По данным наших пользователей, первые приглашения на собеседования обычно приходят в течение первой недели активной работы. Полный цикл до оффера индивидуален и зависит от профессии и рынка.
                 </div>
             </details>
 
             <!-- FAQ 6 -->
-            <details class="faq-item group card-wrap sa d1" style="border-radius:16px">
-                <div class="card-glow" style="border-radius:18px"></div>
-                <summary class="relative p-6 md:p-8 rounded-[16px] cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none"
-                         style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+            <details class="faq-item group card-wrap sa d1" style="border-radius:20px">
+                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
                     <h3 class="text-lg md:text-xl font-bold text-white pr-4">Можно ли попробовать бесплатно и отменить подписку?</h3>
                     <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
                     </span>
                 </summary>
-                <div class="faq-content p-6 md:p-8 pt-0 -mt-2 rounded-b-[16px] relative z-10 leading-relaxed text-sm md:text-base"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border-left:1px solid rgba(34,211,238,0.2);border-right:1px solid rgba(34,211,238,0.2);border-bottom:1px solid rgba(34,211,238,0.2);color:rgba(255,255,255,0.7)">
+                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
                     Да. После регистрации вы получаете 10 бесплатных откликов без привязки карты. Подписку можно отменить в любой момент в личном кабинете — условия возврата описаны в оферте.
                 </div>
             </details>
@@ -1555,7 +1547,7 @@ tailwind.config = {
      JOIN MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="join-modal" onclick="if(event.target===this)toggleModal('join-modal')">
-    <div class="glass-card max-w-lg w-full p-6 md:p-10 rounded-[16px] relative shadow-2xl"
+    <div class="glass-panel max-w-lg w-full p-6 md:p-10 rounded-[16px] relative shadow-2xl"
          style="border:1px solid rgba(34,211,238,0.2)">
         <button class="absolute top-4 right-4 md:top-6 md:right-6 bg-transparent border-0 cursor-pointer transition-colors hover:text-white"
                 style="color:rgba(255,255,255,0.6)" onclick="toggleModal('join-modal')">
@@ -1592,7 +1584,7 @@ tailwind.config = {
      INFO MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="info-modal" onclick="if(event.target===this)toggleModal('info-modal')">
-    <div class="glass-card aurora-scroll max-w-xl w-full p-6 md:p-10 rounded-[16px] relative shadow-2xl"
+    <div class="glass-panel aurora-scroll max-w-xl w-full p-6 md:p-10 rounded-[16px] relative shadow-2xl"
          style="border:1px solid rgba(34,211,238,0.2);max-height:85vh;overflow-y:auto;overscroll-behavior:contain">
         <button class="absolute top-4 right-4 md:top-6 md:right-6 bg-transparent border-0 cursor-pointer transition-colors hover:text-white"
                 style="color:rgba(255,255,255,0.6)" onclick="toggleModal('info-modal')">
@@ -1907,6 +1899,32 @@ document.querySelectorAll('.parallax-card').forEach(function(card) {
         img.style.transform = 'scale(1.25) translate(0px, 0px)';
     });
 });
+
+/* ── Glass card tilt + glare (stats only) ── */
+(function() {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var fine = window.matchMedia('(pointer: fine)').matches;
+    if (reduce || !fine) return;
+
+    var MAX_TILT = 5;
+
+    document.querySelectorAll('.glass-card--interactive').forEach(function(card) {
+        card.addEventListener('pointermove', function(e) {
+            var r = card.getBoundingClientRect();
+            var px = (e.clientX - r.left) / r.width;
+            var py = (e.clientY - r.top) / r.height;
+            var ry = (px - 0.5) * MAX_TILT * 2;
+            var rx = -(py - 0.5) * MAX_TILT * 2;
+            card.style.transform =
+                'perspective(900px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) scale(1.02)';
+            card.style.setProperty('--mx', (px * 100) + '%');
+            card.style.setProperty('--my', (py * 100) + '%');
+        });
+        card.addEventListener('pointerleave', function() {
+            card.style.transform = '';
+        });
+    });
+})();
 </script>
 
 </body>
