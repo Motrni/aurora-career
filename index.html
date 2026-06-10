@@ -76,7 +76,7 @@ tailwind.config = {
 
 <style>
     html { scroll-behavior: smooth; color-scheme: dark; }
-    body { font-family: 'Inter', sans-serif; background-color: #0a0b1e; min-width: 320px; overflow-x: hidden; }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0b1e 0%, #1e2952 55%, #3a2a5e 100%) fixed; min-width: 320px; overflow-x: hidden; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
 
     /* ── Loading Screen ── */
@@ -435,7 +435,7 @@ tailwind.config = {
 
 <!-- ── HERO ── -->
 <section id="hero" class="pt-32 pb-24 px-6 relative overflow-hidden"
-         style="background:linear-gradient(135deg,#0a0b1e 0%,#1e2952 55%,#3a2a5e 100%)">
+         style="background:transparent">
     <div class="absolute inset-0 pointer-events-none"
          style="background:radial-gradient(ellipse at top right,rgba(168,85,247,0.15) 0%,transparent 60%)"></div>
     <div class="absolute inset-0 pointer-events-none"
@@ -500,7 +500,7 @@ tailwind.config = {
 </section>
 
 <!-- ── STATS ── -->
-<section id="stats" class="py-16 px-6" style="background:#0a0b1e">
+<section id="stats" class="py-16 px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
@@ -605,149 +605,103 @@ tailwind.config = {
     </div>
 </section>
 
-<!-- ── SECURITY / FEATURES ── -->
-<section id="safety" class="py-24 px-6" style="background:#0a0b1e">
+<!-- ── PROBLEMS ── -->
+<section id="problems" class="py-24 px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">
-                Работает безопасно. Как обычный пользователь.
+                Поиск работы — это вторая работа.
             </h2>
-            <p class="text-xl max-w-3xl mx-auto mt-4" style="color:rgba(255,255,255,0.7)">
-                Доверьте рутину системе и начните получать приглашения уже на этой неделе.
-            </p>
+            <h3 class="text-3xl lg:text-4xl font-bold" style="color:rgba(255,255,255,0.9)">
+                Скучная и бесплатная.
+            </h3>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
 
-            <!-- Card 1 -->
-            <div class="card-wrap sa">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="mb-6">
-                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">security</span>
-                        </div>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 text-white">Без передачи паролей.</h3>
-                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
-                        Мы используем безопасные методы авторизации и никогда не храним ваши данные.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Card 2 -->
-            <div class="card-wrap sa d1">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="mb-6">
-                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">schedule</span>
-                        </div>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 text-white">Алгоритмы имитируют поведение человека.</h3>
-                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
-                        Без блокировок. Система соблюдает лимиты площадок, чтобы ваш аккаунт был в безопасности.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Card 3 -->
-            <div class="card-wrap sa d2">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="mb-6 relative">
-                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">task</span>
-                        </div>
-                        <div class="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
-                             style="background:#a855f7">
-                            <span class="text-white text-xs font-bold">✓</span>
-                        </div>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 text-white">Полный контроль.</h3>
-                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
-                        Инструмент не удаляет отклики и не меняет оригинальное резюме. Всё управление — в ваших руках.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ── TEAM ── -->
-<section id="team" class="py-24 px-6" style="background:#0a0b1e">
-    <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-16 sa">
-            <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">Кто стоит за алгоритмами Авроры</h2>
-            <p class="text-xl max-w-3xl mx-auto" style="color:rgba(255,255,255,0.7)">
-                Мы объединили опыт HR-директора и системного инженера, чтобы сделать процесс поиска работы прозрачным и предсказуемым.
-            </p>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-
-            <!-- Founder 1 -->
-            <div class="card-wrap sa h-full">
+            <!-- Problem 1 — Конкуренция (Parallax Effect) -->
+            <div class="card-wrap sa h-full parallax-card">
                 <div class="card-glow" style="border-radius:18px"></div>
-                <div class="team-card relative">
-                    <div class="team-card-media relative flex items-center justify-center">
-                        <div class="w-32 h-32 rounded-full"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col justify-end min-h-[380px] overflow-hidden"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    
+                    <!-- Parallax Background Layer -->
+                    <div class="absolute inset-x-0 top-0 overflow-hidden pointer-events-none" style="height: 52%; border-radius:12px 12px 0 0">
+                        <img src="images/end1.png?v=1"
+                             class="parallax-bg-img w-full h-full object-cover object-center"
+                             style="transform: scale(1.15); transition: transform 0.15s ease-out; transform-origin: center;"
+                             alt="Бешеная конкуренция — сотни кандидатов">
+                        <!-- Fading overlay that fades to transparent towards the top, and blends into card background at the bottom -->
+                        <div class="absolute inset-0"
+                             style="background: linear-gradient(to top, rgba(30,41,82,1) 0%, rgba(30,41,82,0.4) 40%, transparent 100%)"></div>
                     </div>
-                    <div class="team-card-body">
-                        <h3 class="text-2xl font-bold mb-2 text-white">Роман Изотов,<br>основатель.</h3>
-                        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
-                            Карьерный консультант с опытом в IT-рекрутменте более 5 лет. Знаю изнутри, как мыслят работодатели и почему резюме закрывают за 6 секунд. Отвечаю за продуктовую логику сервиса.
+
+                    <div class="relative z-10 text-center mt-auto">
+                        <h3 class="text-2xl font-bold mb-4 text-white">Бешеная конкуренция</h3>
+                        <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                            Сотни кандидатов на одну позицию. Ваше резюме просто теряется в общем потоке.
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Founder 2 -->
+            <!-- Problem 2 — Рутина -->
             <div class="card-wrap sa d1 h-full">
                 <div class="card-glow" style="border-radius:18px"></div>
-                <div class="team-card relative">
-                    <div class="team-card-media">
-                        <img src="images/team-vadim-klepov.png?v=1"
-                             alt="Вадим Клепов, технический директор Авроры"
-                             width="1100" height="619" loading="lazy" decoding="async">
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center justify-end min-h-[380px] text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6 mt-auto">
+                        <div class="relative w-48 h-48 rounded-[12px] flex items-center justify-center p-4"
+                             style="background:linear-gradient(135deg,rgba(55,65,81,0.4),rgba(31,41,55,0.4))">
+                            <div class="relative">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 rounded-full mb-2"
+                                         style="background:linear-gradient(135deg,#6b7280,#4b5563)"></div>
+                                    <div class="w-20 h-24 rounded-[8px]"
+                                         style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
+                                </div>
+                                <span class="absolute material-symbols-outlined"
+                                      style="color:#f97316;font-size:32px;top:-8px;right:-24px">local_fire_department</span>
+                                <span class="absolute material-symbols-outlined"
+                                      style="color:#fb923c;font-size:24px;top:-16px;left:32px">local_fire_department</span>
+                                <span class="absolute material-symbols-outlined"
+                                      style="color:#ef4444;font-size:28px;top:8px;left:-24px">local_fire_department</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="team-card-body">
-                        <h3 class="text-2xl font-bold mb-2 text-white">Вадим Клепов,<br>технический директор.</h3>
-                        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
-                            Отвечаю за стабильность архитектуры и точность парсинга. Лично протестировал инструмент на собственном поиске работы, чтобы вычистить ошибки под капотом.
-                        </p>
-                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Рутина выжигает</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Бесконечное заполнение анкет и корректировка писем убивают мотивацию.
+                    </p>
                 </div>
             </div>
 
-            <!-- Online разборы -->
+            <!-- Problem 3 — Тишина -->
             <div class="card-wrap sa d2 h-full">
                 <div class="card-glow" style="border-radius:18px"></div>
-                <div class="team-card relative">
-                    <div class="team-card-media">
-                        <img src="images/team-online-reviews.png?v=1"
-                             alt="Открытые онлайн-разборы резюме с Романом Изотовым"
-                             width="1100" height="619" loading="lazy" decoding="async">
+                <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center justify-end min-h-[380px] text-center"
+                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
+                    <div class="mb-6 mt-auto">
+                        <div class="relative w-48 h-48 rounded-[12px] flex items-center justify-center p-4"
+                             style="background:linear-gradient(135deg,rgba(55,65,81,0.4),rgba(31,41,55,0.4))">
+                            <div class="relative">
+                                <div class="w-32 h-24 rounded-[8px] flex items-center justify-center"
+                                     style="background:linear-gradient(135deg,rgba(168,85,247,0.3),rgba(147,51,234,0.3));border:2px solid rgba(168,85,247,0.4)">
+                                    <span class="material-symbols-outlined" style="color:#c4b5fd;font-size:48px">mail</span>
+                                </div>
+                                <div class="absolute flex items-center justify-center rounded-full"
+                                     style="width:48px;height:48px;top:-16px;left:-16px;background:rgba(34,211,238,0.2);border:2px solid rgba(34,211,238,0.4)">
+                                    <span class="material-symbols-outlined" style="color:#67e8f9;font-size:20px">schedule</span>
+                                </div>
+                                <div class="absolute font-bold" style="color:#c4b5fd;font-size:2rem;top:-8px;right:-24px">?</div>
+                                <div class="absolute font-bold" style="color:rgba(196,181,253,0.7);font-size:1.5rem;top:32px;right:-32px">?</div>
+                                <div class="absolute font-bold" style="color:#f87171;font-size:1.25rem;bottom:-16px;right:16px">✕</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="team-card-body">
-                        <h3 class="text-2xl font-bold mb-3 text-white">Открытые онлайн-разборы</h3>
-                        <p class="text-sm mb-3" style="color:rgba(255,255,255,0.7);line-height:1.75">
-                            Открытые разборы резюме с создателем сервиса. Раз в две недели Роман Изотов бесплатно разбирает профили пользователей в прямом эфире.
-                        </p>
-                        <p class="text-sm mb-6" style="color:rgba(255,255,255,0.6);line-height:1.7">
-                            Ищем слепые зоны, исправляем формулировки и настраиваем алгоритм для точных попаданий.
-                        </p>
-                        <button type="button" onclick="window.open('https://t.me/AuroraCareer','_blank')"
-                                class="mt-auto px-6 py-3.5 rounded-[12px] font-bold text-white uppercase tracking-wide cursor-pointer border-0 hover:scale-105 active:scale-95 transition-transform text-sm"
-                                style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 8px 24px rgba(34,211,238,0.3)">
-                            Записаться на следующий эфир (бесплатно)
-                        </button>
-                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Тишина в ответ</h3>
+                    <p style="color:rgba(255,255,255,0.7);line-height:1.75">
+                        Месяцы ожиданий без обратной связи. Вы даже не знаете, прочитали ли ваше письмо.
+                    </p>
                 </div>
             </div>
         </div>
@@ -755,7 +709,7 @@ tailwind.config = {
 </section>
 
 <!-- ── PRICING ── -->
-<section id="pricing" class="py-24 px-6" style="background:#0a0b1e">
+<section id="pricing" class="py-24 px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white">Математика вашей карьеры</h2>
@@ -851,7 +805,7 @@ tailwind.config = {
 </section>
 
 <!-- ── HOW IT WORKS ── -->
-<section id="how-it-works" class="py-24 px-6 relative overflow-hidden" style="background:#0a0b1e">
+<section id="how-it-works" class="py-24 px-6 relative overflow-hidden" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white">Как это работает</h2>
@@ -882,9 +836,12 @@ tailwind.config = {
                 <div class="card-glow"></div>
                 <div class="relative p-8 rounded-[16px] h-full flex flex-col"
                      style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="mb-6 rounded-[12px] flex items-center justify-center"
-                         style="height:192px;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(168,85,247,0.1));border:1px solid rgba(34,211,238,0.2)">
-                        <span class="material-symbols-outlined" style="color:rgba(34,211,238,0.45);font-size:80px">edit_note</span>
+                    <div class="mb-6 w-full rounded-[12px] overflow-hidden aspect-video"
+                         style="border:1px solid rgba(34,211,238,0.2)">
+                        <img src="images/how-it-works-step2.png?v=1"
+                             alt="Шаг 2. Подстройка под вакансию — прохождение ATS фильтров"
+                             class="w-full h-full object-cover object-center"
+                             width="800" height="450" loading="lazy" decoding="async">
                     </div>
                     <h3 class="text-2xl font-bold mb-4 text-white">Шаг 2. Подстройка под вакансию.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
@@ -898,9 +855,12 @@ tailwind.config = {
                 <div class="card-glow"></div>
                 <div class="relative p-8 rounded-[16px] h-full flex flex-col"
                      style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="mb-6 rounded-[12px] flex items-center justify-center"
-                         style="height:192px;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(168,85,247,0.1));border:1px solid rgba(34,211,238,0.2)">
-                        <span class="material-symbols-outlined" style="color:rgba(34,211,238,0.45);font-size:80px">my_location</span>
+                    <div class="mb-6 w-full rounded-[12px] overflow-hidden aspect-video"
+                         style="border:1px solid rgba(34,211,238,0.2)">
+                        <img src="images/how-it-works-step3.png?v=1"
+                             alt="Шаг 3. Умный поиск и автоотклики — воронка откликов"
+                             class="w-full h-full object-cover object-center"
+                             width="800" height="450" loading="lazy" decoding="async">
                     </div>
                     <h3 class="text-2xl font-bold mb-4 text-white">Шаг 3. Умный поиск и автоотклики.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
@@ -917,7 +877,7 @@ tailwind.config = {
 </section>
 
 <!-- ── RESULTS ── -->
-<section id="results" class="py-24 px-6" style="background:#0a0b1e">
+<section id="results" class="py-24 px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white">Результаты работы алгоритмов</h2>
@@ -1065,123 +1025,149 @@ tailwind.config = {
     </div>
 </section>
 
-<!-- ── PROBLEMS ── -->
-<section id="problems" class="py-24 px-6" style="background:#0a0b1e">
+<!-- ── SECURITY / FEATURES ── -->
+<section id="safety" class="py-24 px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">
-                Поиск работы — это вторая работа.
+                Работает безопасно. Как обычный пользователь.
             </h2>
-            <h3 class="text-3xl lg:text-4xl font-bold" style="color:rgba(255,255,255,0.9)">
-                Скучная и бесплатная.
-            </h3>
+            <p class="text-xl max-w-3xl mx-auto mt-4" style="color:rgba(255,255,255,0.7)">
+                Доверьте рутину системе и начните получать приглашения уже на этой неделе.
+            </p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-            <!-- Problem 1 — Конкуренция -->
+            <!-- Card 1 -->
             <div class="card-wrap sa">
                 <div class="card-glow"></div>
                 <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
                      style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
                     <div class="mb-6">
-                        <div class="w-48 h-48 rounded-[12px] flex items-center justify-center p-4 relative overflow-hidden"
-                             style="background:linear-gradient(135deg,rgba(55,65,81,0.4),rgba(31,41,55,0.4))">
-                            <!-- Grid of resumes -->
-                            <div class="absolute inset-2 grid grid-cols-3 gap-1" style="opacity:0.3">
-                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
-                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
-                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
-                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
-                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
-                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
-                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
-                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
-                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
-                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
-                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
-                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
-                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
-                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
-                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
-                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
-                                <div class="rounded-sm bg-[#4b5563] flex items-center justify-center">
-                                    <span class="material-symbols-outlined" style="font-size:14px;color:#9ca3af">person</span></div>
-                            </div>
-                            <!-- Featured resume -->
-                            <div class="absolute flex flex-col items-center p-2 rounded-[8px]"
-                                 style="width:72px;height:100px;background:linear-gradient(135deg,rgba(34,211,238,0.3),rgba(168,85,247,0.3));border:2px solid rgba(34,211,238,0.5)">
-                                <div class="w-8 h-8 rounded-full mb-2" style="background:rgba(34,211,238,0.5)"></div>
-                                <div class="w-full h-1 rounded mb-1" style="background:rgba(34,211,238,0.3)"></div>
-                                <div class="rounded mb-1" style="width:75%;height:4px;background:rgba(34,211,238,0.3)"></div>
-                                <div class="w-full h-1 rounded" style="background:rgba(34,211,238,0.3)"></div>
-                            </div>
+                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">security</span>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4 text-white">Бешеная конкуренция</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Без передачи паролей.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
-                        Сотни кандидатов на одну позицию. Ваше резюме просто теряется в общем потоке.
+                        Мы используем безопасные методы авторизации и никогда не храним ваши данные.
                     </p>
                 </div>
             </div>
 
-            <!-- Problem 2 — Рутина -->
+            <!-- Card 2 -->
             <div class="card-wrap sa d1">
                 <div class="card-glow"></div>
                 <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
                      style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
                     <div class="mb-6">
-                        <div class="relative w-48 h-48 rounded-[12px] flex items-center justify-center p-4"
-                             style="background:linear-gradient(135deg,rgba(55,65,81,0.4),rgba(31,41,55,0.4))">
-                            <div class="relative">
-                                <div class="flex flex-col items-center">
-                                    <div class="w-16 h-16 rounded-full mb-2"
-                                         style="background:linear-gradient(135deg,#6b7280,#4b5563)"></div>
-                                    <div class="w-20 h-24 rounded-[8px]"
-                                         style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
-                                </div>
-                                <span class="absolute material-symbols-outlined"
-                                      style="color:#f97316;font-size:32px;top:-8px;right:-24px">local_fire_department</span>
-                                <span class="absolute material-symbols-outlined"
-                                      style="color:#fb923c;font-size:24px;top:-16px;left:32px">local_fire_department</span>
-                                <span class="absolute material-symbols-outlined"
-                                      style="color:#ef4444;font-size:28px;top:8px;left:-24px">local_fire_department</span>
-                            </div>
+                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">schedule</span>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4 text-white">Рутина выжигает</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Алгоритмы имитируют поведение человека.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
-                        Бесконечное заполнение анкет и корректировка писем убивают мотивацию.
+                        Без блокировок. Система соблюдает лимиты площадок, чтобы ваш аккаунт был в безопасности.
                     </p>
                 </div>
             </div>
 
-            <!-- Problem 3 — Тишина -->
+            <!-- Card 3 -->
             <div class="card-wrap sa d2">
                 <div class="card-glow"></div>
                 <div class="relative p-8 rounded-[16px] h-full flex flex-col items-center text-center"
                      style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
-                    <div class="mb-6">
-                        <div class="relative w-48 h-48 rounded-[12px] flex items-center justify-center p-4"
-                             style="background:linear-gradient(135deg,rgba(55,65,81,0.4),rgba(31,41,55,0.4))">
-                            <div class="relative">
-                                <div class="w-32 h-24 rounded-[8px] flex items-center justify-center"
-                                     style="background:linear-gradient(135deg,rgba(168,85,247,0.3),rgba(147,51,234,0.3));border:2px solid rgba(168,85,247,0.4)">
-                                    <span class="material-symbols-outlined" style="color:#c4b5fd;font-size:48px">mail</span>
-                                </div>
-                                <div class="absolute flex items-center justify-center rounded-full"
-                                     style="width:48px;height:48px;top:-16px;left:-16px;background:rgba(34,211,238,0.2);border:2px solid rgba(34,211,238,0.4)">
-                                    <span class="material-symbols-outlined" style="color:#67e8f9;font-size:20px">schedule</span>
-                                </div>
-                                <div class="absolute font-bold" style="color:#c4b5fd;font-size:2rem;top:-8px;right:-24px">?</div>
-                                <div class="absolute font-bold" style="color:rgba(196,181,253,0.7);font-size:1.5rem;top:32px;right:-32px">?</div>
-                                <div class="absolute font-bold" style="color:#f87171;font-size:1.25rem;bottom:-16px;right:16px">✕</div>
-                            </div>
+                    <div class="mb-6 relative">
+                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">task</span>
+                        </div>
+                        <div class="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                             style="background:#a855f7">
+                            <span class="text-white text-xs font-bold">✓</span>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4 text-white">Тишина в ответ</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Полный контроль.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
-                        Месяцы ожиданий без обратной связи. Вы даже не знаете, прочитали ли ваше письмо.
+                        Инструмент не удаляет отклики и не меняет оригинальное резюме. Всё управление — в ваших руках.
                     </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── TEAM ── -->
+<section id="team" class="py-24 px-6" style="background:transparent">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16 sa">
+            <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">Кто стоит за алгоритмами Авроры</h2>
+            <p class="text-xl max-w-3xl mx-auto" style="color:rgba(255,255,255,0.7)">
+                Мы объединили опыт HR-директора и системного инженера, чтобы сделать процесс поиска работы прозрачным и предсказуемым.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+
+            <!-- Founder 1 -->
+            <div class="card-wrap sa h-full">
+                <div class="card-glow" style="border-radius:18px"></div>
+                <div class="team-card relative">
+                    <div class="team-card-media relative flex items-center justify-center">
+                        <div class="w-32 h-32 rounded-full"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
+                    </div>
+                    <div class="team-card-body">
+                        <h3 class="text-2xl font-bold mb-2 text-white">Роман Изотов,<br>основатель.</h3>
+                        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
+                            Карьерный консультант с опытом в IT-рекрутменте более 5 лет. Знаю изнутри, как мыслят работодатели и почему резюме закрывают за 6 секунд. Отвечаю за продуктовую логику сервиса.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Founder 2 -->
+            <div class="card-wrap sa d1 h-full">
+                <div class="card-glow" style="border-radius:18px"></div>
+                <div class="team-card relative">
+                    <div class="team-card-media relative flex items-center justify-center">
+                        <div class="w-32 h-32 rounded-full"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
+                    </div>
+                    <div class="team-card-body">
+                        <h3 class="text-2xl font-bold mb-2 text-white">Вадим Клепов,<br>технический директор.</h3>
+                        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
+                            Отвечаю за стабильность архитектуры и точность парсинга. Лично протестировал инструмент на собственном поиске работы, чтобы вычистить ошибки под капотом.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Online разборы -->
+            <div class="card-wrap sa d2 h-full">
+                <div class="card-glow" style="border-radius:18px"></div>
+                <div class="team-card relative">
+                    <div class="team-card-media relative flex items-center justify-center">
+                        <div class="w-32 h-32 rounded-full flex items-center justify-center"
+                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
+                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:48px">videocam</span>
+                        </div>
+                    </div>
+                    <div class="team-card-body">
+                        <h3 class="text-2xl font-bold mb-3 text-white">Открытые онлайн-разборы</h3>
+                        <p class="text-sm mb-3" style="color:rgba(255,255,255,0.7);line-height:1.75">
+                            Открытые разборы резюме с создателем сервиса. Раз в две недели Роман Изотов бесплатно разбирает профили пользователей в прямом эфире.
+                        </p>
+                        <p class="text-sm mb-6" style="color:rgba(255,255,255,0.6);line-height:1.7">
+                            Ищем слепые зоны, исправляем формулировки и настраиваем алгоритм для точных попаданий.
+                        </p>
+                        <button type="button" onclick="window.open('https://t.me/AuroraCareer','_blank')"
+                                class="mt-auto px-6 py-3.5 rounded-[12px] font-bold text-white uppercase tracking-wide cursor-pointer border-0 hover:scale-105 active:scale-95 transition-transform text-sm"
+                                style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 8px 24px rgba(34,211,238,0.3)">
+                            Записаться на следующий эфир (бесплатно)
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1551,6 +1537,24 @@ var cntObserver = new IntersectionObserver(function(entries) {
 }, { threshold: 0.3 });
 
 document.querySelectorAll('.counter').forEach(function(el) { cntObserver.observe(el); });
+
+/* ── Parallax Cards ── */
+document.querySelectorAll('.parallax-card').forEach(function(card) {
+    var img = card.querySelector('.parallax-bg-img');
+    if (!img) return;
+    card.addEventListener('mousemove', function(e) {
+        var rect = card.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width;
+        var y = (e.clientY - rect.top) / rect.height;
+        // Shift image in the opposite direction (2D parallax backdrop effect)
+        var moveX = (0.5 - x) * 22; // up to 11px shift left/right
+        var moveY = (0.5 - y) * 22; // up to 11px shift up/down
+        img.style.transform = 'scale(1.15) translate(' + moveX.toFixed(1) + 'px, ' + moveY.toFixed(1) + 'px)';
+    });
+    card.addEventListener('mouseleave', function() {
+        img.style.transform = 'scale(1.15) translate(0px, 0px)';
+    });
+});
 </script>
 
 </body>
