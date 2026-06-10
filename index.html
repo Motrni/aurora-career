@@ -255,8 +255,49 @@ tailwind.config = {
             rgba(255,255,255,.18), transparent 60%);
     }
     .glass-card--interactive:hover .glare { opacity: 1; }
-    .glass-card--interactive .stat-icon { transform: translateZ(40px); }
-    .glass-card--interactive .stat-num { transform: translateZ(30px); }
+
+    /* Stat cards — типографика и иконки (прототип) */
+    .glass-card--interactive.stat-card {
+        padding: 22px 24px 26px;
+    }
+    .glass-card--interactive .stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(54,201,232,.25), rgba(139,92,246,.3));
+        border: 1px solid rgba(255,255,255,.16);
+        box-shadow: 0 6px 16px rgba(0,0,0,.3);
+        transform: translateZ(40px);
+    }
+    .glass-card--interactive .stat-icon svg {
+        width: 26px;
+        height: 26px;
+        stroke: #bfe7ff;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .glass-card--interactive .stat-label {
+        margin-top: 20px;
+        color: #9aa3c7;
+        font-size: 14px;
+        line-height: 1.4;
+        transform: translateZ(22px);
+    }
+    .glass-card--interactive .stat-num {
+        margin-top: 8px;
+        font-size: clamp(28px, 5vw, 34px);
+        font-weight: 700;
+        letter-spacing: -1px;
+        color: #eef1ff;
+        line-height: 1.1;
+        transform: translateZ(30px);
+    }
+    .stat-card-inner { position: relative; z-index: 1; }
 
     /* Modal panels (не путать с карточками лендинга) */
     .glass-panel {
@@ -294,11 +335,6 @@ tailwind.config = {
     @keyframes twinkle {
         0%, 100% { opacity: var(--op, 0.3); }
         50%  { opacity: 0.05; }
-    }
-
-    @keyframes icon-pulse {
-        0%, 100% { transform: scale(1); }
-        50%  { transform: scale(1.1); }
     }
 
     @keyframes gradient-shift {
@@ -408,28 +444,378 @@ tailwind.config = {
     .aurora-scroll::-webkit-scrollbar-track { background: rgba(10,11,30,0.6); border-radius: 9999px; margin: 8px 0; }
     .aurora-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg,rgba(168,85,247,0.7),rgba(34,211,238,0.35)); border-radius: 9999px; }
 
-    /* Воронка в блоке «Результаты» */
-    .funnel-bar {
+    /* ── Блок «Результаты работы алгоритмов» ── */
+    body.reviews-lock { overflow: hidden; }
+
+    #results .results-wrap { max-width: 1120px; margin: 0 auto; }
+    #results .res-sec-title {
+        font-size: clamp(22px, 4vw, 26px);
         text-align: center;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #fff;
-        padding: 0.625rem 0;
+        margin-bottom: 26px;
+        color: #eef1ff;
     }
-    .funnel-bar-1 {
+
+    #results .res-glass,
+    #reviews-overlay .res-glass {
+        position: relative;
+        border-radius: 22px;
+        background: linear-gradient(160deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255,255,255,.12);
+        box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18);
+        overflow: hidden;
+    }
+
+    #results .res-block {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        padding: 30px 34px;
+        margin-bottom: 22px;
+    }
+    #results .part { min-width: 0; }
+    #results .part.text { flex: 1.1; }
+    #results .part.viz { flex: 1; }
+    #results .part.review { flex: 1.3; }
+    #results .vdiv {
+        display: none;
+        height: 1px;
+        margin: 20px 8%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+    }
+    #results h3.bt {
+        font-family: var(--font-display);
+        font-size: 20px;
+        line-height: 1.28;
+        margin-bottom: 10px;
+        color: #eef1ff;
+    }
+    #results p.bp { color: #9aa3c7; font-size: 14px; line-height: 1.6; }
+
+    #results .stages {
         width: 100%;
-        background: linear-gradient(to right, #22d3ee, #06b6d4);
-        clip-path: polygon(0% 0%, 100% 0%, 88% 100%, 12% 100%);
+        max-width: 360px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
     }
-    .funnel-bar-2 {
-        width: 78%;
-        background: linear-gradient(to right, #06b6d4, #a855f7);
-        clip-path: polygon(0% 0%, 100% 0%, 86% 100%, 14% 100%);
+    #results .stage {
+        height: 54px;
+        width: 0;
+        min-width: 150px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: width .9s cubic-bezier(.2,.7,.2,1);
+        background: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
+        border: 1px solid rgba(255,255,255,.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.2);
     }
-    .funnel-bar-3 {
-        width: 54%;
-        background: linear-gradient(to right, #a855f7, #9333ea);
-        clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%);
+    #results .stage b { font-size: 19px; font-weight: 700; line-height: 1; color: #eef1ff; }
+    #results .stage span {
+        font-size: 10px;
+        color: #9aa3c7;
+        margin-top: 2px;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+    #results .stage.win {
+        background: linear-gradient(135deg, #36c9e8, #8b5cf6);
+        border: 0;
+        box-shadow: 0 8px 22px rgba(74,123,255,.5);
+    }
+    #results .stage.win span { color: rgba(255,255,255,.85); }
+
+    #results .rail {
+        width: 100%;
+        max-width: 340px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    #results .chip {
+        width: 66px;
+        height: 74px;
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        background: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
+        border: 1px solid rgba(255,255,255,.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.2);
+    }
+    #results .chip .mon {
+        font-size: 9px;
+        color: #9aa3c7;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    #results .chip .day {
+        font-family: var(--font-display);
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1;
+        color: #eef1ff;
+    }
+    #results .chip.offer {
+        background: linear-gradient(135deg, #4a7bff, #8b5cf6);
+        border: 0;
+        box-shadow: 0 8px 20px rgba(139,92,246,.5);
+    }
+    #results .conn {
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 60px;
+        height: 3px;
+        margin: 0 6px;
+        border-radius: 3px;
+        background: rgba(255,255,255,.12);
+    }
+    #results .conn i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0;
+        border-radius: 3px;
+        background: linear-gradient(90deg, #36c9e8, #8b5cf6);
+        transition: width 1s ease .3s;
+    }
+    #results .conn .dot {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 0 12px #36c9e8;
+        transform: translate(-50%, -50%);
+        transition: left 1s ease .3s;
+    }
+    #results .days { text-align: center; margin-top: 14px; }
+    #results .days b {
+        font-family: var(--font-display);
+        font-size: 30px;
+        background: linear-gradient(135deg, #36c9e8, #8b5cf6);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    #results .days span { display: block; color: #9aa3c7; font-size: 12px; margin-top: 2px; }
+
+    #results .cmp {
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    #results .cmp .row {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 12px 15px;
+        border-radius: 13px;
+        border: 1px solid rgba(255,255,255,.1);
+    }
+    #results .cmp .row.bad { background: rgba(255,255,255,.04); }
+    #results .cmp .row.good {
+        background: linear-gradient(135deg, rgba(54,201,232,.16), rgba(139,92,246,.18));
+        border-color: rgba(255,255,255,.18);
+    }
+    #results .cmp .row .mk {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: #fff;
+        flex: 0 0 auto;
+    }
+    #results .cmp .row.bad .mk { background: rgba(255,255,255,.1); color: #9aa3c7; }
+    #results .cmp .row.good .mk { background: linear-gradient(135deg, #36c9e8, #8b5cf6); }
+    #results .cmp .row .tt b { font-size: 14px; display: block; color: #eef1ff; }
+    #results .cmp .row .tt span { font-size: 12px; color: #9aa3c7; }
+
+    #results .review-card,
+    #reviews-overlay .review-card {
+        background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 16px;
+        padding: 16px 18px;
+    }
+    #results .tg-head,
+    #reviews-overlay .tg-head {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 11px;
+    }
+    #results .ava,
+    #reviews-overlay .ava {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 15px;
+        color: #fff;
+        flex: 0 0 auto;
+    }
+    #results .tg-name,
+    #reviews-overlay .tg-name { font-weight: 600; font-size: 14px; color: #7cc4ff; }
+    #results .tg-sub,
+    #reviews-overlay .tg-sub { font-size: 12px; color: #9aa3c7; }
+    #results .bubble,
+    #reviews-overlay .bubble {
+        position: relative;
+        background: rgba(255,255,255,.07);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 4px 14px 14px 14px;
+        padding: 10px 13px 16px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        margin-bottom: 7px;
+        color: #eef1ff;
+    }
+    #results .bubble:last-child,
+    #reviews-overlay .bubble:last-child { margin-bottom: 0; }
+    #results .tm,
+    #reviews-overlay .tm {
+        position: absolute;
+        right: 11px;
+        bottom: 6px;
+        font-size: 10px;
+        color: #9aa3c7;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    #results .dc,
+    #reviews-overlay .dc { width: 16px; height: 10px; color: #36c9e8; flex: 0 0 auto; }
+
+    #results .see-wrap { text-align: center; margin-top: 8px; }
+    #results .see-all {
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+        border: 0;
+        padding: 14px 30px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #36c9e8, #8b5cf6);
+        box-shadow: 0 8px 24px rgba(74,123,255,.4);
+        transition: transform .15s;
+    }
+    #results .see-all:active { transform: scale(.97); }
+    #results .see-all:focus-visible {
+        outline: 2px solid #36c9e8;
+        outline-offset: 2px;
+    }
+
+    #reviews-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(5,7,20,.72);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 120;
+    }
+    #reviews-overlay.open { display: flex; }
+    #reviews-overlay .reviews-modal {
+        width: 100%;
+        max-width: 1000px;
+        max-height: 88vh;
+        overflow: hidden;
+        padding: 24px 26px;
+        display: flex;
+        flex-direction: column;
+    }
+    #reviews-overlay .modal-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        gap: 12px;
+    }
+    #reviews-overlay .modal-top h4 {
+        font-family: var(--font-display);
+        font-size: 20px;
+        color: #eef1ff;
+    }
+    #reviews-overlay .ctrls { display: flex; gap: 8px; flex-shrink: 0; }
+    #reviews-overlay .arrow,
+    #reviews-overlay .close {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        cursor: pointer;
+        color: #fff;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.07);
+        border: 1px solid rgba(255,255,255,.14);
+        transition: background .15s;
+    }
+    #reviews-overlay .arrow:hover,
+    #reviews-overlay .close:hover { background: rgba(255,255,255,.16); }
+    #reviews-overlay .reviews-track {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        padding: 4px 2px 8px;
+        scrollbar-width: none;
+    }
+    #reviews-overlay .reviews-track::-webkit-scrollbar { display: none; }
+    #reviews-overlay .reviews-carousel-card {
+        flex: 0 0 calc((100% - 32px) / 3);
+        scroll-snap-align: start;
+        padding: 15px 17px;
+    }
+
+    @media (max-width: 760px) {
+        #results .res-block {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
+            padding: 24px 22px;
+        }
+        #results .part.viz { display: block; }
+        #results .vdiv { display: block; }
+        #reviews-overlay .ctrls .arrow { display: none; }
+        #reviews-overlay .reviews-carousel-card {
+            flex: 0 0 82%;
+            scroll-snap-align: center;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #results .stage { transition: none; }
+        #results .conn i,
+        #results .conn .dot { transition: none; }
     }
 
     /* Интерактивная сетка точек (как на stitch.withgoogle.com) */
@@ -537,6 +923,14 @@ tailwind.config = {
 </head>
 
 <body>
+
+<!-- SVG: двойная галочка прочтения (Telegram) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="dc" viewBox="0 0 16 10">
+        <path d="M1 5.5 L4 8.5 L9.5 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5.5 5.5 L8.5 8.5 L14 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+</svg>
 
 <!-- ══════════════════════════════════════════
      LOADING SCREEN
@@ -732,64 +1126,56 @@ tailwind.config = {
 
             <!-- Stat 1 -->
             <div class="card-wrap sa">
-                <div class="glass-card glass-card--interactive relative p-6">
+                <div class="glass-card glass-card--interactive stat-card relative">
                     <span class="glare"></span>
-                    <div class="glass-card-inner space-y-4">
-                        <div class="stat-icon inline-flex p-3 rounded-[10px]"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">send</span>
+                    <div class="stat-card-inner">
+                        <div class="stat-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                         </div>
-                        <p class="stat-label" style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Отправлено откликов:</p>
-                        <p class="stat-num text-3xl font-bold counter stat-value" data-count-to="997537"
-                           style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">997&nbsp;537</p>
+                        <p class="stat-label">Отправлено откликов:</p>
+                        <p class="stat-num counter stat-value" data-count-to="997537">997&nbsp;537</p>
                     </div>
                 </div>
             </div>
 
             <!-- Stat 2 -->
             <div class="card-wrap sa d1">
-                <div class="glass-card glass-card--interactive relative p-6">
+                <div class="glass-card glass-card--interactive stat-card relative">
                     <span class="glare"></span>
-                    <div class="glass-card-inner space-y-4">
-                        <div class="stat-icon inline-flex p-3 rounded-[10px]"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite 0.3s">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">description</span>
+                    <div class="stat-card-inner">
+                        <div class="stat-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
                         </div>
-                        <p class="stat-label" style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Написано сопроводительных:</p>
-                        <p class="stat-num text-3xl font-bold counter stat-value" data-count-to="125430"
-                           style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">125&nbsp;430</p>
+                        <p class="stat-label">Написано сопроводительных:</p>
+                        <p class="stat-num counter stat-value" data-count-to="125430">125&nbsp;430</p>
                     </div>
                 </div>
             </div>
 
             <!-- Stat 3 -->
             <div class="card-wrap sa d2">
-                <div class="glass-card glass-card--interactive relative p-6">
+                <div class="glass-card glass-card--interactive stat-card relative">
                     <span class="glare"></span>
-                    <div class="glass-card-inner space-y-4">
-                        <div class="stat-icon inline-flex p-3 rounded-[10px]"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite 0.6s">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">schedule</span>
+                    <div class="stat-card-inner">
+                        <div class="stat-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                         </div>
-                        <p class="stat-label" style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Сэкономлено часов:</p>
-                        <p class="stat-num text-3xl font-bold counter stat-value" data-count-to="83120"
-                           style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">83&nbsp;120</p>
+                        <p class="stat-label">Сэкономлено часов:</p>
+                        <p class="stat-num counter stat-value" data-count-to="83120">83&nbsp;120</p>
                     </div>
                 </div>
             </div>
 
             <!-- Stat 4 -->
             <div class="card-wrap sa d3">
-                <div class="glass-card glass-card--interactive relative p-6">
+                <div class="glass-card glass-card--interactive stat-card relative">
                     <span class="glare"></span>
-                    <div class="glass-card-inner space-y-4">
-                        <div class="stat-icon inline-flex p-3 rounded-[10px]"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2));border:1px solid rgba(34,211,238,0.3);animation:icon-pulse 2.5s ease-in-out infinite 0.9s">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:24px">group</span>
+                    <div class="stat-card-inner">
+                        <div class="stat-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </div>
-                        <p class="stat-label" style="font-size:0.875rem;color:rgba(255,255,255,0.7)">Специалистов в поиске:</p>
-                        <p class="stat-num text-3xl font-bold counter stat-value" data-count-to="1842"
-                           style="background:linear-gradient(to right,white,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">1&nbsp;842</p>
+                        <p class="stat-label">Специалистов в поиске:</p>
+                        <p class="stat-num counter stat-value" data-count-to="1842">1&nbsp;842</p>
                     </div>
                 </div>
             </div>
@@ -1000,143 +1386,100 @@ tailwind.config = {
 
 <!-- ── RESULTS ── -->
 <section id="results" class="py-24 px-4 sm:px-6" style="background:transparent">
-    <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-16 sa">
-            <h2 class="section-title text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Результаты: реальные воронки откликов наших пользователей</h2>
-        </div>
-        <div class="space-y-6">
+    <div class="results-wrap">
+        <h2 class="section-title res-sec-title sa">Результаты работы алгоритмов</h2>
 
-            <!-- Result 1: Текст | Воронка | Чат -->
-            <div class="card-wrap sa">
-                <div class="glass-card relative p-6 lg:p-8 min-h-[200px]">
-                    <div class="grid lg:grid-cols-3 gap-6 items-center h-full">
-                        <!-- Текст -->
-                        <div>
-                            <h3 class="text-xl lg:text-2xl font-bold mb-3 text-white">
-                                Свел поиск работы к понятной математике: 282 отклика = 2 оффера
-                            </h3>
-                            <p class="text-sm mb-1" style="color:rgba(255,255,255,0.7)">Полная воронка от нашего пользователя.</p>
-                            <p class="text-sm" style="color:rgba(255,255,255,0.7)">Активный поиск занял ровно месяц.</p>
-                        </div>
-                        <!-- Воронка -->
-                        <div class="flex flex-col items-center justify-center gap-0 w-full py-2">
-                            <div class="funnel-bar funnel-bar-1">282 ОТКЛИКА</div>
-                            <div class="text-base leading-none my-0.5" style="color:#22d3ee">▼</div>
-                            <div class="funnel-bar funnel-bar-2">7 СОБЕСЕДОВАНИЙ</div>
-                            <div class="text-base leading-none my-0.5" style="color:#a855f7">▼</div>
-                            <div class="funnel-bar funnel-bar-3">2 ОФФЕРА</div>
-                        </div>
-                        <!-- Чат -->
-                        <div class="rounded-[8px] p-3 h-full flex flex-col justify-center"
-                             style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
-                            <div class="flex items-center gap-2 mb-3">
-                                <div class="w-6 h-6 rounded-full flex-shrink-0"
-                                     style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
-                                <div class="text-xs font-bold text-white">Антон</div>
-                            </div>
-                            <div class="space-y-2">
-                                <div class="rounded p-2 text-xs"
-                                     style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
-                                    282 отклика → 7 собеседований
-                                </div>
-                                <div class="rounded p-2 text-xs"
-                                     style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
-                                    2 оффера ✓
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Блок 1: воронка + Антон -->
+        <div class="res-glass res-block sa">
+            <div class="part text">
+                <h3 class="bt">Свёл поиск работы к понятной математике: 282 → 2 оффера</h3>
+                <p class="bp">Полная воронка от нашего пользователя. Активный поиск занял ровно месяц.</p>
+            </div>
+            <div class="vdiv" aria-hidden="true"></div>
+            <div class="part viz">
+                <div class="stages">
+                    <div class="stage" data-w="100%"><b data-n="282">0</b><span>откликов</span></div>
+                    <div class="stage" data-w="72%"><b data-n="7">0</b><span>собеседований</span></div>
+                    <div class="stage win" data-w="52%"><b data-n="2">0</b><span>оффера ✓</span></div>
                 </div>
             </div>
-
-            <!-- Result 2: Календарь | Чат | Текст -->
-            <div class="card-wrap sa d1">
-                <div class="glass-card relative p-6 lg:p-8 min-h-[200px]">
-                    <div class="grid lg:grid-cols-3 gap-6 items-center h-full">
-                        <!-- Календарь -->
-                        <div class="flex items-center gap-3 justify-center">
-                            <div class="text-center">
-                                <div class="text-[10px] font-bold text-white mb-1 text-center"
-                                     style="color:rgba(255,255,255,0.5)">DEC</div>
-                                <div class="rounded-[8px] px-4 py-3"
-                                     style="background:rgba(34,211,238,0.2);border:1px solid rgba(34,211,238,0.3)">
-                                    <div class="text-3xl font-bold text-white">9</div>
-                                </div>
-                            </div>
-                            <div class="text-xl font-bold flex-shrink-0" style="color:#22d3ee">→</div>
-                            <div class="text-center">
-                                <div class="text-[10px] font-bold mb-1 text-center"
-                                     style="color:rgba(255,255,255,0.5)">DEC</div>
-                                <div class="rounded-[8px] px-4 py-3"
-                                     style="background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.3)">
-                                    <div class="text-3xl font-bold text-white">17</div>
-                                </div>
-                                <div class="mt-2 px-2 py-0.5 rounded text-[10px] font-bold text-white text-center"
-                                     style="background:#a855f7">ОФФЕР</div>
-                            </div>
-                        </div>
-                        <!-- Чат -->
-                        <div class="rounded-[8px] p-3 h-full flex flex-col justify-center"
-                             style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
-                            <div class="flex items-center gap-2 mb-3">
-                                <div class="w-6 h-6 rounded-full flex-shrink-0"
-                                     style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
-                                <div class="text-xs font-bold text-white">Станислав</div>
-                            </div>
-                            <div class="rounded p-2 text-xs leading-relaxed"
-                                 style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
-                                От запуска до оффера на полную удаленку — 8 дней. Наконец-то получил удаленную работу, когда все говорили, что удаленки больше нет.
-                            </div>
-                        </div>
-                        <!-- Текст -->
+            <div class="vdiv" aria-hidden="true"></div>
+            <div class="part review">
+                <div class="review-card">
+                    <div class="tg-head">
+                        <div class="ava" style="background:linear-gradient(135deg,#4a7bff,#8b5cf6)">А</div>
                         <div>
-                            <h3 class="text-xl lg:text-2xl font-bold mb-3 text-white">
-                                От запуска до оффера на полную удаленку — 8 дней
-                            </h3>
-                            <p class="text-sm" style="color:rgba(255,255,255,0.7)">
-                                SA/BA аналитик получил удаленную работу, когда все говорили, что удаленки больше нет.
-                            </p>
+                            <div class="tg-name">Антон</div>
+                            <div class="tg-sub">Backend-разработчик</div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Result 3: Текст | Чат -->
-            <div class="card-wrap sa d2">
-                <div class="glass-card relative p-6 lg:p-8 min-h-[200px]">
-                    <div class="grid lg:grid-cols-3 gap-6 items-center h-full">
-                        <!-- Текст занимает 2 колонки -->
-                        <div class="lg:col-span-2">
-                            <h3 class="text-xl lg:text-2xl font-bold mb-3 text-white">
-                                Аврора пробивает фильтры НН и некомпетентность первичного отбора
-                            </h3>
-                            <p class="text-sm" style="color:rgba(255,255,255,0.7)">
-                                Честный отзыв о том, почему ручной точечный поиск сейчас проигрывает умной автоматизации.
-                            </p>
-                        </div>
-                        <!-- Чат -->
-                        <div class="rounded-[8px] p-3 h-full flex flex-col justify-center"
-                             style="background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.2)">
-                            <div class="flex items-center gap-2 mb-3">
-                                <div class="w-6 h-6 rounded-full flex-shrink-0"
-                                     style="background:linear-gradient(135deg,#22d3ee,#a855f7)"></div>
-                                <div class="text-xs font-bold text-white">Рустем</div>
-                            </div>
-                            <div class="rounded p-2 text-xs leading-relaxed"
-                                 style="background:rgba(34,197,94,0.2);color:rgba(255,255,255,0.9)">
-                                Ручной точечный поиск проигрывает умной автоматизации — это факт...
-                            </div>
-                        </div>
-                    </div>
+                    <div class="bubble">282 отклика → 7 собеседований<span class="tm">11:04<svg class="dc"><use href="#dc"/></svg></span></div>
+                    <div class="bubble">2 оффера ✓ Закрыл поиск за месяц<span class="tm">11:05<svg class="dc"><use href="#dc"/></svg></span></div>
                 </div>
             </div>
         </div>
 
-        <div class="text-center mt-12 sa d3">
-            <a href="#how-it-works" class="inline-flex items-center gap-2 text-sm hover:underline transition-colors"
-               style="color:#22d3ee">
-                Узнайте, как мы это сделали <span>↑</span>
-            </a>
+        <!-- Блок 2: таймлайн + Станислав -->
+        <div class="res-glass res-block sa d1">
+            <div class="part text">
+                <h3 class="bt">От запуска до оффера на полную удалёнку — 8 дней</h3>
+                <p class="bp">SA/BA аналитик получил удалённую работу, когда все говорили, что удалёнки больше нет.</p>
+            </div>
+            <div class="vdiv" aria-hidden="true"></div>
+            <div class="part viz">
+                <div class="rail">
+                    <div class="chip"><span class="mon">DEC</span><span class="day">9</span></div>
+                    <div class="conn"><i></i><div class="dot"></div></div>
+                    <div class="chip offer"><span class="mon">DEC</span><span class="day">17</span></div>
+                </div>
+                <div class="days"><b>8 дней</b><span>от запуска до оффера</span></div>
+            </div>
+            <div class="vdiv" aria-hidden="true"></div>
+            <div class="part review">
+                <div class="review-card">
+                    <div class="tg-head">
+                        <div class="ava" style="background:linear-gradient(135deg,#36c9e8,#4a7bff)">С</div>
+                        <div>
+                            <div class="tg-name">Станислав</div>
+                            <div class="tg-sub">SA/BA аналитик</div>
+                        </div>
+                    </div>
+                    <div class="bubble">От запуска до оффера на удалёнку — 8 дней 🚀<span class="tm">14:32<svg class="dc"><use href="#dc"/></svg></span></div>
+                    <div class="bubble">Получил удалёнку, когда все говорили, что её больше нет.<span class="tm">14:32<svg class="dc"><use href="#dc"/></svg></span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Блок 3: сравнение + Рустем -->
+        <div class="res-glass res-block sa d2">
+            <div class="part text">
+                <h3 class="bt">Аврора пробивает фильтры HH и слабость первичного отбора</h3>
+                <p class="bp">Честный отзыв о том, почему ручной точечный поиск сейчас проигрывает умной автоматизации.</p>
+            </div>
+            <div class="vdiv" aria-hidden="true"></div>
+            <div class="part viz">
+                <div class="cmp">
+                    <div class="row bad"><div class="mk">✕</div><div class="tt"><b>Ручной точечный поиск</b><span>медленно, теряется в потоке</span></div></div>
+                    <div class="row good"><div class="mk">✓</div><div class="tt"><b>Умная автоматизация Авроры</b><span>объём + персонализация</span></div></div>
+                </div>
+            </div>
+            <div class="vdiv" aria-hidden="true"></div>
+            <div class="part review">
+                <div class="review-card">
+                    <div class="tg-head">
+                        <div class="ava" style="background:linear-gradient(135deg,#8b5cf6,#36c9e8)">Р</div>
+                        <div>
+                            <div class="tg-name">Рустем</div>
+                            <div class="tg-sub">Data-инженер</div>
+                        </div>
+                    </div>
+                    <div class="bubble">Ручной точечный поиск проигрывает умной автоматизации — это факт.<span class="tm">09:18<svg class="dc"><use href="#dc"/></svg></span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="see-wrap sa d3">
+            <button type="button" class="see-all" onclick="openReviewsModal()">Смотреть все отзывы</button>
         </div>
     </div>
 </section>
@@ -1528,6 +1871,47 @@ tailwind.config = {
 </footer>
 
 <!-- ══════════════════════════════════════════
+     REVIEWS MODAL (карусель отзывов)
+══════════════════════════════════════════ -->
+<div class="reviews-overlay" id="reviews-overlay" onclick="if(event.target===this)closeReviewsModal()">
+    <div class="res-glass reviews-modal">
+        <div class="modal-top">
+            <h4>Отзывы пользователей</h4>
+            <div class="ctrls">
+                <button type="button" class="arrow" onclick="scrollReviewsCarousel(-1)" aria-label="Предыдущие отзывы">‹</button>
+                <button type="button" class="arrow" onclick="scrollReviewsCarousel(1)" aria-label="Следующие отзывы">›</button>
+                <button type="button" class="close" onclick="closeReviewsModal()" aria-label="Закрыть">✕</button>
+            </div>
+        </div>
+        <div class="reviews-track" id="reviews-track">
+            <div class="res-glass reviews-carousel-card">
+                <div class="tg-head">
+                    <div class="ava" style="background:linear-gradient(135deg,#4a7bff,#8b5cf6)">А</div>
+                    <div><div class="tg-name">Антон</div><div class="tg-sub">Backend-разработчик</div></div>
+                </div>
+                <div class="bubble">282 отклика → 7 собеседований<span class="tm">11:04<svg class="dc"><use href="#dc"/></svg></span></div>
+                <div class="bubble">2 оффера ✓ Закрыл поиск за месяц<span class="tm">11:05<svg class="dc"><use href="#dc"/></svg></span></div>
+            </div>
+            <div class="res-glass reviews-carousel-card">
+                <div class="tg-head">
+                    <div class="ava" style="background:linear-gradient(135deg,#36c9e8,#4a7bff)">С</div>
+                    <div><div class="tg-name">Станислав</div><div class="tg-sub">SA/BA аналитик</div></div>
+                </div>
+                <div class="bubble">От запуска до оффера на удалёнку — 8 дней 🚀<span class="tm">14:32<svg class="dc"><use href="#dc"/></svg></span></div>
+                <div class="bubble">Получил удалёнку, когда все говорили, что её больше нет.<span class="tm">14:32<svg class="dc"><use href="#dc"/></svg></span></div>
+            </div>
+            <div class="res-glass reviews-carousel-card">
+                <div class="tg-head">
+                    <div class="ava" style="background:linear-gradient(135deg,#8b5cf6,#36c9e8)">Р</div>
+                    <div><div class="tg-name">Рустем</div><div class="tg-sub">Data-инженер</div></div>
+                </div>
+                <div class="bubble">Ручной точечный поиск проигрывает умной автоматизации — это факт.<span class="tm">09:18<svg class="dc"><use href="#dc"/></svg></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
      VIDEO LIGHTBOX
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="video-modal" onclick="if(event.target===this)closeVideoModal()">
@@ -1681,7 +2065,13 @@ function closeVideoModal() {
 }
 
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && document.getElementById('video-modal').classList.contains('active')) {
+    if (e.key !== 'Escape') return;
+    var reviewsOverlay = document.getElementById('reviews-overlay');
+    if (reviewsOverlay && reviewsOverlay.classList.contains('open')) {
+        closeReviewsModal();
+        return;
+    }
+    if (document.getElementById('video-modal').classList.contains('active')) {
         closeVideoModal();
     }
 });
@@ -1925,6 +2315,89 @@ document.querySelectorAll('.parallax-card').forEach(function(card) {
         });
     });
 })();
+
+/* ── Results block: funnel + timeline animations ── */
+(function() {
+    var section = document.getElementById('results');
+    if (!section) return;
+
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var animated = false;
+
+    function setFinalResultsState() {
+        section.querySelectorAll('.stage').forEach(function(s) {
+            s.style.width = s.dataset.w;
+        });
+        section.querySelectorAll('.stage b[data-n]').forEach(function(b) {
+            b.textContent = b.dataset.n;
+        });
+        var fill = section.querySelector('.conn i');
+        var dot = section.querySelector('.conn .dot');
+        if (fill) fill.style.width = '100%';
+        if (dot) dot.style.left = '100%';
+    }
+
+    function animateResults() {
+        if (animated) return;
+        animated = true;
+
+        if (reducedMotion) {
+            setFinalResultsState();
+            return;
+        }
+
+        section.querySelectorAll('.stage').forEach(function(s) {
+            s.style.width = s.dataset.w;
+        });
+        section.querySelectorAll('.stage b[data-n]').forEach(function(b) {
+            var to = parseInt(b.dataset.n, 10);
+            var duration = 1000;
+            var start = performance.now();
+            function tick(now) {
+                var p = Math.min((now - start) / duration, 1);
+                b.textContent = String(Math.round(to * (1 - Math.pow(1 - p, 3))));
+                if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        });
+        var fill = section.querySelector('.conn i');
+        var dot = section.querySelector('.conn .dot');
+        if (fill) fill.style.width = '100%';
+        if (dot) dot.style.left = '100%';
+    }
+
+    var resultsObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+            if (e.isIntersecting) {
+                animateResults();
+                resultsObserver.disconnect();
+            }
+        });
+    }, { threshold: 0.3 });
+
+    resultsObserver.observe(section);
+})();
+
+/* ── Reviews modal + carousel ── */
+function openReviewsModal() {
+    var overlay = document.getElementById('reviews-overlay');
+    if (!overlay) return;
+    overlay.classList.add('open');
+    document.body.classList.add('reviews-lock');
+}
+
+function closeReviewsModal() {
+    var overlay = document.getElementById('reviews-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    document.body.classList.remove('reviews-lock');
+}
+
+function scrollReviewsCarousel(dir) {
+    var track = document.getElementById('reviews-track');
+    if (!track) return;
+    track.scrollBy({ left: dir * track.clientWidth, behavior: 'smooth' });
+}
 </script>
 
 </body>
