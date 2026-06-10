@@ -904,7 +904,7 @@ tailwind.config = {
 </section>
 
 <!-- ── RESULTS ── -->
-<section id="results" class="py-24 px-6" style="background:transparent">
+<section id="results" class="py-24 px-4 sm:px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white">Результаты: реальные воронки откликов наших пользователей</h2>
@@ -1053,7 +1053,7 @@ tailwind.config = {
 </section>
 
 <!-- ── PRICING ── -->
-<section id="pricing" class="py-24 px-6" style="background:transparent">
+<section id="pricing" class="py-24 px-4 sm:px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white">Математика вашей карьеры</h2>
@@ -1149,7 +1149,7 @@ tailwind.config = {
 </section>
 
 <!-- ── SECURITY / FEATURES ── -->
-<section id="safety" class="py-24 px-6" style="background:transparent">
+<section id="safety" class="py-24 px-4 sm:px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">
@@ -1223,7 +1223,7 @@ tailwind.config = {
 </section>
 
 <!-- ── TEAM ── -->
-<section id="team" class="py-24 px-6" style="background:transparent">
+<section id="team" class="py-24 px-4 sm:px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">Кто стоит за алгоритмами Авроры</h2>
@@ -1310,7 +1310,7 @@ tailwind.config = {
 </section>
 
 <!-- ── FAQ ── -->
-<section id="faq" class="py-24 px-6" style="background:transparent">
+<section id="faq" class="py-24 px-4 sm:px-6" style="background:transparent">
     <div class="max-w-4xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">Частые вопросы</h2>
@@ -1418,7 +1418,7 @@ tailwind.config = {
 </section>
 
 <!-- ── CTA ── -->
-<section class="py-24 px-6" style="background:transparent">
+<section class="py-24 px-4 sm:px-6" style="background:transparent">
     <div class="max-w-4xl mx-auto text-center">
         <div class="sa">
             <button onclick="toggleModal('join-modal')"
@@ -1444,7 +1444,7 @@ tailwind.config = {
 <!-- ══════════════════════════════════════════
      FOOTER
 ══════════════════════════════════════════ -->
-<footer class="py-16 px-6" style="background:rgba(10,11,30,0.5);backdrop-filter:blur(4px);border-top:1px solid rgba(34,211,238,0.1)">
+<footer class="py-16 px-4 sm:px-6" style="background:rgba(10,11,30,0.5);backdrop-filter:blur(4px);border-top:1px solid rgba(34,211,238,0.1)">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-12">
             <h2 class="text-4xl font-bold tracking-widest" style="color:rgba(255,255,255,0.9)">AVRORA</h2>
@@ -1667,8 +1667,21 @@ document.addEventListener('DOMContentLoaded', function() {
     var btnM = document.getElementById('authBtnMobile');
 
     function setLoggedIn() {
-        if (btn) { btn.textContent = 'Кабинет'; btn.href = '/cabinet/'; }
-        if (btnM) { btnM.textContent = 'Кабинет'; btnM.href = '/cabinet/'; }
+        if (btn) {
+            btn.textContent = 'Кабинет';
+            btn.href = '/cabinet/';
+            btn.className = "px-5 py-2.5 rounded-[12px] text-sm font-bold text-white transition-all duration-200 hover:scale-105 active:scale-95 inline-flex items-center justify-center";
+            btn.style.background = "linear-gradient(135deg, #22d3ee, #a855f7)";
+            btn.style.boxShadow = "0 4px 15px rgba(34,211,238,0.25)";
+        }
+        if (btnM) {
+            btnM.textContent = 'Кабинет';
+            btnM.href = '/cabinet/';
+            btnM.className = "w-full text-center py-3.5 rounded-[12px] text-sm font-bold text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200";
+            btnM.style.background = "linear-gradient(135deg, #22d3ee, #a855f7)";
+            btnM.style.boxShadow = "0 4px 15px rgba(34,211,238,0.25)";
+            btnM.style.border = "none";
+        }
         
         // Hide registration button and divider when logged in
         var divider = document.getElementById('authDivider');
