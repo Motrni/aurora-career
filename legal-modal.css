@@ -245,6 +245,10 @@
 /* Body lock — не скроллим страницу когда модалка открыта */
 body.lm-open {
   overflow: hidden;
+  pointer-events: none;
+}
+#legal-modal-backdrop, #legal-modal-backdrop * {
+  pointer-events: auto;
 }
 
 /* Mobile */
