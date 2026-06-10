@@ -311,26 +311,6 @@ tailwind.config = {
         align-items: center;
         padding: 0 0 28px;
     }
-    #hero .hero-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12.5px;
-        color: #bfe7ff;
-        background: rgba(54,201,232,.1);
-        border: 1px solid rgba(54,201,232,.25);
-        padding: 6px 13px;
-        border-radius: 999px;
-        margin-bottom: 20px;
-    }
-    #hero .hero-chip .dotp {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #36c9e8;
-        box-shadow: 0 0 8px #36c9e8;
-        flex-shrink: 0;
-    }
     #hero .hero-h1 {
         font-family: var(--font-display);
         font-weight: 800;
@@ -339,6 +319,9 @@ tailwind.config = {
         letter-spacing: -1px;
         margin-bottom: 18px;
         color: #eef1ff;
+    }
+    #hero .hero-h1-line {
+        display: block;
     }
     #hero .hero-h1 .grad {
         background: linear-gradient(120deg, #36c9e8, #8b5cf6);
@@ -448,8 +431,8 @@ tailwind.config = {
         inset: 0;
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        object-position: center;
+        object-fit: contain;
+        object-position: center center;
         z-index: 0;
         pointer-events: none;
     }
@@ -1321,11 +1304,8 @@ tailwind.config = {
     <div class="max-w-7xl mx-auto">
         <div class="hero-grid">
             <div class="sa">
-                <div class="hero-chip">
-                    <span class="dotp" aria-hidden="true"></span>
-                    Аврора —
-                </div>
                 <h1 class="hero-h1">
+                    <span class="hero-h1-line">Аврора —</span>
                     автоотклики и поиск работы <span class="grad">на автопилоте</span>
                 </h1>
                 <p class="hero-lead">
