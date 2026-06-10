@@ -1067,7 +1067,7 @@ tailwind.config = {
     /* Интерактивная сетка точек (как на stitch.withgoogle.com) */
     #dot-grid-bg { z-index: 0; }
 
-    /* Карточки команды — 2 колонки, равная высота, фото 3:4 */
+    /* Карточки команды — компактные фото, имя сверху */
     .team-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -1083,30 +1083,49 @@ tailwind.config = {
         height: 100%;
         overflow: hidden;
     }
+    .team-card-head {
+        padding: 1.5rem 1.5rem 1rem;
+        text-align: center;
+    }
+    .team-card-head .card-title {
+        margin-bottom: 0;
+    }
     .card-photo-wrap {
         position: relative;
         width: 100%;
-        aspect-ratio: 3 / 4;
+        aspect-ratio: 1 / 1;
+        max-height: 280px;
+        margin: 0 auto;
         overflow: hidden;
         flex-shrink: 0;
-        background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(168,85,247,0.15));
-        border-radius: 12px 12px 0 0;
+        background: linear-gradient(135deg, rgba(34,211,238,0.12), rgba(168,85,247,0.12));
+        -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 62%, rgba(0,0,0,0) 100%);
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 62%, rgba(0,0,0,0) 100%);
     }
     .team-card .card-photo {
         position: absolute;
-        inset: 0;
+        top: 0;
+        left: 0;
         width: 100%;
-        height: 100%;
+        height: 135%;
         object-fit: cover;
-        object-position: center top;
+        object-position: top center;
         display: block;
-        border-radius: 12px 12px 0 0;
+        pointer-events: none;
+    }
+    .card-photo-wrap .team-photo-fade {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(to top, rgba(10,14,42,0.92) 0%, rgba(10,14,42,0.35) 42%, transparent 72%);
     }
     .team-card .card-photo.photo-fallback { display: none; }
     .card-photo-wrap.is-fallback {
         display: flex;
         align-items: center;
         justify-content: center;
+        mask-image: none;
+        -webkit-mask-image: none;
     }
     .card-photo-wrap .photo-fallback-icon {
         display: none;
@@ -1118,18 +1137,16 @@ tailwind.config = {
         font-size: 64px;
     }
     .card-photo-wrap.is-fallback .photo-fallback-icon { display: flex; }
-    /* Опционально: .duotone на фото — включить позже при необходимости */
-    .team-card .card-photo.duotone { filter: saturate(0.85) contrast(1.05); }
     .team-card-body,
     .team-card .card-body {
         display: flex;
         flex-direction: column;
         flex: 1;
-        padding: 1.5rem;
+        padding: 1rem 1.5rem 1.5rem;
         text-align: center;
     }
     .team-card-body p,
-    .team-card .card-body p { flex: 1; }
+    .team-card .card-body p { flex: 1; margin: 0; }
     .team-card .card-cta { margin-top: auto; }
 
     /* Плашка «Открытые онлайн-разборы» — наследует .glass-card */
@@ -1144,12 +1161,7 @@ tailwind.config = {
         background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(168,85,247,0.2));
     }
 
-    .team-card.glass-card .card-photo-wrap,
-    .team-card.glass-card .card-photo {
-        border-radius: 20px 20px 0 0;
-    }
-
-    /* FAQ accordion custom markers and rotation */
+    .team-reviews-icon {
     details.faq-item summary::-webkit-details-marker { display: none; }
     details.faq-item[open] .faq-chevron { transform: rotate(180deg); }
     details.faq-item[open] summary.glass-card {
@@ -1840,18 +1852,21 @@ tailwind.config = {
 
         <div class="team-grid">
 
-            <!-- Founder 1 -->
+            <!-- Founder 1 — Роман -->
             <div class="card-wrap sa h-full">
                 <div class="team-card glass-card glass-card--no-glow relative">
+                    <div class="team-card-head">
+                        <h3 class="card-title text-xl sm:text-2xl font-semibold text-white">Роман Изотов, сооснователь.</h3>
+                    </div>
                     <div class="card-photo-wrap">
-                        <img class="card-photo" src="images/team-roman.jpg?v=1"
+                        <img class="card-photo" src="images/team-roman.jpg?v=2"
                              alt="Роман Изотов, сооснователь Аврора"
                              onerror="this.classList.add('photo-fallback'); this.closest('.card-photo-wrap').classList.add('is-fallback');"
-                             loading="lazy" width="400" height="533">
+                             loading="lazy" width="400" height="400" decoding="async">
+                        <div class="team-photo-fade" aria-hidden="true"></div>
                         <span class="photo-fallback-icon material-symbols-outlined" aria-hidden="true">account_circle</span>
                     </div>
                     <div class="team-card-body card-body">
-                        <h3 class="card-title text-xl sm:text-2xl font-semibold mb-3 text-white">Роман Изотов, сооснователь.</h3>
                         <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
                             Карьерный консультант с опытом в IT-рекрутменте более 5 лет. Знаю изнутри, как мыслят работодатели и почему резюме закрывают за 6 секунд. Отвечаю за продуктовую логику и методологию сервиса.
                         </p>
@@ -1859,18 +1874,21 @@ tailwind.config = {
                 </div>
             </div>
 
-            <!-- Founder 2 -->
+            <!-- Founder 2 — Вадим -->
             <div class="card-wrap sa d1 h-full">
                 <div class="team-card glass-card glass-card--no-glow relative">
+                    <div class="team-card-head">
+                        <h3 class="card-title text-xl sm:text-2xl font-semibold text-white">Вадим Клепов, технический сооснователь.</h3>
+                    </div>
                     <div class="card-photo-wrap">
-                        <img class="card-photo" src="images/team-vadim.jpg?v=1"
+                        <img class="card-photo" src="images/team-vadim.jpg?v=2"
                              alt="Вадим Клепов, технический сооснователь Аврора"
                              onerror="this.classList.add('photo-fallback'); this.closest('.card-photo-wrap').classList.add('is-fallback');"
-                             loading="lazy" width="400" height="533">
+                             loading="lazy" width="400" height="400" decoding="async">
+                        <div class="team-photo-fade" aria-hidden="true"></div>
                         <span class="photo-fallback-icon material-symbols-outlined" aria-hidden="true">account_circle</span>
                     </div>
                     <div class="team-card-body card-body">
-                        <h3 class="card-title text-xl sm:text-2xl font-semibold mb-3 text-white">Вадим Клепов, технический сооснователь.</h3>
                         <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
                             Инженер с бэкграундом в QA и разработке. Построил Аврору с нуля — архитектуру, парсинг и ИИ-логику под капотом. Сам прошёл через поиск работы и зашил этот опыт в продукт, чтобы он работал на результат.
                         </p>
