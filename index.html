@@ -167,7 +167,10 @@ tailwind.config = {
 </script>
 
 <style>
-    html { scroll-behavior: smooth; color-scheme: dark; scrollbar-gutter: stable; }
+    html { scroll-behavior: smooth; color-scheme: dark; overflow-x: hidden; }
+    @media (min-width: 1024px) {
+        html { scrollbar-gutter: stable; }
+    }
     body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0b1e 0%, #1e2952 55%, #3a2a5e 100%) fixed; min-width: 320px; overflow-x: hidden; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
 
@@ -467,7 +470,7 @@ tailwind.config = {
 ══════════════════════════════════════════ -->
 <header class="fixed top-0 left-0 right-0 z-50"
         style="background:rgba(10,11,30,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(34,211,238,0.1)">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <!-- Logo -->
         <a href="/" class="flex items-center gap-3 no-underline">
             <img src="favicon-white.png?v=1" alt="Аврора" width="36" height="36"
@@ -510,7 +513,7 @@ tailwind.config = {
      MOBILE MENU
 ══════════════════════════════════════════ -->
 <div id="mobile-menu"
-     class="mob-menu fixed inset-0 z-40 pt-20 px-6 flex flex-col gap-2 lg:hidden"
+     class="mob-menu fixed inset-0 z-40 pt-20 px-4 sm:px-6 flex flex-col gap-2 lg:hidden"
      style="background:rgba(10,11,30,0.97);backdrop-filter:blur(20px)">
     <!-- Auth Buttons on Top in Mobile Menu -->
     <div id="mobileAuthBlock" class="py-4 flex flex-col gap-3" style="border-bottom:1px solid rgba(34,211,238,0.1)">
@@ -538,15 +541,12 @@ tailwind.config = {
 <main style="position:relative;z-index:1">
 
 <!-- ── HERO ── -->
-<section id="hero" class="pt-32 pb-24 px-6 relative overflow-hidden"
+<section id="hero" class="pt-32 pb-24 px-4 sm:px-6 relative overflow-hidden"
          style="background:transparent">
-    <div class="absolute inset-0 pointer-events-none"
-         style="background:radial-gradient(ellipse at top right,rgba(168,85,247,0.15) 0%,transparent 60%)"></div>
-    <div class="absolute inset-0 pointer-events-none"
-         style="background:radial-gradient(ellipse at bottom left,rgba(34,211,238,0.08) 0%,transparent 60%)"></div>
+    <div class="absolute inset-0 pointer-events-none"></div>
+    <div class="absolute inset-0 pointer-events-none"></div>
     <!-- Seamless blend glow overlay at the bottom border of Hero section -->
-    <div class="absolute bottom-0 inset-x-0 h-24 pointer-events-none"
-         style="background:linear-gradient(to top, transparent, rgba(34,211,238,0.01))"></div>
+    <div class="absolute bottom-0 inset-x-0 h-24 pointer-events-none"></div>
 
     <div class="max-w-7xl mx-auto relative">
         <div class="grid lg:grid-cols-[3fr_2fr] gap-16 items-center">
@@ -607,7 +607,7 @@ tailwind.config = {
 </section>
 
 <!-- ── STATS ── -->
-<section id="stats" class="py-16 px-6" style="background:transparent">
+<section id="stats" class="py-16 px-4 sm:px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
@@ -691,7 +691,7 @@ tailwind.config = {
 </section>
 
 <!-- ── PROBLEMS ── -->
-<section id="problems" class="py-24 px-6" style="background:transparent">
+<section id="problems" class="py-24 px-4 sm:px-6" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">
@@ -832,7 +832,7 @@ tailwind.config = {
 </section>
 
 <!-- ── HOW IT WORKS ── -->
-<section id="how-it-works" class="py-24 px-6 relative overflow-hidden" style="background:transparent">
+<section id="how-it-works" class="py-24 px-4 sm:px-6 relative overflow-hidden" style="background:transparent">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white">Как это работает</h2>
