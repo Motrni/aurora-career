@@ -170,18 +170,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                     window.AuroraSession.applyResumeNavLock(meData.subscription_status);
                 }
 
-                // Guard: если нет профиля у активного резюме — кидаем в кабинет
-                try {
-                    const resumesResp = await fetch(`${API_BASE_URL}/api/resumes/list`, { credentials: 'include' });
-                    if (resumesResp.ok) {
-                        const resumesData = await resumesResp.json();
-                        const active = (resumesData.resumes || []).find(r => r.is_active);
-                        if (active && !active.has_custom_query) {
-                            window.location.href = '/cabinet/';
-                            return;
+                // Guard: если нет профиля у активного резюме — кидаем в кабинет.
+                // ИСКЛЮЧЕНИЕ: онбординг настроек (onboarding_settings / onboarding_save_pending).
+                // На этих шагах cabinet СПЕЦИАЛЬНО направляет юзера сюда, чтобы он
+                // впервые настроил профиль — custom_query ещё пустой, это норма.
+                // Без исключения cabinet ↔ settings зацикливаются (cabinet шлёт в settings
+                // по onboarding_settings, guard шлёт обратно в cabinet по пустому профилю).
+                const inOnboardingSettings =
+                    meData.current_step === 'onboarding_settings' ||
+                    meData.current_step === 'onboarding_save_pending';
+                if (!inOnboardingSettings) {
+                    try {
+                        const resumesResp = await fetch(`${API_BASE_URL}/api/resumes/list`, { credentials: 'include' });
+                        if (resumesResp.ok) {
+                            const resumesData = await resumesResp.json();
+                            const active = (resumesData.resumes || []).find(r => r.is_active);
+                            if (active && !active.has_custom_query) {
+                                window.location.href = '/cabinet/';
+                                return;
+                            }
                         }
-                    }
-                } catch (_) {}
+                    } catch (_) {}
+                }
 
                 console.log("[Auth] JWT session active");
             }

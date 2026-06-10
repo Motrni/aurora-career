@@ -268,6 +268,42 @@ tailwind.config = {
         background: linear-gradient(to right, #a855f7, #9333ea);
         clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%);
     }
+
+    /* Интерактивная сетка точек (как на stitch.withgoogle.com) */
+    #dot-grid-bg { z-index: 0; }
+
+    /* Карточки команды — одинаковая высота */
+    .team-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(30,41,82,0.85), rgba(42,53,98,0.85));
+        border: 1px solid rgba(34,211,238,0.2);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .team-card-media {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #374151, #4b5563);
+    }
+    .team-card-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+        display: block;
+    }
+    .team-card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .team-card-body p { flex: 1; }
 </style>
 
 <link rel="stylesheet" href="cookie-consent.css">
@@ -308,14 +344,9 @@ tailwind.config = {
      style="background:linear-gradient(to right,#22d3ee,#a855f7,#22d3ee);width:0%;transition:width 0.1s linear;z-index:999"></div>
 
 <!-- ══════════════════════════════════════════
-     STARS BACKGROUND
+     DOT GRID BACKGROUND
 ══════════════════════════════════════════ -->
-<div id="stars-bg" class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0"></div>
-
-<!-- ══════════════════════════════════════════
-     FLOATING ELEMENTS
-══════════════════════════════════════════ -->
-<div id="float-bg" class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0"></div>
+<canvas id="dot-grid-bg" class="fixed inset-0 pointer-events-none" aria-hidden="true"></canvas>
 
 <!-- ══════════════════════════════════════════
      SCROLL TO TOP
@@ -343,11 +374,15 @@ tailwind.config = {
         </a>
 
         <!-- Desktop Nav -->
-        <nav class="hidden md:flex items-center gap-8">
-            <a href="#features" class="text-sm font-medium transition-colors duration-200 hover:text-white"
-               style="color:rgba(255,255,255,0.8)">Возможности</a>
-            <a href="#how-it-works" class="text-sm font-medium transition-colors duration-200 hover:text-white"
+        <nav class="hidden lg:flex items-center gap-6">
+            <a href="#how-it-works" class="text-sm font-medium transition-colors duration-200 hover:text-white whitespace-nowrap"
                style="color:rgba(255,255,255,0.8)">Как работает</a>
+            <a href="#results" class="text-sm font-medium transition-colors duration-200 hover:text-white whitespace-nowrap"
+               style="color:rgba(255,255,255,0.8)">Результаты</a>
+            <a href="#pricing" class="text-sm font-medium transition-colors duration-200 hover:text-white whitespace-nowrap"
+               style="color:rgba(255,255,255,0.8)">Тарифы</a>
+            <a href="#safety" class="text-sm font-medium transition-colors duration-200 hover:text-white whitespace-nowrap"
+               style="color:rgba(255,255,255,0.8)">Безопасность</a>
         </nav>
 
         <!-- Auth -->
@@ -362,7 +397,7 @@ tailwind.config = {
         </div>
 
         <!-- Burger -->
-        <button type="button" id="burger-btn" class="burger flex md:hidden p-2 -mr-2 bg-transparent border-0 cursor-pointer"
+        <button type="button" id="burger-btn" class="burger flex lg:hidden p-2 -mr-2 bg-transparent border-0 cursor-pointer"
                 onclick="toggleMobileMenu()">
             <span></span><span></span><span></span>
         </button>
@@ -373,12 +408,16 @@ tailwind.config = {
      MOBILE MENU
 ══════════════════════════════════════════ -->
 <div id="mobile-menu"
-     class="mob-menu fixed inset-0 z-40 pt-20 px-6 flex flex-col gap-2 md:hidden"
+     class="mob-menu fixed inset-0 z-40 pt-20 px-6 flex flex-col gap-2 lg:hidden"
      style="background:rgba(10,11,30,0.97);backdrop-filter:blur(20px)">
-    <a href="#features" onclick="toggleMobileMenu()" class="text-lg font-medium py-3.5 hover:text-white transition-colors"
-       style="color:rgba(255,255,255,0.9);border-bottom:1px solid rgba(34,211,238,0.1)">Возможности</a>
     <a href="#how-it-works" onclick="toggleMobileMenu()" class="text-lg font-medium py-3.5 hover:text-white transition-colors"
        style="color:rgba(255,255,255,0.9);border-bottom:1px solid rgba(34,211,238,0.1)">Как работает</a>
+    <a href="#results" onclick="toggleMobileMenu()" class="text-lg font-medium py-3.5 hover:text-white transition-colors"
+       style="color:rgba(255,255,255,0.9);border-bottom:1px solid rgba(34,211,238,0.1)">Результаты</a>
+    <a href="#pricing" onclick="toggleMobileMenu()" class="text-lg font-medium py-3.5 hover:text-white transition-colors"
+       style="color:rgba(255,255,255,0.9);border-bottom:1px solid rgba(34,211,238,0.1)">Тарифы</a>
+    <a href="#safety" onclick="toggleMobileMenu()" class="text-lg font-medium py-3.5 hover:text-white transition-colors"
+       style="color:rgba(255,255,255,0.9);border-bottom:1px solid rgba(34,211,238,0.1)">Безопасность</a>
     <div class="pt-4 mt-2 flex flex-col gap-3" style="border-top:1px solid rgba(34,211,238,0.1)">
         <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()"
            class="w-full text-center py-3.5 rounded-[12px] text-sm font-semibold hover:text-white transition-colors"
@@ -567,7 +606,7 @@ tailwind.config = {
 </section>
 
 <!-- ── SECURITY / FEATURES ── -->
-<section id="features" class="py-24 px-6" style="background:#0a0b1e">
+<section id="safety" class="py-24 px-6" style="background:#0a0b1e">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
             <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">
@@ -649,23 +688,17 @@ tailwind.config = {
                 Мы объединили опыт HR-директора и системного инженера, чтобы сделать процесс поиска работы прозрачным и предсказуемым.
             </p>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
 
             <!-- Founder 1 -->
-            <div class="card-wrap sa">
+            <div class="card-wrap sa h-full">
                 <div class="card-glow" style="border-radius:18px"></div>
-                <div class="relative rounded-[16px] overflow-hidden"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2)">
-                    <div class="relative flex items-center justify-center overflow-hidden"
-                         style="height:320px;background:linear-gradient(135deg,#374151,#4b5563)">
-                        <div class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center"
-                             style="background:rgba(255,255,255,0.1);backdrop-filter:blur(4px)">
-                            <span class="material-symbols-outlined" style="color:rgba(255,255,255,0.6);font-size:24px">account_circle</span>
-                        </div>
+                <div class="team-card relative">
+                    <div class="team-card-media relative flex items-center justify-center">
                         <div class="w-32 h-32 rounded-full"
                              style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
                     </div>
-                    <div class="p-6 text-center">
+                    <div class="team-card-body">
                         <h3 class="text-2xl font-bold mb-2 text-white">Роман Изотов,<br>основатель.</h3>
                         <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
                             Карьерный консультант с опытом в IT-рекрутменте более 5 лет. Знаю изнутри, как мыслят работодатели и почему резюме закрывают за 6 секунд. Отвечаю за продуктовую логику сервиса.
@@ -675,20 +708,15 @@ tailwind.config = {
             </div>
 
             <!-- Founder 2 -->
-            <div class="card-wrap sa d1">
+            <div class="card-wrap sa d1 h-full">
                 <div class="card-glow" style="border-radius:18px"></div>
-                <div class="relative rounded-[16px] overflow-hidden"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2)">
-                    <div class="relative flex items-center justify-center overflow-hidden"
-                         style="height:320px;background:linear-gradient(135deg,#374151,#4b5563)">
-                        <div class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center"
-                             style="background:rgba(255,255,255,0.1);backdrop-filter:blur(4px)">
-                            <span class="material-symbols-outlined" style="color:rgba(255,255,255,0.6);font-size:24px">account_circle</span>
-                        </div>
-                        <div class="w-32 h-32 rounded-full"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))"></div>
+                <div class="team-card relative">
+                    <div class="team-card-media">
+                        <img src="images/team-vadim-klepov.png?v=1"
+                             alt="Вадим Клепов, технический директор Авроры"
+                             width="1100" height="619" loading="lazy" decoding="async">
                     </div>
-                    <div class="p-6 text-center">
+                    <div class="team-card-body">
                         <h3 class="text-2xl font-bold mb-2 text-white">Вадим Клепов,<br>технический директор.</h3>
                         <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.7)">
                             Отвечаю за стабильность архитектуры и точность парсинга. Лично протестировал инструмент на собственном поиске работы, чтобы вычистить ошибки под капотом.
@@ -698,28 +726,28 @@ tailwind.config = {
             </div>
 
             <!-- Online разборы -->
-            <div class="card-wrap sa d2">
-                <div class="card-glow"></div>
-                <div class="relative p-8 rounded-[16px] flex flex-col justify-center items-center text-center"
-                     style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px);min-height:420px">
-                    <div class="mb-6">
-                        <div class="w-24 h-24 rounded-[16px] flex items-center justify-center mx-auto"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:48px">videocam</span>
-                        </div>
+            <div class="card-wrap sa d2 h-full">
+                <div class="card-glow" style="border-radius:18px"></div>
+                <div class="team-card relative">
+                    <div class="team-card-media">
+                        <img src="images/team-online-reviews.png?v=1"
+                             alt="Открытые онлайн-разборы резюме с Романом Изотовым"
+                             width="1100" height="619" loading="lazy" decoding="async">
                     </div>
-                    <h3 class="text-2xl font-bold mb-4 text-white">Открытые онлайн-разборы</h3>
-                    <p class="mb-3" style="color:rgba(255,255,255,0.7);line-height:1.75">
-                        Открытые разборы резюме с создателем сервиса.
-                    </p>
-                    <p class="text-sm mb-8" style="color:rgba(255,255,255,0.6);line-height:1.7">
-                        Раз в две недели Роман Изотов бесплатно разбирает профили пользователей в прямом эфире. Ищем слепые зоны, исправляем формулировки и настраиваем алгоритм для точных попаданий.
-                    </p>
-                    <button onclick="window.open('https://t.me/AuroraCareer','_blank')"
-                            class="px-8 py-4 rounded-[12px] font-bold text-white uppercase tracking-wide cursor-pointer border-0 hover:scale-105 active:scale-95 transition-transform"
-                            style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 8px 24px rgba(34,211,238,0.3)">
-                        Записаться на следующий<br>эфир (бесплатно)
-                    </button>
+                    <div class="team-card-body">
+                        <h3 class="text-2xl font-bold mb-3 text-white">Открытые онлайн-разборы</h3>
+                        <p class="text-sm mb-3" style="color:rgba(255,255,255,0.7);line-height:1.75">
+                            Открытые разборы резюме с создателем сервиса. Раз в две недели Роман Изотов бесплатно разбирает профили пользователей в прямом эфире.
+                        </p>
+                        <p class="text-sm mb-6" style="color:rgba(255,255,255,0.6);line-height:1.7">
+                            Ищем слепые зоны, исправляем формулировки и настраиваем алгоритм для точных попаданий.
+                        </p>
+                        <button type="button" onclick="window.open('https://t.me/AuroraCareer','_blank')"
+                                class="mt-auto px-6 py-3.5 rounded-[12px] font-bold text-white uppercase tracking-wide cursor-pointer border-0 hover:scale-105 active:scale-95 transition-transform text-sm"
+                                style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 8px 24px rgba(34,211,238,0.3)">
+                            Записаться на следующий эфир (бесплатно)
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -826,7 +854,7 @@ tailwind.config = {
 <section id="how-it-works" class="py-24 px-6 relative overflow-hidden" style="background:#0a0b1e">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 sa">
-            <h2 class="text-4xl lg:text-5xl font-bold text-white">Как это работает (Актуальный функционал)</h2>
+            <h2 class="text-4xl lg:text-5xl font-bold text-white">Как это работает</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
@@ -1418,42 +1446,72 @@ window.addEventListener('load', function() {
     }, 2000);
 });
 
-/* ── Stars ── */
+/* ── Dot Grid Background (Stitch-style) ── */
 (function() {
-    var c = document.getElementById('stars-bg');
-    for (var i = 0; i < 50; i++) {
-        var s = document.createElement('div');
-        var op = (Math.random() * 0.4 + 0.1).toFixed(2);
-        var dur = (Math.random() * 3 + 2).toFixed(1);
-        var del = (Math.random() * 3).toFixed(1);
-        s.style.cssText = 'position:absolute;width:3px;height:3px;background:white;border-radius:50%;'
-            + 'left:' + (Math.random()*100).toFixed(1) + '%;'
-            + 'top:' + (Math.random()*100).toFixed(1) + '%;'
-            + '--op:' + op + ';opacity:' + op + ';'
-            + 'animation:twinkle ' + dur + 's ease-in-out infinite ' + del + 's';
-        c.appendChild(s);
-    }
-})();
+    var canvas = document.getElementById('dot-grid-bg');
+    if (!canvas || !canvas.getContext) { return; }
+    var ctx = canvas.getContext('2d');
+    var mouse = { x: -9999, y: -9999 };
+    var spacing = 14;
+    var radius = 1.1;
+    var baseAlpha = 0.14;
+    var hoverRadius = 130;
+    var rafId = 0;
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ── Floating Elements ── */
-(function() {
-    var c = document.getElementById('float-bg');
-    var shapes = [
-        {sz:40,x:10,y:20,dl:0,dr:20},  {sz:60,x:80,y:40,dl:2,dr:25},
-        {sz:30,x:15,y:70,dl:4,dr:18},  {sz:50,x:85,y:80,dl:1,dr:22},
-        {sz:35,x:50,y:15,dl:3,dr:24},  {sz:45,x:25,y:50,dl:5,dr:20}
-    ];
-    shapes.forEach(function(s) {
-        var el = document.createElement('div');
-        el.style.cssText = 'position:absolute;'
-            + 'width:' + s.sz + 'px;height:' + s.sz + 'px;'
-            + 'left:' + s.x + '%;top:' + s.y + '%;'
-            + 'border-radius:50%;'
-            + 'border:2px solid rgba(34,211,238,0.15);'
-            + 'background:radial-gradient(circle,rgba(34,211,238,0.08) 0%,transparent 70%);'
-            + 'animation:float-up ' + s.dr + 's ease-in-out infinite ' + s.dl + 's';
-        c.appendChild(el);
+    function resize() {
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(window.innerWidth * dpr);
+        canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        draw();
+    }
+
+    function draw() {
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        ctx.clearRect(0, 0, w, h);
+        for (var y = spacing * 0.5; y < h; y += spacing) {
+            for (var x = spacing * 0.5; x < w; x += spacing) {
+                var alpha = baseAlpha;
+                if (!reducedMotion) {
+                    var dist = Math.hypot(x - mouse.x, y - mouse.y);
+                    if (dist < hoverRadius) {
+                        alpha = baseAlpha + (1 - dist / hoverRadius) * 0.55;
+                    }
+                }
+                ctx.fillStyle = 'rgba(231,224,239,' + alpha.toFixed(3) + ')';
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+
+    function scheduleDraw() {
+        if (rafId) { return; }
+        rafId = requestAnimationFrame(function() {
+            rafId = 0;
+            draw();
+        });
+    }
+
+    window.addEventListener('mousemove', function(e) {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        scheduleDraw();
+    }, { passive: true });
+
+    window.addEventListener('mouseleave', function() {
+        mouse.x = -9999;
+        mouse.y = -9999;
+        scheduleDraw();
     });
+
+    window.addEventListener('resize', resize);
+    resize();
 })();
 
 /* ── Scroll Progress ── */
