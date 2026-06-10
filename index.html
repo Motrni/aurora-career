@@ -304,10 +304,6 @@ tailwind.config = {
         padding-top: 7rem;
         padding-bottom: 0;
     }
-    #hero .hero-wrap {
-        max-width: 1160px;
-        margin: 0 auto;
-    }
     #hero .hero-grid {
         display: grid;
         grid-template-columns: 1.25fr 0.75fr;
@@ -703,14 +699,6 @@ tailwind.config = {
 
     /* ── Блок «Результаты работы алгоритмов» ── */
     body.reviews-lock { overflow: hidden; }
-
-    #results .results-wrap { max-width: 1120px; margin: 0 auto; }
-    #results .res-sec-title {
-        font-size: clamp(22px, 4vw, 26px);
-        text-align: center;
-        margin-bottom: 26px;
-        color: #eef1ff;
-    }
 
     #results .res-glass,
     #reviews-overlay .res-glass {
@@ -1312,7 +1300,7 @@ tailwind.config = {
 
 <!-- ── HERO ── -->
 <section id="hero" class="px-4 sm:px-6 relative" style="background:transparent">
-    <div class="hero-wrap">
+    <div class="max-w-7xl mx-auto">
         <div class="hero-grid">
             <div class="sa">
                 <div class="hero-chip">
@@ -1580,8 +1568,10 @@ tailwind.config = {
 
 <!-- ── RESULTS ── -->
 <section id="results" class="py-24 px-4 sm:px-6" style="background:transparent">
-    <div class="results-wrap">
-        <h2 class="section-title res-sec-title sa">Результаты работы алгоритмов</h2>
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16 sa">
+            <h2 class="section-title text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Результаты работы алгоритмов</h2>
+        </div>
 
         <!-- Блок 1: воронка + Антон -->
         <div class="res-glass res-block sa">
