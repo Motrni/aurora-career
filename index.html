@@ -75,7 +75,7 @@ tailwind.config = {
 </script>
 
 <style>
-    html { scroll-behavior: smooth; color-scheme: dark; }
+    html { scroll-behavior: smooth; color-scheme: dark; scrollbar-gutter: stable; }
     body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0b1e 0%, #1e2952 55%, #3a2a5e 100%) fixed; min-width: 320px; overflow-x: hidden; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
 
@@ -584,7 +584,7 @@ tailwind.config = {
 </section>
 
 <!-- ── CTA ── -->
-<section class="py-20 px-6" style="background:#0a0b1e">
+<section class="py-20 px-6" style="background:transparent">
     <div class="max-w-4xl mx-auto text-center">
         <div class="sa">
             <button onclick="toggleModal('join-modal')"
@@ -624,15 +624,16 @@ tailwind.config = {
                 <div class="relative p-8 rounded-[16px] h-full flex flex-col justify-end min-h-[380px] overflow-hidden"
                      style="background:linear-gradient(135deg,rgba(30,41,82,0.85),rgba(42,53,98,0.85));border:1px solid rgba(34,211,238,0.2);backdrop-filter:blur(4px)">
                     
-                    <!-- Parallax Background Layer -->
-                    <div class="absolute inset-x-0 top-0 overflow-hidden pointer-events-none" style="height: 52%; border-radius:12px 12px 0 0">
+                    <!-- Parallax Background Layer with Mask -->
+                    <div class="absolute inset-x-0 top-0 overflow-hidden pointer-events-none" 
+                         style="height: 58%; border-radius:12px 12px 0 0; -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 100%); mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 100%);">
                         <img src="images/end1.png?v=1"
                              class="parallax-bg-img w-full h-full object-cover object-center"
-                             style="transform: scale(1.15); transition: transform 0.15s ease-out; transform-origin: center;"
+                             style="transform: scale(1.25); transition: transform 0.15s ease-out; transform-origin: center;"
                              alt="Бешеная конкуренция — сотни кандидатов">
-                        <!-- Fading overlay that fades to transparent towards the top, and blends into card background at the bottom -->
+                        <!-- Fading overlay to soften detail contrast -->
                         <div class="absolute inset-0"
-                             style="background: linear-gradient(to top, rgba(30,41,82,1) 0%, rgba(30,41,82,0.4) 40%, transparent 100%)"></div>
+                             style="background: linear-gradient(to top, rgba(30,41,82,0.9) 0%, rgba(30,41,82,0.2) 50%, transparent 100%)"></div>
                     </div>
 
                     <div class="relative z-10 text-center mt-auto">
@@ -1549,10 +1550,10 @@ document.querySelectorAll('.parallax-card').forEach(function(card) {
         // Shift image in the opposite direction (2D parallax backdrop effect)
         var moveX = (0.5 - x) * 22; // up to 11px shift left/right
         var moveY = (0.5 - y) * 22; // up to 11px shift up/down
-        img.style.transform = 'scale(1.15) translate(' + moveX.toFixed(1) + 'px, ' + moveY.toFixed(1) + 'px)';
+        img.style.transform = 'scale(1.25) translate(' + moveX.toFixed(1) + 'px, ' + moveY.toFixed(1) + 'px)';
     });
     card.addEventListener('mouseleave', function() {
-        img.style.transform = 'scale(1.15) translate(0px, 0px)';
+        img.style.transform = 'scale(1.25) translate(0px, 0px)';
     });
 });
 </script>

@@ -24,9 +24,9 @@
 }
 
 #legal-modal-backdrop.lm-visible {
-  background: rgba(10, 8, 16, 0.72);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: rgba(5, 6, 18, 0.85);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   opacity: 1;
   pointer-events: auto;
 }
@@ -36,12 +36,12 @@
   width: 100%;
   max-width: 720px;
   max-height: calc(100vh - 48px);
-  background: linear-gradient(145deg, rgba(33,30,41,0.98) 0%, rgba(21,18,28,0.98) 100%);
-  border: 1px solid rgba(204, 190, 255, 0.14);
+  background: linear-gradient(135deg, rgba(20, 24, 61, 0.92) 0%, rgba(33, 41, 88, 0.92) 100%);
+  border: 1px solid rgba(34, 211, 238, 0.25);
   border-radius: 20px;
   box-shadow:
-    0 32px 80px -20px rgba(0, 0, 0, 0.65),
-    0 12px 40px -8px rgba(90, 48, 208, 0.18),
+    0 32px 80px -20px rgba(0, 0, 0, 0.8),
+    0 12px 40px -8px rgba(34, 211, 238, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
@@ -79,8 +79,8 @@
   justify-content: space-between;
   gap: 16px;
   padding: 24px 28px 18px;
-  border-bottom: 1px solid rgba(147, 142, 160, 0.12);
-  background: rgba(21, 18, 28, 0.6);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.15);
+  background: rgba(20, 24, 61, 0.45);
 }
 
 .lm-badge {
@@ -88,10 +88,10 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background: rgba(204, 190, 255, 0.08);
-  border: 1px solid rgba(204, 190, 255, 0.18);
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.3);
   border-radius: 999px;
-  color: #ccbeff;
+  color: #22d3ee;
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -178,7 +178,7 @@
 .lm-body h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #ccbeff;
+  color: #22d3ee;
   margin-top: 18px;
   margin-bottom: 8px;
 }
@@ -206,16 +206,16 @@
 }
 
 .lm-body a {
-  color: #ccbeff;
+  color: #22d3ee;
   text-decoration: underline;
-  text-decoration-color: rgba(204, 190, 255, 0.35);
+  text-decoration-color: rgba(34, 211, 238, 0.35);
   transition: text-decoration-color 0.2s;
 }
-.lm-body a:hover { text-decoration-color: rgba(204, 190, 255, 0.9); }
+.lm-body a:hover { text-decoration-color: rgba(34, 211, 238, 0.9); }
 
 .lm-body .lm-tariff {
-  background: rgba(90, 48, 208, 0.08);
-  border: 1px solid rgba(204, 190, 255, 0.12);
+  background: rgba(34, 211, 238, 0.06);
+  border: 1px solid rgba(34, 211, 238, 0.15);
   border-radius: 10px;
   padding: 10px 14px;
   margin: 6px 0;
