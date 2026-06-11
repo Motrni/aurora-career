@@ -580,8 +580,12 @@ tailwind.config = {
         background: #000;
         transition: opacity .6s ease;
     }
-    #hero .hero-video.is-playing .hero-video-poster {
+    #hero .hero-video.is-playing:not(.is-ended) .hero-video-poster {
         opacity: 0;
+    }
+    #hero .hero-video.is-ended .hero-preview-vid {
+        opacity: 0;
+        transition: opacity .6s ease;
     }
     #hero .hero-poster-top {
         position: absolute;
@@ -594,6 +598,9 @@ tailwind.config = {
         justify-content: center;
         padding-bottom: 42px;
     }
+    #hero .hero-poster-top .hero-poster-lockup {
+        transform: translateY(10%);
+    }
     #hero .hero-poster-bottom {
         position: absolute;
         bottom: 0;
@@ -604,6 +611,9 @@ tailwind.config = {
         align-items: center;
         justify-content: center;
         padding-top: 42px;
+    }
+    #hero .hero-poster-bottom .hero-poster-sub {
+        transform: translateY(-10%);
     }
     #hero .hero-poster-lockup {
         display: flex;
@@ -627,7 +637,17 @@ tailwind.config = {
         color: rgba(255,255,255,.72);
         font-size: 14px;
         letter-spacing: .2px;
+        margin: 0;
+        text-align: center;
     }
+    #hero .hero-poster-sub--outro {
+        display: none;
+        max-width: min(280px, 72%);
+        line-height: 1.45;
+        font-size: 13px;
+    }
+    #hero .hero-video.is-ended .hero-poster-sub--intro { display: none; }
+    #hero .hero-video.is-ended .hero-poster-sub--outro { display: block; }
     @media (max-width: 480px) {
         #hero .hero-poster-emblem { width: 40px; height: 40px; }
         #hero .hero-poster-word { font-size: 28px; }
@@ -665,7 +685,34 @@ tailwind.config = {
             gap: 30px;
             padding-bottom: 22px;
         }
-        #hero .hero-h1 { font-size: clamp(30px, 8vw, 42px); }
+        #hero .hero-h1 {
+            font-size: clamp(30px, 8vw, 42px);
+            text-align: center;
+        }
+        #hero .hero-lead {
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #hero .hero-cta {
+            justify-content: center;
+        }
+        #hero .hero-trust {
+            justify-content: center;
+        }
+    }
+    @media (max-width: 640px) {
+        #hero .hero-cta {
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        #hero .btn-hero-main,
+        #hero .btn-hero-ghost {
+            width: 100%;
+            max-width: 300px;
+            justify-content: center;
+        }
     }
 
     /* Modal panels (не путать с карточками лендинга) */
@@ -1684,7 +1731,8 @@ tailwind.config = {
                             </div>
                         </div>
                         <div class="hero-poster-bottom">
-                            <div class="hero-poster-sub">Знакомство за минуту</div>
+                            <p class="hero-poster-sub hero-poster-sub--intro">Знакомство за минуту</p>
+                            <p class="hero-poster-sub hero-poster-sub--outro">Познакомьтесь с сервисом Аврора и оцените его преимущества</p>
                         </div>
                     </div>
                     <div class="hero-reel-pill"><span class="lv" aria-hidden="true"></span> 1:00</div>
@@ -2493,9 +2541,15 @@ function initHeroPreviewVideo() {
 
     var shell = document.getElementById('hero-video-trigger');
 
-    // При старте воспроизведения прячем фирменную заглушку (плавный fade)
+    // При старте воспроизведения прячем заглушку; по окончании — финальный экран без повтора
     video.addEventListener('playing', function() {
         if (shell) shell.classList.add('is-playing');
+    });
+    video.addEventListener('ended', function() {
+        if (!shell) return;
+        shell.classList.remove('is-playing');
+        shell.classList.add('is-ended');
+        try { video.pause(); } catch (e) {}
     });
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
