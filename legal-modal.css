@@ -64,6 +64,7 @@
   backdrop-filter: blur(0px);
   -webkit-backdrop-filter: blur(0px);
   opacity: 0;
+  pointer-events: none;
 }
 
 #legal-modal-backdrop.lm-hiding #legal-modal-panel {
@@ -247,7 +248,9 @@ body.lm-open {
   overflow: hidden;
   pointer-events: none;
 }
-#legal-modal-backdrop, #legal-modal-backdrop * {
+/* pointer-events только пока модалка видима — иначе скрытый backdrop блокирует клики по странице */
+#legal-modal-backdrop.lm-visible,
+#legal-modal-backdrop.lm-visible * {
   pointer-events: auto;
 }
 

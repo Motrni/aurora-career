@@ -954,13 +954,15 @@ tailwind.config = {
         z-index: 100; align-items: center; justify-content: center; padding: 16px;
     }
     .modal-overlay.active { display: flex; }
-    body.modal-open { overflow: hidden; pointer-events: none; }
+    body.modal-open,
+    body.lm-open { overflow: hidden; pointer-events: none; }
     body.modal-open .modal-overlay, 
     body.modal-open #pre,
     body.modal-open #mobile-menu,
     body.modal-open #video-modal,
-    body.modal-open #legal-modal-backdrop,
-    body.modal-open .burger { pointer-events: auto; }
+    body.modal-open .burger,
+    body.lm-open #legal-modal-backdrop.lm-visible,
+    body.lm-open #legal-modal-backdrop.lm-visible * { pointer-events: auto; }
 
     /* ── Video Lightbox ── */
     /* Оверлей всегда display:flex, скрыт через opacity+pointer-events.
