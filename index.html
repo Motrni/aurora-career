@@ -670,18 +670,18 @@ tailwind.config = {
         align-items: stretch;
         padding-top: 14px;
     }
+    #pricing .card-wrap { height: 100%; }
     #pricing .pricing-card {
         position: relative;
         display: flex;
         flex-direction: column;
         border-radius: 20px;
         padding: 28px 24px;
-        background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
-        border: 1px solid rgba(255,255,255,.1);
-        box-shadow: 0 10px 30px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.14);
         transition: transform .2s;
         color: #eef1ff;
+        height: 100%;
     }
+    #pricing .pricing-card.glass-card:hover,
     #pricing .pricing-card:not(.pricing-card--win):hover {
         transform: translateY(-4px);
     }
@@ -816,7 +816,7 @@ tailwind.config = {
             grid-template-columns: 1fr;
             gap: 26px;
         }
-        #pricing .pricing-card--win { order: -1; }
+        #pricing .card-wrap:has(.pricing-card--win) { order: -1; }
     }
 
     /* Безопасность — иллюстрация щита */
@@ -1892,31 +1892,36 @@ tailwind.config = {
         </div>
         <div class="pricing-grid">
 
-            <div class="pricing-card card-wrap sa">
-                <div class="pricing-ic" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/></svg>
-                </div>
-                <div class="pricing-name">Консультант</div>
-                <div class="pricing-price">от 50 000 <small>₽</small></div>
-                <div class="pricing-attrs">
-                    <div class="pricing-attr"><span class="pricing-mk">✕</span><span class="lab">Скорость</span><span class="val">Низкая</span></div>
-                    <div class="pricing-attr"><span class="pricing-mk">✕</span><span class="lab">Объём</span><span class="val">Ограниченный</span></div>
-                </div>
-            </div>
-
-            <div class="pricing-card card-wrap sa d1">
-                <div class="pricing-ic" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/></svg>
-                </div>
-                <div class="pricing-name">Самостоятельно</div>
-                <div class="pricing-price">0 <small>₽</small></div>
-                <div class="pricing-attrs">
-                    <div class="pricing-attr"><span class="pricing-mk">~</span><span class="lab">Скорость</span><span class="val">Зависит от вас</span></div>
-                    <div class="pricing-attr"><span class="pricing-mk">✕</span><span class="lab">Объём</span><span class="val">Малый</span></div>
+            <div class="card-wrap sa">
+                <div class="glass-card glass-card--no-glow pricing-card">
+                    <div class="pricing-ic" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/></svg>
+                    </div>
+                    <div class="pricing-name">Консультант</div>
+                    <div class="pricing-price">от 50 000 <small>₽</small></div>
+                    <div class="pricing-attrs">
+                        <div class="pricing-attr"><span class="pricing-mk">✕</span><span class="lab">Скорость</span><span class="val">Низкая</span></div>
+                        <div class="pricing-attr"><span class="pricing-mk">✕</span><span class="lab">Объём</span><span class="val">Ограниченный</span></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="pricing-card pricing-card--win card-wrap sa d2">
+            <div class="card-wrap sa d1">
+                <div class="glass-card glass-card--no-glow pricing-card">
+                    <div class="pricing-ic" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/></svg>
+                    </div>
+                    <div class="pricing-name">Самостоятельно</div>
+                    <div class="pricing-price">0 <small>₽</small></div>
+                    <div class="pricing-attrs">
+                        <div class="pricing-attr"><span class="pricing-mk">~</span><span class="lab">Скорость</span><span class="val">Зависит от вас</span></div>
+                        <div class="pricing-attr"><span class="pricing-mk">✕</span><span class="lab">Объём</span><span class="val">Малый</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-wrap sa d2">
+                <div class="pricing-card pricing-card--win">
                 <div class="pricing-badge">Рекомендуем</div>
                 <div class="pricing-ic" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M21 5h-4M5 17v2M6 18H4"/></svg>
@@ -1928,6 +1933,7 @@ tailwind.config = {
                     <div class="pricing-attr"><span class="pricing-mk">✓</span><span class="lab">Объём</span><span class="val">Максимальный</span></div>
                 </div>
                 <a href="/auth/" class="pricing-cta">Начать бесплатно →</a>
+                </div>
             </div>
 
         </div>
