@@ -769,6 +769,17 @@ tailwind.config = {
         #pricing .pricing-card--win { order: -1; }
     }
 
+    /* Безопасность — иллюстрация щита */
+    #safety .safety-shield-img {
+        width: 128px;
+        height: 128px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+    }
+    #safety .safety-shield-img--screen { mix-blend-mode: screen; }
+    #safety .safety-shield-img--lighten { mix-blend-mode: lighten; }
+
     /* ── Mobile Menu ── */
     .mob-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
     .mob-menu.open { transform: translateX(0); }
@@ -1900,10 +1911,9 @@ tailwind.config = {
             <div class="card-wrap sa">
                 <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
                     <div class="mb-6">
-                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">security</span>
-                        </div>
+                        <img class="safety-shield-img" src="images/safety-shield.png?v=1"
+                             alt="" width="128" height="128" loading="lazy" decoding="async"
+                             aria-hidden="true">
                     </div>
                     <h3 class="text-2xl font-bold mb-4 text-white">Без передачи паролей.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
@@ -1916,10 +1926,9 @@ tailwind.config = {
             <div class="card-wrap sa d1">
                 <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
                     <div class="mb-6">
-                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">schedule</span>
-                        </div>
+                        <img class="safety-shield-img safety-shield-img--screen" src="images/safety-shield.png?v=1"
+                             alt="" width="128" height="128" loading="lazy" decoding="async"
+                             aria-hidden="true">
                     </div>
                     <h3 class="text-2xl font-bold mb-4 text-white">Бережная работа с аккаунтом.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
@@ -1931,15 +1940,10 @@ tailwind.config = {
             <!-- Card 3 -->
             <div class="card-wrap sa d2">
                 <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
-                    <div class="mb-6 relative">
-                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">task</span>
-                        </div>
-                        <div class="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
-                             style="background:#a855f7">
-                            <span class="text-white text-xs font-bold">✓</span>
-                        </div>
+                    <div class="mb-6">
+                        <img class="safety-shield-img safety-shield-img--lighten" src="images/safety-shield.png?v=1"
+                             alt="" width="128" height="128" loading="lazy" decoding="async"
+                             aria-hidden="true">
                     </div>
                     <h3 class="text-2xl font-bold mb-4 text-white">Полный контроль.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
