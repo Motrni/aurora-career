@@ -649,6 +649,11 @@ tailwind.config = {
         .hero-scroll-cue .ch { animation: none; }
     }
 
+    /* Мобилка: превью-видео скрыто, открытие только через кнопку «Смотреть видео» */
+    @media (max-width: 767px) {
+        #hero .hero-video-col { display: none; }
+    }
+
     @media (max-width: 860px) {
         #hero { padding-top: 6rem; }
         #hero .hero-grid {
@@ -656,7 +661,6 @@ tailwind.config = {
             gap: 30px;
             padding-bottom: 22px;
         }
-        #hero .hero-video-col { order: -1; }
         #hero .hero-h1 { font-size: clamp(30px, 8vw, 42px); }
     }
 
