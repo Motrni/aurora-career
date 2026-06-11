@@ -1375,16 +1375,82 @@ tailwind.config = {
         background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(168,85,247,0.2));
     }
 
-    /* FAQ accordion custom markers and rotation */
-    details.faq-item summary::-webkit-details-marker { display: none; }
-    details.faq-item[open] .faq-chevron { transform: rotate(180deg); }
-    details.faq-item[open] summary.glass-card {
-        border-radius: 20px 20px 0 0;
-        border-bottom-color: transparent;
-        box-shadow: none;
+    /* ── FAQ accordion ── */
+    #faq { --muted: rgba(255, 255, 255, 0.7); --cyan: #36c9e8; }
+    #faq .faq-list { display: flex; flex-direction: column; gap: 16px; }
+    #faq .item {
+        border: 1px solid rgba(255, 255, 255, .1);
+        border-radius: 16px;
+        overflow: hidden;
+        background: linear-gradient(160deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .03));
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .18);
+        transition: border-color .25s ease, box-shadow .25s ease;
     }
-    details.faq-item[open] summary.glass-card:hover {
-        box-shadow: none;
+    #faq .item:hover {
+        border-color: rgba(54, 201, 232, .45);
+        box-shadow: 0 12px 34px rgba(74, 123, 255, .3), inset 0 1px 0 rgba(255, 255, 255, .2);
+    }
+    #faq .item.open { border-color: rgba(54, 201, 232, .35); }
+    #faq .q {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        width: 100%;
+        padding: 20px 24px;
+        border: none;
+        background: transparent;
+        color: #fff;
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: 17px;
+        line-height: 1.4;
+        text-align: left;
+        cursor: pointer;
+    }
+    @media (min-width: 768px) {
+        #faq .q { font-size: 18px; padding: 22px 24px; }
+    }
+    #faq .q:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: -2px;
+    }
+    #faq .chev {
+        color: var(--cyan);
+        flex-shrink: 0;
+        transition: transform .35s cubic-bezier(.2, .7, .2, 1);
+    }
+    #faq .item.open .chev { transform: rotate(180deg); }
+    #faq .a-wrap {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows .38s cubic-bezier(.2, .7, .2, 1);
+    }
+    #faq .item.open .a-wrap { grid-template-rows: 1fr; }
+    #faq .a { overflow: hidden; min-height: 0; }
+    #faq .a-inner {
+        padding: 0 24px 22px;
+        color: var(--muted);
+        font-size: 14.5px;
+        line-height: 1.65;
+        font-weight: 400;
+    }
+    #faq .a-inner::before {
+        content: "";
+        display: block;
+        height: 1px;
+        margin: 0 0 16px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .14), transparent);
+        opacity: 0;
+        transition: opacity .3s ease .1s;
+    }
+    #faq .item.open .a-inner::before { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) {
+        #faq .a-wrap,
+        #faq .chev,
+        #faq .a-inner::before { transition: none; }
     }
 </style>
 
@@ -2087,85 +2153,55 @@ tailwind.config = {
         <div class="text-center mb-16 sa">
             <h2 class="section-title text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">Частые вопросы</h2>
         </div>
-        <div class="space-y-6">
+        <div class="faq-list">
 
-            <!-- FAQ 1 -->
-            <details class="faq-item group card-wrap sa" style="border-radius:20px">
-                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
-                    <h3 class="text-lg md:text-xl font-bold text-white pr-4">Это безопасно для моего аккаунта на hh.ru?</h3>
-                    <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                    </span>
-                </summary>
-                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
-                    Да. Система работает в щадящем режиме, соблюдает лимиты площадок и не совершает действий, которые отличали бы её активность от активности обычного пользователя. Мы не храним ваши пароли и используем защищённые методы авторизации.
-                </div>
-            </details>
+            <div class="item card-wrap sa">
+                <button class="q" type="button" aria-expanded="false">
+                    Это безопасно для моего аккаунта на hh.ru?
+                    <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="a-wrap"><div class="a"><div class="a-inner">Да. Система работает в щадящем режиме, соблюдает лимиты площадок и не совершает действий, которые отличали бы её активность от активности обычного пользователя. Мы не храним ваши пароли и используем защищённые методы авторизации.</div></div></div>
+            </div>
 
-            <!-- FAQ 2 -->
-            <details class="faq-item group card-wrap sa d1" style="border-radius:20px">
-                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
-                    <h3 class="text-lg md:text-xl font-bold text-white pr-4">Сколько откликов отправляет система?</h3>
-                    <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                    </span>
-                </summary>
-                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
-                    Объём зависит от тарифа и ваших настроек: вы сами задаёте фильтры вакансий, желаемую интенсивность и стоп-условия. Система не превышает дневные лимиты площадок.
-                </div>
-            </details>
+            <div class="item card-wrap sa d1">
+                <button class="q" type="button" aria-expanded="false">
+                    Сколько откликов отправляет система?
+                    <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="a-wrap"><div class="a"><div class="a-inner">Объём зависит от тарифа и ваших настроек: вы сами задаёте фильтры вакансий, желаемую интенсивность и стоп-условия. Система не превышает дневные лимиты площадок.</div></div></div>
+            </div>
 
-            <!-- FAQ 3 -->
-            <details class="faq-item group card-wrap sa d2" style="border-radius:20px">
-                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
-                    <h3 class="text-lg md:text-xl font-bold text-white pr-4">Чем это лучше ручного поиска?</h3>
-                    <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                    </span>
-                </summary>
-                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
-                    Скоростью и охватом. Вручную кандидат отправляет 5–10 осмысленных откликов в день, система — десятки, и к каждому пишет персонализированное сопроводительное письмо. Ваше время уходит на собеседования, а не на рутину.
-                </div>
-            </details>
+            <div class="item card-wrap sa d2">
+                <button class="q" type="button" aria-expanded="false">
+                    Чем это лучше ручного поиска?
+                    <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="a-wrap"><div class="a"><div class="a-inner">Скоростью и охватом. Вручную кандидат отправляет 5–10 осмысленных откликов в день, система — десятки, и к каждому пишет персонализированное сопроводительное письмо. Ваше время уходит на собеседования, а не на рутину.</div></div></div>
+            </div>
 
-            <!-- FAQ 4 -->
-            <details class="faq-item group card-wrap sa d1" style="border-radius:20px">
-                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
-                    <h3 class="text-lg md:text-xl font-bold text-white pr-4">Система меняет моё резюме?</h3>
-                    <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                    </span>
-                </summary>
-                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
-                    Нет. Оригинальное резюме остаётся нетронутым. Система готовит адаптированные версии под конкретные вакансии и показывает их вам — управление всегда в ваших руках.
-                </div>
-            </details>
+            <div class="item card-wrap sa d1">
+                <button class="q" type="button" aria-expanded="false">
+                    Система меняет моё резюме?
+                    <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="a-wrap"><div class="a"><div class="a-inner">Нет. Оригинальное резюме остаётся нетронутым. Система готовит адаптированные версии под конкретные вакансии и показывает их вам — управление всегда в ваших руках.</div></div></div>
+            </div>
 
-            <!-- FAQ 5 -->
-            <details class="faq-item group card-wrap sa d2" style="border-radius:20px">
-                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
-                    <h3 class="text-lg md:text-xl font-bold text-white pr-4">Как быстро ждать результатов?</h3>
-                    <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                    </span>
-                </summary>
-                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
-                    По данным наших пользователей, первые приглашения на собеседования обычно приходят в течение первой недели активной работы. Полный цикл до оффера индивидуален и зависит от профессии и рынка.
-                </div>
-            </details>
+            <div class="item card-wrap sa d2">
+                <button class="q" type="button" aria-expanded="false">
+                    Как быстро ждать результатов?
+                    <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="a-wrap"><div class="a"><div class="a-inner">По данным наших пользователей, первые приглашения на собеседования обычно приходят в течение первой недели активной работы. Полный цикл до оффера индивидуален и зависит от профессии и рынка.</div></div></div>
+            </div>
 
-            <!-- FAQ 6 -->
-            <details class="faq-item group card-wrap sa d1" style="border-radius:20px">
-                <summary class="glass-card relative p-6 md:p-8 cursor-pointer flex items-center justify-between gap-4 select-none list-none outline-none">
-                    <h3 class="text-lg md:text-xl font-bold text-white pr-4">Можно ли попробовать бесплатно и отменить подписку?</h3>
-                    <span class="faq-chevron shrink-0 transition-transform duration-300 text-cyan-400">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                    </span>
-                </summary>
-                <div class="faq-content glass-card glass-card--no-glow p-6 md:p-8 pt-0 -mt-2 rounded-b-[20px] relative z-10 leading-relaxed text-sm md:text-base" style="color:rgba(255,255,255,0.7);border-top:none;border-radius:0 0 20px 20px;">
-                    Да. После регистрации вы получаете 10 бесплатных откликов без привязки карты. Подписку можно отменить в любой момент в личном кабинете — условия возврата описаны в оферте.
-                </div>
-            </details>
+            <div class="item card-wrap sa d1">
+                <button class="q" type="button" aria-expanded="false">
+                    Можно ли попробовать бесплатно и отменить подписку?
+                    <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="a-wrap"><div class="a"><div class="a-inner">Да. После регистрации вы получаете 10 бесплатных откликов без привязки карты. Подписку можно отменить в любой момент в личном кабинете — условия возврата описаны в оферте.</div></div></div>
+            </div>
 
         </div>
     </div>
@@ -2805,6 +2841,15 @@ document.querySelectorAll('.parallax-card').forEach(function(card) {
 
     resultsObserver.observe(section);
 })();
+
+/* ── FAQ accordion ── */
+document.querySelectorAll('#faq .q').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var item = btn.closest('.item');
+        var open = item.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open);
+    });
+});
 
 /* ── Reviews modal + carousel ── */
 function openReviewsModal() {
