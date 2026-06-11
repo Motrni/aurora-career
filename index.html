@@ -178,7 +178,15 @@ tailwind.config = {
     @media (min-width: 1024px) {
         html { scrollbar-gutter: stable; }
     }
-    body { font-family: var(--font-body); background: linear-gradient(135deg, #0a0b1e 0%, #1e2952 55%, #3a2a5e 100%) fixed; min-width: 320px; overflow-x: hidden; }
+    /* Градиент вынесен на фиксированный слой: background-attachment:fixed на body
+       заставляет браузер перерисовывать фон (и пересчитывать backdrop-filter карточек)
+       на каждый кадр скролла. Отдельный fixed-слой композитится на GPU без repaint. */
+    body { font-family: var(--font-body); background: #0a0b1e; min-width: 320px; overflow-x: hidden; }
+    body::before {
+        content: ""; position: fixed; inset: 0; z-index: -1;
+        background: linear-gradient(135deg, #0a0b1e 0%, #1e2952 55%, #3a2a5e 100%);
+        pointer-events: none;
+    }
     h1, h2, .section-title { font-family: var(--font-display); font-weight: 700; }
     h3, h4, h5, h6, .card-title, p, button, a, nav, .stat-value, .counter { font-family: var(--font-body); }
     h3, h4, h5, h6, .card-title { font-weight: 600; }
@@ -616,6 +624,7 @@ tailwind.config = {
         transition: opacity 0.6s ease, transform 0.6s ease;
     }
     .sa.vis { opacity: 1; transform: translateY(0); }
+    .sa.no-anim { transition: none !important; }
     .sa.d1 { transition-delay: 0.1s; }
     .sa.d2 { transition-delay: 0.2s; }
     .sa.d3 { transition-delay: 0.3s; }
@@ -2637,6 +2646,24 @@ document.addEventListener('DOMContentLoaded', function() {
     var hoverRadius = 130;
     var rafId = 0;
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Базовая сетка рендерится один раз в offscreen-буфер;
+    // на mousemove перерисовывается только зона вокруг курсора, а не ~7000 точек
+    var base = document.createElement('canvas');
+    var bctx = base.getContext('2d');
+
+    function renderBase() {
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        bctx.clearRect(0, 0, w, h);
+        bctx.fillStyle = 'rgba(231,224,239,' + baseAlpha + ')';
+        for (var y = spacing * 0.5; y < h; y += spacing) {
+            for (var x = spacing * 0.5; x < w; x += spacing) {
+                bctx.beginPath();
+                bctx.arc(x, y, radius, 0, Math.PI * 2);
+                bctx.fill();
+            }
+        }
+    }
 
     function resize() {
         var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -2645,6 +2672,10 @@ document.addEventListener('DOMContentLoaded', function() {
         canvas.style.width = window.innerWidth + 'px';
         canvas.style.height = window.innerHeight + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        base.width = canvas.width;
+        base.height = canvas.height;
+        bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        renderBase();
         draw();
     }
 
@@ -2652,15 +2683,20 @@ document.addEventListener('DOMContentLoaded', function() {
         var w = window.innerWidth;
         var h = window.innerHeight;
         ctx.clearRect(0, 0, w, h);
-        for (var y = spacing * 0.5; y < h; y += spacing) {
-            for (var x = spacing * 0.5; x < w; x += spacing) {
-                var alpha = baseAlpha;
-                if (!reducedMotion) {
-                    var dist = Math.hypot(x - mouse.x, y - mouse.y);
-                    if (dist < hoverRadius) {
-                        alpha = baseAlpha + (1 - dist / hoverRadius) * 0.55;
-                    }
-                }
+        ctx.drawImage(base, 0, 0, w, h);
+        if (reducedMotion || mouse.x < -hoverRadius) return;
+        var x0 = Math.max(spacing * 0.5, mouse.x - hoverRadius);
+        var x1 = Math.min(w, mouse.x + hoverRadius);
+        var y0 = Math.max(spacing * 0.5, mouse.y - hoverRadius);
+        var y1 = Math.min(h, mouse.y + hoverRadius);
+        // Выравниваем старт по узлам сетки
+        var sx = spacing * 0.5 + Math.ceil((x0 - spacing * 0.5) / spacing) * spacing;
+        var sy = spacing * 0.5 + Math.ceil((y0 - spacing * 0.5) / spacing) * spacing;
+        for (var y = sy; y <= y1; y += spacing) {
+            for (var x = sx; x <= x1; x += spacing) {
+                var dist = Math.hypot(x - mouse.x, y - mouse.y);
+                if (dist >= hoverRadius) continue;
+                var alpha = (1 - dist / hoverRadius) * 0.55;
                 ctx.fillStyle = 'rgba(231,224,239,' + alpha.toFixed(3) + ')';
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -2693,24 +2729,83 @@ document.addEventListener('DOMContentLoaded', function() {
     resize();
 })();
 
-/* ── Scroll Progress ── */
-window.addEventListener('scroll', function() {
-    var scrolled = document.documentElement.scrollTop || document.body.scrollTop;
-    var total = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    document.getElementById('scroll-progress').style.width = ((scrolled / total) * 100) + '%';
+/* ── Scroll Progress (через rAF — не чаще одного раза за кадр) ── */
+(function() {
+    var bar = document.getElementById('scroll-progress');
     var btn = document.getElementById('scroll-top-btn');
-    if (scrolled > 300) btn.classList.add('visible');
-    else btn.classList.remove('visible');
-}, { passive: true });
+    var ticking = false;
+    function update() {
+        ticking = false;
+        var scrolled = document.documentElement.scrollTop || document.body.scrollTop;
+        var total = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        bar.style.width = ((scrolled / total) * 100) + '%';
+        if (scrolled > 300) btn.classList.add('visible');
+        else btn.classList.remove('visible');
+    }
+    window.addEventListener('scroll', function() {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    update();
+})();
 
-/* ── Scroll Animations ── */
-var saObserver = new IntersectionObserver(function(entries) {
-    entries.forEach(function(e) {
-        if (e.isIntersecting) { e.target.classList.add('vis'); }
+/* ── Scroll Animations (поблочно, с учётом направления скролла) ── */
+(function() {
+    var els = Array.prototype.slice.call(document.querySelectorAll('.sa'));
+    if (!els.length) return;
+
+    // Группируем элементы по ближайшей секции — блок появляется целиком
+    var groups = new Map();
+    els.forEach(function(el) {
+        var key = el.closest('section') || el;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(el);
     });
-}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 
-document.querySelectorAll('.sa').forEach(function(el) { saObserver.observe(el); });
+    function reveal(group, instant, root) {
+        group.forEach(function(el) {
+            if (el.classList.contains('vis')) return;
+            if (instant) {
+                el.classList.add('no-anim', 'vis');
+                void el.offsetWidth; // фиксируем состояние до возврата transition
+                el.classList.remove('no-anim');
+            } else {
+                el.classList.add('vis');
+            }
+        });
+        // Блок «уже загружен» — счётчики показываем сразу с финальным значением
+        if (instant && root && root.querySelectorAll) {
+            root.querySelectorAll('.counter[data-count-to]').forEach(function(c) {
+                if (c.dataset.counted) return;
+                c.dataset.counted = '1';
+                var n = parseInt(c.dataset.countTo, 10);
+                c.textContent = n.toLocaleString('ru-RU').replace(/,/g, '\u00a0');
+            });
+        }
+    }
+
+    // Загрузились в середине/внизу страницы: всё, что выше экрана, уже «прочитано»
+    groups.forEach(function(group, root) {
+        if (root.getBoundingClientRect().bottom < 0) reveal(group, true, root);
+    });
+
+    var lastY = window.scrollY;
+    var saObserver = new IntersectionObserver(function(entries) {
+        var goingUp = window.scrollY < lastY;
+        lastY = window.scrollY;
+        entries.forEach(function(e) {
+            if (!e.isIntersecting) return;
+            // Блок входит сверху (скролл вверх) — показываем мгновенно, без выезда снизу
+            var fromTop = goingUp && e.boundingClientRect.top < 0;
+            reveal(groups.get(e.target) || [e.target], fromTop, e.target);
+            saObserver.unobserve(e.target);
+        });
+    }, { threshold: 0, rootMargin: '0px 0px -60px 0px' });
+
+    groups.forEach(function(group, root) {
+        var pending = group.some(function(el) { return !el.classList.contains('vis'); });
+        if (pending) saObserver.observe(root);
+    });
+})();
 
 /* ── Animated Counters ── */
 var cntObserver = new IntersectionObserver(function(entries) {
