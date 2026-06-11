@@ -116,6 +116,7 @@
 }
 </script>
 
+<link rel="preload" as="image" href="favicon-white.png?v=1" fetchpriority="high">
 <link rel="icon" type="image/png" href="favicon-white.png?v=1">
 <link rel="apple-touch-icon" href="favicon-white.png?v=1">
 <link rel="stylesheet" href="burger-menu.css?v=1">
@@ -2618,8 +2619,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    document.body.classList.add('play');
-
     function finish() {
         pre.classList.add('hide');
         sessionStorage.setItem('seenPreloader', '1');
@@ -2630,8 +2629,33 @@ document.addEventListener('DOMContentLoaded', function() {
     var done = false;
     function end() { if (!done) { done = true; finish(); } }
 
-    window.addEventListener('load', function() { setTimeout(end, 1800); });
-    setTimeout(end, 3500);
+    // Полная длительность keyframes: barFill стартует в 1.5с и идёт 1.0с → 2.5с.
+    var MIN_VISIBLE = 2600;
+
+    function startAnim() {
+        // Анимация запускается строго на первом реальном кадре отрисовки.
+        // На «холодном» открытии (пока Tailwind/шрифты блокируют рендер) rAF
+        // не срабатывает — значит часы анимации не тикают на чёрном экране,
+        // и пользователь всегда видит загрузку с самого начала.
+        document.body.classList.add('play');
+
+        var startedAt = (window.performance && performance.now) ? performance.now() : Date.now();
+        var loaded = document.readyState === 'complete';
+        window.addEventListener('load', function() { loaded = true; });
+
+        function tick() {
+            var now = (window.performance && performance.now) ? performance.now() : Date.now();
+            if (now - startedAt >= MIN_VISIBLE && loaded) { end(); }
+            else { setTimeout(tick, 120); }
+        }
+        setTimeout(tick, MIN_VISIBLE);
+        // Потолок: даже если событие load не пришло, не держим бесконечно.
+        setTimeout(end, MIN_VISIBLE + 2000);
+    }
+
+    // Двойной rAF: первый кадр браузер выделяет под первичную отрисовку,
+    // на втором гарантированно запускаем анимацию уже на видимом экране.
+    requestAnimationFrame(function() { requestAnimationFrame(startAnim); });
 })();
 
 /* ── Dot Grid Background (Stitch-style) ── */
