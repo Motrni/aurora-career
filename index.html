@@ -188,11 +188,60 @@ tailwind.config = {
     }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
 
-    /* ── Loading Screen ── */
-    #loading-screen { transition: opacity 0.5s ease; }
-    #loading-screen.ls-hidden { opacity: 0; pointer-events: none; }
-    @keyframes loading-bar-anim { from { width: 0% } to { width: 100% } }
-    .ls-bar { animation: loading-bar-anim 0.6s ease-in-out forwards; width: 0%; }
+    /* ── Preloader ── */
+    .pre {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background:
+            radial-gradient(900px 600px at 50% 40%, rgba(74, 123, 255, .12), transparent 60%),
+            linear-gradient(160deg, #0a0e2a, #10173a 60%, #1a1240);
+    }
+    .pre .center { display: flex; flex-direction: column; align-items: center; }
+    .pre .row { display: flex; align-items: center; justify-content: center; max-width: 100%; padding: 0 16px; }
+    .pre .emblem {
+        width: 64px; height: 64px; flex: 0 0 auto;
+        opacity: 0; transform: scale(.55);
+        filter: drop-shadow(0 0 16px rgba(54, 201, 232, .6));
+    }
+    .pre .word {
+        font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 42px;
+        letter-spacing: 1px; color: #fff;
+        white-space: nowrap; overflow: hidden; max-width: 0; opacity: 0; margin-left: 0;
+    }
+    .pre .loader {
+        margin-top: 26px; width: min(200px, calc(100vw - 48px)); height: 4px;
+        border-radius: 4px; background: rgba(255, 255, 255, .1);
+        overflow: hidden; opacity: 0; transform: translateY(10px);
+    }
+    .pre .loader i {
+        display: block; height: 100%; width: 0; border-radius: 4px;
+        background: linear-gradient(90deg, #36c9e8, #8b5cf6);
+    }
+    body.play .pre .emblem { animation: emblemIn .7s cubic-bezier(.2, .8, .2, 1) forwards; }
+    body.play .pre .word   { animation: wordReveal .8s cubic-bezier(.2, .7, .2, 1) .65s forwards; }
+    body.play .pre .loader { animation: loaderIn .5s ease 1.35s forwards; }
+    body.play .pre .loader i { animation: barFill 1s ease 1.5s forwards; }
+    @keyframes emblemIn {
+        0%   { opacity: 0; transform: scale(.55); }
+        60%  { opacity: 1; transform: scale(1.08); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes wordReveal {
+        0%   { max-width: 0; opacity: 0; margin-left: 0; }
+        100% { max-width: 340px; opacity: 1; margin-left: 18px; }
+    }
+    @keyframes loaderIn { to { opacity: 1; transform: translateY(0); } }
+    @keyframes barFill { 0% { width: 0; } 100% { width: 100%; } }
+    .pre.hide { animation: preOut .7s ease forwards; }
+    @keyframes preOut { to { opacity: 0; transform: translateY(-16px); visibility: hidden; } }
+    @media (max-width: 480px) {
+        .pre .word { font-size: 28px; }
+        @keyframes wordReveal {
+            0%   { max-width: 0; opacity: 0; margin-left: 0; }
+            100% { max-width: 220px; opacity: 1; margin-left: 12px; }
+        }
+    }
+    @media (prefers-reduced-motion: reduce) { .pre { display: none !important; } }
 
     /* ── Scroll To Top ── */
     #scroll-top-btn {
@@ -794,7 +843,7 @@ tailwind.config = {
     .modal-overlay.active { display: flex; }
     body.modal-open { overflow: hidden; pointer-events: none; }
     body.modal-open .modal-overlay, 
-    body.modal-open #loading-screen,
+    body.modal-open #pre,
     body.modal-open #mobile-menu,
     body.modal-open #video-modal,
     body.modal-open #legal-modal-backdrop,
@@ -1356,25 +1405,15 @@ tailwind.config = {
 </svg>
 
 <!-- ══════════════════════════════════════════
-     LOADING SCREEN
+     PRELOADER
 ══════════════════════════════════════════ -->
-<div id="loading-screen" class="fixed inset-0 z-[200] flex items-center justify-center"
-     style="background:linear-gradient(135deg,#0a0b1e 0%,#1e2952 50%,#3a2a5e 100%)">
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 anim-glow"
-             style="width:800px;height:800px;background:radial-gradient(circle,rgba(34,211,238,0.1) 0%,rgba(168,85,247,0.1) 50%,transparent 70%);border-radius:50%"></div>
-    </div>
-    <div class="relative text-center">
-        <div class="flex items-center justify-center gap-3 mb-8">
-            <img src="favicon-white.png?v=1" alt="Логотип Аврора" width="48" height="48"
-                 class="w-12 h-12 object-contain"
-                 style="filter:drop-shadow(0 0 12px rgba(255,255,255,0.2))">
-            <span class="text-3xl font-bold tracking-widest text-white">АВРОРА</span>
+<div class="pre" id="pre">
+    <div class="center">
+        <div class="row">
+            <img class="emblem" src="favicon-white.png?v=1" alt="Аврора" width="64" height="64">
+            <div class="word">АВРОРА</div>
         </div>
-        <div class="overflow-hidden h-1 rounded-full mx-auto" style="max-width:280px;background:rgba(255,255,255,0.1)">
-            <div class="ls-bar h-full rounded-full" style="background:linear-gradient(to right,#22d3ee,#a855f7)"></div>
-        </div>
-        <p class="mt-6 text-sm" style="color:rgba(255,255,255,0.6)">Загрузка...</p>
+        <div class="loader"><i></i></div>
     </div>
 </div>
 
@@ -2511,27 +2550,37 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(function() {});
 });
 
-/* ── Loading Screen ── */
+/* ── Preloader ── */
 (function() {
-    var hidden = false;
-    function hideLoader(delay) {
-        if (hidden) return;
-        hidden = true;
-        setTimeout(function() {
-            var ls = document.getElementById('loading-screen');
-            if (!ls) return;
-            ls.classList.add('ls-hidden');
-            setTimeout(function() { ls.style.display = 'none'; }, 520);
-        }, delay || 0);
+    var pre = document.getElementById('pre');
+    if (!pre) return;
+
+    var metaVer = document.querySelector('meta[name="version"]');
+    var SITE_VERSION = (metaVer && metaVer.getAttribute('content')) || '2026-06-11';
+
+    var newVersion  = localStorage.getItem('auroraVersion') !== SITE_VERSION;
+    var seenSession = sessionStorage.getItem('seenPreloader');
+    var reduced     = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduced || (!newVersion && seenSession)) {
+        pre.remove();
+        return;
     }
-    // Прячем как только готов DOM (контент виден сразу, картинки догружаются лениво)
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        hideLoader(200);
-    } else {
-        document.addEventListener('DOMContentLoaded', function() { hideLoader(200); });
+
+    document.body.classList.add('play');
+
+    function finish() {
+        pre.classList.add('hide');
+        sessionStorage.setItem('seenPreloader', '1');
+        localStorage.setItem('auroraVersion', SITE_VERSION);
+        setTimeout(function() { pre.remove(); }, 800);
     }
-    // Подстраховка: даже при медленной сети не держим экран дольше 2.5с
-    setTimeout(function() { hideLoader(0); }, 2500);
+
+    var done = false;
+    function end() { if (!done) { done = true; finish(); } }
+
+    window.addEventListener('load', function() { setTimeout(end, 1800); });
+    setTimeout(end, 3500);
 })();
 
 /* ── Dot Grid Background (Stitch-style) ── */
