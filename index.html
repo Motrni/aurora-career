@@ -612,11 +612,162 @@ tailwind.config = {
         animation: shimmer 2.5s ease infinite 1s;
     }
 
-    @keyframes pricing-glow {
-        0%, 100% { box-shadow: 0 0 24px rgba(34,211,238,0.35), 0 0 48px rgba(168,85,247,0.2); }
-        50%  { box-shadow: 0 0 36px rgba(34,211,238,0.55), 0 0 72px rgba(168,85,247,0.3); }
+    /* ── Тарифы «Математика вашей карьеры» ── */
+    #pricing .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        align-items: stretch;
+        padding-top: 14px;
     }
-    .pricing-featured { animation: pricing-glow 3s ease-in-out infinite; }
+    #pricing .pricing-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        border-radius: 20px;
+        padding: 28px 24px;
+        background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+        border: 1px solid rgba(255,255,255,.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.14);
+        transition: transform .2s;
+        color: #eef1ff;
+    }
+    #pricing .pricing-card:not(.pricing-card--win):hover {
+        transform: translateY(-4px);
+    }
+    #pricing .pricing-ic {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.12);
+    }
+    #pricing .pricing-ic svg {
+        width: 24px;
+        height: 24px;
+        stroke: #9fb0e0;
+        fill: none;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    #pricing .pricing-name {
+        font-size: 17px;
+        font-weight: 600;
+        margin-bottom: 14px;
+        color: #eef1ff;
+    }
+    #pricing .pricing-price {
+        font-family: var(--font-display);
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 22px;
+        color: #eef1ff;
+    }
+    #pricing .pricing-price small {
+        font-family: var(--font-body);
+        font-size: 14px;
+        color: #9aa3c7;
+        font-weight: 400;
+    }
+    #pricing .pricing-attrs {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: auto;
+    }
+    #pricing .pricing-attr {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+    }
+    #pricing .pricing-mk {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex: 0 0 auto;
+        background: rgba(255,255,255,.08);
+        color: #9aa3c7;
+    }
+    #pricing .pricing-attr .lab { color: #9aa3c7; }
+    #pricing .pricing-attr .val { margin-left: auto; font-weight: 600; color: #eef1ff; }
+
+    #pricing .pricing-card--win {
+        background: linear-gradient(150deg, #36c9e8, #4a7bff 55%, #8b5cf6);
+        border: 0;
+        box-shadow: 0 18px 50px rgba(74,123,255,.5), inset 0 1px 0 rgba(255,255,255,.35);
+        color: #fff;
+    }
+    #pricing .pricing-card--win .pricing-ic {
+        background: rgba(255,255,255,.18);
+        border-color: rgba(255,255,255,.3);
+    }
+    #pricing .pricing-card--win .pricing-ic svg { stroke: #fff; }
+    #pricing .pricing-card--win .pricing-price,
+    #pricing .pricing-card--win .pricing-name { color: #fff; }
+    #pricing .pricing-card--win .pricing-price small { color: rgba(255,255,255,.85); }
+    #pricing .pricing-card--win .pricing-attr .lab { color: rgba(255,255,255,.8); }
+    #pricing .pricing-card--win .pricing-attr .val { color: #fff; }
+    #pricing .pricing-card--win .pricing-mk {
+        background: rgba(255,255,255,.25);
+        color: #fff;
+    }
+    #pricing .pricing-badge {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        font-weight: 600;
+        color: #0a0e2a;
+        background: #fff;
+        padding: 5px 16px;
+        border-radius: 999px;
+        box-shadow: 0 6px 16px rgba(0,0,0,.3);
+        white-space: nowrap;
+    }
+    #pricing .pricing-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 22px;
+        text-align: center;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        color: #8b5cf6;
+        text-decoration: none;
+        background: #fff;
+        padding: 13px;
+        border-radius: 12px;
+        cursor: pointer;
+        border: 0;
+        width: 100%;
+        transition: transform .15s;
+    }
+    #pricing .pricing-cta:active { transform: scale(.97); }
+    #pricing .pricing-cta:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+
+    @media (max-width: 760px) {
+        #pricing .pricing-grid {
+            grid-template-columns: 1fr;
+            gap: 26px;
+        }
+        #pricing .pricing-card--win { order: -1; }
+    }
 
     /* ── Mobile Menu ── */
     .mob-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
@@ -1688,88 +1839,46 @@ tailwind.config = {
         <div class="text-center mb-16 sa">
             <h2 class="section-title text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Математика вашей карьеры</h2>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="pricing-grid">
 
-            <!-- Консультант -->
-            <div class="card-wrap sa">
-                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
-                    <div class="mb-6">
-                        <div class="w-24 h-24 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(107,114,128,0.4),rgba(75,85,99,0.4))">
-                            <span class="material-symbols-outlined" style="color:#9ca3af;font-size:48px">account_circle</span>
-                        </div>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-6 text-white">Консультант</h3>
-                    <div class="mb-8">
-                        <div class="text-4xl font-bold text-white">от 50 000 руб</div>
-                    </div>
-                    <div class="space-y-3 flex-grow" style="color:rgba(255,255,255,0.7);font-size:0.875rem">
-                        <p>*Скорость: Низкая</p>
-                        <p>*Объем: Ограниченный</p>
-                    </div>
+            <div class="pricing-card card-wrap sa">
+                <div class="pricing-ic" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/></svg>
+                </div>
+                <div class="pricing-name">Консультант</div>
+                <div class="pricing-price">от 50 000 <small>₽</small></div>
+                <div class="pricing-attrs">
+                    <div class="pricing-attr"><span class="pricing-mk">✕</span><span class="lab">Скорость</span><span class="val">Низкая</span></div>
+                    <div class="pricing-attr"><span class="pricing-mk">✕</span><span class="lab">Объём</span><span class="val">Ограниченный</span></div>
                 </div>
             </div>
 
-            <!-- Самостоятельно -->
-            <div class="card-wrap sa d1">
-                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
-                    <div class="mb-6">
-                        <div class="relative w-24 h-24 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(107,114,128,0.4),rgba(75,85,99,0.4))">
-                            <span class="material-symbols-outlined" style="color:#9ca3af;font-size:48px">settings</span>
-                            <div class="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
-                                 style="background:#6b7280">
-                                <span class="material-symbols-outlined text-white" style="font-size:16px">account_circle</span>
-                            </div>
-                        </div>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-6 text-white">Самостоятельно</h3>
-                    <div class="mb-8">
-                        <div class="text-4xl font-bold text-white">0 руб</div>
-                    </div>
-                    <div class="space-y-3 flex-grow" style="color:rgba(255,255,255,0.7);font-size:0.875rem">
-                        <p>*Скорость: Зависит от вас</p>
-                        <p>*Объем: Малый</p>
-                    </div>
+            <div class="pricing-card card-wrap sa d1">
+                <div class="pricing-ic" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/></svg>
+                </div>
+                <div class="pricing-name">Самостоятельно</div>
+                <div class="pricing-price">0 <small>₽</small></div>
+                <div class="pricing-attrs">
+                    <div class="pricing-attr"><span class="pricing-mk">~</span><span class="lab">Скорость</span><span class="val">Зависит от вас</span></div>
+                    <div class="pricing-attr"><span class="pricing-mk">✕</span><span class="lab">Объём</span><span class="val">Малый</span></div>
                 </div>
             </div>
 
-            <!-- Аврора (Featured) -->
-            <div class="sa d2" style="position:relative">
-                <div class="absolute -inset-0.5 rounded-[18px]"
-                     style="background:linear-gradient(135deg,#22d3ee,#a855f7);filter:blur(5px)"></div>
-                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center pricing-featured"
-                     style="border:2px solid rgba(34,211,238,0.6)">
-                    <div class="mb-6">
-                        <div class="relative w-24 h-24 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.3),rgba(168,85,247,0.3))">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:48px">rocket_launch</span>
-                            <div class="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
-                                 style="background:#a855f7">
-                                <span class="material-symbols-outlined text-white" style="font-size:16px">settings</span>
-                            </div>
-                        </div>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-6 text-white">Система Аврора</h3>
-                    <div class="mb-8">
-                        <div class="text-4xl font-bold"
-                             style="background:linear-gradient(to right,#22d3ee,#a855f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">
-                            от 2 900 руб
-                        </div>
-                    </div>
-                    <div class="space-y-3 flex-grow" style="color:rgba(255,255,255,0.9);font-size:0.875rem">
-                        <p>Скорость: <strong class="text-white">Максимальная</strong></p>
-                        <p>Объем: <strong class="text-white">Максимальный</strong></p>
-                    </div>
+            <div class="pricing-card pricing-card--win card-wrap sa d2">
+                <div class="pricing-badge">Рекомендуем</div>
+                <div class="pricing-ic" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M21 5h-4M5 17v2M6 18H4"/></svg>
                 </div>
+                <div class="pricing-name">Система Аврора</div>
+                <div class="pricing-price">от 2 900 <small>₽</small></div>
+                <div class="pricing-attrs">
+                    <div class="pricing-attr"><span class="pricing-mk">✓</span><span class="lab">Скорость</span><span class="val">Максимальная</span></div>
+                    <div class="pricing-attr"><span class="pricing-mk">✓</span><span class="lab">Объём</span><span class="val">Максимальный</span></div>
+                </div>
+                <a href="/auth/" class="pricing-cta">Начать бесплатно →</a>
             </div>
-        </div>
 
-        <div class="text-center mt-12 sa d4">
-            <a href="/auth/" class="inline-flex items-center gap-2 text-sm transition-colors hover:underline"
-               style="color:#22d3ee">
-                Попробовать бесплатно
-            </a>
         </div>
     </div>
 </section>
