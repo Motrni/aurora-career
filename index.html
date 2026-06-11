@@ -769,6 +769,14 @@ tailwind.config = {
         #pricing .pricing-card--win { order: -1; }
     }
 
+    /* Безопасность — кастомная иллюстрация (тест: карточка 1) */
+    #safety .safety-feature-img {
+        width: 128px;
+        height: 128px;
+        object-fit: contain;
+        display: block;
+    }
+
     /* ── Mobile Menu ── */
     .mob-menu { transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
     .mob-menu.open { transform: translateX(0); }
@@ -1900,10 +1908,9 @@ tailwind.config = {
             <div class="card-wrap sa">
                 <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
                     <div class="mb-6">
-                        <div class="w-32 h-32 rounded-[16px] flex items-center justify-center"
-                             style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.2))">
-                            <span class="material-symbols-outlined" style="color:#22d3ee;font-size:56px">security</span>
-                        </div>
+                        <img class="safety-feature-img" src="images/safety-shield.png?v=1"
+                             alt="" width="128" height="128" loading="lazy" decoding="async"
+                             aria-hidden="true">
                     </div>
                     <h3 class="text-2xl font-bold mb-4 text-white">Без передачи паролей.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
