@@ -579,6 +579,54 @@ tailwind.config = {
         background: linear-gradient(90deg, #36c9e8, #8b5cf6);
     }
 
+    /* Фирменная заглушка видео — показывается пока ролик не готов
+       играть плавно (на медленном интернете перекрывает «дёргающийся» кадр) */
+    #hero .hero-video-poster {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background:
+            radial-gradient(120% 80% at 50% 32%, rgba(139,92,246,.5), transparent 60%),
+            linear-gradient(180deg, #10183f, #0a0e2a);
+        transition: opacity .6s ease;
+    }
+    #hero .hero-video.is-playing .hero-video-poster {
+        opacity: 0;
+        pointer-events: none;
+    }
+    #hero .hero-poster-lockup {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    #hero .hero-poster-emblem {
+        width: 52px;
+        height: 52px;
+        flex: 0 0 auto;
+        filter: drop-shadow(0 0 16px rgba(54,201,232,.6));
+    }
+    #hero .hero-poster-word {
+        font-family: 'Unbounded', sans-serif;
+        font-weight: 800;
+        font-size: 36px;
+        letter-spacing: 1px;
+        color: #fff;
+    }
+    #hero .hero-poster-sub {
+        color: rgba(255,255,255,.72);
+        font-size: 14px;
+        letter-spacing: .2px;
+    }
+    @media (max-width: 480px) {
+        #hero .hero-poster-emblem { width: 40px; height: 40px; }
+        #hero .hero-poster-word { font-size: 28px; }
+    }
+
     .hero-scroll-cue {
         display: flex;
         flex-direction: column;
@@ -1295,9 +1343,14 @@ tailwind.config = {
         grid-template-columns: repeat(2, 1fr);
         gap: 24px;
         align-items: stretch;
+        /* Карточки портретные — на всю ширину контейнера они растягивались
+           в почти горизонтальные и cover резал лица по бокам.
+           Ограничиваем блок ~3/4 ширины и центрируем. */
+        max-width: 860px;
+        margin: 0 auto;
     }
     @media (max-width: 768px) {
-        .team-grid { grid-template-columns: 1fr; }
+        .team-grid { grid-template-columns: 1fr; max-width: 420px; }
     }
     .team-card {
         display: flex;
@@ -1308,8 +1361,7 @@ tailwind.config = {
     .card-photo-wrap {
         position: relative;
         width: 100%;
-        aspect-ratio: 10 / 13;
-        max-height: 364px;
+        aspect-ratio: 4 / 5;
         overflow: hidden;
         flex-shrink: 0;
         background: linear-gradient(135deg, rgba(34,211,238,0.12), rgba(168,85,247,0.12));
@@ -1318,21 +1370,19 @@ tailwind.config = {
     }
     .team-card .card-photo {
         position: absolute;
-        top: 0;
-        left: 0;
+        inset: 0;
         width: 100%;
-        height: 145%;
+        height: 100%;
         object-fit: cover;
-        object-position: top center;
+        object-position: 50% 22%;
         display: block;
         pointer-events: none;
     }
     .team-card .card-photo--roman {
-        object-position: 50% 8%;
+        object-position: 50% 22%;
     }
     .team-card .card-photo--vadim {
-        object-position: 50% 24%;
-        transform: translateY(-14%);
+        object-position: 50% 30%;
     }
     .card-photo-wrap .team-photo-fade {
         position: absolute;
@@ -1618,6 +1668,13 @@ tailwind.config = {
                      aria-label="Смотреть видео: знакомство с Авророй за минуту">
                     <video id="hero-preview-video" class="hero-preview-vid" muted playsinline preload="metadata"
                            src="aurora-hero.mp4?v=1" aria-hidden="true"></video>
+                    <div class="hero-video-poster" aria-hidden="true">
+                        <div class="hero-poster-lockup">
+                            <img class="hero-poster-emblem" src="favicon-white.png?v=1" alt="" width="52" height="52">
+                            <span class="hero-poster-word">АВРОРА</span>
+                        </div>
+                        <div class="hero-poster-sub">Знакомство за минуту</div>
+                    </div>
                     <div class="hero-reel-pill"><span class="lv" aria-hidden="true"></span> 1:00</div>
                     <div class="hero-play" aria-hidden="true"></div>
                     <div class="hero-reel-cap">
@@ -2430,9 +2487,16 @@ function initHeroPreviewVideo() {
     video.defaultMuted = true;
     video.setAttribute('muted', '');
 
+    var shell = document.getElementById('hero-video-trigger');
+
+    // При старте воспроизведения прячем фирменную заглушку (плавный fade)
+    video.addEventListener('playing', function() {
+        if (shell) shell.classList.add('is-playing');
+    });
+
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         try { video.pause(); } catch (e) {}
-        return;
+        return; // заглушка остаётся видимой как статичная обложка
     }
 
     function playOnce() {
@@ -2444,19 +2508,28 @@ function initHeroPreviewVideo() {
         }
     }
 
-    var container = document.getElementById('hero-video-trigger');
-    if (!container) return;
+    // Запускаем ролик только когда он реально может проиграться без рывков.
+    // До этого момента (особенно на медленном интернете) пользователь видит
+    // статичную брендовую заглушку, а не дёргающееся видео.
+    function tryPlayWhenReady() {
+        if (video.readyState >= 4) { playOnce(); return; }
+        video.preload = 'auto';
+        video.addEventListener('canplaythrough', playOnce, { once: true });
+        try { video.load(); } catch (e) {}
+    }
+
+    if (!shell) return;
 
     var previewObserver = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {
             if (entry.isIntersecting) {
-                playOnce();
+                tryPlayWhenReady();
                 previewObserver.disconnect();
             }
         });
     }, { threshold: 0.35 });
 
-    previewObserver.observe(container);
+    previewObserver.observe(shell);
 }
 
 function openVideoModal() {
