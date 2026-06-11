@@ -769,12 +769,54 @@ tailwind.config = {
         #pricing .pricing-card--win { order: -1; }
     }
 
-    /* Безопасность — кастомная иллюстрация (тест: карточка 1) */
+    /* Безопасность — щит: ореол, zoom 1.3, fade снизу */
+    #safety .safety-icon-slot {
+        width: 128px;
+        height: 128px;
+        margin: 0 auto 0.75rem;
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+        -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 52%, rgba(0,0,0,0) 100%);
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 52%, rgba(0,0,0,0) 100%);
+    }
+    #safety .sec-icon {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+    }
+    #safety .sec-icon::before {
+        content: "";
+        position: absolute;
+        inset: -18%;
+        background: radial-gradient(circle, rgba(54,201,232,.35), transparent 65%);
+        filter: blur(14px);
+        z-index: 0;
+        pointer-events: none;
+    }
     #safety .safety-feature-img {
         width: 128px;
         height: 128px;
         object-fit: contain;
         display: block;
+        position: relative;
+        z-index: 1;
+        transform: scale(1.3);
+        transform-origin: center top;
+    }
+    #safety .safety-shield-fade {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+        background: linear-gradient(to top, rgba(10,14,42,0.9) 0%, rgba(10,14,42,0.35) 42%, transparent 72%);
+    }
+    #safety .safety-card-shield .safety-card-title {
+        position: relative;
+        z-index: 1;
     }
 
     /* ── Mobile Menu ── */
@@ -1906,13 +1948,16 @@ tailwind.config = {
 
             <!-- Card 1 -->
             <div class="card-wrap sa">
-                <div class="glass-card relative p-8 h-full flex flex-col items-center text-center">
-                    <div class="mb-6">
-                        <img class="safety-feature-img" src="images/safety-shield.png?v=1"
-                             alt="" width="128" height="128" loading="lazy" decoding="async"
-                             aria-hidden="true">
+                <div class="glass-card safety-card-shield relative p-8 h-full flex flex-col items-center text-center">
+                    <div class="safety-icon-slot">
+                        <div class="sec-icon">
+                            <img class="safety-feature-img" src="images/safety-shield.png?v=1"
+                                 alt="" width="128" height="128" loading="lazy" decoding="async"
+                                 aria-hidden="true">
+                        </div>
+                        <div class="safety-shield-fade" aria-hidden="true"></div>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4 text-white">Без передачи паролей.</h3>
+                    <h3 class="safety-card-title text-2xl font-bold mb-4 text-white">Без передачи паролей.</h3>
                     <p style="color:rgba(255,255,255,0.7);line-height:1.75">
                         Мы используем безопасные методы авторизации и никогда не храним ваши данные.
                     </p>
