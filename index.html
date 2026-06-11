@@ -2783,23 +2783,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+
     // Загрузились в середине/внизу страницы: всё, что выше экрана, уже «прочитано»
     groups.forEach(function(group, root) {
         if (root.getBoundingClientRect().bottom < 0) reveal(group, true, root);
     });
 
+    // Направление скролла трекаем глобально — внутри колбэка IO оно ненадёжно
+    // (колбэки на быстром скролле приходят пачкой с задержкой)
     var lastY = window.scrollY;
+    var goingUp = false;
+    window.addEventListener('scroll', function() {
+        var y = window.scrollY;
+        if (y !== lastY) { goingUp = y < lastY; lastY = y; }
+    }, { passive: true });
+
     var saObserver = new IntersectionObserver(function(entries) {
-        var goingUp = window.scrollY < lastY;
-        lastY = window.scrollY;
         entries.forEach(function(e) {
             if (!e.isIntersecting) return;
-            // Блок входит сверху (скролл вверх) — показываем мгновенно, без выезда снизу
+            // Блок въезжает сверху (скролл вверх) — без выезда снизу, мгновенно
             var fromTop = goingUp && e.boundingClientRect.top < 0;
             reveal(groups.get(e.target) || [e.target], fromTop, e.target);
             saObserver.unobserve(e.target);
         });
-    }, { threshold: 0, rootMargin: '0px 0px -60px 0px' });
+    }, {
+        threshold: 0,
+        // Прогрев: при движении вниз триггерим за ~45% экрана до входа,
+        // чтобы выезд снизу успел доиграть ДО того, как блок реально виден.
+        rootMargin: '0px 0px ' + Math.round(vh * 0.45) + 'px 0px'
+    });
 
     groups.forEach(function(group, root) {
         var pending = group.some(function(el) { return !el.classList.contains('vis'); });
