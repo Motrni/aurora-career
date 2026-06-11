@@ -77,7 +77,7 @@
       "name": "Сколько откликов отправляет система?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Объём зависит от тарифа и ваших настроек: вы сами задаёте фильтры вакансий, желаемую интенсивность и стоп-условия. Система не превышает дневные лимиты площадок."
+        "text": "До 60 откликов в день — в зависимости от тарифа и ваших настроек. Система соблюдает лимиты площадок и отправляет отклики только по вашим фильтрам."
       }
     },
     {
@@ -86,14 +86,6 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Скоростью и охватом. Вручную кандидат отправляет 5–10 осмысленных откликов в день, система — десятки, и к каждому пишет сопроводительное письмо. Ваше время уходит на собеседования, а не на рутину."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Система меняет моё резюме?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Нет. Оригинальное резюме остаётся нетронутым. Система готовит адаптированные версии под конкретные вакансии и показывает их вам — управление всегда в ваших руках."
       }
     },
     {
@@ -476,9 +468,7 @@ tailwind.config = {
         border-radius: 22px;
         cursor: pointer;
         overflow: hidden;
-        background:
-            radial-gradient(120% 80% at 50% 20%, rgba(139,92,246,.5), transparent 60%),
-            linear-gradient(180deg, #10183f, #0a0e2a);
+        background: #000;
         border: 1px solid rgba(255,255,255,.14);
         box-shadow: 0 24px 60px rgba(74,123,255,.35), inset 0 1px 0 rgba(255,255,255,.2);
     }
@@ -487,10 +477,12 @@ tailwind.config = {
     }
     #hero .hero-preview-vid {
         position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
+        top: 50%;
+        right: 0;
+        width: 55%;
+        height: 110%;
+        transform: translateY(-50%) scale(1.1);
+        object-fit: cover;
         object-position: center center;
         z-index: 0;
         pointer-events: none;
@@ -579,25 +571,39 @@ tailwind.config = {
         background: linear-gradient(90deg, #36c9e8, #8b5cf6);
     }
 
-    /* Фирменная заглушка видео — показывается пока ролик не готов
-       играть плавно (на медленном интернете перекрывает «дёргающийся» кадр) */
+    /* Фирменная заглушка — логотип в верхней половине (до play), подпись в нижней */
     #hero .hero-video-poster {
         position: absolute;
         inset: 0;
         z-index: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
-        background:
-            radial-gradient(120% 80% at 50% 32%, rgba(139,92,246,.5), transparent 60%),
-            linear-gradient(180deg, #10183f, #0a0e2a);
+        pointer-events: none;
+        background: #000;
         transition: opacity .6s ease;
     }
     #hero .hero-video.is-playing .hero-video-poster {
         opacity: 0;
-        pointer-events: none;
+    }
+    #hero .hero-poster-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 42px;
+    }
+    #hero .hero-poster-bottom {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-top: 42px;
     }
     #hero .hero-poster-lockup {
         display: flex;
@@ -629,16 +635,14 @@ tailwind.config = {
 
     .hero-scroll-cue {
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        color: #9aa3c7;
-        font-size: 12px;
+        justify-content: center;
         padding-bottom: 30px;
-        opacity: .8;
     }
     .hero-scroll-cue .ch {
-        font-size: 18px;
+        font-size: 22px;
+        line-height: 1;
+        color: #36c9e8;
+        text-shadow: 0 0 14px rgba(54,201,232,.75), 0 0 28px rgba(139,92,246,.45);
         animation: hero-bob 1.6s ease-in-out infinite;
     }
     @keyframes hero-bob {
@@ -1671,13 +1675,17 @@ tailwind.config = {
                      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openVideoModal();}"
                      aria-label="Смотреть видео: знакомство с Авророй за минуту">
                     <video id="hero-preview-video" class="hero-preview-vid" muted playsinline preload="metadata"
-                           src="aurora-hero.mp4?v=1" aria-hidden="true"></video>
+                           src="aurora-hero.mp4?v=2" aria-hidden="true"></video>
                     <div class="hero-video-poster" aria-hidden="true">
-                        <div class="hero-poster-lockup">
-                            <img class="hero-poster-emblem" src="favicon-white.png?v=1" alt="" width="52" height="52">
-                            <span class="hero-poster-word">АВРОРА</span>
+                        <div class="hero-poster-top">
+                            <div class="hero-poster-lockup">
+                                <img class="hero-poster-emblem" src="favicon-white.png?v=1" alt="" width="52" height="52">
+                                <span class="hero-poster-word">АВРОРА</span>
+                            </div>
                         </div>
-                        <div class="hero-poster-sub">Знакомство за минуту</div>
+                        <div class="hero-poster-bottom">
+                            <div class="hero-poster-sub">Знакомство за минуту</div>
+                        </div>
                     </div>
                     <div class="hero-reel-pill"><span class="lv" aria-hidden="true"></span> 1:00</div>
                     <div class="hero-play" aria-hidden="true"></div>
@@ -1756,7 +1764,7 @@ tailwind.config = {
 </section>
 
 <div class="hero-scroll-cue" aria-hidden="true">
-    листайте ниже<span class="ch">⌄</span>
+    <span class="ch">⌄</span>
 </div>
 
 <!-- ── PROBLEMS ── -->
@@ -2239,7 +2247,7 @@ tailwind.config = {
                     Сколько откликов отправляет система?
                     <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
-                <div class="a-wrap"><div class="a"><div class="a-inner">Объём зависит от тарифа и ваших настроек: вы сами задаёте фильтры вакансий, желаемую интенсивность и стоп-условия. Система не превышает дневные лимиты площадок.</div></div></div>
+                <div class="a-wrap"><div class="a"><div class="a-inner">До 60 откликов в день — в зависимости от тарифа и ваших настроек. Система соблюдает лимиты площадок и отправляет отклики только по вашим фильтрам.</div></div></div>
             </div>
 
             <div class="item card-wrap sa d2">
@@ -2248,14 +2256,6 @@ tailwind.config = {
                     <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
                 <div class="a-wrap"><div class="a"><div class="a-inner">Скоростью и охватом. Вручную кандидат отправляет 5–10 осмысленных откликов в день, система — десятки, и к каждому пишет персонализированное сопроводительное письмо. Ваше время уходит на собеседования, а не на рутину.</div></div></div>
-            </div>
-
-            <div class="item card-wrap sa d1">
-                <button class="q" type="button" aria-expanded="false">
-                    Система меняет моё резюме?
-                    <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-                </button>
-                <div class="a-wrap"><div class="a"><div class="a-inner">Нет. Оригинальное резюме остаётся нетронутым. Система готовит адаптированные версии под конкретные вакансии и показывает их вам — управление всегда в ваших руках.</div></div></div>
             </div>
 
             <div class="item card-wrap sa d2">
@@ -2481,7 +2481,7 @@ function videoApiBase() {
         : 'https://api.aurora-career.ru';
 }
 
-/* Hero: превью aurora-hero.mp4 — один раз, без loop */
+/* Hero: превью aurora-hero.mp4 (портрет, чёрный фон слева) — один раз, без loop */
 function initHeroPreviewVideo() {
     var video = document.getElementById('hero-preview-video');
     if (!video) return;
