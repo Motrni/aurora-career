@@ -1577,11 +1577,11 @@ tailwind.config = {
 
 <link rel="stylesheet" href="cookie-consent.css">
 <link rel="stylesheet" href="legal-modal.css">
-<link rel="stylesheet" href="hero-interactive.css?v=1">
+<link rel="stylesheet" href="hero-interactive.css?v=2">
 <script src="legal-modal.js?v=1.0"></script>
 <script src="cookie-consent.js?v=1.1"></script>
 <script src="hero-wave.js?v=1" defer></script>
-<script src="hero-interactive.js?v=1" defer></script>
+<script src="hero-interactive.js?v=2" defer></script>
 <script src="hero-ab.js?v=1" defer></script>
 </head>
 
@@ -1766,78 +1766,40 @@ tailwind.config = {
     </div>
 </section>
 
-<!-- ── HERO B (интерактивный) ── -->
+<!-- ── HERO B (интерактивный, эталон aurora-hero-interactive.html) ── -->
 <section id="hero-variant-b" class="hero-b" hidden>
     <div class="hero-bg" aria-hidden="true">
         <canvas id="wave"></canvas>
         <div class="dots"></div>
     </div>
-    <div class="hero-b-in">
-        <h1 class="hero-b-h1"><span class="grad">Аврора</span> — поиск работы на автопилоте</h1>
-        <p class="hero-b-lead">Карьерный ИИ-ассистент сам находит вакансии и откликается за вас. Поиск работы ещё никогда не был таким лёгким — попробуйте прямо здесь, без регистрации.</p>
+    <div class="hero-in">
+        <h1 class="hero-b-h1"><span class="g">Аврора</span> — поиск работы<br>на автопилоте</h1>
+        <p class="lead">Карьерный ИИ-ассистент сам находит вакансии и откликается за вас. Поиск работы ещё никогда не был таким лёгким — попробуйте прямо здесь, без регистрации.</p>
 
-        <div class="demo-head">
-            <div class="demo-ring-wrap" aria-hidden="true">
-                <svg class="demo-ring-svg" viewBox="0 0 120 120">
-                    <defs>
-                        <linearGradient id="demoRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stop-color="#36c9e8"/>
-                            <stop offset="100%" stop-color="#8b5cf6"/>
-                        </linearGradient>
-                    </defs>
-                    <circle class="demo-ring-track" cx="60" cy="60" r="52"/>
-                    <circle id="demoRingProg" class="demo-ring-prog" cx="60" cy="60" r="52"/>
-                </svg>
-                <div class="demo-ring-center">
-                    <span id="demoRingNum" class="demo-ring-num">0</span>
-                    <span id="demoRingSub" class="demo-ring-sub">из 10</span>
+        <div class="panel">
+            <div class="p-head">
+                <div class="p-title">Управление откликами<span>Интеллектуальная автоматизация поиска и откликов</span></div>
+                <div class="tabs" role="tablist">
+                    <button type="button" class="tab active" data-tab="auto" role="tab">Автопилот</button>
+                    <button type="button" class="tab" data-tab="manual" role="tab">Ручной режим</button>
+                    <button type="button" class="tab" data-tab="cover" role="tab">Сопровод</button>
                 </div>
             </div>
-            <div class="demo-head-text">
-                <h2 id="demoHeadTitle" class="demo-head-title">Сделано откликов</h2>
-                <p id="demoHeadSub" class="demo-head-sub">Автопилот неактивен</p>
-            </div>
-            <div class="demo-head-actions">
-                <button type="button" id="demoMainBtn" class="demo-main-btn">Запустить автопилот</button>
-                <p id="demoMainHint" class="demo-main-hint hidden">Автопилот продолжит работу завтра в 9:00</p>
-            </div>
-        </div>
-
-        <div class="demo-panel">
-            <div class="demo-panel-hdr">
-                <span>Управление откликами</span>
-                <div class="demo-tabs" role="tablist">
-                    <button type="button" class="demo-tab is-active" data-tab="auto" role="tab">Автопилот</button>
-                    <button type="button" class="demo-tab" data-tab="manual" role="tab">Ручной режим</button>
-                    <button type="button" class="demo-tab" data-tab="cover" role="tab">Сопровод</button>
-                </div>
-            </div>
-            <div class="live-wrap" id="liveWrap">
-                <div class="pane is-active" data-tab="auto" role="tabpanel">
-                    <div class="term" id="autoTerm">
-                        <div class="term-hint">Нажмите «Запустить автопилот», чтобы увидеть демо</div>
+            <div class="p-body">
+                <div class="status">
+                    <div class="st-l">
+                        <div class="ring" aria-hidden="true"><b id="ringN">0</b><small id="ringD">из 10</small></div>
+                        <div class="st-txt"><b id="stTitle">Автопилот готов к запуску</b><p id="stDesc">Найдёт релевантные вакансии и отправит отклики за вас. Жмите «Запустить».</p></div>
                     </div>
-                    <div class="demo-stats">
-                        <div class="demo-stat"><b id="stSent">0</b><span>Отправлено</span></div>
-                        <div class="demo-stat"><b id="stChecked">0</b><span>Проверено</span></div>
-                        <div class="demo-stat"><b id="stSaved">0</b><span>Время вручную</span></div>
+                    <div class="go-col">
+                        <button type="button" class="go" id="goBtn">Запустить автопилот</button>
+                        <div class="go-note" id="goNote"></div>
                     </div>
                 </div>
-                <div class="pane" data-tab="manual" role="tabpanel">
-                    <div class="manual-empty" id="manualEmpty">
-                        <p>Нажмите «Показать вакансии» над панелью</p>
-                    </div>
-                    <div class="manual-list" id="manualList" hidden></div>
-                </div>
-                <div class="pane" data-tab="cover" role="tabpanel">
-                    <div class="cover-empty" id="coverEmpty">
-                        <p>Сгенерируйте сопроводительное письмо под вакансию</p>
-                    </div>
-                    <div class="cover-loader" id="coverLoader" hidden>
-                        <div class="cover-spinner" aria-hidden="true"></div>
-                        Аврора генерирует письмо под вакансию…
-                    </div>
-                    <div class="cover-letter" id="coverLetter" hidden></div>
+                <div class="live-wrap" id="liveWrap">
+                    <div class="pane active" data-pane="auto" role="tabpanel"><div class="hint">Нажмите кнопку выше, чтобы увидеть демо ↑</div></div>
+                    <div class="pane" data-pane="manual" role="tabpanel"><div class="hint">Нажмите кнопку выше, чтобы увидеть демо ↑</div></div>
+                    <div class="pane" data-pane="cover" role="tabpanel"><div class="hint">Нажмите кнопку выше, чтобы увидеть демо ↑</div></div>
                 </div>
             </div>
         </div>

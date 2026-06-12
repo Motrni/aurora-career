@@ -1,328 +1,262 @@
 /**
- * Интерактивная демо-панель hero variant B.
+ * Интерактивная демо-панель hero variant B (логика из aurora-hero-interactive.html).
  */
 (function () {
   'use strict';
 
-  var FEED = [
-    { role: 'Backend-разработчик (Python)', company: 'Тинькофф', match: 78, sent: true, reason: 'Совпадение по Python, FastAPI и PostgreSQL' },
-    { role: 'Middle Python Developer', company: 'Авито', match: 41, sent: false, reason: 'Ищут junior с опытом до 2 лет' },
-    { role: 'Senior Backend Engineer', company: 'Ozon Tech', match: 86, sent: true, reason: 'Совпадение по микросервисам и Kafka' },
-    { role: 'Разработчик API', company: 'СберТех', match: 35, sent: false, reason: 'Нужен другой стек: Java + Spring' },
-    { role: 'Python-разработчик', company: 'Яндекс', match: 72, sent: true, reason: 'Совпадение по навыкам и домену fintech' },
-    { role: 'Backend Developer', company: 'VK', match: 48, sent: false, reason: 'Требуется релокация в офис' },
-    { role: 'Инженер платформы', company: 'Wildberries', match: 81, sent: true, reason: 'Совпадение по highload и CI/CD' },
-    { role: 'Python Engineer', company: 'Райффайзен', match: 67, sent: true, reason: 'Банковский домен и опыт с API' },
-    { role: 'Software Engineer', company: 'Лаборатория Касперского', match: 44, sent: false, reason: 'Зарплата ниже вашего фильтра' },
-    { role: 'Backend-разработчик', company: '2ГИС', match: 74, sent: true, reason: 'Совпадение по Django и геоданным' },
-    { role: 'Senior Python Dev', company: 'МТС Digital', match: 69, sent: true, reason: 'Совпадение по async и Kubernetes' },
-    { role: 'Разработчик', company: 'HeadHunter', match: 52, sent: true, reason: 'Совпадение по продуктовой разработке' },
-    { role: 'Platform Engineer', company: 'X5 Tech', match: 38, sent: false, reason: 'Ищут специалиста с Go, не Python' },
-    { role: 'Backend-разработчик', company: 'Самокат', match: 77, sent: true, reason: 'Совпадение по навыкам и удалёнке' },
-    { role: 'Python Developer', company: 'Циан', match: 71, sent: true, reason: 'Совпадение по стеку и опыту в продукте' }
-  ];
-
-  var MANUAL_JOBS = [
-    { role: 'Senior Python Developer', company: 'Тинькофф', salary: 'до 420 000 ₽', match: 88 },
-    { role: 'Backend Engineer', company: 'Авито', salary: 'до 380 000 ₽', match: 76 },
-    { role: 'Разработчик API', company: 'Ozon', salary: 'до 350 000 ₽', match: 82 },
-    { role: 'Python-разработчик', company: 'Яндекс', salary: 'до 400 000 ₽', match: 79 },
-    { role: 'Platform Engineer', company: 'VK', salary: 'до 360 000 ₽', match: 71 },
-    { role: 'Backend Developer', company: 'Сбер', salary: 'до 340 000 ₽', match: 68 },
-    { role: 'Инженер данных', company: 'Wildberries', salary: 'до 330 000 ₽', match: 64 },
-    { role: 'Python Engineer', company: '2ГИС', salary: 'до 310 000 ₽', match: 73 },
-    { role: 'Senior Backend', company: 'HeadHunter', salary: 'до 370 000 ₽', match: 80 },
-    { role: 'Backend-разработчик', company: 'МТС', salary: 'до 320 000 ₽', match: 70 }
-  ];
-
-  var COVER_LETTER =
-    'Здравствуйте!\n\n' +
-    'Меня заинтересовала вакансия — мой опыт в разработке высоконагруженных Python-сервисов ' +
-    'хорошо совпадает с вашими требованиями. За последние 4 года я проектировал API, ' +
-    'оптимизировал PostgreSQL и выводил микросервисы в прод.\n\n' +
-    'Буду рад обсудить, как мой опыт поможет вашей команде. Готов к собеседованию в удобное время.\n\n' +
-    'С уважением,\nАлександр';
-
   var COVER_STORAGE = 'auroraHeroCoverCount';
 
-  var inited = false;
-  var activeTab = 'auto';
+  var liveWrap, goBtn, goNote, stTitle, stDesc, ringN, ringD;
+  var tab = 'auto';
+  var busy = false;
   var autoState = 'idle';
-  var streamTimer = null;
-  var feedIndex = 0;
-  var sentCount = 0;
-  var checkedCount = 0;
-  var foundTotal = 0;
-  var coverCount = 0;
-  var manualShown = false;
+  var autoRun = false;
+  var inited = false;
 
-  var els = {};
-
-  function $(id) { return document.getElementById(id); }
-
-  function syncHeight() {
-    var wrap = els.liveWrap;
-    if (!wrap) return;
-    var pane = wrap.querySelector('.pane.is-active');
-    if (!pane) return;
-    wrap.style.height = pane.scrollHeight + 'px';
-  }
-
-  function setRing(value, max, label) {
-    if (!els.ringNum || !els.ringSub) return;
-    els.ringNum.textContent = String(value);
-    els.ringSub.textContent = label || ('из ' + max);
-    var pct = max > 0 ? Math.min(1, value / max) : 0;
-    var circ = 2 * Math.PI * 52;
-    if (els.ringProg) {
-      els.ringProg.style.strokeDashoffset = String(circ * (1 - pct));
+  var cfg = {
+    auto: {
+      title: 'Автопилот готов к запуску',
+      desc: 'Найдёт релевантные вакансии и отправит отклики за вас. Жмите «Запустить».'
+    },
+    manual: {
+      btn: 'Показать вакансии',
+      title: 'Ручной поиск вакансий',
+      desc: 'Вакансии подбираются по вашим фильтрам. Жмите, чтобы увидеть подборку.'
+    },
+    cover: {
+      btn: 'Создать сопровод',
+      title: 'Сопроводительные письма',
+      desc: 'Персональное письмо под вакансию — одной кнопкой.'
     }
+  };
+
+  var state = {
+    auto: { ringN: 0, ringD: 'из 10' },
+    manual: { ringN: 243, ringD: 'найдено' },
+    cover: { ringN: 0, ringD: 'из 100' }
+  };
+
+  var feed = [
+    { role: 'QA Engineer', co: 'Альфа-Банк', pct: 91, ok: true, r: 'опыт в банке закрывает требования' },
+    { role: 'Junior QA Tester', co: 'Стартап Nova', pct: 34, ok: false, r: 'ищут junior, вы — senior' },
+    { role: 'QA Automation', co: '2GIS', pct: 88, ok: true, r: 'ваш стек на Python совпал' },
+    { role: 'SDET (Java)', co: 'Корп-проект', pct: 46, ok: false, r: 'нужен глубокий Java, у вас — Python' },
+    { role: 'Ведущий тестировщик', co: 'BetBoom', pct: 84, ok: true, r: 'совпадение по ключевым навыкам' },
+    { role: 'QA Lead (релокация)', co: 'ESSG', pct: 41, ok: false, r: 'требуется переезд, у вас — удалёнка' },
+    { role: 'QA Tech Expert', co: 'Pay Digital', pct: 79, ok: true, r: 'мобайл + блокчейн — ваш профиль' },
+    { role: 'Manual QA', co: 'Аутсорс Гамма', pct: 38, ok: false, r: 'зарплата ниже вашего фильтра' },
+    { role: 'QA Backend', co: 'Haier', pct: 72, ok: true, r: 'PostgreSQL и Kafka — в плюс' },
+    { role: 'QA Engineer', co: 'Yandex', pct: 81, ok: true, r: 'микросервисы — ваш опыт' },
+    { role: 'Тестировщик 1С', co: 'Интегратор', pct: 29, ok: false, r: 'другой стек (1С), не ваш профиль' },
+    { role: 'QA Mobile', co: 'Pay Digital', pct: 68, ok: true, r: 'мобильное тестирование совпало' },
+    { role: 'QA Automation', co: 'IBS', pct: 76, ok: true, r: 'опыт автоматизации подошёл' },
+    { role: 'QA Analyst', co: 'СберТех', pct: 83, ok: true, r: 'аналитика и API — ваш конёк' },
+    { role: 'QA Engineer (Senior)', co: 'Каспийский банк', pct: 74, ok: true, r: 'банковский домен — точное попадание' }
+  ];
+
+  function pane(n) {
+    return liveWrap.querySelector('.pane[data-pane="' + n + '"]');
   }
 
-  function updateHead() {
-    if (activeTab === 'auto') {
-      els.headTitle.textContent = 'Сделано откликов';
-      if (autoState === 'idle') {
-        els.headSub.textContent = 'Автопилот неактивен';
-        els.mainBtn.textContent = 'Запустить автопилот';
-        els.mainBtn.classList.remove('is-muted', 'is-stop');
-        els.mainHint.classList.add('hidden');
-      } else if (autoState === 'running') {
-        els.headSub.textContent = 'Автопилот работает…';
-        els.mainBtn.textContent = 'Остановить автопилот';
-        els.mainBtn.classList.add('is-stop');
-        els.mainBtn.classList.remove('is-muted');
-        els.mainHint.classList.add('hidden');
-      } else {
-        els.headSub.textContent = 'Дневной лимит достигнут';
-        els.mainBtn.textContent = 'Остановить автопилот';
-        els.mainBtn.classList.add('is-stop', 'is-muted');
-        els.mainHint.textContent = 'Автопилот продолжит работу завтра в 9:00';
-        els.mainHint.classList.remove('hidden');
-      }
-      setRing(sentCount, 10, 'из 10');
-    } else if (activeTab === 'manual') {
-      els.headTitle.textContent = 'Ручной поиск';
-      els.headSub.textContent = manualShown ? '10 вакансий в подборке' : 'Покажите подборку вакансий';
-      els.mainBtn.textContent = 'Показать вакансии';
-      els.mainBtn.classList.remove('is-stop', 'is-muted');
-      els.mainHint.classList.add('hidden');
-      setRing(manualShown ? 10 : 0, 10, 'из 10');
+  function fit() {
+    if (!liveWrap) return;
+    var p = pane(tab);
+    if (p) liveWrap.style.height = p.scrollHeight + 'px';
+  }
+
+  function syncHead() {
+    var c = cfg[tab];
+    var s = state[tab];
+    stTitle.textContent = c.title;
+    stDesc.textContent = c.desc;
+    ringN.textContent = s.ringN;
+    ringD.textContent = s.ringD;
+    if (tab === 'auto') {
+      goBtn.textContent = autoState === 'idle' ? 'Запустить автопилот' : 'Остановить автопилот';
+      goBtn.classList.toggle('stop', autoState !== 'idle');
+      goNote.textContent = autoState === 'done' ? 'Автопилот продолжит работу завтра в 9:00' : '';
     } else {
-      els.headTitle.textContent = 'Сопроводительные';
-      els.headSub.textContent = 'Генерация под вакансию';
-      els.mainBtn.textContent = 'Создать сопровод';
-      els.mainBtn.classList.remove('is-stop', 'is-muted');
-      els.mainHint.classList.add('hidden');
-      setRing(coverCount, 100, 'из 100');
+      goBtn.textContent = c.btn;
+      goBtn.classList.remove('stop');
+      goNote.textContent = '';
     }
   }
 
-  function appendLogLine(html) {
-    var line = document.createElement('div');
-    line.className = 'term-line';
-    line.innerHTML = html;
-    els.autoTerm.appendChild(line);
-    els.autoTerm.scrollTop = els.autoTerm.scrollHeight;
-    syncHeight();
-  }
-
-  function resetAutoLog() {
-    els.autoTerm.innerHTML = '';
-    sentCount = 0;
-    checkedCount = 0;
-    feedIndex = 0;
-    els.stSent.textContent = '0';
-    els.stChecked.textContent = '0';
-    els.stSaved.textContent = '0';
-  }
-
-  function stopStream() {
-    if (streamTimer) {
-      clearTimeout(streamTimer);
-      streamTimer = null;
-    }
-    autoState = 'idle';
-    updateHead();
-  }
-
-  function streamNext() {
-    if (autoState !== 'running') return;
-
-    if (sentCount >= 10) {
-      appendLogLine(
-        '<span class="term-done">На сегодня отправлено 10 откликов из 10. ' +
-        'Завтра в 9:00 автопилот продолжит работу.</span>'
-      );
-      autoState = 'done';
-      updateHead();
-      return;
-    }
-
-    while (feedIndex < FEED.length && sentCount < 10) {
-      var item = FEED[feedIndex++];
-      checkedCount++;
-      els.stChecked.textContent = String(checkedCount);
-      els.stSaved.textContent = String(Math.min(6, Math.floor(checkedCount * 0.4)));
-
-      if (item.sent) {
-        sentCount++;
-        els.stSent.textContent = String(sentCount);
-        appendLogLine(
-          '<span class="term-ok">✓ Отклик отправлен · ' + item.role + ', ' + item.company +
-          ' — мэтч ' + item.match + '%</span>' +
-          '<span class="term-reason">' + item.reason + '</span>'
-        );
-        setRing(sentCount, 10, 'из 10');
-        if (sentCount >= 10) {
-          streamTimer = setTimeout(streamNext, 520);
-          return;
-        }
-      } else {
-        appendLogLine(
-          '<span class="term-skip">→ Пропущено · ' + item.role + ', ' + item.company +
-          ' — мэтч ' + item.match + '%</span>' +
-          '<span class="term-reason">' + item.reason + '</span>'
-        );
-      }
-
-      streamTimer = setTimeout(streamNext, 380 + Math.random() * 280);
-      return;
-    }
-
-    if (sentCount >= 10) {
-      streamNext();
-    } else {
-      autoState = 'done';
-      updateHead();
-    }
-  }
-
-  function startAutopilot() {
-    resetAutoLog();
-    foundTotal = 200 + Math.floor(Math.random() * 51);
-    appendLogLine(
-      '<span class="term-head">Найдено ' + foundTotal + ' вакансий по вашим фильтрам</span>'
-    );
+  function startAuto() {
     autoState = 'running';
-    updateHead();
-    streamTimer = setTimeout(streamNext, 600);
-  }
+    autoRun = true;
+    syncHead();
+    state.auto.ringN = 0;
+    if (tab === 'auto') ringN.textContent = '0';
 
-  function onMainBtn() {
-    if (activeTab === 'auto') {
-      if (autoState === 'idle') {
-        startAutopilot();
-      } else {
-        stopStream();
-        resetAutoLog();
-        els.autoTerm.innerHTML = '<div class="term-hint">Нажмите «Запустить автопилот», чтобы увидеть демо</div>';
-        syncHeight();
+    var found = 200 + Math.floor(Math.random() * 51);
+    var p = pane('auto');
+    p.innerHTML =
+      '<div class="term" id="term"><div class="l hd">Найдено ' + found +
+      ' вакансий. Оцениваю соответствие профилю…</div></div>' +
+      '<div class="stat-row"><div class="stat"><div class="lb">Отправлено</div><div class="nm" id="s1">0</div></div>' +
+      '<div class="stat"><div class="lb">Проверено</div><div class="nm" id="s2">0</div></div>' +
+      '<div class="stat"><div class="lb">Время вручную</div><div class="nm" id="s3">0 ч</div></div></div>';
+
+    var term = document.getElementById('term');
+    var i = 0;
+    var sent = 0;
+    fit();
+
+    (function step() {
+      if (!autoRun) return;
+      if (i >= feed.length || sent >= 10) {
+        var f = document.createElement('div');
+        f.className = 'l fin';
+        f.textContent = 'На сегодня отправлено 10 откликов из 10. Завтра в 9:00 автопилот продолжит работу.';
+        term.appendChild(f);
+        term.scrollTop = term.scrollHeight;
+        state.auto.ringN = 10;
+        if (tab === 'auto') ringN.textContent = '10';
+        autoState = 'done';
+        autoRun = false;
+        syncHead();
+        fit();
+        return;
       }
-    } else if (activeTab === 'manual') {
-      if (manualShown) return;
-      manualShown = true;
-      els.manualEmpty.hidden = true;
-      els.manualList.hidden = false;
-      els.manualList.innerHTML = '';
-      MANUAL_JOBS.forEach(function (job, i) {
-        var card = document.createElement('div');
-        card.className = 'manual-card';
-        card.style.animationDelay = (i * 0.06) + 's';
-        card.innerHTML =
-          '<div class="manual-card-top">' +
-            '<strong>' + job.role + '</strong>' +
-            '<span class="manual-match">' + job.match + '%</span>' +
-          '</div>' +
-          '<div class="manual-card-meta">' + job.company + ' · ' + job.salary + '</div>';
-        els.manualList.appendChild(card);
-      });
-      updateHead();
-      syncHeight();
-    } else {
-      if (els.coverLoader && !els.coverLoader.hidden) return;
-      els.coverLetter.hidden = true;
-      els.coverLoader.hidden = false;
-      if (els.coverEmpty) els.coverEmpty.hidden = true;
-      syncHeight();
-      var delay = 1500 + Math.random() * 300;
+      var v = feed[i];
+      var d = document.createElement('div');
+      d.className = 'l';
+      if (v.ok) {
+        sent++;
+        d.innerHTML =
+          '<span class="ok">✓ Отклик отправлен</span> · ' + v.role + ', ' + v.co +
+          ' — мэтч ' + v.pct + '%<span class="rs">' + v.r + '</span>';
+        state.auto.ringN = sent;
+        if (tab === 'auto') ringN.textContent = String(sent);
+        document.getElementById('s1').textContent = String(sent);
+      } else {
+        d.innerHTML =
+          '<span class="sk">→ Пропущено</span> · ' + v.role + ', ' + v.co +
+          ' — мэтч ' + v.pct + '%<span class="rs">' + v.r + '</span>';
+      }
+      term.appendChild(d);
+      term.scrollTop = term.scrollHeight;
+      i++;
+      document.getElementById('s2').textContent = String(Math.min(found, 15 + i * 16));
+      document.getElementById('s3').textContent = (i * 0.4).toFixed(1) + ' ч';
+      fit();
+      setTimeout(step, 620);
+    })();
+  }
+
+  function stopAuto() {
+    autoRun = false;
+    autoState = 'idle';
+    syncHead();
+  }
+
+  function runManual() {
+    busy = true;
+    var p = pane('manual');
+    var vac = [
+      ['Альфа-Банк', 'Ведущий тестировщик', '94%'],
+      ['2GIS', 'QA Engineer', '91%'],
+      ['BetBoom', 'QA Automation', '88%'],
+      ['Pay Digital', 'QA Tech Expert', '85%'],
+      ['СберТех', 'QA Analyst', '82%'],
+      ['Haier', 'QA Backend', '80%'],
+      ['IBS', 'QA Automation', '78%'],
+      ['Yandex', 'QA Engineer', '77%'],
+      ['Каспийский банк', 'QA Senior', '75%'],
+      ['Ozon', 'QA Mobile', '73%']
+    ];
+    p.innerHTML = '<div class="vac-list" id="vl"></div>';
+    var vl = document.getElementById('vl');
+    fit();
+    vac.forEach(function (v, idx) {
       setTimeout(function () {
-        els.coverLoader.hidden = true;
-        els.coverLetter.hidden = false;
-        els.coverLetter.textContent = COVER_LETTER;
-        coverCount++;
-        try { localStorage.setItem(COVER_STORAGE, String(coverCount)); } catch (e) {}
-        updateHead();
-        syncHeight();
-      }, delay);
+        var d = document.createElement('div');
+        d.className = 'vac';
+        d.innerHTML =
+          '<div class="ico">💼</div><div><b>' + v[1] + '</b><p>' + v[0] +
+          '</p></div><div class="resp">мэтч ' + v[2] + '</div>';
+        vl.appendChild(d);
+        fit();
+        if (idx === vac.length - 1) busy = false;
+      }, idx * 150);
+    });
+  }
+
+  function runCover() {
+    busy = true;
+    var p = pane('cover');
+    p.innerHTML =
+      '<div class="loader"><div class="spin"></div><div class="lt">Аврора генерирует письмо под вакансию…</div></div>';
+    fit();
+    setTimeout(function () {
+      var txt =
+        'Здравствуйте!\n\nУвидел вашу вакансию «Ведущий тестировщик» и откликаюсь с интересом. ' +
+        'За 5+ лет в QA выстраивал процессы тестирования в банковских системах, автоматизировал регресс ' +
+        'и снижал time-to-release.\n\nГотов обсудить, чем буду полезен вашей команде.\n\nС уважением,\nВадим';
+      p.innerHTML = '<div class="letter">' + txt + '</div>';
+      state.cover.ringN += 1;
+      try { localStorage.setItem(COVER_STORAGE, String(state.cover.ringN)); } catch (e) {}
+      if (tab === 'cover') ringN.textContent = String(state.cover.ringN);
+      fit();
+      busy = false;
+    }, 1600);
+  }
+
+  function onGoClick() {
+    if (tab === 'auto') {
+      if (autoState === 'idle') startAuto();
+      else stopAuto();
+      return;
     }
-  }
-
-  function switchTab(tab) {
-    activeTab = tab;
-    els.tabBtns.forEach(function (btn) {
-      btn.classList.toggle('is-active', btn.dataset.tab === tab);
-    });
-    els.panes.forEach(function (pane) {
-      pane.classList.toggle('is-active', pane.dataset.tab === tab);
-    });
-    updateHead();
-    requestAnimationFrame(function () {
-      requestAnimationFrame(syncHeight);
-    });
-  }
-
-  function collectEls() {
-    els.liveWrap = $('liveWrap');
-    els.autoTerm = $('autoTerm');
-    els.manualEmpty = $('manualEmpty');
-    els.manualList = $('manualList');
-    els.coverEmpty = $('coverEmpty');
-    els.coverLoader = $('coverLoader');
-    els.coverLetter = $('coverLetter');
-    els.headTitle = $('demoHeadTitle');
-    els.headSub = $('demoHeadSub');
-    els.mainBtn = $('demoMainBtn');
-    els.mainHint = $('demoMainHint');
-    els.ringNum = $('demoRingNum');
-    els.ringSub = $('demoRingSub');
-    els.ringProg = $('demoRingProg');
-    els.stSent = $('stSent');
-    els.stChecked = $('stChecked');
-    els.stSaved = $('stSaved');
-    els.tabBtns = Array.prototype.slice.call(document.querySelectorAll('.demo-tab'));
-    els.panes = Array.prototype.slice.call(document.querySelectorAll('#liveWrap .pane'));
+    if (busy) return;
+    if (tab === 'manual') runManual();
+    else runCover();
   }
 
   function init() {
-    if (inited) {
-      syncHeight();
-      return;
-    }
-    var root = $('hero-variant-b');
+    var root = document.getElementById('hero-variant-b');
     if (!root || root.hidden) return;
 
-    collectEls();
-    if (!els.liveWrap) return;
+    liveWrap = document.getElementById('liveWrap');
+    goBtn = document.getElementById('goBtn');
+    goNote = document.getElementById('goNote');
+    stTitle = document.getElementById('stTitle');
+    stDesc = document.getElementById('stDesc');
+    ringN = document.getElementById('ringN');
+    ringD = document.getElementById('ringD');
+    if (!liveWrap || !goBtn) return;
 
-    try {
-      var saved = parseInt(localStorage.getItem(COVER_STORAGE) || '0', 10);
-      if (!isNaN(saved) && saved > 0) coverCount = saved;
-    } catch (e) {}
+    if (!inited) {
+      try {
+        var saved = parseInt(localStorage.getItem(COVER_STORAGE) || '0', 10);
+        if (!isNaN(saved) && saved > 0) state.cover.ringN = saved;
+      } catch (e) {}
 
-    els.mainBtn.addEventListener('click', onMainBtn);
-    els.tabBtns.forEach(function (btn) {
-      btn.addEventListener('click', function () { switchTab(btn.dataset.tab); });
-    });
+      document.querySelectorAll('#hero-variant-b .tab').forEach(function (t) {
+        t.addEventListener('click', function () {
+          document.querySelectorAll('#hero-variant-b .tab').forEach(function (x) {
+            x.classList.remove('active');
+          });
+          t.classList.add('active');
+          liveWrap.querySelectorAll('.pane').forEach(function (p) {
+            p.classList.remove('active');
+          });
+          tab = t.dataset.tab;
+          pane(tab).classList.add('active');
+          syncHead();
+          fit();
+        });
+      });
 
-    updateHead();
-    inited = true;
+      goBtn.addEventListener('click', onGoClick);
+      window.addEventListener('resize', fit);
+      inited = true;
+    }
 
-    requestAnimationFrame(function () {
-      syncHeight();
-      window.addEventListener('resize', syncHeight);
-    });
+    syncHead();
+    fit();
   }
 
-  window.HeroInteractive = { init: init, syncHeight: syncHeight };
+  window.HeroInteractive = { init: init, syncHeight: fit };
 })();
