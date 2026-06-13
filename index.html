@@ -2819,29 +2819,40 @@ document.addEventListener('DOMContentLoaded', function() {
     requestAnimationFrame(function() { requestAnimationFrame(startAnim); });
 })();
 
-/* ── Dot Grid Background (Stitch-style) ── */
+/* ── Dot Grid Background (Stitch-style, барабан 2×vh + scroll-sync) ── */
 (function() {
     var canvas = document.getElementById('dot-grid-bg');
     if (!canvas || !canvas.getContext) { return; }
     var ctx = canvas.getContext('2d');
     var mouse = { x: -9999, y: -9999 };
+    var scrollY = 0;
     var spacing = 14;
     var radius = 1.1;
     var baseAlpha = 0.14;
     var hoverRadius = 130;
     var rafId = 0;
+    var scrollTicking = false;
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    // Базовая сетка рендерится один раз в offscreen-буфер;
-    // на mousemove перерисовывается только зона вокруг курсора, а не ~7000 точек
+    var dpr = 1;
+    // Плитка сетки = 2 экрана, шаг кратен spacing — бесшовный wrap при скролле
     var base = document.createElement('canvas');
     var bctx = base.getContext('2d');
 
+    function readScrollY() {
+        return window.pageYOffset || document.documentElement.scrollTop || 0;
+    }
+
+    function drumPeriod() {
+        var h = window.innerHeight || document.documentElement.clientHeight || 800;
+        return Math.max(spacing, Math.ceil((h * 2) / spacing) * spacing);
+    }
+
     function renderBase() {
         var w = window.innerWidth;
-        var h = window.innerHeight;
-        bctx.clearRect(0, 0, w, h);
+        var drumH = drumPeriod();
+        bctx.clearRect(0, 0, w, drumH);
         bctx.fillStyle = 'rgba(231,224,239,' + baseAlpha + ')';
-        for (var y = spacing * 0.5; y < h; y += spacing) {
+        for (var y = spacing * 0.5; y < drumH; y += spacing) {
             for (var x = spacing * 0.5; x < w; x += spacing) {
                 bctx.beginPath();
                 bctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -2851,15 +2862,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function resize() {
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.floor(window.innerWidth * dpr);
-        canvas.height = Math.floor(window.innerHeight * dpr);
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        var drumH = drumPeriod();
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        base.width = canvas.width;
-        base.height = canvas.height;
+        base.width = Math.floor(w * dpr);
+        base.height = Math.floor(drumH * dpr);
         bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        scrollY = readScrollY();
         renderBase();
         draw();
     }
@@ -2867,31 +2882,42 @@ document.addEventListener('DOMContentLoaded', function() {
     function draw() {
         var w = window.innerWidth;
         var h = window.innerHeight;
+        var drumH = drumPeriod();
+        var offset = scrollY % drumH;
+
         ctx.clearRect(0, 0, w, h);
-        ctx.drawImage(base, 0, 0, w, h);
+        for (var ty = -offset; ty < h; ty += drumH) {
+            ctx.drawImage(base, 0, 0, base.width, base.height, 0, ty, w, drumH);
+        }
+
         if (reducedMotion || mouse.x < -hoverRadius) return;
-        var x0 = Math.max(spacing * 0.5, mouse.x - hoverRadius);
-        var x1 = Math.min(w, mouse.x + hoverRadius);
-        var y0 = Math.max(spacing * 0.5, mouse.y - hoverRadius);
-        var y1 = Math.min(h, mouse.y + hoverRadius);
-        // Выравниваем старт по узлам сетки
+
+        // Подсветка в координатах документа → рисуем в viewport (1:1 со скроллом)
+        var docMX = mouse.x;
+        var docMY = scrollY + mouse.y;
+        var x0 = docMX - hoverRadius;
+        var x1 = docMX + hoverRadius;
+        var y0 = docMY - hoverRadius;
+        var y1 = docMY + hoverRadius;
         var sx = spacing * 0.5 + Math.ceil((x0 - spacing * 0.5) / spacing) * spacing;
         var sy = spacing * 0.5 + Math.ceil((y0 - spacing * 0.5) / spacing) * spacing;
-        for (var y = sy; y <= y1; y += spacing) {
-            for (var x = sx; x <= x1; x += spacing) {
-                var dist = Math.hypot(x - mouse.x, y - mouse.y);
+        for (var gy = sy; gy <= y1; gy += spacing) {
+            for (var gx = sx; gx <= x1; gx += spacing) {
+                var vy = gy - scrollY;
+                if (vy < -radius * 2 || vy > h + radius * 2) continue;
+                var dist = Math.hypot(gx - docMX, gy - docMY);
                 if (dist >= hoverRadius) continue;
                 var alpha = (1 - dist / hoverRadius) * 0.55;
                 ctx.fillStyle = 'rgba(231,224,239,' + alpha.toFixed(3) + ')';
                 ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.arc(gx, vy, radius, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
     }
 
     function scheduleDraw() {
-        if (rafId) { return; }
+        if (rafId) return;
         rafId = requestAnimationFrame(function() {
             rafId = 0;
             draw();
@@ -2910,7 +2936,19 @@ document.addEventListener('DOMContentLoaded', function() {
         scheduleDraw();
     });
 
+    window.addEventListener('scroll', function() {
+        if (!scrollTicking) {
+            scrollTicking = true;
+            requestAnimationFrame(function() {
+                scrollTicking = false;
+                scrollY = readScrollY();
+                scheduleDraw();
+            });
+        }
+    }, { passive: true });
+
     window.addEventListener('resize', resize);
+    scrollY = readScrollY();
     resize();
 })();
 
