@@ -1,54 +1,44 @@
 /* ── Hero variant B (эталон aurora-hero-interactive.html) ── */
 
-body.hero-v-b #dot-grid-bg { opacity: 0 !important; }
-
 /* Шапка variant B */
 body.hero-v-b #site-header {
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     border-bottom: none !important;
-    transition: padding 0.3s;
+}
+body.hero-v-b #site-header .max-w-7xl {
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 body.hero-v-b #header-nav,
 body.hero-v-b #header-auth,
 body.hero-v-b #burger-btn { display: none !important; }
-body.hero-v-b #header-cta-b {
-    display: inline-flex !important;
-    font-size: 14px;
-    font-weight: 600;
-    color: #fff;
-    text-decoration: none;
-    padding: 10px 22px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #36c9e8, #8b5cf6);
-    box-shadow: 0 8px 22px rgba(74, 123, 255, 0.4);
-    transition: transform 0.15s;
-}
-body.hero-v-a #header-cta-b { display: none !important; }
-body.hero-v-b #header-cta-b:active { transform: scale(0.97); }
 
 #site-header.hdr::after {
     content: "";
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: -5%;
+    right: -5%;
+    bottom: -14px;
     z-index: -1;
-    background: rgba(8, 10, 28, 0.6);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.035));
+    backdrop-filter: blur(22px) saturate(1.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
     opacity: 0;
-    transition: opacity 0.4s;
-    -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent);
-    mask-image: linear-gradient(to bottom, #000 62%, transparent);
+    transition: opacity 0.35s ease;
+    -webkit-mask-image: linear-gradient(to bottom, #000 52%, transparent 78%);
+    mask-image: linear-gradient(to bottom, #000 52%, transparent 78%);
     pointer-events: none;
 }
 body.hero-v-b #site-header.hdr.scrolled::after { opacity: 1; }
 
 body.hero-v-b #hero-ab-switch {
     margin-left: auto;
-    margin-right: 8px;
 }
-body.hero-v-b #hero-ab-switch ~ #header-cta-b { margin-left: 0; }
 
 .hero-ab-switch {
     display: inline-flex;
@@ -81,7 +71,7 @@ body.hero-v-b #hero-ab-switch ~ #header-cta-b { margin-left: 0; }
 #hero-variant-b.hero-b {
     position: relative;
     min-height: 100vh;
-    padding: 120px 22px 70px;
+    padding: 128px 22px 70px;
     text-align: center;
     overflow: hidden;
 }

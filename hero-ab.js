@@ -49,7 +49,7 @@
     if (!hdr) return;
     function onScroll() {
       if (!document.body.classList.contains('hero-v-b')) return;
-      hdr.classList.toggle('scrolled', window.scrollY > 120);
+      hdr.classList.toggle('scrolled', window.scrollY > 8);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
