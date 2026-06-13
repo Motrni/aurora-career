@@ -167,14 +167,14 @@ tailwind.config = {
         --font-display: 'Unbounded', system-ui, sans-serif;
         --font-body: 'Inter', system-ui, sans-serif;
     }
-    html { scroll-behavior: smooth; color-scheme: dark; overflow-x: hidden; }
+    html { scroll-behavior: smooth; color-scheme: dark; overflow-x: hidden; background: #0a0b1e; overscroll-behavior-y: none; }
     @media (min-width: 1024px) {
         html { scrollbar-gutter: stable; }
     }
     /* Градиент вынесен на фиксированный слой: background-attachment:fixed на body
        заставляет браузер перерисовывать фон (и пересчитывать backdrop-filter карточек)
        на каждый кадр скролла. Отдельный fixed-слой композитится на GPU без repaint. */
-    body { font-family: var(--font-body); background: #0a0b1e; min-width: 320px; overflow-x: hidden; position: relative; }
+    body { font-family: var(--font-body); background: #0a0b1e; min-width: 320px; overflow-x: hidden; position: relative; overscroll-behavior-y: none; }
     #dots-bg-css {
         position: absolute;
         inset: 0;
@@ -2399,19 +2399,13 @@ tailwind.config = {
 <!-- ══════════════════════════════════════════
      FOOTER
 ══════════════════════════════════════════ -->
-<footer class="py-16 px-4 sm:px-6" style="background:rgba(10,11,30,0.5);backdrop-filter:blur(4px);border-top:1px solid rgba(34,211,238,0.1)">
+<footer class="py-8 px-4 sm:px-6" style="background:transparent;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);-webkit-mask-image:linear-gradient(to top,#000 55%,transparent 100%);mask-image:linear-gradient(to top,#000 55%,transparent 100%);position:relative;z-index:10;">
     <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold tracking-widest" style="color:rgba(255,255,255,0.9)">AVRORA</h2>
-        </div>
         <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-sm"
              style="color:rgba(255,255,255,0.6)">
             <div class="text-center md:text-left">
                 <p class="mb-1">ИП Клепов Вадим Сергеевич | ИНН</p>
                 <p>220415598925 | ОГРНИП 326220200010610</p>
-            </div>
-            <div class="text-center">
-                <p>© 2026 Аврора. Все права защищены.</p>
             </div>
             <div class="flex gap-6 items-center">
                 <button type="button" onclick="openLegalModal('offer')"
