@@ -8,8 +8,8 @@ body.hero-v-b #site-header {
     border-bottom: none !important;
 }
 body.hero-v-b #site-header .max-w-7xl {
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-top: 14px;
+    padding-bottom: 24px;
 }
 body.hero-v-b #header-nav,
 body.hero-v-b #header-auth,
@@ -21,18 +21,18 @@ body.hero-v-b #burger-btn { display: none !important; }
     top: 0;
     left: -5%;
     right: -5%;
-    bottom: -14px;
+    bottom: -36px;
     z-index: -1;
     background: transparent;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.35s ease;
-    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
-    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
     pointer-events: none;
 }
-body.hero-v-b #site-header.hdr.scrolled::after { opacity: 1; }
+/* scrolled state is no longer needed since it's always active like stitch */
 
 body.hero-v-b #hero-ab-switch {
     margin-left: auto;
@@ -69,7 +69,7 @@ body.hero-v-b #hero-ab-switch {
 #hero-variant-b.hero-b {
     position: relative;
     min-height: 100vh;
-    padding: 128px 22px 70px;
+    padding: 140px 22px 70px;
     text-align: center;
     overflow: hidden;
 }
