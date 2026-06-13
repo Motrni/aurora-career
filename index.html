@@ -167,14 +167,14 @@ tailwind.config = {
         --font-display: 'Unbounded', system-ui, sans-serif;
         --font-body: 'Inter', system-ui, sans-serif;
     }
-    html { scroll-behavior: smooth; color-scheme: dark; overflow-x: hidden; background: #0a0b1e; overscroll-behavior-y: none; }
+    html { scroll-behavior: smooth; color-scheme: dark; overflow-x: hidden; background: #0a0b1e; }
     @media (min-width: 1024px) {
         html { scrollbar-gutter: stable; }
     }
     /* Градиент вынесен на фиксированный слой: background-attachment:fixed на body
        заставляет браузер перерисовывать фон (и пересчитывать backdrop-filter карточек)
        на каждый кадр скролла. Отдельный fixed-слой композитится на GPU без repaint. */
-    body { font-family: var(--font-body); background: #0a0b1e; min-width: 320px; overflow-x: hidden; position: relative; overscroll-behavior-y: none; }
+    body { font-family: var(--font-body); background: #0a0b1e; min-width: 320px; overflow-x: hidden; position: relative; }
     #dots-bg-css {
         position: absolute;
         inset: 0;
@@ -195,8 +195,14 @@ tailwind.config = {
         mask-image: radial-gradient(circle 130px at var(--mouse-x, -9999px) var(--mouse-y, -9999px), black 0%, transparent 100%);
         -webkit-mask-image: radial-gradient(circle 130px at var(--mouse-x, -9999px) var(--mouse-y, -9999px), black 0%, transparent 100%);
     }
+    /* Фиксированный фон-подложка: расширен по краям вверх и вниз на 150px
+       с помощью отрицательных inset-граней (margin/padding/top/bottom),
+       чтобы компенсировать оверскролл/баунс (rubber-banding) на iOS и macOS
+       и не показывать пустую непрорисованную серую или белую область. */
     body::before {
-        content: ""; position: fixed; inset: 0; z-index: -1;
+        content: ""; position: fixed;
+        top: -150px; bottom: -150px; left: -150px; right: -150px;
+        z-index: -1;
         background: linear-gradient(135deg, #0a0b1e 0%, #1e2952 55%, #3a2a5e 100%);
         pointer-events: none;
     }
