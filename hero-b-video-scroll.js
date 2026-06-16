@@ -11,50 +11,88 @@
   var ticking = false;
   var bound = false;
   var reducedMotion = false;
+  var rafId = 0;
+  var cur = { scale: 0.42, ty: 60, opacity: 0, play: 0 };
+  var target = { scale: 0.42, ty: 60, opacity: 0, play: 0 };
+  var animating = false;
 
   function clamp(v, lo, hi) {
     return Math.min(hi, Math.max(lo, v));
   }
 
-  function easeOutCubic(t) {
-    return 1 - Math.pow(1 - t, 3);
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
 
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
 
-  function updateProgress() {
-    ticking = false;
+  function computeTarget() {
     if (!wrap || !shell || wrap.offsetParent === null) return;
 
     var viewH = window.innerHeight;
     var rect = wrap.getBoundingClientRect();
 
     /* progress: 0 — верх обёртки на нижней кромке экрана (видео маленькое),
-       1 — верх обёртки поднялся до 25% высоты экрана (видео в финале). */
+       1 — верх обёртки поднялся до 30% высоты экрана (видео в финале). */
     var startTop = viewH;
-    var endTop = viewH * 0.25;
+    var endTop = viewH * 0.3;
     var progress = clamp((startTop - rect.top) / (startTop - endTop), 0, 1);
 
     if (reducedMotion) {
-      shell.style.setProperty('--hbv-ty', '0px');
-      shell.style.setProperty('--hbv-scale', '1');
-      shell.style.setProperty('--hbv-opacity', '1');
-      shell.style.setProperty('--hbv-play-opacity', '1');
+      target.scale = 1; target.ty = 0; target.opacity = 1; target.play = 1;
       return;
     }
 
-    var e = easeOutCubic(progress);
-    var scale = lerp(0.42, 1, e);
-    var ty = lerp(60, 0, e);
-    var opacity = clamp(progress * 1.6, 0, 1);
-    var playOpacity = clamp((progress - 0.2) / 0.4, 0, 1);
+    var e = easeInOutCubic(progress);
+    target.scale = lerp(0.42, 1, e);
+    target.ty = lerp(60, 0, e);
+    target.opacity = clamp(progress / 0.35, 0, 1);
+    target.play = clamp((progress - 0.25) / 0.45, 0, 1);
+  }
 
-    shell.style.setProperty('--hbv-scale', String(scale));
-    shell.style.setProperty('--hbv-ty', ty + 'px');
-    shell.style.setProperty('--hbv-opacity', String(opacity));
-    shell.style.setProperty('--hbv-play-opacity', String(playOpacity));
+  function applyVars() {
+    shell.style.setProperty('--hbv-scale', cur.scale.toFixed(4));
+    shell.style.setProperty('--hbv-ty', cur.ty.toFixed(2) + 'px');
+    shell.style.setProperty('--hbv-opacity', cur.opacity.toFixed(3));
+    shell.style.setProperty('--hbv-play-opacity', cur.play.toFixed(3));
+  }
+
+  /* Плавное приближение текущих значений к целевым (демпфирование) */
+  function animateLoop() {
+    var k = reducedMotion ? 1 : 0.18;
+    var done = true;
+    ['scale', 'ty', 'opacity', 'play'].forEach(function (key) {
+      var diff = target[key] - cur[key];
+      if (Math.abs(diff) > 0.0005) {
+        cur[key] += diff * k;
+        done = false;
+      } else {
+        cur[key] = target[key];
+      }
+    });
+    applyVars();
+    if (!done) {
+      rafId = requestAnimationFrame(animateLoop);
+      animating = true;
+    } else {
+      animating = false;
+    }
+  }
+
+  function startAnim() {
+    if (!animating) {
+      animating = true;
+      rafId = requestAnimationFrame(animateLoop);
+    }
+  }
+
+  function updateProgress() {
+    ticking = false;
+    if (!wrap || !shell) return;
+    computeTarget();
+    startAnim();
   }
 
   function onScroll() {
@@ -76,6 +114,8 @@
     bound = false;
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onScroll);
+    if (rafId) cancelAnimationFrame(rafId);
+    animating = false;
   }
 
   function initPreviewVideo() {

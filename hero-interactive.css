@@ -451,9 +451,9 @@ body.hero-v-b #hero-ab-switch {
 #hero-variant-b .demo-fineprint,
 #hero-variant-b .hero-b-cta { display: none !important; }
 
-/* Пустое пространство после панели перед появлением видео */
+/* Пустое пространство после панели перед появлением видео (сокращено) */
 #hero-variant-b .hero-b-spacer {
-    height: clamp(120px, 28vh, 320px);
+    height: clamp(60px, 14vh, 160px);
     pointer-events: none;
 }
 
@@ -461,7 +461,7 @@ body.hero-v-b #hero-ab-switch {
 #hero-variant-b .hero-b-video-wrap {
     position: relative;
     width: min(70vw, 960px);
-    margin: 0 auto;
+    margin: 0 auto clamp(80px, 12vh, 180px);
     aspect-ratio: 16 / 10;
 }
 
@@ -473,20 +473,32 @@ body.hero-v-b #hero-ab-switch {
     --hbv-play-opacity: 0;
     position: absolute;
     inset: 0;
-    border-radius: 22px;
+    border-radius: 26px;
     cursor: pointer;
     overflow: hidden;
     background: #000;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 24px 60px rgba(74, 123, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    padding: 1.5px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-image:
+        linear-gradient(#000, #000),
+        linear-gradient(135deg, rgba(54, 201, 232, 0.65), rgba(139, 92, 246, 0.65) 55%, rgba(54, 201, 232, 0.35));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        0 30px 80px rgba(74, 123, 255, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
     transform: translateY(var(--hbv-ty)) scale(var(--hbv-scale));
     transform-origin: center bottom;
     opacity: var(--hbv-opacity);
     will-change: transform, opacity;
-    transition: box-shadow 0.25s ease;
+    transition: box-shadow 0.3s ease;
 }
 #hero-variant-b .hero-b-scroll-video:hover {
-    box-shadow: 0 28px 70px rgba(74, 123, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow:
+        0 36px 100px rgba(74, 123, 255, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 #hero-variant-b .hero-b-preview-vid {
