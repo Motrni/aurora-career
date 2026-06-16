@@ -1651,12 +1651,13 @@ tailwind.config = {
 
 <link rel="stylesheet" href="cookie-consent.css">
 <link rel="stylesheet" href="legal-modal.css">
-<link rel="stylesheet" href="hero-interactive.css?v=3">
+<link rel="stylesheet" href="hero-interactive.css?v=4">
 <script src="legal-modal.js?v=1.0"></script>
 <script src="cookie-consent.js?v=1.1"></script>
 <script src="hero-wave.js?v=1" defer></script>
 <script src="hero-interactive.js?v=2" defer></script>
-<script src="hero-ab.js?v=1" defer></script>
+<script src="hero-b-video-scroll.js?v=1" defer></script>
+<script src="hero-ab.js?v=2" defer></script>
 </head>
 
 <body>
@@ -1873,14 +1874,40 @@ tailwind.config = {
                 </div>
             </div>
         </div>
-
-        <p class="demo-fineprint">
-            <a href="/auth/" class="demo-fine-link" data-cta="hero-b">Это демо · начать по-настоящему →</a>
-        </p>
-        <div class="hero-b-cta">
-            <a href="/auth/" class="btn-hero-main-b" data-cta="hero-b">Начать бесплатно →</a>
-        </div>
     </div>
+
+    <div class="hero-b-spacer" aria-hidden="true"></div>
+
+    <div id="hero-b-video-scene" class="hero-b-video-scene">
+            <div class="hero-b-video-sticky">
+                <div class="hero-b-scroll-video" id="hero-b-video-trigger" role="button" tabindex="0"
+                     aria-label="Смотреть видео: знакомство с Авророй за минуту">
+                    <video id="hero-b-preview-video" class="hero-b-preview-vid" muted playsinline preload="metadata"
+                           src="aurora-hero.mp4?v=2" aria-hidden="true"></video>
+                    <div class="hero-b-video-poster" aria-hidden="true">
+                        <div class="hero-b-poster-top">
+                            <div class="hero-b-poster-lockup">
+                                <img class="hero-b-poster-emblem" src="favicon-white.png?v=1" alt="" width="52" height="52">
+                                <span class="hero-b-poster-word">АВРОРА</span>
+                            </div>
+                        </div>
+                        <div class="hero-b-poster-bottom">
+                            <p class="hero-b-poster-sub hero-b-poster-sub--intro">Знакомство за минуту</p>
+                            <p class="hero-b-poster-sub hero-b-poster-sub--outro">Познакомьтесь с сервисом Аврора и оцените его преимущества</p>
+                        </div>
+                    </div>
+                    <div class="hero-b-reel-pill"><span class="lv" aria-hidden="true"></span> 1:00</div>
+                    <button type="button" class="hero-b-play-intro" tabindex="-1" aria-hidden="true">
+                        <span class="hero-b-play-intro-icon" aria-hidden="true">▶</span>
+                        Смотреть интро
+                    </button>
+                    <div class="hero-b-reel-cap">
+                        <div class="t">Знакомство с Авророй за минуту</div>
+                        <div class="bar" aria-hidden="true"><i></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 </section>
 
 <!-- ── STATS ── -->
@@ -2700,7 +2727,7 @@ function openVideoModal() {
     }
 
     // Вычисляем transform-origin так, чтобы раскрытие шло из центра кружка, а не из центра экрана
-    var trigger = document.getElementById('hero-video-trigger');
+    var trigger = document.getElementById('hero-video-trigger') || document.getElementById('hero-b-video-trigger');
     if (trigger) {
         var tr     = trigger.getBoundingClientRect();
         var vw     = window.innerWidth;
@@ -2718,7 +2745,7 @@ function openVideoModal() {
     }
 
     document.body.classList.add('modal-open');
-    var heroPreview = document.getElementById('hero-preview-video');
+    var heroPreview = document.getElementById('hero-preview-video') || document.getElementById('hero-b-preview-video');
     if (heroPreview) {
         try { heroPreview.pause(); } catch (e) {}
     }

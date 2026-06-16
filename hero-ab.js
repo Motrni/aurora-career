@@ -87,9 +87,11 @@
     if (variant === 'B') {
       if (window.HeroWave) window.HeroWave.init();
       if (window.HeroInteractive) window.HeroInteractive.init();
+      if (window.HeroBVideoScroll) window.HeroBVideoScroll.init();
       bindHdrScroll();
     } else {
       if (window.HeroWave) window.HeroWave.destroy();
+      if (window.HeroBVideoScroll) window.HeroBVideoScroll.destroy();
       if (typeof initHeroPreviewVideo === 'function') initHeroPreviewVideo();
     }
 
