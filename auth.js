@@ -51,17 +51,15 @@ async function redirectBySubscription() {
     window.location.href = '/onboarding/';
 }
 
+const _EYE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const _EYE_OFF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>';
+
 function togglePwdVis(inputId, btn) {
     const input = document.getElementById(inputId);
-    if (!input) return;
-    const icon = btn.querySelector('.material-symbols-outlined');
-    if (input.type === 'password') {
-        input.type = 'text';
-        if (icon) icon.textContent = 'visibility';
-    } else {
-        input.type = 'password';
-        if (icon) icon.textContent = 'visibility_off';
-    }
+    if (!input || !btn) return;
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.innerHTML = show ? _EYE_OFF_SVG : _EYE_SVG;
 }
 let currentOtpPurpose = 'email_verify';
 let resendTimerInterval = null;
@@ -70,33 +68,61 @@ let resendTimerInterval = null;
 // VIEW SWITCHING
 // ============================================================================
 
+function fitAuthPanes() {
+    const panes = document.getElementById('panes');
+    if (!panes) return;
+    const active = panes.querySelector('.pane.on');
+    if (active) panes.style.height = active.scrollHeight + 'px';
+}
+
+function _syncAuthSegment(view) {
+    const isRegister = view === 'register';
+    document.getElementById('tabLogin')?.classList.toggle('on', !isRegister);
+    document.getElementById('tabReg')?.classList.toggle('on', isRegister);
+    document.getElementById('tabLogin')?.setAttribute('aria-selected', String(!isRegister));
+    document.getElementById('tabReg')?.setAttribute('aria-selected', String(isRegister));
+
+    const panes = document.getElementById('panes');
+    if (panes) {
+        panes.querySelectorAll('.pane').forEach(p => {
+            p.classList.toggle('on', p.dataset.pane === (isRegister ? 'register' : 'login'));
+        });
+    }
+
+    const switchTxt = document.getElementById('switchTxt');
+    const switchLink = document.getElementById('switchLink');
+    if (switchTxt) switchTxt.textContent = isRegister ? 'Уже есть аккаунт?' : 'Нет аккаунта?';
+    if (switchLink) {
+        switchLink.textContent = isRegister ? 'Войти' : 'Зарегистрироваться';
+        switchLink.onclick = () => showAuthView(isRegister ? 'login' : 'register');
+    }
+
+    requestAnimationFrame(fitAuthPanes);
+}
+
 function showAuthView(view) {
-    const loginView = document.getElementById('loginView');
-    const registerView = document.getElementById('registerView');
     const tgPending = document.getElementById('tgLoginPending');
     const tgError = document.getElementById('tgLoginError');
     const tgSuccess = document.getElementById('tgSuccessSection');
+    const authMain = document.getElementById('authMainSection');
 
     [tgPending, tgError, tgSuccess].forEach(el => el?.classList.add('hidden'));
+    ['otpForm', 'forgotForm', 'resetForm'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+    authMain?.classList.remove('hidden');
     hideMessage?.();
 
+    _syncAuthSegment(view);
+
     if (view === 'register') {
-        loginView?.classList.add('hidden');
-        registerView?.classList.remove('hidden');
         history.replaceState(null, '', '/auth/?register');
     } else {
-        registerView?.classList.add('hidden');
-        loginView?.classList.remove('hidden');
         history.replaceState(null, '', '/auth/');
     }
 }
 
 function switchTab(tab) {
-    const toHide = ['loginView', 'registerView', 'otpForm', 'forgotForm', 'resetForm', 'tgSuccessSection', 'tgLoginPending', 'tgLoginError'];
-    toHide.forEach(f => {
-        const el = document.getElementById(f);
-        if (el) el.classList.add('hidden');
-    });
+    const toHide = ['authMainSection', 'otpForm', 'forgotForm', 'resetForm', 'tgSuccessSection', 'tgLoginPending', 'tgLoginError'];
+    toHide.forEach(f => document.getElementById(f)?.classList.add('hidden'));
     hideMessage();
 
     switch (tab) {
@@ -107,13 +133,13 @@ function switchTab(tab) {
             showAuthView('register');
             return;
         case 'otp':
-            document.getElementById('otpForm').classList.remove('hidden');
+            document.getElementById('otpForm')?.classList.remove('hidden');
             break;
         case 'forgot':
-            document.getElementById('forgotForm').classList.remove('hidden');
+            document.getElementById('forgotForm')?.classList.remove('hidden');
             break;
         case 'reset':
-            document.getElementById('resetForm').classList.remove('hidden');
+            document.getElementById('resetForm')?.classList.remove('hidden');
             break;
     }
 }
@@ -124,13 +150,10 @@ function switchTab(tab) {
 
 function showMessage(text, type = 'error') {
     const box = document.getElementById('messageBox');
+    if (!box) return;
     box.textContent = text;
     box.classList.remove('hidden');
-    box.className = `mx-8 mt-4 rounded-lg px-4 py-3 text-sm fade-in ${
-        type === 'error'
-            ? 'bg-error-container/30 text-error border border-error/20'
-            : 'bg-primary-container/20 text-primary border border-primary/20'
-    }`;
+    box.className = `fade-in ${type === 'error' ? 'msg-error' : 'msg-info'}`;
 
     if (type === 'error') {
         box.classList.add('shake');
@@ -217,33 +240,43 @@ async function handleLogin(e) {
 
 function updateRegPasswordChecks() {
     const pwd = (document.getElementById('regPassword')?.value) || '';
-    const checks = [
-        { id: 'regChkLength', icon: 'regChkLengthIcon', pass: pwd.length >= 8 },
-        { id: 'regChkUpper',  icon: 'regChkUpperIcon',  pass: /[A-ZА-ЯЁ]/.test(pwd) },
-        { id: 'regChkDigit',  icon: 'regChkDigitIcon',  pass: /[0-9]/.test(pwd) },
-        { id: 'regChkLower',  icon: 'regChkLowerIcon',  pass: /[a-zа-яё!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd) },
-    ];
+    const ruleMap = {
+        len: pwd.length >= 8,
+        up: /[A-ZА-ЯЁ]/.test(pwd),
+        num: /[0-9]/.test(pwd),
+        low: /[a-zа-яё]/.test(pwd) || /[^A-Za-zА-Яа-яЁё0-9]/.test(pwd),
+    };
     let allPassed = true;
-    checks.forEach(c => {
-        const icon = document.getElementById(c.icon);
-        const row = document.getElementById(c.id);
-        if (!icon || !row) return;
-        const textSpan = row.querySelector('span:last-child');
-        if (c.pass) {
-            icon.textContent = 'check_circle'; icon.style.color = '#4ade80';
-            if (textSpan) textSpan.style.color = '#4ade80';
-        } else {
-            icon.textContent = 'radio_button_unchecked'; icon.style.color = '#938ea0';
-            if (textSpan) textSpan.style.color = '#938ea0';
-            allPassed = false;
-        }
+    document.querySelectorAll('#regPwdChecks .req').forEach(row => {
+        const ok = !!ruleMap[row.dataset.k];
+        row.classList.toggle('ok', ok);
+        if (!ok) allPassed = false;
     });
-    const confirm = document.getElementById('regPasswordConfirm')?.value;
-    const email = document.getElementById('regEmail')?.value?.trim();
+
+    const confirm = document.getElementById('regPasswordConfirm')?.value || '';
+    const matchEl = document.getElementById('regPwdMatch');
+    if (matchEl) {
+        if (!confirm) {
+            matchEl.textContent = '';
+            matchEl.className = 'match';
+        } else if (confirm === pwd) {
+            matchEl.textContent = '✓ Пароли совпадают';
+            matchEl.className = 'match ok';
+        } else {
+            matchEl.textContent = 'Пароли не совпадают';
+            matchEl.className = 'match err';
+        }
+    }
+
+    const email = document.getElementById('regEmail')?.value?.trim() || '';
+    const emailOk = /.+@.+\..+/.test(email);
     const consentPrivacy = document.getElementById('regConsentPrivacy')?.checked;
     const consentOffer = document.getElementById('regConsentOffer')?.checked;
     const btn = document.getElementById('regBtn');
-    if (btn) btn.disabled = !(allPassed && email && pwd === confirm && consentPrivacy && consentOffer);
+    if (btn) {
+        btn.disabled = !(allPassed && emailOk && confirm && confirm === pwd && consentPrivacy && consentOffer);
+    }
+    fitAuthPanes();
 }
 
 async function handleRegister(e) {
@@ -510,35 +543,7 @@ let _tgLoginToken = null;
 let _tgSuccessCallback = null;
 let _tgLoginHadConsent = false;
 
-function updateTgBotLoginButton() {
-    const btn = document.getElementById('tgLoginBtnRegister');
-    const hint = document.getElementById('tgRegisterHint');
-    const cp = document.getElementById('regConsentPrivacy');
-    const co = document.getElementById('regConsentOffer');
-    if (!btn || !cp || !co) return;
-    const ok = cp.checked && co.checked;
-    btn.disabled = !ok;
-    btn.classList.toggle('opacity-50', !ok);
-    btn.classList.toggle('cursor-not-allowed', !ok);
-    btn.classList.toggle('cursor-pointer', ok);
-    if (hint) hint.style.display = ok ? 'none' : 'block';
-}
-
 window.startTelegramBotLogin = async function(withConsent = false) {
-    let consentPrivacy = false;
-    let consentOffer = false;
-
-    if (withConsent) {
-        const cp = document.getElementById('regConsentPrivacy');
-        const co = document.getElementById('regConsentOffer');
-        consentPrivacy = cp?.checked || false;
-        consentOffer = co?.checked || false;
-        if (!consentPrivacy || !consentOffer) {
-            showMessage('Отметьте оба пункта согласий');
-            return;
-        }
-    }
-
     const btnLogin = document.getElementById('tgLoginBtnLogin');
     const btnRegister = document.getElementById('tgLoginBtnRegister');
     if (btnLogin) btnLogin.disabled = true;
@@ -550,8 +555,8 @@ window.startTelegramBotLogin = async function(withConsent = false) {
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
-                consent_privacy: consentPrivacy,
-                consent_offer: consentOffer,
+                consent_privacy: false,
+                consent_offer: false,
             }),
         });
         if (!resp.ok) {
@@ -559,7 +564,6 @@ window.startTelegramBotLogin = async function(withConsent = false) {
             showMessage(err.detail || 'Не удалось начать вход');
             if (btnLogin) btnLogin.disabled = false;
             if (btnRegister) btnRegister.disabled = false;
-            updateTgBotLoginButton();
             return;
         }
         const data = await resp.json();
@@ -571,8 +575,8 @@ window.startTelegramBotLogin = async function(withConsent = false) {
 
         window.open(data.deep_link, '_blank');
 
-        document.getElementById('loginView')?.classList.add('hidden');
-        document.getElementById('registerView')?.classList.add('hidden');
+        document.getElementById('authMainSection')?.classList.add('hidden');
+        ['otpForm', 'forgotForm', 'resetForm'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
 
         const pending = document.getElementById('tgLoginPending');
         if (pending) pending.classList.remove('hidden');
@@ -584,7 +588,6 @@ window.startTelegramBotLogin = async function(withConsent = false) {
         console.error('[TgBotLogin] init error', e);
         if (btnLogin) btnLogin.disabled = false;
         if (btnRegister) btnRegister.disabled = false;
-        updateTgBotLoginButton();
         showMessage('Ошибка сети. Попробуйте ещё раз.');
     }
 };
@@ -670,7 +673,6 @@ window.resetTelegramBotLogin = function() {
     const btnRegister = document.getElementById('tgLoginBtnRegister');
     if (btnLogin) btnLogin.disabled = false;
     if (btnRegister) btnRegister.disabled = false;
-    updateTgBotLoginButton();
 };
 
 function _showTgBotLoginError(text, showRegisterLink = false) {
@@ -684,7 +686,7 @@ function _showTgBotLoginError(text, showRegisterLink = false) {
 }
 
 function showTelegramLoginSuccess(isNew, onContinue) {
-    const toHide = ['loginView', 'registerView', 'otpForm', 'forgotForm', 'resetForm', 'tgLoginPending', 'tgLoginError'];
+    const toHide = ['authMainSection', 'otpForm', 'forgotForm', 'resetForm', 'tgLoginPending', 'tgLoginError'];
     toHide.forEach(id => document.getElementById(id)?.classList.add('hidden'));
 
     const subtext = document.getElementById('tgSuccessSubtext');
@@ -769,8 +771,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (_) {}
 
-    // Прикручиваем слушатели чекбоксов (register view)
-    document.getElementById('regConsentPrivacy')?.addEventListener('change', updateTgBotLoginButton);
-    document.getElementById('regConsentOffer')?.addEventListener('change', updateTgBotLoginButton);
-    updateTgBotLoginButton();
+    fitAuthPanes();
+    window.addEventListener('resize', fitAuthPanes);
 });

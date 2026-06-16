@@ -1,533 +1,438 @@
 <!DOCTYPE html>
-<html class="dark" lang="ru">
+<html lang="ru">
 <head>
 <meta charset="utf-8"/>
 <base href="/">
 <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport"/>
 <title>Вход | Aurora Career</title>
 <link rel="icon" type="image/png" href="favicon.png?v=3">
-<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Unbounded:wght@700;800&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet"/>
-<script>(function(){var s=document.createElement('style');s.textContent='.material-symbols-outlined{visibility:hidden}';document.head.appendChild(s);document.fonts.ready.then(function(){s.parentNode&&s.parentNode.removeChild(s)});})()</script>
-<script>
-tailwind.config = {
-    darkMode: "class",
-    theme: {
-        extend: {
-            colors: {
-                "primary": "#ccbeff",
-                "primary-container": "#5a30d0",
-                "on-surface": "#e7e0ef",
-                "surface": "#15121c",
-                "surface-container-low": "#1d1a24",
-                "surface-container": "#211e29",
-                "surface-container-highest": "#37333e",
-                "surface-variant": "#37333e",
-                "on-surface-variant": "#cac3d7",
-                "background": "#15121c",
-                "on-background": "#e7e0ef",
-                "outline": "#938ea0",
-                "error": "#ffb4ab",
-                "error-container": "#93000a",
-                "inverse-primary": "#653edb",
-            },
-            fontFamily: {
-                inter: ["Inter", "system-ui", "sans-serif"],
-            },
-        },
-    },
-};
-</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@700;800&display=swap&subset=cyrillic,latin" rel="stylesheet"/>
 <style>
-    :root {
-        --font-display: 'Unbounded', system-ui, sans-serif;
-        --font-body: 'Inter', system-ui, sans-serif;
-    }
-    html { color-scheme: dark; }
-    body {
-        background: #06081c;
-        font-family: var(--font-body);
-        min-height: 100vh;
-        min-height: 100dvh;
-    }
+  :root{--bg0:#06081c;--text:#eef1ff;--muted:#9aa3c7;--faint:#6b7398;--cyan:#36c9e8;--blue:#4a7bff;--purple:#8b5cf6;--ok:#46e0a0;--err:#ef6d6d}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{color-scheme:dark}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--text);background:var(--bg0);min-height:100vh;min-height:100dvh;overflow-x:hidden}
 
-    /* WebGL-фон как в hero B */
-    .auth-bg {
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-        overflow: hidden;
-        background: radial-gradient(ellipse at 50% 120%, #2a2466, #10103a 45%, #06081c 80%);
-    }
-    .auth-bg canvas {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
-    }
-    .auth-dots {
-        position: absolute;
-        inset: 0;
-        background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-        background-size: 24px 24px;
-        -webkit-mask-image: radial-gradient(120% 95% at 50% 0%, #000 30%, transparent 72%);
-        mask-image: radial-gradient(120% 95% at 50% 0%, #000 30%, transparent 72%);
-        pointer-events: none;
-    }
+  .bg{position:fixed;inset:0;z-index:-2;overflow:hidden;background:#06081c}
+  #auth-wave{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .scrim{position:fixed;inset:0;z-index:-1;background:radial-gradient(46% 60% at 50% 48%,#06081c 38%,rgba(6,8,28,.55) 62%,transparent 82%)}
 
-    /* Glass-карта как panel в hero B */
-    .auth-card {
-        position: relative;
-        overflow: hidden;
-        background: linear-gradient(160deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.035));
-        backdrop-filter: blur(22px) saturate(1.4);
-        -webkit-backdrop-filter: blur(22px) saturate(1.4);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        border-radius: 24px;
-        box-shadow:
-            0 40px 100px rgba(8, 12, 50, 0.6),
-            inset 0 1px 0 rgba(255, 255, 255, 0.32),
-            inset 0 0 50px rgba(255, 255, 255, 0.03);
-    }
-    .auth-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 46%;
-        pointer-events: none;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent);
-        opacity: 0.6;
-        border-radius: 24px 24px 0 0;
-    }
-    .auth-card > * { position: relative; z-index: 1; }
+  .wrap{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:40px 18px}
 
-    .auth-card input[type="email"],
-    .auth-card input[type="password"],
-    .auth-card input[type="text"] {
-        background: rgba(255, 255, 255, 0.06) !important;
-        border: 1px solid rgba(255, 255, 255, 0.14) !important;
-        border-radius: 12px !important;
-        color: #eef1ff !important;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .auth-card input::placeholder { color: #9aa3c7 !important; }
-    input:focus {
-        outline: none;
-        border-color: rgba(54, 201, 232, 0.55) !important;
-        box-shadow: 0 0 0 3px rgba(54, 201, 232, 0.12) !important;
-    }
+  .card{width:100%;max-width:430px;border-radius:22px;padding:34px 32px 26px;
+    background:linear-gradient(180deg,#141a3f,#0e1230);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(54,201,232,.05),inset 0 1px 0 rgba(255,255,255,.06)}
 
-    .otp-input { letter-spacing: 0.5em; text-align: center; font-size: 1.5rem; font-weight: 600; }
+  .brand{display:flex;align-items:center;gap:13px;margin-bottom:24px}
+  .brand .mark{width:36px;height:36px;flex-shrink:0}
+  .brand .mark img{width:100%;height:100%;object-fit:contain}
+  .brand h1{font-family:'Unbounded',sans-serif;font-weight:800;font-size:25px;letter-spacing:-.5px}
+  .brand p{font-size:12.5px;color:var(--muted);margin-top:2px}
 
-    .consent-check {
-        appearance: none; -webkit-appearance: none;
-        width: 18px; height: 18px; flex-shrink: 0;
-        border: 1.5px solid rgba(255, 255, 255, 0.2);
-        background: rgba(255, 255, 255, 0.06);
-        border-radius: 5px; cursor: pointer;
-        transition: all 0.2s;
-        position: relative; margin-top: 1px;
-    }
-    .consent-check:hover { border-color: rgba(54, 201, 232, 0.6); }
-    .consent-check:checked {
-        background: linear-gradient(135deg, #36c9e8, #8b5cf6);
-        border-color: transparent;
-    }
-    .consent-check:checked::after {
-        content: ''; position: absolute;
-        left: 5px; top: 1px;
-        width: 5px; height: 10px;
-        border: solid #fff;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-    }
-    .consent-label { user-select: none; }
-    .consent-label a { color: #ccbeff; text-decoration: underline; text-decoration-color: rgba(204, 190, 255, 0.35); }
-    .consent-label a:hover { text-decoration-color: rgba(204, 190, 255, 0.9); }
+  .hidden{display:none!important}
 
-    .tg-divider {
-        display: flex; align-items: center; gap: 12px;
-        color: #9aa3c7; font-size: 12px; letter-spacing: 0.04em;
-    }
-    .tg-divider::before, .tg-divider::after {
-        content: ''; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.1);
-    }
-    .tg-consent-hint {
-        font-size: 11px; color: #9aa3c7; text-align: center;
-        transition: opacity 0.2s;
-    }
-    .btn-tg {
-        background: rgba(34, 158, 217, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 12px;
-        transition: background 0.2s, transform 0.15s;
-    }
-    .btn-tg:hover:not(:disabled) { background: #229ED9; transform: translateY(-1px); }
-    .btn-tg:disabled { opacity: 0.5; cursor: not-allowed; }
+  #messageBox{margin-bottom:16px;border-radius:11px;padding:11px 13px;font-size:13px;line-height:1.45}
+  #messageBox.msg-error{background:rgba(239,109,109,.12);border:1px solid rgba(239,109,109,.25);color:var(--err)}
+  #messageBox.msg-info{background:rgba(54,201,232,.1);border:1px solid rgba(54,201,232,.2);color:var(--cyan)}
+  .shake{animation:shake .4s ease-in-out}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .fade-in{animation:fadeIn .3s ease-out}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-    @keyframes spin-lg { to { transform: rotate(360deg); } }
-    .spinner-lg {
-        border: 3px solid rgba(54, 201, 232, 0.2);
-        border-top-color: #36c9e8;
-        border-radius: 50%; width: 48px; height: 48px;
-        animation: spin-lg 0.8s linear infinite;
-        display: inline-block;
-    }
+  .seg{display:flex;gap:4px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:5px;margin-bottom:22px}
+  .seg button{flex:1;font:inherit;font-size:14.5px;font-weight:600;color:var(--muted);padding:11px;border:0;border-radius:9px;background:none;cursor:pointer;transition:color .2s,background .2s}
+  .seg button.on{color:#fff;background:linear-gradient(135deg,rgba(54,201,232,.22),rgba(139,92,246,.32));box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
 
-    .btn-primary {
-        background: linear-gradient(135deg, #36c9e8, #8b5cf6);
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(74, 123, 255, 0.45);
-        transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
-    }
-    .btn-primary:hover:not(:disabled) {
-        filter: brightness(1.06);
-        transform: translateY(-1px);
-        box-shadow: 0 14px 36px rgba(74, 123, 255, 0.55);
-    }
-    .btn-primary:active:not(:disabled) { transform: scale(0.98); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .panes{overflow:hidden;transition:height .38s cubic-bezier(.2,.7,.2,1)}
+  .pane{display:none}.pane.on{display:block}
 
-    .shake { animation: shake 0.4s ease-in-out; }
-    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-    .fade-in { animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    .spinner {
-        border: 2px solid rgba(54, 201, 232, 0.2);
-        border-top-color: #36c9e8;
-        border-radius: 50%; width: 18px; height: 18px;
-        animation: spin 0.6s linear infinite; display: inline-block;
-    }
-    @keyframes spin { to{transform:rotate(360deg)} }
+  label.fl{display:block;font-size:13px;font-weight:600;color:var(--text);margin:0 0 7px}
+  .field{position:relative;margin-bottom:16px}
+  .field input{width:100%;font:inherit;font-size:15px;color:var(--text);background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.11);border-radius:12px;padding:13px 44px 13px 15px;transition:border .18s,background .18s}
+  .field input::placeholder{color:var(--faint)}
+  .field input:focus{outline:none;border-color:var(--cyan);background:rgba(54,201,232,.06)}
+  .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--faint);cursor:pointer;background:none;border:0;padding:0;transition:color .18s}
+  .eye:hover{color:var(--muted)}
+  .eye svg{width:19px;height:19px}
 
-    .brand-logo-font {
-        font-family: var(--font-display);
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        color: #eef1ff;
-    }
-    .brand-tag {
-        font-size: 11px;
-        letter-spacing: 0.04em;
-        color: #9aa3c7;
-        font-weight: 400;
-    }
-    .auth-link {
-        color: #ccbeff;
-        transition: color 0.15s ease;
-    }
-    .auth-link:hover { color: #eef1ff; }
+  .reqs{margin:-4px 0 16px;display:grid;gap:7px}
+  .req{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);transition:color .2s}
+  .req .dot{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:.2s}
+  .req .dot svg{width:10px;height:10px;opacity:0;transform:scale(.5);transition:.2s;color:#06281c}
+  .req.ok{color:var(--text)}
+  .req.ok .dot{background:var(--ok);border-color:var(--ok)}
+  .req.ok .dot svg{opacity:1;transform:scale(1)}
 
-    @media (prefers-reduced-motion: reduce) {
-        .fade-in { animation: none; }
-        .btn-primary:hover:not(:disabled) { transform: none; }
-    }
+  .match{font-size:12.5px;margin:-8px 0 14px;min-height:16px}
+  .match.ok{color:var(--ok)}.match.err{color:var(--err)}
+
+  .hint{font-size:12.5px;color:var(--muted);background:rgba(54,201,232,.07);border:1px solid rgba(54,201,232,.16);border-radius:11px;padding:11px 13px;margin-bottom:18px;line-height:1.45}
+
+  .consent{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--muted);line-height:1.45;margin-bottom:12px;cursor:pointer}
+  .consent input{position:absolute;opacity:0;width:0;height:0}
+  .consent .box{width:19px;height:19px;border-radius:6px;border:1.5px solid rgba(255,255,255,.28);flex:0 0 auto;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:.18s}
+  .consent .box svg{width:12px;height:12px;opacity:0;color:#06281c;transition:.18s}
+  .consent input:checked + .box{background:var(--cyan);border-color:var(--cyan)}
+  .consent input:checked + .box svg{opacity:1}
+  .consent a{color:var(--cyan);text-decoration:underline}
+
+  .btn{width:100%;font:inherit;font-size:16px;font-weight:600;color:#fff;border:0;border-radius:13px;padding:15px;cursor:pointer;transition:transform .12s,opacity .2s,box-shadow .2s}
+  .btn:active{transform:scale(.985)}
+  .btn-primary{background:linear-gradient(135deg,var(--cyan),var(--purple));box-shadow:0 12px 26px rgba(74,123,255,.4)}
+  .btn-primary:disabled{background:#2a3158;color:#7a82a8;box-shadow:none;cursor:not-allowed;transform:none}
+  .btn-tg{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:var(--text);display:flex;align-items:center;justify-content:center;gap:9px}
+  .btn-tg:hover:not(:disabled){background:rgba(255,255,255,.08)}
+  .btn-tg:disabled{opacity:.5;cursor:not-allowed}
+  .btn-tg svg{width:18px;height:18px;color:#37aee2;flex-shrink:0}
+
+  .forgot{display:block;text-align:center;font-size:13px;color:var(--muted);margin:13px 0 2px;text-decoration:none;background:none;border:0;font:inherit;cursor:pointer;width:100%}
+  .forgot:hover{color:var(--text)}
+
+  .trust{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:var(--muted);margin-top:14px}
+  .trust svg{width:14px;height:14px;color:var(--ok);flex-shrink:0}
+
+  .or{display:flex;align-items:center;gap:12px;color:var(--faint);font-size:12px;margin:18px 0}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.1)}
+
+  .tgnote{text-align:center;font-size:12px;color:var(--faint);margin-top:9px;line-height:1.4}
+  .switch{text-align:center;font-size:13.5px;color:var(--muted);margin-top:18px}
+  .switch a,.switch button.switch-link{color:var(--cyan);font-weight:600;cursor:pointer;text-decoration:none;background:none;border:0;font:inherit;font-size:inherit;padding:0}
+  .switch a:hover,.switch button.switch-link:hover{text-decoration:underline}
+
+  .foot{display:flex;align-items:center;justify-content:center;gap:10px;font-size:12px;color:var(--faint);margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.07)}
+  .foot a{color:var(--faint);text-decoration:none;cursor:pointer}.foot a:hover{color:var(--muted)}
+
+  .otp-input{letter-spacing:.5em;text-align:center;font-size:1.5rem;font-weight:600}
+  .form-icon{display:flex;justify-content:center;margin-bottom:12px;color:var(--cyan)}
+  .form-icon svg{width:40px;height:40px}
+  .form-head{text-align:center;margin-bottom:16px}
+  .form-head p{font-size:13px;color:var(--muted)}
+  .form-head .email{color:var(--cyan);font-weight:600;font-size:13px;margin-top:4px}
+  .form-back{display:block;text-align:center;font-size:13px;color:var(--muted);margin-top:12px;background:none;border:0;font:inherit;cursor:pointer;width:100%}
+  .form-back:hover{color:var(--text)}
+  .resend-btn{display:block;width:100%;text-align:center;font-size:13px;color:var(--cyan);background:none;border:0;font:inherit;cursor:pointer;margin-top:8px}
+  .resend-btn:disabled{opacity:.4;cursor:not-allowed}
+
+  .tg-pending,.tg-error,.tg-success{text-align:center;padding:8px 0 4px}
+  .spinner-lg{border:3px solid rgba(54,201,232,.2);border-top-color:var(--cyan);border-radius:50%;width:48px;height:48px;animation:spin-lg .8s linear infinite;display:inline-block;margin-bottom:20px}
+  @keyframes spin-lg{to{transform:rotate(360deg)}}
+  .spinner{border:2px solid rgba(54,201,232,.2);border-top-color:var(--cyan);border-radius:50%;width:18px;height:18px;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .tg-pending h3,.tg-error h3,.tg-success h3{font-size:16px;font-weight:600;margin-bottom:8px}
+  .tg-pending p,.tg-error p{font-size:13px;color:var(--muted);line-height:1.45}
+  .tg-sync-box{margin:16px 0;padding:14px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08)}
+  .tg-sync-box p{font-size:12px;color:var(--muted);margin-bottom:8px}
+  #tgLoginSyncEmoji{font-size:28px;letter-spacing:.15em}
+  .tg-pending-link{display:inline-block;color:var(--cyan);text-decoration:underline;font-size:13px;margin:12px 0}
+  .tg-cancel{display:block;margin:0 auto;font-size:13px;color:var(--muted);background:none;border:0;font:inherit;cursor:pointer}
+  .tg-cancel:hover{color:var(--text)}
+  .tg-error-icon{color:var(--err);margin-bottom:12px}
+  .tg-error-icon svg{width:48px;height:48px}
+  .tg-success-icon{color:var(--cyan);margin-bottom:12px}
+  .tg-success-icon svg{width:48px;height:48px}
+  .tg-success p{color:var(--muted);font-size:13px;margin-top:4px}
+  .btn-inline{font:inherit;font-size:14px;font-weight:600;color:#fff;border:0;border-radius:13px;padding:12px 24px;cursor:pointer;background:linear-gradient(135deg,var(--cyan),var(--purple));box-shadow:0 12px 26px rgba(74,123,255,.4)}
+
+  @media (prefers-reduced-motion:reduce){
+    .panes{transition:none}
+    .fade-in{animation:none}
+    .btn:active{transform:none}
+    .spinner-lg,.spinner{animation:none}
+  }
 </style>
 <link rel="stylesheet" href="cookie-consent.css">
 <link rel="stylesheet" href="legal-modal.css">
 <script src="legal-modal.js?v=1.0"></script>
 <script src="cookie-consent.js?v=1.1"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 sm:p-6">
+<body>
 
-<div class="auth-bg" aria-hidden="true">
-    <canvas id="auth-wave"></canvas>
-    <div class="auth-dots"></div>
-</div>
+<div class="bg" aria-hidden="true"><canvas id="auth-wave"></canvas></div>
+<div class="scrim" aria-hidden="true"></div>
 
-<div class="auth-card rounded-2xl w-full max-w-md relative z-10">
-    <!-- Logo -->
-    <div class="flex items-center justify-center gap-3 pt-8 pb-2">
-        <img src="/favicon-white.png?v=1" alt="Аврора"
-             class="w-10 h-10 flex-shrink-0"
-             onerror="this.src='/favicon.png?v=3';this.classList.add('invert','brightness-200')"/>
-        <div class="text-left leading-none">
-            <div class="brand-logo-font text-2xl">Аврора</div>
-            <div class="brand-tag mt-1">Карьерный ИИ-Ассистент</div>
-        </div>
+<div class="wrap">
+  <div class="card">
+
+    <div class="brand">
+      <div class="mark">
+        <img src="/favicon-white.png?v=1" alt="" onerror="this.src='/favicon.png?v=3';this.style.filter='invert(1) brightness(2)'"/>
+      </div>
+      <div>
+        <h1>Аврора</h1>
+        <p>Карьерный ИИ-Ассистент</p>
+      </div>
     </div>
 
-    <!-- Error/Success messages -->
-    <div id="messageBox" class="mx-8 mt-4 hidden rounded-lg px-4 py-3 text-sm"></div>
+    <div id="messageBox" class="hidden" role="alert"></div>
 
-    <!-- TG PENDING SECTION -->
-    <div id="tgLoginPending" class="hidden px-8 py-10 text-center fade-in">
-        <div class="mb-5 flex justify-center">
-            <span class="spinner-lg"></span>
-        </div>
-        <h3 class="text-base font-semibold text-on-surface mb-2">Подтвердите вход в Telegram</h3>
-        <div class="my-4 p-4 rounded-[12px] bg-surface-container border border-surface-variant">
-            <p class="text-xs text-on-surface-variant mb-2">Сравните код на сайте и в боте:</p>
-            <p id="tgLoginSyncEmoji" class="text-3xl tracking-wider"></p>
-        </div>
-        <p class="text-sm text-on-surface-variant mb-2">
-            Если коды совпадают — нажмите «Подтвердить» в боте.
-        </p>
-        <p class="text-xs text-on-surface-variant mb-5">
-            Если нет — отклоните вход и попробуйте заново.
-        </p>
-        <a id="tgLoginPendingLink" href="#" target="_blank" rel="noopener"
-           class="inline-block text-primary underline text-sm mb-4">Открыть Telegram заново</a>
-        <button type="button" onclick="cancelTelegramBotLogin()"
-                class="block mx-auto text-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">
-            Отменить
-        </button>
+    <!-- TG PENDING -->
+    <div id="tgLoginPending" class="tg-pending hidden fade-in">
+      <div class="spinner-lg" aria-hidden="true"></div>
+      <h3>Подтвердите вход в Telegram</h3>
+      <div class="tg-sync-box">
+        <p>Сравните код на сайте и в боте:</p>
+        <p id="tgLoginSyncEmoji"></p>
+      </div>
+      <p>Если коды совпадают — нажмите «Подтвердить» в боте.</p>
+      <p style="margin-top:8px;font-size:12px">Если нет — отклоните вход и попробуйте заново.</p>
+      <a id="tgLoginPendingLink" href="#" target="_blank" rel="noopener" class="tg-pending-link">Открыть Telegram заново</a>
+      <button type="button" onclick="cancelTelegramBotLogin()" class="tg-cancel">Отменить</button>
     </div>
 
-    <!-- TG ERROR SECTION -->
-    <div id="tgLoginError" class="hidden px-8 py-10 text-center fade-in">
-        <span class="material-symbols-outlined text-error text-5xl mb-3" style="font-variation-settings:'FILL' 1">error</span>
-        <h3 class="text-base font-semibold text-on-surface mb-2">Не удалось войти</h3>
-        <p id="tgLoginErrorText" class="text-sm text-on-surface-variant mb-5"></p>
-        <p id="tgLoginRegisterLink" class="hidden text-sm text-on-surface-variant mb-3">
-            <button type="button" onclick="showAuthView('register')"
-                    class="text-primary hover:underline font-medium cursor-pointer">Перейти к регистрации</button>
-        </p>
-        <button type="button" onclick="resetTelegramBotLogin()"
-                class="btn-primary inline-flex items-center justify-center px-5 py-2.5 rounded-[12px] text-white text-sm font-medium cursor-pointer">
-            Попробовать снова
-        </button>
+    <!-- TG ERROR -->
+    <div id="tgLoginError" class="tg-error hidden fade-in">
+      <div class="tg-error-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      </div>
+      <h3>Не удалось войти</h3>
+      <p id="tgLoginErrorText"></p>
+      <p id="tgLoginRegisterLink" class="hidden" style="margin-top:12px">
+        <button type="button" onclick="showAuthView('register')" class="switch-link">Перейти к регистрации</button>
+      </p>
+      <button type="button" onclick="resetTelegramBotLogin()" class="btn-inline" style="margin-top:16px">Попробовать снова</button>
     </div>
 
-    <!-- TG SUCCESS SECTION -->
-    <div id="tgSuccessSection" class="hidden p-8 pt-6 text-center fade-in">
-        <span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings:'FILL' 1">check_circle</span>
-        <p class="text-on-surface font-semibold mt-4 text-base">Вы успешно вошли в Aurora</p>
-        <p class="text-on-surface-variant text-sm mt-1" id="tgSuccessSubtext"></p>
-        <button id="tgSuccessBtn" class="btn-primary w-full text-white font-medium py-3 rounded-[12px] text-sm mt-6" onclick="tgSuccessContinue()">
-            Далее
-        </button>
+    <!-- TG SUCCESS -->
+    <div id="tgSuccessSection" class="tg-success hidden fade-in">
+      <div class="tg-success-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+      </div>
+      <h3>Вы успешно вошли в Aurora</h3>
+      <p id="tgSuccessSubtext"></p>
+      <button id="tgSuccessBtn" type="button" class="btn btn-primary" style="margin-top:20px" onclick="tgSuccessContinue()">Далее</button>
     </div>
 
-    <!-- LOGIN VIEW -->
-    <div id="loginView">
-    <form id="loginForm" class="p-8 pt-6 space-y-4" onsubmit="handleLogin(event)">
-        <div>
-            <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Email</label>
-            <input type="email" id="loginEmail" required autocomplete="email"
-                   class="w-full bg-surface-container border border-surface-variant rounded-[12px] px-4 py-3 text-on-surface text-sm placeholder:text-outline"
-                   placeholder="user@example.com">
-        </div>
-        <div>
-            <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Пароль</label>
-            <div class="relative">
-                <input type="password" id="loginPassword" required autocomplete="current-password"
-                       class="w-full bg-surface-container border border-surface-variant rounded-[12px] px-4 py-3 pr-11 text-on-surface text-sm"
-                       placeholder="Введите пароль">
-                <button type="button" onclick="togglePwdVis('loginPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-secondary-container transition-colors">
-                    <span class="material-symbols-outlined text-xl">visibility_off</span>
-                </button>
+    <!-- MAIN: login / register -->
+    <div id="authMainSection">
+      <div class="seg" role="tablist" aria-label="Вход или регистрация">
+        <button type="button" id="tabLogin" class="on" role="tab" aria-selected="true" onclick="showAuthView('login')">Вход</button>
+        <button type="button" id="tabReg" role="tab" aria-selected="false" onclick="showAuthView('register')">Регистрация</button>
+      </div>
+
+      <div class="panes" id="panes">
+        <!-- LOGIN -->
+        <div class="pane on" id="loginView" data-pane="login" role="tabpanel">
+          <form id="loginForm" onsubmit="handleLogin(event)">
+            <label class="fl" for="loginEmail">Email</label>
+            <div class="field">
+              <input type="email" id="loginEmail" required autocomplete="email" placeholder="user@example.com">
             </div>
-        </div>
-        <button type="submit" id="loginBtn" class="btn-primary w-full text-white font-medium py-3 rounded-[12px] text-sm">
-            <span id="loginBtnText">Войти</span>
-        </button>
-        <div class="text-center">
-            <button type="button" onclick="switchTab('forgot')" class="text-primary text-xs hover:underline">Забыли пароль?</button>
-        </div>
-    </form>
-    <div class="px-8 pb-2">
-        <div class="tg-divider">или</div>
-        <button id="tgLoginBtnLogin" type="button" onclick="startTelegramBotLogin(false)"
-                class="btn-tg mt-3 w-full text-white font-medium py-3 px-4 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
-            </svg>
-            <span>Войти через Telegram</span>
-        </button>
-    </div>
-    <div class="px-8 pb-6 pt-2 text-center">
-        <p class="text-sm text-on-surface-variant">
-            Нет аккаунта?
-            <button type="button" onclick="showAuthView('register')"
-                    class="text-primary hover:underline font-medium cursor-pointer ml-1">Зарегистрироваться</button>
-        </p>
-    </div>
-    </div>
-
-    <!-- REGISTER VIEW -->
-    <div id="registerView" class="hidden">
-    <form id="registerForm" class="p-8 pt-6 space-y-4" onsubmit="handleRegister(event)">
-        <div>
-            <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Email</label>
-            <input type="email" id="regEmail" required autocomplete="email"
-                   class="w-full bg-surface-container border border-surface-variant rounded-[12px] px-4 py-3 text-on-surface text-sm placeholder:text-outline"
-                   placeholder="user@example.com">
-        </div>
-        <div>
-            <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Пароль</label>
-            <div class="relative">
-                <input type="password" id="regPassword" required autocomplete="new-password" minlength="8"
-                       class="w-full bg-surface-container border border-surface-variant rounded-[12px] px-4 py-3 pr-11 text-on-surface text-sm"
-                       placeholder="Введите пароль" oninput="updateRegPasswordChecks()">
-                <button type="button" onclick="togglePwdVis('regPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-secondary-container transition-colors">
-                    <span class="material-symbols-outlined text-xl">visibility_off</span>
-                </button>
+            <label class="fl" for="loginPassword">Пароль</label>
+            <div class="field">
+              <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Введите пароль">
+              <button type="button" class="eye" onclick="togglePwdVis('loginPassword', this)" aria-label="Показать пароль">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
             </div>
-            <div class="mt-2.5 space-y-1" id="regPwdChecks">
-                <div class="flex items-center gap-2 text-xs" id="regChkLength">
-                    <span class="material-symbols-outlined text-sm text-outline" id="regChkLengthIcon">radio_button_unchecked</span>
-                    <span class="text-outline">Минимум 8 символов</span>
-                </div>
-                <div class="flex items-center gap-2 text-xs" id="regChkUpper">
-                    <span class="material-symbols-outlined text-sm text-outline" id="regChkUpperIcon">radio_button_unchecked</span>
-                    <span class="text-outline">Одна заглавная буква</span>
-                </div>
-                <div class="flex items-center gap-2 text-xs" id="regChkDigit">
-                    <span class="material-symbols-outlined text-sm text-outline" id="regChkDigitIcon">radio_button_unchecked</span>
-                    <span class="text-outline">Одна цифра</span>
-                </div>
-                <div class="flex items-center gap-2 text-xs" id="regChkLower">
-                    <span class="material-symbols-outlined text-sm text-outline" id="regChkLowerIcon">radio_button_unchecked</span>
-                    <span class="text-outline">Одна строчная буква или символ</span>
-                </div>
-            </div>
-        </div>
-        <div>
-            <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Подтвердите пароль</label>
-            <div class="relative">
-                <input type="password" id="regPasswordConfirm" required autocomplete="new-password"
-                       class="w-full bg-surface-container border border-surface-variant rounded-[12px] px-4 py-3 pr-11 text-on-surface text-sm"
-                       placeholder="Повторите пароль" oninput="updateRegPasswordChecks()">
-                <button type="button" onclick="togglePwdVis('regPasswordConfirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-secondary-container transition-colors">
-                    <span class="material-symbols-outlined text-xl">visibility_off</span>
-                </button>
-            </div>
-        </div>
-        <p class="text-xs text-outline text-center">
-            Для запуска автопилота понадобится доступ к hh.ru — займёт 1 минуту
-        </p>
-        <div class="space-y-3 pt-1">
-            <label class="flex items-start gap-2.5 cursor-pointer consent-label">
-                <input type="checkbox" id="regConsentPrivacy" class="consent-check" oninput="updateRegPasswordChecks()">
-                <span class="text-xs text-on-surface-variant leading-relaxed">
-                    Я даю согласие на обработку персональных данных в соответствии с
-                    <a href="#" onclick="event.preventDefault();event.stopPropagation();openLegalModal('privacy');return false;">Политикой конфиденциальности</a>
-                </span>
-            </label>
-            <label class="flex items-start gap-2.5 cursor-pointer consent-label">
-                <input type="checkbox" id="regConsentOffer" class="consent-check" oninput="updateRegPasswordChecks()">
-                <span class="text-xs text-on-surface-variant leading-relaxed">
-                    Я принимаю условия
-                    <a href="#" onclick="event.preventDefault();event.stopPropagation();openLegalModal('offer');return false;">Публичной оферты</a>
-                </span>
-            </label>
-        </div>
-        <button type="submit" id="regBtn" class="btn-primary w-full text-white font-medium py-3 rounded-[12px] text-sm" disabled>
-            <span id="regBtnText">Зарегистрироваться</span>
-        </button>
-    </form>
-    <div class="px-8 pb-2">
-        <div class="tg-divider">или</div>
-        <button id="tgLoginBtnRegister" type="button" onclick="startTelegramBotLogin(true)"
-                class="btn-tg mt-3 w-full text-white font-medium py-3 px-4 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
-            </svg>
-            <span>Войти через Telegram</span>
-        </button>
-        <p id="tgRegisterHint" class="tg-consent-hint mt-2">Для входа через Telegram отметьте оба пункта выше</p>
-    </div>
-    <div class="px-8 pb-6 pt-2 text-center">
-        <p class="text-sm text-on-surface-variant">
-            Уже есть аккаунт?
-            <button type="button" onclick="showAuthView('login')"
-                    class="text-primary hover:underline font-medium cursor-pointer ml-1">Войти</button>
-        </p>
-    </div>
-    </div>
-
-    <!-- OTP FORM -->
-    <form id="otpForm" class="p-8 pt-6 space-y-4 hidden fade-in" onsubmit="handleVerifyOtp(event)">
-        <div class="text-center mb-2">
-            <span class="material-symbols-outlined text-primary text-4xl">mail</span>
-            <p class="text-on-surface text-sm mt-2">Код отправлен на</p>
-            <p class="text-primary text-sm font-medium" id="otpEmailDisplay"></p>
-        </div>
-        <div>
-            <input type="text" id="otpCode" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
-                   class="otp-input w-full bg-surface-container border border-surface-variant rounded-[12px] px-4 py-4 text-primary placeholder:text-outline"
-                   placeholder="000000" autocomplete="one-time-code">
-        </div>
-        <button type="submit" id="otpBtn" class="btn-primary w-full text-white font-medium py-3 rounded-[12px] text-sm">
-            <span id="otpBtnText">Подтвердить</span>
-        </button>
-        <div class="text-center space-y-2">
-            <button type="button" id="resendBtn" onclick="handleResendOtp()" class="text-primary text-xs hover:underline disabled:opacity-40 disabled:cursor-not-allowed" disabled>
-                Отправить код повторно (<span id="resendTimer">60</span>с)
+            <button type="submit" id="loginBtn" class="btn btn-primary">
+              <span id="loginBtnText">Войти</span>
             </button>
-        </div>
-    </form>
+            <button type="button" class="forgot" onclick="switchTab('forgot')">Забыли пароль?</button>
 
-    <!-- FORGOT PASSWORD FORM -->
-    <form id="forgotForm" class="p-8 pt-6 space-y-4 hidden" onsubmit="handleForgotPassword(event)">
-        <div class="text-center mb-2">
-            <span class="material-symbols-outlined text-primary text-4xl">lock_reset</span>
-            <p class="text-on-surface-variant text-sm mt-2">Введите email для сброса пароля</p>
+            <div class="or">или</div>
+            <button type="button" id="tgLoginBtnLogin" class="btn btn-tg" onclick="startTelegramBotLogin(false)">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3l-3.3 15.6c-.25 1.1-.9 1.37-1.83.85l-5-3.7-2.42 2.33c-.27.27-.5.5-1 .5l.36-5.1L18 6.2c.4-.36-.1-.56-.62-.2L7.3 12.4l-4.96-1.55c-1.08-.34-1.1-1.08.23-1.6l19.4-7.48c.9-.33 1.68.2 1.4 1.53z"/></svg>
+              Войти через Telegram
+            </button>
+            <div class="trust">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Не видим и не храним ваш пароль
+            </div>
+          </form>
         </div>
-        <div>
-            <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Email</label>
-            <input type="email" id="forgotEmail" required autocomplete="email"
-                   class="w-full bg-surface-container border border-surface-variant rounded-[12px] px-4 py-3 text-on-surface text-sm placeholder:text-outline"
-                   placeholder="user@example.com">
-        </div>
-        <button type="submit" id="forgotBtn" class="btn-primary w-full text-white font-medium py-3 rounded-[12px] text-sm">
-            <span id="forgotBtnText">Отправить код</span>
-        </button>
-        <div class="text-center">
-            <button type="button" onclick="showAuthView('login')" class="text-on-surface-variant text-xs hover:underline">Назад ко входу</button>
-        </div>
-    </form>
 
-    <!-- RESET PASSWORD FORM -->
-    <form id="resetForm" class="p-8 pt-6 space-y-4 hidden fade-in" onsubmit="handleResetPassword(event)">
-        <div class="text-center mb-2">
-            <span class="material-symbols-outlined text-primary text-4xl">lock_reset</span>
-            <p class="text-on-surface text-sm mt-2">Код отправлен на</p>
-            <p class="text-primary text-sm font-medium" id="resetEmailDisplay"></p>
-        </div>
-        <div>
-            <input type="text" id="resetCode" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
-                   class="otp-input w-full bg-surface-container border border-surface-variant rounded-[12px] px-4 py-4 text-primary placeholder:text-outline"
-                   placeholder="000000" autocomplete="one-time-code">
-        </div>
-        <div>
-            <label class="block text-on-surface-variant text-xs font-medium mb-1.5">Новый пароль</label>
-            <input type="password" id="resetNewPassword" required minlength="8" autocomplete="new-password"
-                   class="w-full bg-surface-container border border-surface-variant rounded-[12px] px-4 py-3 text-on-surface text-sm"
-                   placeholder="Минимум 8 символов, буквы + цифры">
-        </div>
-        <button type="submit" id="resetBtn" class="btn-primary w-full text-white font-medium py-3 rounded-[12px] text-sm">
-            <span id="resetBtnText">Сбросить пароль</span>
-        </button>
-        <div class="text-center">
-            <button type="button" onclick="showAuthView('login')" class="text-on-surface-variant text-xs hover:underline">Назад ко входу</button>
-        </div>
-    </form>
+        <!-- REGISTER -->
+        <div class="pane" id="registerView" data-pane="register" role="tabpanel">
+          <form id="registerForm" onsubmit="handleRegister(event)">
+            <label class="fl" for="regEmail">Email</label>
+            <div class="field">
+              <input type="email" id="regEmail" required autocomplete="email" placeholder="user@example.com" oninput="updateRegPasswordChecks()">
+            </div>
 
-    <!-- Footer -->
-    <div class="px-8 pb-6 text-center">
-        <p class="text-outline text-xs leading-relaxed">
-            <a href="#" onclick="event.preventDefault();openLegalModal('privacy');return false;" class="hover:text-primary transition-colors">Конфиденциальность</a>
-            <span class="mx-2">·</span>
-            <a href="#" onclick="event.preventDefault();openLegalModal('offer');return false;" class="hover:text-primary transition-colors">Оферта</a>
-        </p>
+            <label class="fl" for="regPassword">Пароль</label>
+            <div class="field">
+              <input type="password" id="regPassword" required autocomplete="new-password" minlength="8" placeholder="Введите пароль" oninput="updateRegPasswordChecks()">
+              <button type="button" class="eye" onclick="togglePwdVis('regPassword', this)" aria-label="Показать пароль">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="reqs" id="regPwdChecks">
+              <div class="req" id="regChkLength" data-k="len"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Минимум 8 символов</div>
+              <div class="req" id="regChkUpper" data-k="up"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна заглавная буква</div>
+              <div class="req" id="regChkDigit" data-k="num"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна цифра</div>
+              <div class="req" id="regChkLower" data-k="low"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна строчная буква или символ</div>
+            </div>
+
+            <label class="fl" for="regPasswordConfirm">Подтвердите пароль</label>
+            <div class="field">
+              <input type="password" id="regPasswordConfirm" required autocomplete="new-password" placeholder="Повторите пароль" oninput="updateRegPasswordChecks()">
+              <button type="button" class="eye" onclick="togglePwdVis('regPasswordConfirm', this)" aria-label="Показать пароль">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="match" id="regPwdMatch"></div>
+
+            <div class="hint">Для запуска автопилота понадобится доступ к hh.ru — займёт 1 минуту. Сделаете это уже внутри, после короткого знакомства с сервисом.</div>
+
+            <label class="consent">
+              <input type="checkbox" id="regConsentPrivacy" onchange="updateRegPasswordChecks()">
+              <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>
+              <span>Я даю согласие на обработку персональных данных в соответствии с <a href="#" onclick="event.preventDefault();event.stopPropagation();openLegalModal('privacy');return false;">Политикой конфиденциальности</a></span>
+            </label>
+            <label class="consent">
+              <input type="checkbox" id="regConsentOffer" onchange="updateRegPasswordChecks()">
+              <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>
+              <span>Я принимаю условия <a href="#" onclick="event.preventDefault();event.stopPropagation();openLegalModal('offer');return false;">Публичной оферты</a></span>
+            </label>
+
+            <button type="submit" id="regBtn" class="btn btn-primary" style="margin-top:6px" disabled>
+              <span id="regBtnText">Зарегистрироваться</span>
+            </button>
+
+            <div class="or">или</div>
+            <button type="button" id="tgLoginBtnRegister" class="btn btn-tg" onclick="startTelegramBotLogin(true)">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3l-3.3 15.6c-.25 1.1-.9 1.37-1.83.85l-5-3.7-2.42 2.33c-.27.27-.5.5-1 .5l.36-5.1L18 6.2c.4-.36-.1-.56-.62-.2L7.3 12.4l-4.96-1.55c-1.08-.34-1.1-1.08.23-1.6l19.4-7.48c.9-.33 1.68.2 1.4 1.53z"/></svg>
+              Зарегистрироваться через Telegram
+            </button>
+            <div class="tgnote">Согласие подтвердите в боте — одним касанием. Галочки выше для входа через Telegram не нужны.</div>
+          </form>
+        </div>
+      </div>
+
+      <div class="switch" id="authSwitch">
+        <span id="switchTxt">Нет аккаунта?</span>
+        <button type="button" id="switchLink" class="switch-link" onclick="showAuthView('register')">Зарегистрироваться</button>
+      </div>
     </div>
+
+    <!-- OTP -->
+    <form id="otpForm" class="hidden fade-in" onsubmit="handleVerifyOtp(event)">
+      <div class="form-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/></svg>
+      </div>
+      <div class="form-head">
+        <p>Код отправлен на</p>
+        <p class="email" id="otpEmailDisplay"></p>
+      </div>
+      <div class="field">
+        <input type="text" id="otpCode" class="otp-input" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" placeholder="000000" autocomplete="one-time-code">
+      </div>
+      <button type="submit" id="otpBtn" class="btn btn-primary">
+        <span id="otpBtnText">Подтвердить</span>
+      </button>
+      <button type="button" id="resendBtn" class="resend-btn" onclick="handleResendOtp()" disabled>
+        Отправить код повторно (<span id="resendTimer">60</span>с)
+      </button>
+    </form>
+
+    <!-- FORGOT -->
+    <form id="forgotForm" class="hidden" onsubmit="handleForgotPassword(event)">
+      <div class="form-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div class="form-head">
+        <p>Введите email для сброса пароля</p>
+      </div>
+      <label class="fl" for="forgotEmail">Email</label>
+      <div class="field">
+        <input type="email" id="forgotEmail" required autocomplete="email" placeholder="user@example.com">
+      </div>
+      <button type="submit" id="forgotBtn" class="btn btn-primary">
+        <span id="forgotBtnText">Отправить код</span>
+      </button>
+      <button type="button" class="form-back" onclick="showAuthView('login')">Назад ко входу</button>
+    </form>
+
+    <!-- RESET -->
+    <form id="resetForm" class="hidden fade-in" onsubmit="handleResetPassword(event)">
+      <div class="form-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div class="form-head">
+        <p>Код отправлен на</p>
+        <p class="email" id="resetEmailDisplay"></p>
+      </div>
+      <div class="field">
+        <input type="text" id="resetCode" class="otp-input" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" placeholder="000000" autocomplete="one-time-code">
+      </div>
+      <label class="fl" for="resetNewPassword">Новый пароль</label>
+      <div class="field">
+        <input type="password" id="resetNewPassword" required minlength="8" autocomplete="new-password" placeholder="Минимум 8 символов, буквы + цифры">
+      </div>
+      <button type="submit" id="resetBtn" class="btn btn-primary">
+        <span id="resetBtnText">Сбросить пароль</span>
+      </button>
+      <button type="button" class="form-back" onclick="showAuthView('login')">Назад ко входу</button>
+    </form>
+
+    <div class="foot">
+      <a href="#" onclick="event.preventDefault();openLegalModal('privacy');return false;">Конфиденциальность</a>
+      <span aria-hidden="true">·</span>
+      <a href="#" onclick="event.preventDefault();openLegalModal('offer');return false;">Оферта</a>
+    </div>
+
+  </div>
 </div>
 
-<script src="/hero-wave.js?v=2" defer></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    if (window.HeroWave) window.HeroWave.initAuth();
-});
+(function(){
+  var CONFIG={renderScale:0.30,maxFPS:30,speed:0.12,fadeIn:2.5,intensity:0.6,gapAmount:0.55,breathe:1.0};
+  var canvas=document.getElementById('auth-wave');
+  var gl=canvas.getContext('webgl',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'low-power'});
+  if(!gl){document.querySelector('.bg').style.background='radial-gradient(ellipse at 50% 120%,#2a2466,#10103a 45%,#06081c 80%)';return;}
+  var VERT='attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
+  var FRAG=['precision mediump float;uniform vec2 uRes;uniform float uTime;uniform float uFade;uniform float uIntensity;uniform float uGap;uniform float uBreathe;',
+'float hash(vec2 p){p=fract(p*vec2(127.1,311.7));p+=dot(p,p+34.45);return fract(p.x*p.y);}',
+'float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),f.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),f.x),f.y);}',
+'float fbm(vec2 p){float v=0.0;v+=0.50*noise(p);p*=2.07;v+=0.25*noise(p);p*=2.13;v+=0.125*noise(p);return v*1.143;}',
+'void main(){vec2 uv=gl_FragCoord.xy/uRes;float aspect=uRes.x/uRes.y;float t=uTime;',
+'float cx=uv.x-0.5;float edge=0.30+1.05*cx*cx;',
+'edge+=(fbm(vec2(uv.x*2.2*aspect+t*0.7,t*0.45))-0.5)*0.28;',
+'edge+=sin(uv.x*3.5*aspect-t*1.4)*0.025;',
+'float d=edge-uv.y;',
+'vec2 q=vec2(uv.x*2.6*aspect,d*2.6);',
+'vec2 warp=vec2(fbm(q*1.2+vec2(t*0.95,-t*0.6)),fbm(q*1.2+vec2(-t*0.7,t*0.85)+5.2));',
+'float flow=fbm(q+2.6*(warp-0.5)+vec2(t*0.45,0.0));',
+'float width=1.6+uBreathe*3.0*fbm(vec2(uv.x*1.3*aspect-t*0.55,t*0.3));',
+'float crest=smoothstep(0.0,0.03+0.05*flow,d);',
+'float fall=exp(-max(d,0.0)*width);',
+'float gate=smoothstep(0.30,0.62,flow);',
+'float gaps=mix(1.0,gate,uGap+0.35*uGap*sin(t*0.9+uv.x*6.0));',
+'float fil=0.5+0.5*sin(d*24.0+(warp.x-0.5)*10.0+uv.x*5.0*aspect-t*1.2);',
+'float sideMask=smoothstep(0.02,0.16,cx*cx);',
+'float ribbons=mix(1.0,0.30+0.70*fil,sideMask*0.85);',
+'float body=crest*(0.15+1.15*fall)*gaps*ribbons*(0.35+0.95*flow);',
+'float haze=crest*exp(-max(d,0.0)*1.4)*0.16;',
+'float vein=fbm(vec2(uv.x*5.0*aspect-t*0.9,d*6.0+t*0.4));',
+'float streak=smoothstep(0.09,0.0,abs(d-0.035-0.05*vein))*crest*(0.4+0.6*gate);',
+'vec3 purple=vec3(0.42,0.30,0.92);vec3 blue=vec3(0.22,0.42,1.00);vec3 cyan=vec3(0.25,0.90,0.85);vec3 pink=vec3(0.92,0.42,0.95);vec3 deep=vec3(0.10,0.09,0.30);',
+'vec3 col=mix(purple,blue,smoothstep(0.25,0.75,flow));',
+'col=mix(col,cyan,smoothstep(0.62,0.92,flow)*0.85);',
+'col=col*body+deep*haze+pink*streak*(0.35+0.45*flow);',
+'col*=mix(0.35,1.0,exp(-max(d-0.05,0.0)*2.0));',
+'col*=uIntensity*uFade;',
+'col+=(hash(gl_FragCoord.xy+fract(t))-0.5)*0.012;',
+'gl_FragColor=vec4(col,1.0);}'].join('\n');
+  function sh(t,s){var o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);return o;}
+  var pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VERT));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FRAG));gl.linkProgram(pr);gl.useProgram(pr);
+  var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  var uRes=gl.getUniformLocation(pr,'uRes'),uTime=gl.getUniformLocation(pr,'uTime'),uFade=gl.getUniformLocation(pr,'uFade');
+  gl.uniform1f(gl.getUniformLocation(pr,'uIntensity'),CONFIG.intensity);
+  gl.uniform1f(gl.getUniformLocation(pr,'uGap'),CONFIG.gapAmount);
+  gl.uniform1f(gl.getUniformLocation(pr,'uBreathe'),CONFIG.breathe);
+  function size(){var w=Math.max(2,Math.round(canvas.clientWidth*CONFIG.renderScale)),h=Math.max(2,Math.round(canvas.clientHeight*CONFIG.renderScale));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);gl.uniform2f(uRes,w,h);}}
+  size();window.addEventListener('resize',size);
+  var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var start=performance.now(),lastFrame=0,fi=1000/CONFIG.maxFPS,running=true;
+  function draw(now){if(running)requestAnimationFrame(draw);if(now-lastFrame<fi)return;lastFrame=now;var el=(now-start)/1000;var f=Math.min(el/CONFIG.fadeIn,1.0);f=f*f*(3.0-2.0*f);gl.uniform1f(uTime,el*CONFIG.speed);gl.uniform1f(uFade,f);gl.drawArrays(gl.TRIANGLES,0,3);}
+  if(reduced){gl.uniform1f(uTime,7.3);gl.uniform1f(uFade,1.0);gl.drawArrays(gl.TRIANGLES,0,3);}
+  else{requestAnimationFrame(draw);document.addEventListener('visibilitychange',function(){running=!document.hidden;if(running){lastFrame=0;requestAnimationFrame(draw);}});}
+})();
 </script>
-<script src="auth.js?v=1.7"></script>
+<script src="auth.js?v=1.8"></script>
 </body>
 </html>

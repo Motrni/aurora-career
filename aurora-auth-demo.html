@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Аврора — вход / регистрация (редизайн)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@700;800&display=swap&subset=cyrillic,latin" rel="stylesheet">
+<style>
+  :root{--bg0:#06081c;--text:#eef1ff;--muted:#9aa3c7;--faint:#6b7398;--cyan:#36c9e8;--blue:#4a7bff;--purple:#8b5cf6;--ok:#46e0a0;--err:#ef6d6d}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--text);background:var(--bg0);min-height:100vh;overflow-x:hidden}
+
+  .bg{position:fixed;inset:0;z-index:-2;overflow:hidden;background:#06081c}
+  #wave{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .scrim{position:fixed;inset:0;z-index:-1;background:radial-gradient(46% 60% at 50% 48%,#06081c 38%,rgba(6,8,28,.55) 62%,transparent 82%)}
+
+  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 18px}
+
+  .card{width:100%;max-width:430px;border-radius:22px;padding:34px 32px 26px;
+    background:linear-gradient(180deg,#141a3f,#0e1230);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(54,201,232,.05),inset 0 1px 0 rgba(255,255,255,.06)}
+
+  .brand{display:flex;align-items:center;gap:13px;margin-bottom:24px}
+  .brand .mark{font-size:30px;line-height:1;color:var(--cyan)}
+  .brand h1{font-family:'Unbounded',sans-serif;font-weight:800;font-size:25px;letter-spacing:-.5px}
+  .brand p{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  .seg{display:flex;gap:4px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:5px;margin-bottom:22px}
+  .seg button{flex:1;font:inherit;font-size:14.5px;font-weight:600;color:var(--muted);padding:11px;border:0;border-radius:9px;background:none;cursor:pointer;transition:.2s}
+  .seg button.on{color:#fff;background:linear-gradient(135deg,rgba(54,201,232,.22),rgba(139,92,246,.32));box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+
+  .panes{overflow:hidden;transition:height .38s cubic-bezier(.2,.7,.2,1)}
+  .pane{display:none}.pane.on{display:block}
+
+  label.fl{display:block;font-size:13px;font-weight:600;color:var(--text);margin:0 0 7px}
+  .field{position:relative;margin-bottom:16px}
+  .field input{width:100%;font:inherit;font-size:15px;color:var(--text);background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.11);border-radius:12px;padding:13px 44px 13px 15px;transition:border .18s,background .18s}
+  .field input::placeholder{color:var(--faint)}
+  .field input:focus{outline:none;border-color:var(--cyan);background:rgba(54,201,232,.06)}
+  .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--faint);cursor:pointer;background:none;border:0;padding:0}
+  .eye:hover{color:var(--muted)}
+  .eye svg{width:19px;height:19px}
+
+  .reqs{margin:-4px 0 16px;display:grid;gap:7px}
+  .req{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);transition:color .2s}
+  .req .dot{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:.2s}
+  .req .dot svg{width:10px;height:10px;opacity:0;transform:scale(.5);transition:.2s;color:#06281c}
+  .req.ok{color:var(--text)}
+  .req.ok .dot{background:var(--ok);border-color:var(--ok)}
+  .req.ok .dot svg{opacity:1;transform:scale(1)}
+
+  .match{font-size:12.5px;margin:-8px 0 14px;height:16px}
+  .match.ok{color:var(--ok)}.match.err{color:var(--err)}
+
+  .hint{font-size:12.5px;color:var(--muted);background:rgba(54,201,232,.07);border:1px solid rgba(54,201,232,.16);border-radius:11px;padding:11px 13px;margin-bottom:18px;line-height:1.45}
+
+  .consent{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--muted);line-height:1.45;margin-bottom:12px;cursor:pointer}
+  .consent input{position:absolute;opacity:0;width:0;height:0}
+  .consent .box{width:19px;height:19px;border-radius:6px;border:1.5px solid rgba(255,255,255,.28);flex:0 0 auto;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:.18s}
+  .consent .box svg{width:12px;height:12px;opacity:0;color:#06281c;transition:.18s}
+  .consent input:checked + .box{background:var(--cyan);border-color:var(--cyan)}
+  .consent input:checked + .box svg{opacity:1}
+  .consent a{color:var(--cyan);text-decoration:underline}
+
+  .btn{width:100%;font:inherit;font-size:16px;font-weight:600;color:#fff;border:0;border-radius:13px;padding:15px;cursor:pointer;transition:transform .12s,opacity .2s,box-shadow .2s}
+  .btn:active{transform:scale(.985)}
+  .btn-primary{background:linear-gradient(135deg,var(--cyan),var(--purple));box-shadow:0 12px 26px rgba(74,123,255,.4)}
+  .btn-primary:disabled{background:#2a3158;color:#7a82a8;box-shadow:none;cursor:not-allowed}
+  .btn-tg{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:var(--text);display:flex;align-items:center;justify-content:center;gap:9px}
+  .btn-tg:hover{background:rgba(255,255,255,.08)}
+  .btn-tg svg{width:18px;height:18px;color:#37aee2}
+
+  .forgot{display:block;text-align:center;font-size:13px;color:var(--muted);margin:13px 0 2px;text-decoration:none}
+  .forgot:hover{color:var(--text)}
+
+  .trust{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:var(--muted);margin-top:14px}
+  .trust svg{width:14px;height:14px;color:var(--ok)}
+
+  .or{display:flex;align-items:center;gap:12px;color:var(--faint);font-size:12px;margin:18px 0}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.1)}
+
+  .tgnote{text-align:center;font-size:12px;color:var(--faint);margin-top:9px;line-height:1.4}
+  .switch{text-align:center;font-size:13.5px;color:var(--muted);margin-top:18px}
+  .switch a{color:var(--cyan);font-weight:600;cursor:pointer;text-decoration:none}
+
+  .foot{display:flex;align-items:center;justify-content:center;gap:10px;font-size:12px;color:var(--faint);margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.07)}
+  .foot a{color:var(--faint);text-decoration:none}.foot a:hover{color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="bg"><canvas id="wave"></canvas></div>
+  <div class="scrim"></div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="brand">
+        <div class="mark">▲</div>
+        <div><h1>Аврора</h1><p>Карьерный ИИ-Ассистент</p></div>
+      </div>
+
+      <div class="seg">
+        <button id="tabLogin" class="on" onclick="setMode('login')">Вход</button>
+        <button id="tabReg" onclick="setMode('reg')">Регистрация</button>
+      </div>
+
+      <div class="panes" id="panes">
+        <!-- ВХОД -->
+        <div class="pane on" data-pane="login">
+          <label class="fl">Email</label>
+          <div class="field"><input type="email" placeholder="user@example.com"></div>
+          <label class="fl">Пароль</label>
+          <div class="field">
+            <input type="password" id="lpass" placeholder="Введите пароль">
+            <button class="eye" onclick="toggleEye('lpass',this)" aria-label="Показать пароль"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <button class="btn btn-primary">Войти</button>
+          <a class="forgot" href="#">Забыли пароль?</a>
+
+          <div class="or">или</div>
+          <button class="btn btn-tg"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3l-3.3 15.6c-.25 1.1-.9 1.37-1.83.85l-5-3.7-2.42 2.33c-.27.27-.5.5-1 .5l.36-5.1L18 6.2c.4-.36-.1-.56-.62-.2L7.3 12.4l-4.96-1.55c-1.08-.34-1.1-1.08.23-1.6l19.4-7.48c.9-.33 1.68.2 1.4 1.53z"/></svg>Войти через Telegram</button>
+
+          <div class="trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Не видим и не храним ваш пароль</div>
+        </div>
+
+        <!-- РЕГИСТРАЦИЯ -->
+        <div class="pane" data-pane="reg">
+          <label class="fl">Email</label>
+          <div class="field"><input type="email" id="remail" placeholder="user@example.com" oninput="validate()"></div>
+
+          <label class="fl">Пароль</label>
+          <div class="field">
+            <input type="password" id="rpass" placeholder="Введите пароль" oninput="validate()">
+            <button class="eye" onclick="toggleEye('rpass',this)" aria-label="Показать пароль"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="reqs" id="reqs">
+            <div class="req" data-k="len"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Минимум 8 символов</div>
+            <div class="req" data-k="up"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна заглавная буква</div>
+            <div class="req" data-k="num"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна цифра</div>
+            <div class="req" data-k="low"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна строчная буква или символ</div>
+          </div>
+
+          <label class="fl">Подтвердите пароль</label>
+          <div class="field">
+            <input type="password" id="rpass2" placeholder="Повторите пароль" oninput="validate()">
+            <button class="eye" onclick="toggleEye('rpass2',this)" aria-label="Показать пароль"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="match" id="match"></div>
+
+          <div class="hint">Для запуска автопилота понадобится доступ к hh.ru — займёт 1 минуту. Сделаете это уже внутри, после короткого знакомства с сервисом.</div>
+
+          <label class="consent"><input type="checkbox" id="c1" onchange="validate()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span><span>Я даю согласие на обработку персональных данных в соответствии с <a href="#">Политикой конфиденциальности</a></span></label>
+          <label class="consent"><input type="checkbox" id="c2" onchange="validate()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span><span>Я принимаю условия <a href="#">Публичной оферты</a></span></label>
+
+          <button class="btn btn-primary" id="regBtn" style="margin-top:6px" disabled>Зарегистрироваться</button>
+
+          <div class="or">или</div>
+          <button class="btn btn-tg"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3l-3.3 15.6c-.25 1.1-.9 1.37-1.83.85l-5-3.7-2.42 2.33c-.27.27-.5.5-1 .5l.36-5.1L18 6.2c.4-.36-.1-.56-.62-.2L7.3 12.4l-4.96-1.55c-1.08-.34-1.1-1.08.23-1.6l19.4-7.48c.9-.33 1.68.2 1.4 1.53z"/></svg>Зарегистрироваться через Telegram</button>
+          <div class="tgnote">Согласие подтвердите в боте — одним касанием. Галочки выше для входа через Telegram не нужны.</div>
+        </div>
+      </div>
+
+      <div class="switch" id="switch"><span id="switchTxt">Нет аккаунта?</span> <a id="switchLink" onclick="setMode('reg')">Зарегистрироваться</a></div>
+
+      <div class="foot"><a href="#">Конфиденциальность</a><span>·</span><a href="#">Оферта</a></div>
+    </div>
+  </div>
+
+<script>
+const eyeSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const eyeOff='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>';
+
+const panes=document.getElementById('panes');
+function fit(){const a=panes.querySelector('.pane.on');panes.style.height=a.scrollHeight+'px';}
+function setMode(m){
+  document.getElementById('tabLogin').classList.toggle('on',m==='login');
+  document.getElementById('tabReg').classList.toggle('on',m==='reg');
+  panes.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===m));
+  document.getElementById('switchTxt').textContent=m==='login'?'Нет аккаунта?':'Уже есть аккаунт?';
+  const link=document.getElementById('switchLink');
+  link.textContent=m==='login'?'Зарегистрироваться':'Войти';
+  link.onclick=()=>setMode(m==='login'?'reg':'login');
+  fit();
+}
+function toggleEye(id,btn){const i=document.getElementById(id);const s=i.type==='password';i.type=s?'text':'password';btn.innerHTML=s?eyeOff:eyeSvg;}
+
+function validate(){
+  const p=document.getElementById('rpass').value;
+  const checks={len:p.length>=8,up:/[A-ZА-ЯЁ]/.test(p),num:/[0-9]/.test(p),low:/[a-zа-яё]/.test(p)||/[^A-Za-zА-Яа-яЁё0-9]/.test(p)};
+  let allp=true;
+  document.querySelectorAll('#reqs .req').forEach(r=>{const ok=checks[r.dataset.k];r.classList.toggle('ok',ok);if(!ok)allp=false;});
+  const p2=document.getElementById('rpass2').value;
+  const mm=document.getElementById('match');
+  if(!p2){mm.textContent='';mm.className='match';}
+  else if(p2===p){mm.textContent='✓ Пароли совпадают';mm.className='match ok';}
+  else{mm.textContent='Пароли не совпадают';mm.className='match err';}
+  const email=/.+@.+\..+/.test(document.getElementById('remail').value);
+  const c1=document.getElementById('c1').checked,c2=document.getElementById('c2').checked;
+  document.getElementById('regBtn').disabled=!(allp&&p2===p&&p2&&email&&c1&&c2);
+  fit();
+}
+window.addEventListener('load',fit);
+window.addEventListener('resize',fit);
+
+/* ---- успокоенный fluid (твой шейдер, intensity снижена до 0.6) ---- */
+(function(){
+  var CONFIG={renderScale:0.30,maxFPS:30,speed:0.12,fadeIn:2.5,intensity:0.6,gapAmount:0.55,breathe:1.0};
+  var canvas=document.getElementById('wave');
+  var gl=canvas.getContext('webgl',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'low-power'});
+  if(!gl){document.querySelector('.bg').style.background='radial-gradient(ellipse at 50% 120%,#2a2466,#10103a 45%,#06081c 80%)';return;}
+  var VERT='attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
+  var FRAG=['precision mediump float;uniform vec2 uRes;uniform float uTime;uniform float uFade;uniform float uIntensity;uniform float uGap;uniform float uBreathe;',
+'float hash(vec2 p){p=fract(p*vec2(127.1,311.7));p+=dot(p,p+34.45);return fract(p.x*p.y);}',
+'float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),f.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),f.x),f.y);}',
+'float fbm(vec2 p){float v=0.0;v+=0.50*noise(p);p*=2.07;v+=0.25*noise(p);p*=2.13;v+=0.125*noise(p);return v*1.143;}',
+'void main(){vec2 uv=gl_FragCoord.xy/uRes;float aspect=uRes.x/uRes.y;float t=uTime;',
+'float cx=uv.x-0.5;float edge=0.30+1.05*cx*cx;',
+'edge+=(fbm(vec2(uv.x*2.2*aspect+t*0.7,t*0.45))-0.5)*0.28;',
+'edge+=sin(uv.x*3.5*aspect-t*1.4)*0.025;',
+'float d=edge-uv.y;',
+'vec2 q=vec2(uv.x*2.6*aspect,d*2.6);',
+'vec2 warp=vec2(fbm(q*1.2+vec2(t*0.95,-t*0.6)),fbm(q*1.2+vec2(-t*0.7,t*0.85)+5.2));',
+'float flow=fbm(q+2.6*(warp-0.5)+vec2(t*0.45,0.0));',
+'float width=1.6+uBreathe*3.0*fbm(vec2(uv.x*1.3*aspect-t*0.55,t*0.3));',
+'float crest=smoothstep(0.0,0.03+0.05*flow,d);',
+'float fall=exp(-max(d,0.0)*width);',
+'float gate=smoothstep(0.30,0.62,flow);',
+'float gaps=mix(1.0,gate,uGap+0.35*uGap*sin(t*0.9+uv.x*6.0));',
+'float fil=0.5+0.5*sin(d*24.0+(warp.x-0.5)*10.0+uv.x*5.0*aspect-t*1.2);',
+'float sideMask=smoothstep(0.02,0.16,cx*cx);',
+'float ribbons=mix(1.0,0.30+0.70*fil,sideMask*0.85);',
+'float body=crest*(0.15+1.15*fall)*gaps*ribbons*(0.35+0.95*flow);',
+'float haze=crest*exp(-max(d,0.0)*1.4)*0.16;',
+'float vein=fbm(vec2(uv.x*5.0*aspect-t*0.9,d*6.0+t*0.4));',
+'float streak=smoothstep(0.09,0.0,abs(d-0.035-0.05*vein))*crest*(0.4+0.6*gate);',
+'vec3 purple=vec3(0.42,0.30,0.92);vec3 blue=vec3(0.22,0.42,1.00);vec3 cyan=vec3(0.25,0.90,0.85);vec3 pink=vec3(0.92,0.42,0.95);vec3 deep=vec3(0.10,0.09,0.30);',
+'vec3 col=mix(purple,blue,smoothstep(0.25,0.75,flow));',
+'col=mix(col,cyan,smoothstep(0.62,0.92,flow)*0.85);',
+'col=col*body+deep*haze+pink*streak*(0.35+0.45*flow);',
+'col*=mix(0.35,1.0,exp(-max(d-0.05,0.0)*2.0));',
+'col*=uIntensity*uFade;',
+'col+=(hash(gl_FragCoord.xy+fract(t))-0.5)*0.012;',
+'gl_FragColor=vec4(col,1.0);}'].join('\n');
+  function sh(t,s){var o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);return o;}
+  var pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VERT));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FRAG));gl.linkProgram(pr);gl.useProgram(pr);
+  var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  var uRes=gl.getUniformLocation(pr,'uRes'),uTime=gl.getUniformLocation(pr,'uTime'),uFade=gl.getUniformLocation(pr,'uFade');
+  gl.uniform1f(gl.getUniformLocation(pr,'uIntensity'),CONFIG.intensity);
+  gl.uniform1f(gl.getUniformLocation(pr,'uGap'),CONFIG.gapAmount);
+  gl.uniform1f(gl.getUniformLocation(pr,'uBreathe'),CONFIG.breathe);
+  function size(){var w=Math.max(2,Math.round(canvas.clientWidth*CONFIG.renderScale)),h=Math.max(2,Math.round(canvas.clientHeight*CONFIG.renderScale));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);gl.uniform2f(uRes,w,h);}}
+  size();window.addEventListener('resize',size);
+  var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var start=performance.now(),lastFrame=0,fi=1000/CONFIG.maxFPS,running=true;
+  function draw(now){if(running)requestAnimationFrame(draw);if(now-lastFrame<fi)return;lastFrame=now;var el=(now-start)/1000;var f=Math.min(el/CONFIG.fadeIn,1.0);f=f*f*(3.0-2.0*f);gl.uniform1f(uTime,el*CONFIG.speed);gl.uniform1f(uFade,f);gl.drawArrays(gl.TRIANGLES,0,3);}
+  if(reduced){gl.uniform1f(uTime,7.3);gl.uniform1f(uFade,1.0);gl.drawArrays(gl.TRIANGLES,0,3);}
+  else{requestAnimationFrame(draw);document.addEventListener('visibilitychange',function(){running=!document.hidden;if(running){lastFrame=0;requestAnimationFrame(draw);}});}
+})();
+</script>
+</body>
+</html>
