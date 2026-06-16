@@ -1,5 +1,5 @@
 /**
- * Fluid WebGL фон для hero variant B (Приложение A ТЗ).
+ * Fluid WebGL фон для hero variant B и auth-страницы.
  */
 (function () {
   'use strict';
@@ -20,6 +20,7 @@
   var canvas = null;
   var drawFn = null;
   var onVisChange = null;
+  var onResize = null;
 
   function destroy() {
     running = false;
@@ -29,14 +30,22 @@
       document.removeEventListener('visibilitychange', onVisChange);
       onVisChange = null;
     }
+    if (onResize) {
+      window.removeEventListener('resize', onResize);
+      onResize = null;
+    }
     drawFn = null;
     gl = null;
+    canvas = null;
   }
 
-  function init() {
+  function initOn(canvasId, bgSelector) {
     destroy();
-    canvas = document.getElementById('wave');
-    if (!canvas || canvas.offsetParent === null) return;
+    canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    var bg = bgSelector ? document.querySelector(bgSelector) : null;
+    if (canvas.offsetParent === null && canvasId !== 'auth-wave') return;
 
     gl = canvas.getContext('webgl', {
       alpha: false,
@@ -46,7 +55,6 @@
       powerPreference: 'low-power'
     });
 
-    var bg = document.querySelector('#hero-variant-b .hero-bg');
     if (!gl) {
       if (bg) {
         bg.style.background =
@@ -134,7 +142,7 @@
       }
     }
 
-    var onResize = function () { resize(); };
+    onResize = function () { resize(); };
     resize();
     window.addEventListener('resize', onResize);
 
@@ -172,18 +180,11 @@
       };
       document.addEventListener('visibilitychange', onVisChange);
     }
-
-    window.HeroWave._onResize = onResize;
   }
 
   window.HeroWave = {
-    init: init,
-    destroy: function () {
-      if (window.HeroWave._onResize) {
-        window.removeEventListener('resize', window.HeroWave._onResize);
-        window.HeroWave._onResize = null;
-      }
-      destroy();
-    }
+    init: function () { initOn('wave', '#hero-variant-b .hero-bg'); },
+    initAuth: function () { initOn('auth-wave', '.auth-bg'); },
+    destroy: destroy
   };
 })();
