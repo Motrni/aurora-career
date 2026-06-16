@@ -1,11 +1,11 @@
 /**
- * Hero B: scroll-driven появление видео (Stitch-style).
- * Фазы: скрыто → рост снизу → fullscreen → крупный формат справа → docked при скролле ниже.
+ * Hero B: scroll-driven видео без пустого runway.
+ * Прогресс считается от конца панели; stats идёт сразу под hero.
  */
 (function () {
   'use strict';
 
-  var scene = null;
+  var hero = null;
   var shell = null;
   var ticking = false;
   var bound = false;
@@ -23,25 +23,47 @@
     return a + (b - a) * t;
   }
 
+  function getMetrics() {
+    var viewH = window.innerHeight;
+    var heroIn = hero.querySelector('.hero-in');
+    var spacer = hero.querySelector('.hero-b-spacer');
+    var heroTop = hero.getBoundingClientRect().top + window.scrollY;
+    var contentEnd = heroTop + heroIn.offsetTop + heroIn.offsetHeight;
+    var spacerH = spacer ? spacer.offsetHeight : 0;
+    /* Старт: первые ~12% скролла после панели — видео уже растёт */
+    var animStart = Math.max(40, contentEnd + spacerH - viewH * 0.88);
+    var animRange = viewH * 0.38;
+    return { viewH: viewH, animStart: animStart, animRange: animRange };
+  }
+
   function updateProgress() {
     ticking = false;
-    if (!scene || scene.hidden || !shell) return;
+    if (!hero || hero.hidden || !shell) return;
 
-    var viewH = window.innerHeight;
-    var rect = scene.getBoundingClientRect();
-    var scrollable = Math.max(scene.offsetHeight - viewH, 1);
-    var scrolled = -rect.top;
-    var progress = clamp(scrolled / scrollable, 0, 1);
+    var m = getMetrics();
+    var progress = clamp((window.scrollY - m.animStart) / m.animRange, 0, 1);
+    var isMaxed = progress >= 1;
+
+    document.body.classList.toggle('hero-b-video-maxed', isMaxed);
 
     if (reducedMotion) {
-      shell.style.setProperty('--hbv-scale', '0.52');
-      shell.style.setProperty('--hbv-tx', '28vw');
-      shell.style.setProperty('--hbv-ty', '0vh');
-      shell.style.setProperty('--hbv-opacity', '1');
-      shell.style.setProperty('--hbv-play-opacity', '1');
-      shell.classList.toggle('is-docked', rect.bottom <= viewH && progress > 0.5);
+      shell.classList.toggle('is-maxed', isMaxed || progress > 0.2);
+      shell.style.setProperty('--hbv-opacity', progress > 0.05 ? '1' : '0');
+      shell.style.setProperty('--hbv-play-opacity', progress > 0.15 ? '1' : '0');
       return;
     }
+
+    if (isMaxed) {
+      shell.classList.add('is-maxed', 'is-visible');
+      shell.style.setProperty('--hbv-scale', '1');
+      shell.style.setProperty('--hbv-tx', '0');
+      shell.style.setProperty('--hbv-ty', '0');
+      shell.style.setProperty('--hbv-opacity', '1');
+      shell.style.setProperty('--hbv-play-opacity', '1');
+      return;
+    }
+
+    shell.classList.remove('is-maxed');
 
     var scale;
     var tx;
@@ -49,23 +71,24 @@
     var opacity;
     var playOpacity;
 
-    if (progress < 0.38) {
-      var t1 = easeOutCubic(progress / 0.38);
-      scale = lerp(0.3, 1, t1);
+    if (progress <= 0) {
+      scale = 0.28;
+      ty = 38;
+      tx = 0;
+      opacity = 0;
+      playOpacity = 0;
+      shell.classList.remove('is-visible');
+    } else if (progress < 0.55) {
+      var t1 = easeOutCubic(progress / 0.55);
+      scale = lerp(0.28, 1, t1);
       ty = lerp(38, 0, t1);
       tx = 0;
-      opacity = lerp(0, 1, t1);
-      playOpacity = lerp(0, 1, clamp((progress - 0.12) / 0.2, 0, 1));
-    } else if (progress < 0.62) {
-      scale = 1;
-      tx = 0;
-      ty = 0;
-      opacity = 1;
-      playOpacity = 1;
+      opacity = lerp(0, 1, Math.min(t1 * 1.4, 1));
+      playOpacity = lerp(0, 1, clamp((progress - 0.08) / 0.25, 0, 1));
     } else {
-      var t2 = easeOutCubic((progress - 0.62) / 0.38);
+      var t2 = easeOutCubic((progress - 0.55) / 0.45);
       scale = lerp(1, 0.52, t2);
-      tx = lerp(0, 28, t2);
+      tx = lerp(0, 30, t2);
       ty = 0;
       opacity = 1;
       playOpacity = 1;
@@ -76,10 +99,7 @@
     shell.style.setProperty('--hbv-ty', ty + 'vh');
     shell.style.setProperty('--hbv-opacity', String(opacity));
     shell.style.setProperty('--hbv-play-opacity', String(playOpacity));
-
-    var docked = progress >= 0.85 && rect.bottom <= viewH;
-    shell.classList.toggle('is-docked', docked);
-    scene.classList.toggle('is-docked-active', docked);
+    shell.classList.toggle('is-visible', opacity > 0.05);
   }
 
   function onScroll() {
@@ -101,6 +121,7 @@
     bound = false;
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onScroll);
+    document.body.classList.remove('hero-b-video-maxed');
   }
 
   function initPreviewVideo() {
@@ -148,7 +169,7 @@
           obs.disconnect();
         }
       });
-    }, { threshold: 0.2 });
+    }, { threshold: 0.15 });
 
     obs.observe(shell);
   }
@@ -157,10 +178,7 @@
     if (!shell || shell.dataset.clickBound === '1') return;
     shell.dataset.clickBound = '1';
 
-    function open(e) {
-      if (e.target.closest('.hero-b-play-intro')) {
-        e.stopPropagation();
-      }
+    function open() {
       if (typeof openVideoModal === 'function') openVideoModal();
     }
 
@@ -168,15 +186,15 @@
     shell.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        open(e);
+        open();
       }
     });
   }
 
   function init() {
-    scene = document.getElementById('hero-b-video-scene');
+    hero = document.getElementById('hero-variant-b');
     shell = document.getElementById('hero-b-video-trigger');
-    if (!scene || !shell) return;
+    if (!hero || !shell) return;
 
     reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     bindScroll();
@@ -188,7 +206,7 @@
   function destroy() {
     unbindScroll();
     if (shell) {
-      shell.classList.remove('is-docked', 'is-playing', 'is-ended');
+      shell.classList.remove('is-maxed', 'is-visible', 'is-playing', 'is-ended');
       shell.style.removeProperty('--hbv-scale');
       shell.style.removeProperty('--hbv-tx');
       shell.style.removeProperty('--hbv-ty');
@@ -196,7 +214,6 @@
       shell.style.removeProperty('--hbv-play-opacity');
       delete shell.dataset.clickBound;
     }
-    if (scene) scene.classList.remove('is-docked-active');
   }
 
   window.HeroBVideoScroll = { init: init, destroy: destroy };
