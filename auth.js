@@ -240,6 +240,9 @@ async function handleLogin(e) {
 
 function updateRegPasswordChecks() {
     const pwd = (document.getElementById('regPassword')?.value) || '';
+    const reqsWrap = document.getElementById('regPwdChecksWrap');
+    if (reqsWrap) reqsWrap.classList.toggle('show', pwd.length > 0);
+
     const ruleMap = {
         len: pwd.length >= 8,
         up: /[A-ZА-ЯЁ]/.test(pwd),

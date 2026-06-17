@@ -12,23 +12,22 @@
 <style>
   :root{--bg0:#06081c;--text:#eef1ff;--muted:#9aa3c7;--faint:#6b7398;--cyan:#36c9e8;--blue:#4a7bff;--purple:#8b5cf6;--ok:#46e0a0;--err:#ef6d6d}
   *{box-sizing:border-box;margin:0;padding:0}
-  html{color-scheme:dark}
+  html{color-scheme:dark;scrollbar-gutter:stable}
   body{font-family:'Inter',system-ui,sans-serif;color:var(--text);background:var(--bg0);min-height:100vh;min-height:100dvh;overflow-x:hidden}
 
   .bg{position:fixed;inset:0;z-index:-2;overflow:hidden;background:#06081c}
   #auth-wave{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .scrim{position:fixed;inset:0;z-index:-1;background:radial-gradient(46% 60% at 50% 48%,#06081c 38%,rgba(6,8,28,.55) 62%,transparent 82%)}
+  .scrim{position:fixed;inset:0;z-index:-1;background:radial-gradient(48% 60% at 50% 48%,#06081c 36%,rgba(6,8,28,.5) 62%,transparent 84%)}
 
   .wrap{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:40px 18px}
 
   .card{width:100%;max-width:430px;border-radius:22px;padding:34px 32px 26px;
     background:linear-gradient(180deg,#141a3f,#0e1230);
     border:1px solid rgba(255,255,255,.10);
-    box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(54,201,232,.05),inset 0 1px 0 rgba(255,255,255,.06)}
+    box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06)}
 
   .brand{display:flex;align-items:center;gap:13px;margin-bottom:24px}
-  .brand .mark{width:36px;height:36px;flex-shrink:0}
-  .brand .mark img{width:100%;height:100%;object-fit:contain}
+  .brand .mark{font-size:30px;line-height:1;color:var(--cyan);flex-shrink:0}
   .brand h1{font-family:'Unbounded',sans-serif;font-weight:800;font-size:25px;letter-spacing:-.5px}
   .brand p{font-size:12.5px;color:var(--muted);margin-top:2px}
 
@@ -43,11 +42,13 @@
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
   .seg{display:flex;gap:4px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:5px;margin-bottom:22px}
-  .seg button{flex:1;font:inherit;font-size:14.5px;font-weight:600;color:var(--muted);padding:11px;border:0;border-radius:9px;background:none;cursor:pointer;transition:color .2s,background .2s}
+  .seg button{flex:1;font:inherit;font-size:14.5px;font-weight:600;color:var(--muted);padding:11px;border:0;border-radius:9px;background:none;cursor:pointer;transition:color .25s,background .25s}
   .seg button.on{color:#fff;background:linear-gradient(135deg,rgba(54,201,232,.22),rgba(139,92,246,.32));box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
 
-  .panes{overflow:hidden;transition:height .38s cubic-bezier(.2,.7,.2,1)}
-  .pane{display:none}.pane.on{display:block}
+  .panes{overflow:hidden;transition:height .4s cubic-bezier(.2,.7,.2,1)}
+  .pane{display:none}
+  .pane.on{display:block;animation:paneIn .45s cubic-bezier(.2,.7,.2,1)}
+  @keyframes paneIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
   label.fl{display:block;font-size:13px;font-weight:600;color:var(--text);margin:0 0 7px}
   .field{position:relative;margin-bottom:16px}
@@ -58,7 +59,9 @@
   .eye:hover{color:var(--muted)}
   .eye svg{width:19px;height:19px}
 
-  .reqs{margin:-4px 0 16px;display:grid;gap:7px}
+  .reqs-wrap{height:0;opacity:0;overflow:hidden;transition:opacity .3s ease}
+  .reqs-wrap.show{height:auto;opacity:1}
+  .reqs{display:grid;gap:7px;padding:2px 0 14px}
   .req{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);transition:color .2s}
   .req .dot{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:.2s}
   .req .dot svg{width:10px;height:10px;opacity:0;transform:scale(.5);transition:.2s;color:#06281c}
@@ -66,10 +69,8 @@
   .req.ok .dot{background:var(--ok);border-color:var(--ok)}
   .req.ok .dot svg{opacity:1;transform:scale(1)}
 
-  .match{font-size:12.5px;margin:-8px 0 14px;min-height:16px}
+  .match{font-size:12.5px;margin:-8px 0 14px;height:16px}
   .match.ok{color:var(--ok)}.match.err{color:var(--err)}
-
-  .hint{font-size:12.5px;color:var(--muted);background:rgba(54,201,232,.07);border:1px solid rgba(54,201,232,.16);border-radius:11px;padding:11px 13px;margin-bottom:18px;line-height:1.45}
 
   .consent{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--muted);line-height:1.45;margin-bottom:12px;cursor:pointer}
   .consent input{position:absolute;opacity:0;width:0;height:0}
@@ -79,9 +80,9 @@
   .consent input:checked + .box svg{opacity:1}
   .consent a{color:var(--cyan);text-decoration:underline}
 
-  .btn{width:100%;font:inherit;font-size:16px;font-weight:600;color:#fff;border:0;border-radius:13px;padding:15px;cursor:pointer;transition:transform .12s,opacity .2s,box-shadow .2s}
+  .btn{width:100%;font:inherit;font-size:16px;font-weight:600;color:#fff;border:0;border-radius:13px;padding:15px;cursor:pointer;transition:transform .12s,opacity .2s,box-shadow .2s,background .2s}
   .btn:active{transform:scale(.985)}
-  .btn-primary{background:linear-gradient(135deg,var(--cyan),var(--purple));box-shadow:0 12px 26px rgba(74,123,255,.4)}
+  .btn-primary{background:linear-gradient(135deg,var(--cyan),var(--purple));box-shadow:0 6px 16px rgba(0,0,0,.28)}
   .btn-primary:disabled{background:#2a3158;color:#7a82a8;box-shadow:none;cursor:not-allowed;transform:none}
   .btn-tg{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:var(--text);display:flex;align-items:center;justify-content:center;gap:9px}
   .btn-tg:hover:not(:disabled){background:rgba(255,255,255,.08)}
@@ -138,6 +139,7 @@
 
   @media (prefers-reduced-motion:reduce){
     .panes{transition:none}
+    .pane.on{animation:none}
     .fade-in{animation:none}
     .btn:active{transform:none}
     .spinner-lg,.spinner{animation:none}
@@ -157,9 +159,7 @@
   <div class="card">
 
     <div class="brand">
-      <div class="mark">
-        <img src="/favicon-white.png?v=1" alt="" onerror="this.src='/favicon.png?v=3';this.style.filter='invert(1) brightness(2)'"/>
-      </div>
+      <div class="mark" aria-hidden="true">▲</div>
       <div>
         <h1>Аврора</h1>
         <p>Карьерный ИИ-Ассистент</p>
@@ -259,12 +259,6 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
             </div>
-            <div class="reqs" id="regPwdChecks">
-              <div class="req" id="regChkLength" data-k="len"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Минимум 8 символов</div>
-              <div class="req" id="regChkUpper" data-k="up"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна заглавная буква</div>
-              <div class="req" id="regChkDigit" data-k="num"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна цифра</div>
-              <div class="req" id="regChkLower" data-k="low"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна строчная буква или символ</div>
-            </div>
 
             <label class="fl" for="regPasswordConfirm">Подтвердите пароль</label>
             <div class="field">
@@ -275,7 +269,14 @@
             </div>
             <div class="match" id="regPwdMatch"></div>
 
-            <div class="hint">Для запуска автопилота понадобится доступ к hh.ru — займёт 1 минуту. Сделаете это уже внутри, после короткого знакомства с сервисом.</div>
+            <div class="reqs-wrap" id="regPwdChecksWrap">
+              <div class="reqs" id="regPwdChecks">
+                <div class="req" id="regChkLength" data-k="len"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Минимум 8 символов</div>
+                <div class="req" id="regChkUpper" data-k="up"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна заглавная буква</div>
+                <div class="req" id="regChkDigit" data-k="num"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна цифра</div>
+                <div class="req" id="regChkLower" data-k="low"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg></span>Одна строчная буква или символ</div>
+              </div>
+            </div>
 
             <label class="consent">
               <input type="checkbox" id="regConsentPrivacy" onchange="updateRegPasswordChecks()">
@@ -433,6 +434,6 @@
   else{requestAnimationFrame(draw);document.addEventListener('visibilitychange',function(){running=!document.hidden;if(running){lastFrame=0;requestAnimationFrame(draw);}});}
 })();
 </script>
-<script src="auth.js?v=1.8"></script>
+<script src="auth.js?v=1.9"></script>
 </body>
 </html>
