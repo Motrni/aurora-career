@@ -34,37 +34,6 @@ body.hero-v-b #burger-btn { display: none !important; }
 }
 /* scrolled state is no longer needed since it's always active like stitch */
 
-body.hero-v-b #hero-ab-switch {
-    margin-left: auto;
-}
-
-.hero-ab-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    padding: 3px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.hero-ab-btn {
-    font-family: inherit;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    padding: 6px 10px;
-    border: 0;
-    border-radius: 8px;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.55);
-    background: transparent;
-    transition: background 0.15s, color 0.15s;
-}
-.hero-ab-btn.is-active {
-    color: #fff;
-    background: linear-gradient(135deg, rgba(54, 201, 232, 0.35), rgba(139, 92, 246, 0.45));
-}
-
 /* Hero layout */
 #hero-variant-b.hero-b {
     position: relative;

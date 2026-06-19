@@ -210,12 +210,4 @@
   }
 
   window.HeroBVideoScroll = { init: init, destroy: destroy };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      if (document.body.classList.contains('hero-v-b')) init();
-    });
-  } else if (document.body.classList.contains('hero-v-b')) {
-    init();
-  }
 })();
