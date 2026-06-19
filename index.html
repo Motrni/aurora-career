@@ -1737,14 +1737,10 @@ tailwind.config = {
         </nav>
 
         <!-- Auth -->
-        <div id="authContainer" class="hidden lg:flex items-center gap-1">
-            <a id="authBtn" href="/auth/"
-               class="px-4 py-2 text-sm font-medium transition-colors duration-200 hover:text-white"
-               style="color:rgba(255,255,255,0.8)">Вход</a>
-            <span id="authDivider" style="color:rgba(255,255,255,0.4)">/</span>
-            <button id="regBtn" onclick="toggleModal('join-modal')"
-                    class="px-5 py-2.5 rounded-[12px] text-sm font-bold text-white transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border-0"
-                    style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 4px 15px rgba(34,211,238,0.25)">Регистрация</button>
+        <div id="authContainer" class="hidden lg:flex items-center">
+            <a id="regBtn" href="/auth/"
+               class="px-5 py-2.5 rounded-[12px] text-sm font-bold text-white transition-all duration-200 hover:scale-105 active:scale-95 inline-flex items-center justify-center"
+               style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 4px 15px rgba(34,211,238,0.25)">Войти</a>
         </div>
 
         <!-- Burger -->
@@ -1763,12 +1759,9 @@ tailwind.config = {
      style="background:rgba(10,11,30,0.97);backdrop-filter:blur(20px)">
     <!-- Auth Buttons on Top in Mobile Menu -->
     <div id="mobileAuthBlock" class="py-4 flex flex-col gap-3" style="border-bottom:1px solid rgba(34,211,238,0.1)">
-        <a id="authBtnMobile" href="/auth/" onclick="toggleMobileMenu()"
-           class="w-full text-center py-3.5 rounded-[12px] text-sm font-semibold hover:text-white transition-colors"
-           style="border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.8)">Вход</a>
-        <button id="regBtnMobile" onclick="toggleMobileMenu();toggleModal('join-modal');"
-                class="w-full py-3.5 rounded-[12px] font-bold text-white text-sm cursor-pointer border-0"
-                style="background:linear-gradient(135deg,#22d3ee,#a855f7)">Регистрация</button>
+        <a id="regBtnMobile" href="/auth/" onclick="toggleMobileMenu()"
+           class="w-full text-center py-3.5 rounded-[12px] font-bold text-white text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+           style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 4px 15px rgba(34,211,238,0.25)">Войти</a>
     </div>
 
     <a href="#how-it-works" onclick="toggleMobileMenu()" class="text-lg font-medium py-3.5 hover:text-white transition-colors"
@@ -2812,8 +2805,8 @@ document.addEventListener('DOMContentLoaded', function() {
         initHeroPreviewVideo();
     }
 
-    var btn = document.getElementById('authBtn');
-    var btnM = document.getElementById('authBtnMobile');
+    var btn = document.getElementById('regBtn');
+    var btnM = document.getElementById('regBtnMobile');
 
     function setLoggedIn() {
         if (btn) {
@@ -2831,15 +2824,6 @@ document.addEventListener('DOMContentLoaded', function() {
             btnM.style.boxShadow = "0 4px 15px rgba(34,211,238,0.25)";
             btnM.style.border = "none";
         }
-        
-        // Hide registration button and divider when logged in
-        var divider = document.getElementById('authDivider');
-        var reg = document.getElementById('regBtn');
-        var regM = document.getElementById('regBtnMobile');
-        
-        if (divider) divider.style.display = 'none';
-        if (reg) reg.style.display = 'none';
-        if (regM) regM.style.display = 'none';
     }
 
     fetch(apiBase + '/api/auth/me', { method: 'GET', credentials: 'include' })
