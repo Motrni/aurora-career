@@ -36,6 +36,31 @@
     cover: { ringN: 0, ringD: 'из 100' }
   };
 
+  var AUTO_STEP_MS = 465;
+
+  function maybeCenterAutopilotPanel() {
+    if (window.scrollY > 100) return;
+    var panel = document.querySelector('#hero-variant-b .panel');
+    if (!panel) return;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var rect = panel.getBoundingClientRect();
+        var panelCenter = rect.top + rect.height / 2;
+        var viewCenter = window.innerHeight / 2;
+        var threshold = window.innerHeight * 0.3;
+        if (Math.abs(panelCenter - viewCenter) <= threshold) return;
+        var targetY = Math.max(0, window.scrollY + panelCenter - viewCenter);
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      });
+    });
+  }
+
+  function showDemoCompleteModal() {
+    if (typeof window.openHeroDemoModal === 'function') {
+      window.openHeroDemoModal();
+    }
+  }
+
   var feed = [
     { role: 'QA Engineer', co: 'Альфа-Банк', pct: 91, ok: true, r: 'опыт в банке закрывает требования' },
     { role: 'Junior QA Tester', co: 'Стартап Nova', pct: 34, ok: false, r: 'ищут junior, вы — senior' },
@@ -102,6 +127,7 @@
     var i = 0;
     var sent = 0;
     fit();
+    maybeCenterAutopilotPanel();
 
     (function step() {
       if (!autoRun) return;
@@ -117,6 +143,7 @@
         autoRun = false;
         syncHead();
         fit();
+        showDemoCompleteModal();
         return;
       }
       var v = feed[i];
@@ -141,7 +168,7 @@
       document.getElementById('s2').textContent = String(Math.min(found, 15 + i * 16));
       document.getElementById('s3').textContent = (i * 0.4).toFixed(1) + ' ч';
       fit();
-      setTimeout(step, 620);
+      setTimeout(step, AUTO_STEP_MS);
     })();
   }
 
@@ -216,7 +243,7 @@
 
   function init() {
     var root = document.getElementById('hero-variant-b');
-    if (!root || root.hidden) return;
+    if (!root) return;
 
     liveWrap = document.getElementById('liveWrap');
     goBtn = document.getElementById('goBtn');

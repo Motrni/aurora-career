@@ -701,6 +701,7 @@ tailwind.config = {
     body.modal-open #pre,
     body.modal-open #mobile-menu,
     body.modal-open #video-modal,
+    body.modal-open #hero-demo-modal,
     body.modal-open .burger,
     body.lm-open #legal-modal-backdrop.lm-visible,
     body.lm-open #legal-modal-backdrop.lm-visible * { pointer-events: auto; }
@@ -1310,7 +1311,7 @@ tailwind.config = {
 <script src="legal-modal.js?v=1.0"></script>
 <script src="cookie-consent.js?v=1.1"></script>
 <script src="hero-wave.js?v=2" defer></script>
-<script src="hero-interactive.js?v=3" defer></script>
+<script src="hero-interactive.js?v=4" defer></script>
 <script src="hero-b-video-scroll.js?v=5" defer></script>
 </head>
 
@@ -1388,7 +1389,7 @@ tailwind.config = {
         <div id="authContainer" class="hidden lg:flex items-center">
             <a id="regBtn" href="/auth/"
                class="px-5 py-2.5 rounded-[12px] text-sm font-bold text-white transition-all duration-200 hover:scale-105 active:scale-95 inline-flex items-center justify-center"
-               style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 4px 15px rgba(34,211,238,0.25)">Войти</a>
+               style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 4px 15px rgba(34,211,238,0.25)">Начать бесплатно</a>
         </div>
 
         <!-- Burger -->
@@ -1409,7 +1410,7 @@ tailwind.config = {
     <div id="mobileAuthBlock" class="py-4 flex flex-col gap-3" style="border-bottom:1px solid rgba(34,211,238,0.1)">
         <a id="regBtnMobile" href="/auth/" onclick="toggleMobileMenu()"
            class="w-full text-center py-3.5 rounded-[12px] font-bold text-white text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-           style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 4px 15px rgba(34,211,238,0.25)">Войти</a>
+           style="background:linear-gradient(135deg,#22d3ee,#a855f7);box-shadow:0 4px 15px rgba(34,211,238,0.25)">Начать бесплатно</a>
     </div>
 
     <a href="#how-it-works" onclick="toggleMobileMenu()" class="text-lg font-medium py-3.5 hover:text-white transition-colors"
@@ -1458,9 +1459,9 @@ tailwind.config = {
                     </div>
                 </div>
                 <div class="live-wrap" id="liveWrap">
-                    <div class="pane active" data-pane="auto" role="tabpanel"><div class="hint">Нажмите кнопку выше, чтобы увидеть демо ↑</div></div>
-                    <div class="pane" data-pane="manual" role="tabpanel"><div class="hint">Нажмите кнопку выше, чтобы увидеть демо ↑</div></div>
-                    <div class="pane" data-pane="cover" role="tabpanel"><div class="hint">Нажмите кнопку выше, чтобы увидеть демо ↑</div></div>
+                    <div class="pane active" data-pane="auto" role="tabpanel"></div>
+                    <div class="pane" data-pane="manual" role="tabpanel"></div>
+                    <div class="pane" data-pane="cover" role="tabpanel"></div>
                 </div>
             </div>
         </div>
@@ -1525,8 +1526,8 @@ tailwind.config = {
                         <div class="stat-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
                         </div>
-                        <p class="stat-label">Написано сопроводительных:</p>
-                        <p class="stat-num counter stat-value" data-count-to="125430">125&nbsp;430</p>
+                        <p class="stat-label">Проанализировано резюме:</p>
+                        <p class="stat-num counter stat-value" data-count-to="3684">3&nbsp;684</p>
                     </div>
                 </div>
             </div>
@@ -2110,29 +2111,39 @@ tailwind.config = {
                 <button type="button" class="close" onclick="closeReviewsModal()" aria-label="Закрыть">✕</button>
             </div>
         </div>
-        <div class="reviews-track" id="reviews-track">
-            <div class="res-glass reviews-carousel-card">
-                <div class="tg-head">
-                    <div class="ava" style="background:linear-gradient(135deg,#4a7bff,#8b5cf6)">А</div>
-                    <div><div class="tg-name">Антон</div><div class="tg-sub">Backend-разработчик</div></div>
-                </div>
-                <div class="bubble">282 отклика → 7 собеседований<span class="tm">11:04<svg class="dc"><use href="#dc"/></svg></span></div>
-                <div class="bubble">2 оффера ✓ Закрыл поиск за месяц<span class="tm">11:05<svg class="dc"><use href="#dc"/></svg></span></div>
-            </div>
-            <div class="res-glass reviews-carousel-card">
-                <div class="tg-head">
-                    <div class="ava" style="background:linear-gradient(135deg,#36c9e8,#4a7bff)">С</div>
-                    <div><div class="tg-name">Станислав</div><div class="tg-sub">SA/BA аналитик</div></div>
-                </div>
-                <div class="bubble">От запуска до оффера на удалёнку — 8 дней 🚀<span class="tm">14:32<svg class="dc"><use href="#dc"/></svg></span></div>
-                <div class="bubble">Получил удалёнку, когда все говорили, что её больше нет.<span class="tm">14:32<svg class="dc"><use href="#dc"/></svg></span></div>
-            </div>
-            <div class="res-glass reviews-carousel-card">
-                <div class="tg-head">
-                    <div class="ava" style="background:linear-gradient(135deg,#8b5cf6,#36c9e8)">Р</div>
-                    <div><div class="tg-name">Рустем</div><div class="tg-sub">Data-инженер</div></div>
-                </div>
-                <div class="bubble">Ручной точечный поиск проигрывает умной автоматизации — это факт.<span class="tm">09:18<svg class="dc"><use href="#dc"/></svg></span></div>
+        <div class="reviews-track" id="reviews-track"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     HERO DEMO COMPLETE MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="hero-demo-modal" onclick="if(event.target===this)closeHeroDemoModal()">
+    <div class="glass-panel max-w-lg w-full p-6 md:p-10 rounded-[16px] relative shadow-2xl"
+         style="border:1px solid rgba(34,211,238,0.2)">
+        <button type="button" class="absolute top-4 right-4 md:top-6 md:right-6 bg-transparent border-0 cursor-pointer transition-colors hover:text-white"
+                style="color:rgba(255,255,255,0.6)" onclick="closeHeroDemoModal()" aria-label="Закрыть">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+        <div class="text-center space-y-4 md:space-y-5">
+            <h3 class="text-xl md:text-2xl font-bold text-white leading-snug">10 откликов за 30 секунд. Вместо вас.</h3>
+            <p class="leading-relaxed text-sm md:text-base text-left" style="color:rgba(255,255,255,0.75)">
+                Это была симуляция, но в реальности система работает точно так же. Аврора берёт на себя самую нудную часть: сама находит релевантные вакансии, пишет сопроводительные и отправляет отклики каждый день. Ваша задача — просто приходить на собеседования.
+            </p>
+            <p class="text-sm md:text-base font-semibold text-white">Запустите алгоритм на своём резюме.</p>
+            <div class="pt-2 flex flex-col gap-3">
+                <a class="inline-block text-white px-6 md:px-8 py-3 md:py-4 rounded-[12px] font-bold text-sm md:text-base hover:scale-105 transition-transform text-center"
+                   href="/auth/" style="background:linear-gradient(135deg,#22d3ee,#a855f7)">
+                    Получить 10 откликов бесплатно
+                </a>
+                <button type="button" class="inline-block px-6 md:px-8 py-3 md:py-4 rounded-[12px] font-semibold text-sm md:text-base hover:bg-white/10 transition-colors text-center cursor-pointer border-0"
+                        style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.1)"
+                        onclick="closeHeroDemoModal()">
+                    Ещё посмотрю демо
+                </button>
             </div>
         </div>
     </div>
@@ -2304,6 +2315,10 @@ document.addEventListener('keydown', function(e) {
     }
     if (document.getElementById('video-modal').classList.contains('active')) {
         closeVideoModal();
+        return;
+    }
+    if (document.getElementById('hero-demo-modal').classList.contains('active')) {
+        closeHeroDemoModal();
     }
 });
 
@@ -2339,6 +2354,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.HeroWave) window.HeroWave.init();
     if (window.HeroInteractive) window.HeroInteractive.init();
     if (window.HeroBVideoScroll) window.HeroBVideoScroll.init();
+
+    renderReviewsCarousel();
 
     var hdr = document.getElementById('site-header');
     if (hdr) {
@@ -2743,7 +2760,112 @@ document.querySelectorAll('#faq .q').forEach(function(btn) {
     });
 });
 
+/* ── Hero demo complete modal ── */
+function openHeroDemoModal() {
+    var modal = document.getElementById('hero-demo-modal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function closeHeroDemoModal() {
+    var modal = document.getElementById('hero-demo-modal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
 /* ── Reviews modal + carousel ── */
+var HERO_REVIEWS = [
+    {
+        name: 'Сергей',
+        sub: 'Пользователь Авроры',
+        grad: 'linear-gradient(135deg,#36c9e8,#4a7bff)',
+        bubbles: ['Кстати тоже сегодня получил оффер с помощью Авроры, спасибо)']
+    },
+    {
+        name: 'Марина Игнатьева',
+        sub: 'Пользовательница Авроры',
+        grad: 'linear-gradient(135deg,#8b5cf6,#36c9e8)',
+        bubbles: [
+            'Добрый день! Сегодня была на собеседовании и хочу поделиться одной деталькой) Одна из руководительниц отметила, что пригласили меня на собеседование благодаря сопроводительному письму, просто очень понравилось, как написано) Благодарю Вас, дорогие, Команда Авроры!'
+        ]
+    },
+    {
+        name: 'Марина Игнатьева',
+        sub: 'Пользовательница Авроры',
+        grad: 'linear-gradient(135deg,#4a7bff,#8b5cf6)',
+        bubbles: [
+            'Всем добрый день! Сегодня первый день Аврора поработала полноценно, я победила свой страх запускать Автопилот) И даже воспряла духом! Сопроводительные письма и отклики работодатели видят! Назначают собеседования) Правда именно сегодня пришлось отказываться, так как далеко и долго добираться по времени) Но я выдохнула, я увидела, что Аврора не просто умничка, а реально работает) Всем сердцем благодарю Вас, команда Авроры! Это просто ЧУДО, что я Вас встретила) 🙏❤️💃'
+        ]
+    },
+    {
+        name: 'Анастасия',
+        sub: 'Frontend-разработчик',
+        grad: 'linear-gradient(135deg,#36c9e8,#8b5cf6)',
+        bubbles: [
+            'Хочу тоже поделиться своими впечатлениями. Автоотклик, конечно, нужно доработать. Я фронт, но Аврора откликалась и на бэк, и на QA, и даже на C# 😃',
+            'Понравилась функция генерации сопроводительных. Закидывала ссылку, немного корректировала сопровод и откликалась ручками. Конверсия в просмотры резюме увеличилась.',
+            'Ну и отдельное спасибо за анализ резюме. Доработала его согласно рекомендациям Авроры, и буквально на следующий день на меня вышел сам работодатель, без отклика. По этому кейсу прошла второй этап собеса, дали оффер. Так что спасибо, продолжайте в том же духе ✊🏻'
+        ]
+    },
+    {
+        name: 'Станислав К.',
+        sub: 'SA/BA аналитик',
+        grad: 'linear-gradient(135deg,#36c9e8,#4a7bff)',
+        bubbles: [
+            'Итак, теперь можно поделиться результатами поисков: 9 декабря — пробный старт, первые 30 откликов. 11 декабря — оплата, запуск откликов без ограничений. 17 декабря — на руках оффер, который стал моим текущим местом работы на сегодняшний день.',
+            'Никогда ещё у меня с достаточно неплохим резюме не было настолько широкого охвата просмотров: показы и просмотры были примерно в корреляции 480/360+.',
+            'SA, полная удалёнка по РФ — и это во времена, когда в чате SA/BA писали, что люди не могут найти работу по 3–4 месяца, а удалёнки в принципе нет. Аврора ❤️'
+        ]
+    },
+    {
+        name: 'Alex Mayer',
+        sub: 'IT-специалист',
+        grad: 'linear-gradient(135deg,#8b5cf6,#4a7bff)',
+        bubbles: [
+            'Всем привет! Аврора сработала, сегодня получил оффер (всё как я хотел). Подключил в начале марта, высококонкурентная вакансия. IT'
+        ]
+    },
+    {
+        name: 'Рустем',
+        sub: 'Пользователь Авроры',
+        grad: 'linear-gradient(135deg,#8b5cf6,#36c9e8)',
+        bubbles: [
+            'Прокомментирую, как пользователь. Бот выполняет свои задачи — при верной настройке сопроводительные создаёт, отклики на hh отправляет. При ручном поиске я навыбирал себе около 20 откликов из 40–50, далее часть отказ, часть в обработке, и 3 реальных встречи (из которых уже есть 1 готовый оффер).',
+            'Попробуйте ручной поиск — реально экономит время. К сожалению, HH сейчас так настроен, что точечные отклики не работают: куча внутренних фильтров, некомпетентные HR, куча сомнительных компаний. Приходится брать количеством. Для этого бот и придуман.'
+        ]
+    },
+    {
+        name: 'Anton Kiselëv',
+        sub: 'Пользователь Авроры',
+        grad: 'linear-gradient(135deg,#4a7bff,#8b5cf6)',
+        bubbles: [
+            'Откликов: 282. Ожидание: 77. Отказов сразу: 37. Живых коммуникаций НЕ с ботами или анкетами: 9. Реальных собесов: 7.',
+            'Отказов после собесов мне: 4. Самоотказов после собесов: 3. Офферов: 2. Принял: 1 (вышел сегодня). Срок активного поиска: 2 февраля — 5 марта.'
+        ]
+    }
+];
+
+function renderReviewsCarousel() {
+    var track = document.getElementById('reviews-track');
+    if (!track) return;
+    var times = ['16:06', '20:33', '20:26', '23:49', '10:22', '21:49', '17:14', '23:24'];
+    track.innerHTML = HERO_REVIEWS.map(function (r, idx) {
+        var initial = (r.name.charAt(0) || '?').toUpperCase();
+        var sub = r.sub ? '<div class="tg-sub">' + r.sub + '</div>' : '';
+        var bubbles = r.bubbles.map(function (text, bi) {
+            var tm = times[(idx + bi) % times.length];
+            return '<div class="bubble">' + text + '<span class="tm">' + tm + '<svg class="dc"><use href="#dc"/></svg></span></div>';
+        }).join('');
+        return '<div class="res-glass reviews-carousel-card">' +
+            '<div class="tg-head">' +
+            '<div class="ava" style="background:' + r.grad + '">' + initial + '</div>' +
+            '<div><div class="tg-name">' + r.name + '</div>' + sub + '</div>' +
+            '</div>' + bubbles + '</div>';
+    }).join('');
+}
+
 function openReviewsModal() {
     var overlay = document.getElementById('reviews-overlay');
     if (!overlay) return;
