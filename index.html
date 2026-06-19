@@ -706,6 +706,141 @@ tailwind.config = {
     body.lm-open #legal-modal-backdrop.lm-visible,
     body.lm-open #legal-modal-backdrop.lm-visible * { pointer-events: auto; }
 
+    /* ── Hero demo complete modal (жидкое стекло) ── */
+    #hero-demo-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(6, 8, 28, 0.62);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    #hero-demo-modal.on {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    #hero-demo-modal .hero-demo-card {
+        position: relative;
+        width: 100%;
+        max-width: 445px;
+        border-radius: 24px;
+        padding: 36px 32px 28px;
+        text-align: center;
+        background: linear-gradient(160deg, rgba(28, 34, 82, 0.97), rgba(15, 19, 50, 0.98));
+        backdrop-filter: blur(24px) saturate(1.3);
+        -webkit-backdrop-filter: blur(24px) saturate(1.3);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        transform: translateY(14px) scale(0.97);
+        opacity: 0;
+        transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.35s ease;
+    }
+    #hero-demo-modal.on .hero-demo-card {
+        transform: none;
+        opacity: 1;
+    }
+    #hero-demo-modal .hero-demo-x {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.06);
+        color: #9aa3c7;
+        font-size: 17px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.18s, color 0.18s;
+    }
+    #hero-demo-modal .hero-demo-x:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+    }
+    #hero-demo-modal .hero-demo-ic {
+        width: 60px;
+        height: 60px;
+        border-radius: 17px;
+        margin: 2px auto 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 29px;
+        background: linear-gradient(135deg, rgba(54, 201, 232, 0.26), rgba(139, 92, 246, 0.36));
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    #hero-demo-modal .hero-demo-card h3 {
+        font-family: 'Unbounded', sans-serif;
+        font-size: 23px;
+        font-weight: 800;
+        line-height: 1.18;
+        margin-bottom: 13px;
+        letter-spacing: -0.5px;
+        color: #eef1ff;
+    }
+    #hero-demo-modal .hero-demo-card p {
+        color: #9aa3c7;
+        font-size: 15px;
+        line-height: 1.55;
+        margin-bottom: 15px;
+        text-align: left;
+    }
+    #hero-demo-modal .hero-demo-fomo {
+        color: #36c9e8;
+        font-size: 13.5px;
+        font-weight: 600;
+        margin-bottom: 24px;
+    }
+    #hero-demo-modal .hero-demo-cta {
+        display: block;
+        width: 100%;
+        font-family: 'Inter', sans-serif;
+        font-size: 16.5px;
+        font-weight: 700;
+        color: #fff;
+        border: 0;
+        border-radius: 14px;
+        padding: 16px;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        background: linear-gradient(135deg, #36c9e8, #8b5cf6);
+        box-shadow: 0 14px 30px rgba(74, 123, 255, 0.4);
+        transition: transform 0.12s ease;
+    }
+    #hero-demo-modal .hero-demo-cta:active {
+        transform: scale(0.98);
+    }
+    #hero-demo-modal .hero-demo-later {
+        display: block;
+        margin: 14px auto 0;
+        background: none;
+        border: 0;
+        color: #9aa3c7;
+        font-family: 'Inter', sans-serif;
+        font-size: 13.5px;
+        cursor: pointer;
+        transition: color 0.18s;
+    }
+    #hero-demo-modal .hero-demo-later:hover {
+        color: #fff;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        #hero-demo-modal,
+        #hero-demo-modal .hero-demo-card { transition: none; }
+        #hero-demo-modal .hero-demo-card { transform: none; opacity: 1; }
+    }
+
     /* ── Video Lightbox ── */
     /* Оверлей всегда display:flex, скрыт через opacity+pointer-events.
        Это нужно чтобы CSS-переходы успевали отработать (display:none убивает переход). */
@@ -1311,7 +1446,7 @@ tailwind.config = {
 <script src="legal-modal.js?v=1.0"></script>
 <script src="cookie-consent.js?v=1.1"></script>
 <script src="hero-wave.js?v=2" defer></script>
-<script src="hero-interactive.js?v=4" defer></script>
+<script src="hero-interactive.js?v=6" defer></script>
 <script src="hero-b-video-scroll.js?v=5" defer></script>
 </head>
 
@@ -2118,34 +2253,15 @@ tailwind.config = {
 <!-- ══════════════════════════════════════════
      HERO DEMO COMPLETE MODAL
 ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="hero-demo-modal" onclick="if(event.target===this)closeHeroDemoModal()">
-    <div class="glass-panel max-w-lg w-full p-6 md:p-10 rounded-[16px] relative shadow-2xl"
-         style="border:1px solid rgba(34,211,238,0.2)">
-        <button type="button" class="absolute top-4 right-4 md:top-6 md:right-6 bg-transparent border-0 cursor-pointer transition-colors hover:text-white"
-                style="color:rgba(255,255,255,0.6)" onclick="closeHeroDemoModal()" aria-label="Закрыть">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-        </button>
-        <div class="text-center space-y-4 md:space-y-5">
-            <h3 class="text-xl md:text-2xl font-bold text-white leading-snug">10 откликов за 30 секунд. Вместо вас.</h3>
-            <p class="leading-relaxed text-sm md:text-base text-left" style="color:rgba(255,255,255,0.75)">
-                Это была симуляция, но в реальности система работает точно так же. Аврора берёт на себя самую нудную часть: сама находит релевантные вакансии, пишет сопроводительные и отправляет отклики каждый день. Ваша задача — просто приходить на собеседования.
-            </p>
-            <p class="text-sm md:text-base font-semibold text-white">Запустите алгоритм на своём резюме.</p>
-            <div class="pt-2 flex flex-col gap-3">
-                <a class="inline-block text-white px-6 md:px-8 py-3 md:py-4 rounded-[12px] font-bold text-sm md:text-base hover:scale-105 transition-transform text-center"
-                   href="/auth/" style="background:linear-gradient(135deg,#22d3ee,#a855f7)">
-                    Получить 10 откликов бесплатно
-                </a>
-                <button type="button" class="inline-block px-6 md:px-8 py-3 md:py-4 rounded-[12px] font-semibold text-sm md:text-base hover:bg-white/10 transition-colors text-center cursor-pointer border-0"
-                        style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.1)"
-                        onclick="closeHeroDemoModal()">
-                    Ещё посмотрю демо
-                </button>
-            </div>
-        </div>
+<div id="hero-demo-modal" onclick="if(event.target===this)closeHeroDemoModal()">
+    <div class="hero-demo-card" role="dialog" aria-labelledby="heroDemoTitle" aria-modal="true">
+        <button type="button" class="hero-demo-x" onclick="closeHeroDemoModal()" aria-label="Закрыть">✕</button>
+        <div class="hero-demo-ic" aria-hidden="true">🚀</div>
+        <h3 id="heroDemoTitle">10 откликов за 30 секунд. Вместо вас.</h3>
+        <p>Это была симуляция, но в реальности система работает точно так же. Аврора берёт на себя самую нудную часть: сама находит релевантные вакансии, пишет сопроводительные и отправляет отклики каждый день. Ваша задача — просто приходить на собеседования.</p>
+        <div class="hero-demo-fomo">Запустите алгоритм на своём резюме.</div>
+        <a class="hero-demo-cta" href="/auth/">Получить 10 откликов бесплатно</a>
+        <button type="button" class="hero-demo-later" onclick="closeHeroDemoModal()">Ещё посмотрю демо</button>
     </div>
 </div>
 
@@ -2317,7 +2433,7 @@ document.addEventListener('keydown', function(e) {
         closeVideoModal();
         return;
     }
-    if (document.getElementById('hero-demo-modal').classList.contains('active')) {
+    if (document.getElementById('hero-demo-modal').classList.contains('on')) {
         closeHeroDemoModal();
     }
 });
@@ -2764,14 +2880,14 @@ document.querySelectorAll('#faq .q').forEach(function(btn) {
 function openHeroDemoModal() {
     var modal = document.getElementById('hero-demo-modal');
     if (!modal) return;
-    modal.classList.add('active');
+    modal.classList.add('on');
     document.body.classList.add('modal-open');
 }
 
 function closeHeroDemoModal() {
     var modal = document.getElementById('hero-demo-modal');
     if (!modal) return;
-    modal.classList.remove('active');
+    modal.classList.remove('on');
     document.body.classList.remove('modal-open');
 }
 

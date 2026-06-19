@@ -41,7 +41,16 @@
   function maybeCenterAutopilotPanel() {
     if (window.scrollY > 100) return;
     var panel = document.querySelector('#hero-variant-b .panel');
-    if (!panel) return;
+    if (!panel || !liveWrap) return;
+
+    // live-wrap анимирует height 0→N за ~0.42s. Без этого центр считается
+    // по свёрнутой панели и после раскрытия лога она оказывается ниже экрана.
+    var savedTransition = liveWrap.style.transition;
+    liveWrap.style.transition = 'none';
+    fit();
+    void panel.offsetHeight;
+    liveWrap.style.transition = savedTransition;
+
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         var rect = panel.getBoundingClientRect();
@@ -56,9 +65,11 @@
   }
 
   function showDemoCompleteModal() {
-    if (typeof window.openHeroDemoModal === 'function') {
-      window.openHeroDemoModal();
-    }
+    setTimeout(function () {
+      if (typeof window.openHeroDemoModal === 'function') {
+        window.openHeroDemoModal();
+      }
+    }, 850);
   }
 
   var feed = [
