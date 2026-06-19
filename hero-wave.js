@@ -1,5 +1,6 @@
 /**
  * Fluid WebGL фон для hero variant B и auth-страницы.
+ * window.AURORA.pause() / resume() — пауза под модалки (стекло блюрит статичный кадр).
  */
 (function () {
   'use strict';
@@ -15,31 +16,86 @@
   };
 
   var rafId = 0;
-  var running = false;
   var gl = null;
   var canvas = null;
   var drawFn = null;
-  var onVisChange = null;
   var onResize = null;
+  var io = null;
+
+  var reduced = false;
+  var modalPauseDepth = 0;
+  var pauseViewport = false;
+  var pauseHidden = false;
+  var viewportVisible = { hero: true, stats: false };
+
+  function shouldAnimate() {
+    return !reduced && modalPauseDepth === 0 && !pauseViewport && !pauseHidden;
+  }
+
+  function stopLoop() {
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+  }
+
+  function startLoop() {
+    if (!shouldAnimate() || !drawFn || rafId) return;
+    rafId = requestAnimationFrame(drawFn);
+  }
+
+  function updateLoop() {
+    if (shouldAnimate()) startLoop();
+    else stopLoop();
+  }
 
   function destroy() {
-    running = false;
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = 0;
-    if (onVisChange) {
-      document.removeEventListener('visibilitychange', onVisChange);
-      onVisChange = null;
+    stopLoop();
+    if (io) {
+      io.disconnect();
+      io = null;
     }
     if (onResize) {
       window.removeEventListener('resize', onResize);
       onResize = null;
     }
+    document.removeEventListener('visibilitychange', onVisibilityChange);
     drawFn = null;
     gl = null;
     canvas = null;
+    modalPauseDepth = 0;
+    pauseViewport = false;
+    pauseHidden = false;
   }
 
-  function initOn(canvasId, bgSelector) {
+  function onVisibilityChange() {
+    pauseHidden = document.hidden;
+    updateLoop();
+  }
+
+  function bindViewportObserver() {
+    if (io) return;
+    var hero = document.getElementById('hero-variant-b');
+    var stats = document.getElementById('stats');
+    var targets = [];
+    if (hero) targets.push({ el: hero, key: 'hero' });
+    if (stats) targets.push({ el: stats, key: 'stats' });
+    if (!targets.length) return;
+
+    io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        targets.forEach(function (t) {
+          if (entry.target === t.el) viewportVisible[t.key] = entry.isIntersecting;
+        });
+      });
+      pauseViewport = !(viewportVisible.hero || viewportVisible.stats);
+      updateLoop();
+    }, { threshold: 0 });
+
+    targets.forEach(function (t) { io.observe(t.el); });
+  }
+
+  function initOn(canvasId, bgSelector, withViewportObserver) {
     destroy();
     canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -146,15 +202,14 @@
     resize();
     window.addEventListener('resize', onResize);
 
-    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var start = performance.now();
     var lastFrame = 0;
     var frameInterval = 1000 / CONFIG.maxFPS;
-    running = true;
 
     drawFn = function (now) {
-      if (!running) return;
       rafId = requestAnimationFrame(drawFn);
+      if (!shouldAnimate()) return;
       if (now - lastFrame < frameInterval) return;
       lastFrame = now;
       var elapsed = (now - start) / 1000;
@@ -165,26 +220,34 @@
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
 
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    pauseHidden = document.hidden;
+
     if (reduced) {
       gl.uniform1f(uTime, 7.3);
       gl.uniform1f(uFade, 1.0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     } else {
-      rafId = requestAnimationFrame(drawFn);
-      onVisChange = function () {
-        running = !document.hidden;
-        if (running) {
-          lastFrame = 0;
-          rafId = requestAnimationFrame(drawFn);
-        }
-      };
-      document.addEventListener('visibilitychange', onVisChange);
+      updateLoop();
     }
+
+    if (withViewportObserver) bindViewportObserver();
   }
 
+  window.AURORA = {
+    pause: function () {
+      modalPauseDepth += 1;
+      updateLoop();
+    },
+    resume: function () {
+      modalPauseDepth = Math.max(0, modalPauseDepth - 1);
+      updateLoop();
+    }
+  };
+
   window.HeroWave = {
-    init: function () { initOn('wave', '#hero-variant-b .hero-bg'); },
-    initAuth: function () { initOn('auth-wave', '.auth-bg'); },
+    init: function () { initOn('wave', '#hero-variant-b .hero-bg', true); },
+    initAuth: function () { initOn('auth-wave', '.auth-bg', false); },
     destroy: destroy
   };
 })();

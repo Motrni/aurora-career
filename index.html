@@ -905,8 +905,7 @@ tailwind.config = {
     /* ── Блок «Результаты работы алгоритмов» ── */
     body.reviews-lock { overflow: hidden; }
 
-    #results .res-glass,
-    #reviews-overlay .res-glass {
+    #results .res-glass {
         position: relative;
         border-radius: 22px;
         background: linear-gradient(160deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
@@ -1185,69 +1184,175 @@ tailwind.config = {
     #reviews-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(5,7,20,.72);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
-        display: none;
+        z-index: 120;
+        display: flex;
         align-items: center;
         justify-content: center;
         padding: 24px;
-        z-index: 120;
+        background: rgba(6, 8, 28, 0.5);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
     }
-    #reviews-overlay.open { display: flex; }
+    #reviews-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    /* Окно — один слой стекла; шейдер на паузе → блюр статичного кадра */
     #reviews-overlay .reviews-modal {
+        position: relative;
         width: 100%;
-        max-width: 1000px;
-        max-height: 88vh;
-        overflow: hidden;
-        padding: 24px 26px;
+        max-width: 1160px;
+        max-height: 86vh;
         display: flex;
         flex-direction: column;
+        border-radius: 26px;
+        overflow: hidden;
+        background: linear-gradient(160deg, rgba(24, 30, 66, 0.62), rgba(13, 17, 44, 0.72));
+        backdrop-filter: blur(30px) saturate(1.25);
+        -webkit-backdrop-filter: blur(30px) saturate(1.25);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 40px 110px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        transform: translateY(16px) scale(0.98);
+        opacity: 0;
+        transition: transform 0.38s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.38s ease;
     }
-    #reviews-overlay .modal-top {
+    #reviews-overlay.open .reviews-modal {
+        transform: none;
+        opacity: 1;
+    }
+    #reviews-overlay .reviews-modal-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 16px;
-        gap: 12px;
+        gap: 16px;
+        padding: 26px 30px 18px;
+        flex: 0 0 auto;
     }
-    #reviews-overlay .modal-top h4 {
+    #reviews-overlay .reviews-modal-head h2 {
         font-family: var(--font-display);
-        font-size: 20px;
+        font-size: clamp(20px, 3vw, 28px);
+        font-weight: 800;
+        letter-spacing: -0.5px;
         color: #eef1ff;
     }
-    #reviews-overlay .ctrls { display: flex; gap: 8px; flex-shrink: 0; }
-    #reviews-overlay .arrow,
-    #reviews-overlay .close {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
+    #reviews-overlay .reviews-close {
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        color: #eef1ff;
+        font-size: 18px;
         cursor: pointer;
-        color: #fff;
-        font-size: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255,255,255,.07);
-        border: 1px solid rgba(255,255,255,.14);
-        transition: background .15s;
+        transition: background 0.18s;
     }
-    #reviews-overlay .arrow:hover,
-    #reviews-overlay .close:hover { background: rgba(255,255,255,.16); }
-    #reviews-overlay .reviews-track {
+    #reviews-overlay .reviews-close:hover {
+        background: rgba(255, 255, 255, 0.11);
+    }
+    #reviews-overlay .reviews-modal-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 6px 30px 30px;
+        -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+        mask-image: linear-gradient(to bottom, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+    }
+    #reviews-overlay .reviews-modal-body::-webkit-scrollbar { width: 9px; }
+    #reviews-overlay .reviews-modal-body::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.16);
+        border-radius: 8px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+    #reviews-overlay .reviews-modal-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.26);
+        background-clip: content-box;
+    }
+    #reviews-overlay .reviews-masonry {
+        column-count: 3;
+        column-gap: 18px;
+        padding-top: 12px;
+    }
+    @media (max-width: 920px) {
+        #reviews-overlay .reviews-masonry { column-count: 2; }
+    }
+    @media (max-width: 600px) {
+        #reviews-overlay .reviews-masonry { column-count: 1; }
+        #reviews-overlay .reviews-modal-head,
+        #reviews-overlay .reviews-modal-body { padding-left: 18px; padding-right: 18px; }
+    }
+    /* Карточки — плотные, без backdrop-filter */
+    #reviews-overlay .r-card {
+        break-inside: avoid;
+        margin-bottom: 18px;
+        border-radius: 18px;
+        padding: 16px 16px 14px;
+        background: linear-gradient(180deg, #181d44, #12163a);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+    }
+    #reviews-overlay .r-head {
         display: flex;
-        gap: 16px;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        scroll-behavior: smooth;
-        padding: 4px 2px 8px;
-        scrollbar-width: none;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
     }
-    #reviews-overlay .reviews-track::-webkit-scrollbar { display: none; }
-    #reviews-overlay .reviews-carousel-card {
-        flex: 0 0 calc((100% - 32px) / 3);
-        scroll-snap-align: start;
-        padding: 15px 17px;
+    #reviews-overlay .r-av {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 17px;
+        color: #fff;
+    }
+    #reviews-overlay .r-av.av-c { background: linear-gradient(135deg, #36c9e8, #4a7bff); }
+    #reviews-overlay .r-av.av-p { background: linear-gradient(135deg, #8b5cf6, #4a7bff); }
+    #reviews-overlay .r-av.av-b { background: linear-gradient(135deg, #4a7bff, #36c9e8); }
+    #reviews-overlay .r-name {
+        font-weight: 700;
+        font-size: 15.5px;
+        color: #cfe0ff;
+        line-height: 1.2;
+    }
+    #reviews-overlay .r-role {
+        font-size: 12.5px;
+        color: #9aa3c7;
+        margin-top: 2px;
+    }
+    #reviews-overlay .r-msg {
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 14px;
+        padding: 13px 15px;
+        font-size: 14px;
+        line-height: 1.55;
+        color: #e7ebff;
+        white-space: pre-wrap;
+    }
+    #reviews-overlay .r-time {
+        display: block;
+        text-align: right;
+        font-size: 11.5px;
+        color: #6b7398;
+        margin-top: 7px;
+    }
+    #reviews-overlay .r-time .v {
+        color: #36c9e8;
+        letter-spacing: -2px;
+        margin-left: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #reviews-overlay,
+        #reviews-overlay .reviews-modal { transition: none; }
+        #reviews-overlay .reviews-modal { transform: none; opacity: 1; }
     }
 
     @media (max-width: 760px) {
@@ -1259,11 +1364,6 @@ tailwind.config = {
         }
         #results .part.viz { display: block; }
         #results .vdiv { display: block; }
-        #reviews-overlay .ctrls .arrow { display: none; }
-        #reviews-overlay .reviews-carousel-card {
-            flex: 0 0 82%;
-            scroll-snap-align: center;
-        }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1445,7 +1545,7 @@ tailwind.config = {
 <link rel="stylesheet" href="hero-interactive.css?v=8">
 <script src="legal-modal.js?v=1.0"></script>
 <script src="cookie-consent.js?v=1.1"></script>
-<script src="hero-wave.js?v=2" defer></script>
+<script src="hero-wave.js?v=3" defer></script>
 <script src="hero-interactive.js?v=6" defer></script>
 <script src="hero-b-video-scroll.js?v=5" defer></script>
 </head>
@@ -2234,19 +2334,17 @@ tailwind.config = {
 </footer>
 
 <!-- ══════════════════════════════════════════
-     REVIEWS MODAL (карусель отзывов)
+     REVIEWS MODAL (masonry в стеклянном окне)
 ══════════════════════════════════════════ -->
 <div class="reviews-overlay" id="reviews-overlay" onclick="if(event.target===this)closeReviewsModal()">
-    <div class="res-glass reviews-modal">
-        <div class="modal-top">
-            <h4>Отзывы пользователей</h4>
-            <div class="ctrls">
-                <button type="button" class="arrow" onclick="scrollReviewsCarousel(-1)" aria-label="Предыдущие отзывы">‹</button>
-                <button type="button" class="arrow" onclick="scrollReviewsCarousel(1)" aria-label="Следующие отзывы">›</button>
-                <button type="button" class="close" onclick="closeReviewsModal()" aria-label="Закрыть">✕</button>
-            </div>
+    <div class="reviews-modal" role="dialog" aria-labelledby="reviewsModalTitle" aria-modal="true">
+        <div class="reviews-modal-head">
+            <h2 id="reviewsModalTitle">Отзывы пользователей</h2>
+            <button type="button" class="reviews-close" onclick="closeReviewsModal()" aria-label="Закрыть">✕</button>
         </div>
-        <div class="reviews-track" id="reviews-track"></div>
+        <div class="reviews-modal-body" id="reviews-modal-body">
+            <div class="reviews-masonry" id="reviews-masonry"></div>
+        </div>
     </div>
 </div>
 
@@ -2398,6 +2496,7 @@ function openVideoModal() {
     }
 
     document.body.classList.add('modal-open');
+    auroraShaderPause();
     var heroPreview = document.getElementById('hero-b-preview-video');
     if (heroPreview) {
         try { heroPreview.pause(); } catch (e) {}
@@ -2420,6 +2519,7 @@ function closeVideoModal() {
     try { video.pause(); } catch (e) {}
     modal.classList.remove('active');
     document.body.classList.remove('modal-open');
+    auroraShaderResume();
 }
 
 document.addEventListener('keydown', function(e) {
@@ -2471,7 +2571,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.HeroInteractive) window.HeroInteractive.init();
     if (window.HeroBVideoScroll) window.HeroBVideoScroll.init();
 
-    renderReviewsCarousel();
+    renderReviewsMasonry();
 
     var hdr = document.getElementById('site-header');
     if (hdr) {
@@ -2877,11 +2977,20 @@ document.querySelectorAll('#faq .q').forEach(function(btn) {
 });
 
 /* ── Hero demo complete modal ── */
+function auroraShaderPause() {
+    if (window.AURORA) window.AURORA.pause();
+}
+
+function auroraShaderResume() {
+    if (window.AURORA) window.AURORA.resume();
+}
+
 function openHeroDemoModal() {
     var modal = document.getElementById('hero-demo-modal');
     if (!modal) return;
     modal.classList.add('on');
     document.body.classList.add('modal-open');
+    auroraShaderPause();
 }
 
 function closeHeroDemoModal() {
@@ -2889,96 +2998,98 @@ function closeHeroDemoModal() {
     if (!modal) return;
     modal.classList.remove('on');
     document.body.classList.remove('modal-open');
+    auroraShaderResume();
 }
 
-/* ── Reviews modal + carousel ── */
+/* ── Reviews modal (masonry) ── */
 var HERO_REVIEWS = [
     {
         name: 'Сергей',
         sub: 'Пользователь Авроры',
-        grad: 'linear-gradient(135deg,#36c9e8,#4a7bff)',
-        bubbles: ['Кстати тоже сегодня получил оффер с помощью Авроры, спасибо)']
+        av: 'av-c',
+        time: '16:06',
+        text: 'Кстати тоже сегодня получил оффер с помощью Авроры, спасибо)'
     },
     {
         name: 'Марина Игнатьева',
         sub: 'Пользовательница Авроры',
-        grad: 'linear-gradient(135deg,#8b5cf6,#36c9e8)',
-        bubbles: [
-            'Добрый день! Сегодня была на собеседовании и хочу поделиться одной деталькой) Одна из руководительниц отметила, что пригласили меня на собеседование благодаря сопроводительному письму, просто очень понравилось, как написано) Благодарю Вас, дорогие, Команда Авроры!'
-        ]
+        av: 'av-p',
+        time: '20:33',
+        text: 'Сегодня была на собеседовании и хочу поделиться деталькой) Одна из руководительниц отметила, что пригласили меня благодаря сопроводительному письму — просто очень понравилось, как написано) Благодарю Вас, Команда Авроры!'
     },
     {
         name: 'Марина Игнатьева',
         sub: 'Пользовательница Авроры',
-        grad: 'linear-gradient(135deg,#4a7bff,#8b5cf6)',
-        bubbles: [
-            'Всем добрый день! Сегодня первый день Аврора поработала полноценно, я победила свой страх запускать Автопилот) И даже воспряла духом! Сопроводительные письма и отклики работодатели видят! Назначают собеседования) Правда именно сегодня пришлось отказываться, так как далеко и долго добираться по времени) Но я выдохнула, я увидела, что Аврора не просто умничка, а реально работает) Всем сердцем благодарю Вас, команда Авроры! Это просто ЧУДО, что я Вас встретила) 🙏❤️💃'
-        ]
+        av: 'av-p',
+        time: '20:26',
+        text: 'Всем добрый день! Сегодня первый день Аврора поработала полноценно — я победила свой страх запускать Автопилот) Сопроводительные письма и отклики работодатели видят, назначают собеседования! Я увидела, что Аврора не просто умничка, а реально работает) Всем сердцем благодарю Вас, команда Авроры. Это просто ЧУДО, что я Вас встретила 🙏❤️'
     },
     {
         name: 'Анастасия',
         sub: 'Frontend-разработчик',
-        grad: 'linear-gradient(135deg,#36c9e8,#8b5cf6)',
-        bubbles: [
-            'Хочу тоже поделиться своими впечатлениями. Автоотклик, конечно, нужно доработать. Я фронт, но Аврора откликалась и на бэк, и на QA, и даже на C# 😃',
-            'Понравилась функция генерации сопроводительных. Закидывала ссылку, немного корректировала сопровод и откликалась ручками. Конверсия в просмотры резюме увеличилась.',
-            'Ну и отдельное спасибо за анализ резюме. Доработала его согласно рекомендациям Авроры, и буквально на следующий день на меня вышел сам работодатель, без отклика. По этому кейсу прошла второй этап собеса, дали оффер. Так что спасибо, продолжайте в том же духе ✊🏻'
-        ]
+        av: 'av-c',
+        time: '23:49',
+        text: 'Я фронт, но Аврора откликалась и на бэк, и на QA, и даже на C# 😃 Отдельное спасибо за анализ резюме — доработала по рекомендациям, и буквально на следующий день на меня вышел сам работодатель, без отклика. Прошла второй этап, дали оффер. Продолжайте в том же духе ✊🏻'
     },
     {
         name: 'Станислав К.',
         sub: 'SA/BA аналитик',
-        grad: 'linear-gradient(135deg,#36c9e8,#4a7bff)',
-        bubbles: [
-            'Итак, теперь можно поделиться результатами поисков: 9 декабря — пробный старт, первые 30 откликов. 11 декабря — оплата, запуск откликов без ограничений. 17 декабря — на руках оффер, который стал моим текущим местом работы на сегодняшний день.',
-            'Никогда ещё у меня с достаточно неплохим резюме не было настолько широкого охвата просмотров: показы и просмотры были примерно в корреляции 480/360+.',
-            'SA, полная удалёнка по РФ — и это во времена, когда в чате SA/BA писали, что люди не могут найти работу по 3–4 месяца, а удалёнки в принципе нет. Аврора ❤️'
-        ]
+        av: 'av-b',
+        time: '14:32',
+        text: 'По датам: 9 декабря — пробный старт, первые 30 откликов. 11 декабря — оплата, отклики без ограничений. 17 декабря — на руках оффер, который стал моим текущим местом работы. Полная удалёнка по РФ — когда все говорили, что удалёнки больше нет. Аврора ❤️'
     },
     {
         name: 'Alex Mayer',
         sub: 'IT-специалист',
-        grad: 'linear-gradient(135deg,#8b5cf6,#4a7bff)',
-        bubbles: [
-            'Всем привет! Аврора сработала, сегодня получил оффер (всё как я хотел). Подключил в начале марта, высококонкурентная вакансия. IT'
-        ]
+        av: 'av-p',
+        time: '21:49',
+        text: 'Всем привет! Аврора сработала, сегодня получил оффер (всё как я хотел). Подключил в начале марта, высококонкурентная вакансия. IT.'
     },
     {
         name: 'Рустем',
-        sub: 'Пользователь Авроры',
-        grad: 'linear-gradient(135deg,#8b5cf6,#36c9e8)',
-        bubbles: [
-            'Прокомментирую, как пользователь. Бот выполняет свои задачи — при верной настройке сопроводительные создаёт, отклики на hh отправляет. При ручном поиске я навыбирал себе около 20 откликов из 40–50, далее часть отказ, часть в обработке, и 3 реальных встречи (из которых уже есть 1 готовый оффер).',
-            'Попробуйте ручной поиск — реально экономит время. К сожалению, HH сейчас так настроен, что точечные отклики не работают: куча внутренних фильтров, некомпетентные HR, куча сомнительных компаний. Приходится брать количеством. Для этого бот и придуман.'
-        ]
+        sub: 'Data-инженер',
+        av: 'av-b',
+        time: '17:14',
+        text: 'Прокомментирую как пользователь. Бот выполняет задачи: при верной настройке создаёт сопроводительные и отправляет отклики на hh. При ручном поиске я набирал ~20 откликов из 40–50, и уже 3 реальных встречи (из которых 1 готовый оффер). Реально экономит время.'
     },
     {
         name: 'Anton Kiselëv',
         sub: 'Пользователь Авроры',
-        grad: 'linear-gradient(135deg,#4a7bff,#8b5cf6)',
-        bubbles: [
-            'Откликов: 282. Ожидание: 77. Отказов сразу: 37. Живых коммуникаций НЕ с ботами или анкетами: 9. Реальных собесов: 7.',
-            'Отказов после собесов мне: 4. Самоотказов после собесов: 3. Офферов: 2. Принял: 1 (вышел сегодня). Срок активного поиска: 2 февраля — 5 марта.'
-        ]
+        av: 'av-p',
+        time: '23:24',
+        text: 'Откликов: 282. Живых коммуникаций (не боты и не анкеты): 9. Реальных собесов: 7. Офферов: 2. Принял: 1 — вышел сегодня. Срок активного поиска: 2 февраля — 5 марта.'
+    },
+    {
+        name: 'Антон',
+        sub: 'Backend-разработчик',
+        av: 'av-c',
+        time: '11:05',
+        text: '282 отклика → 7 собеседований → 2 оффера. Закрыл поиск за месяц.'
     }
 ];
 
-function renderReviewsCarousel() {
-    var track = document.getElementById('reviews-track');
-    if (!track) return;
-    var times = ['16:06', '20:33', '20:26', '23:49', '10:22', '21:49', '17:14', '23:24'];
-    track.innerHTML = HERO_REVIEWS.map(function (r, idx) {
-        var initial = (r.name.charAt(0) || '?').toUpperCase();
-        var sub = r.sub ? '<div class="tg-sub">' + r.sub + '</div>' : '';
-        var bubbles = r.bubbles.map(function (text, bi) {
-            var tm = times[(idx + bi) % times.length];
-            return '<div class="bubble">' + text + '<span class="tm">' + tm + '<svg class="dc"><use href="#dc"/></svg></span></div>';
-        }).join('');
-        return '<div class="res-glass reviews-carousel-card">' +
-            '<div class="tg-head">' +
-            '<div class="ava" style="background:' + r.grad + '">' + initial + '</div>' +
-            '<div><div class="tg-name">' + r.name + '</div>' + sub + '</div>' +
-            '</div>' + bubbles + '</div>';
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function renderReviewsMasonry() {
+    var masonry = document.getElementById('reviews-masonry');
+    if (!masonry) return;
+    masonry.innerHTML = HERO_REVIEWS.map(function (r) {
+        var initial = (r.name.trim().charAt(0) || '?').toUpperCase();
+        var sub = r.sub ? '<div class="r-role">' + escapeHtml(r.sub) + '</div>' : '';
+        return '<div class="r-card">' +
+            '<div class="r-head">' +
+            '<div class="r-av ' + r.av + '">' + initial + '</div>' +
+            '<div><div class="r-name">' + escapeHtml(r.name) + '</div>' + sub + '</div>' +
+            '</div>' +
+            '<div class="r-msg">' + escapeHtml(r.text) +
+            '<span class="r-time">' + escapeHtml(r.time) + '<span class="v">✓✓</span></span></div>' +
+            '</div>';
     }).join('');
 }
 
@@ -2987,6 +3098,9 @@ function openReviewsModal() {
     if (!overlay) return;
     overlay.classList.add('open');
     document.body.classList.add('reviews-lock');
+    var body = document.getElementById('reviews-modal-body');
+    if (body) body.scrollTop = 0;
+    auroraShaderPause();
 }
 
 function closeReviewsModal() {
@@ -2994,12 +3108,7 @@ function closeReviewsModal() {
     if (!overlay) return;
     overlay.classList.remove('open');
     document.body.classList.remove('reviews-lock');
-}
-
-function scrollReviewsCarousel(dir) {
-    var track = document.getElementById('reviews-track');
-    if (!track) return;
-    track.scrollBy({ left: dir * track.clientWidth, behavior: 'smooth' });
+    auroraShaderResume();
 }
 </script>
 
