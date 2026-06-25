@@ -670,6 +670,15 @@ body.hero-v-b #burger-btn { display: none !important; }
     #hero-variant-b .hero-b-play-intro { opacity: 1 !important; }
 }
 
+/* VIDEO_HIDDEN: временный отступ между hero и stats; удалить при возврате видео-блока */
+.hero-b-stats-gap-temp {
+    height: clamp(100px, 16vh, 180px);
+    pointer-events: none;
+}
+@media (max-width: 680px) {
+    .hero-b-stats-gap-temp { height: clamp(72px, 12vh, 120px); }
+}
+
 @media (max-width: 680px) {
     #hero-variant-b .tabs { order: 3; width: 100%; }
     #hero-variant-b .tab { flex: 1; text-align: center; padding: 9px 8px; font-size: 12px; }
