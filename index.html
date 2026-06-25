@@ -695,14 +695,17 @@ tailwind.config = {
         z-index: 100; align-items: center; justify-content: center; padding: 16px;
     }
     .modal-overlay.active { display: flex; }
+    /* scroll-locked: position:fixed через JS — единственный надёжный lock на iOS */
     body.modal-open,
-    body.lm-open { overflow: hidden; pointer-events: none; }
-    body.modal-open .modal-overlay, 
-    body.modal-open #pre,
-    body.modal-open #mobile-menu,
-    body.modal-open #video-modal,
-    body.modal-open #hero-demo-modal,
-    body.modal-open .burger,
+    body.lm-open { overflow: hidden; }
+    body.scroll-locked {
+        position: fixed;
+        left: 0;
+        right: 0;
+        width: 100%;
+    }
+    /* legal-modal: pointer-events trick оставлен только для lm-open */
+    body.lm-open { pointer-events: none; }
     body.lm-open #legal-modal-backdrop.lm-visible,
     body.lm-open #legal-modal-backdrop.lm-visible * { pointer-events: auto; }
 
@@ -856,6 +859,8 @@ tailwind.config = {
     #video-modal.active {
         background: rgba(5,6,18,0.92);
         pointer-events: auto;
+        overscroll-behavior: contain;
+        touch-action: none;
     }
     /* Кружок → прямоугольник через scale + border-radius */
     .video-shell {
@@ -878,10 +883,20 @@ tailwind.config = {
         border-radius: 20px;
         opacity: 1;
     }
-    .video-shell video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+    /* iOS Safari: video/кнопки не кликаются внутри transform — снимаем после анимации */
+    #video-modal.active .video-shell.shell-ready {
+        transform: none;
+    }
+    .video-shell video {
+        width: 100%; height: 100%; object-fit: contain; background: #000; display: block;
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
+    }
     /* Крестик появляется с задержкой — после раскрытия */
     .video-close {
-        position: absolute; top: 12px; right: 12px; z-index: 5;
+        position: absolute; top: 12px; right: 12px; z-index: 10;
+        touch-action: manipulation;
+        pointer-events: auto;
         width: 40px; height: 40px; border-radius: 9999px; border: 0; cursor: pointer;
         display: flex; align-items: center; justify-content: center;
         background: rgba(10,11,30,0.65); backdrop-filter: blur(8px);
@@ -895,15 +910,24 @@ tailwind.config = {
         .video-shell  { transition: opacity 0.2s ease; border-radius: 20px; transform: none; }
         .video-close  { transition: background 0.2s ease, transform 0.2s ease; opacity: 1; }
     }
+    /* iOS: transform на оболочке ломает native video controls — только fade */
+    @supports (-webkit-touch-callout: none) {
+        .video-shell {
+            transform: none;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+        #video-modal.active .video-shell {
+            opacity: 1;
+        }
+    }
 
     /* ── Scrollbar ── */
     .aurora-scroll { scrollbar-width: thin; scrollbar-color: rgba(168,85,247,0.55) rgba(10,11,30,0.85); }
     .aurora-scroll::-webkit-scrollbar { width: 6px; }
     .aurora-scroll::-webkit-scrollbar-track { background: rgba(10,11,30,0.6); border-radius: 9999px; margin: 8px 0; }
     .aurora-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg,rgba(168,85,247,0.7),rgba(34,211,238,0.35)); border-radius: 9999px; }
-
-    /* ── Блок «Результаты работы алгоритмов» ── */
-    body.reviews-lock { overflow: hidden; }
 
     #results .res-glass {
         position: relative;
@@ -1547,7 +1571,9 @@ tailwind.config = {
 <script src="cookie-consent.js?v=1.1"></script>
 <script src="hero-wave.js?v=3" defer></script>
 <script src="hero-interactive.js?v=6" defer></script>
+<!-- VIDEO_HIDDEN: hero-b-video-scroll.js — временно отключено, не удалять
 <script src="hero-b-video-scroll.js?v=5" defer></script>
+-->
 </head>
 
 <body class="hero-v-b">
@@ -1702,6 +1728,7 @@ tailwind.config = {
         </div>
     </div>
 
+    <!-- VIDEO_HIDDEN: блок видео под hero — временно скрыт, не удалять
     <div class="hero-b-spacer" aria-hidden="true"></div>
 
     <div class="hero-b-video-wrap">
@@ -1732,6 +1759,7 @@ tailwind.config = {
             </div>
         </div>
     </div>
+    -->
 </section>
 
 <!-- ── STATS ── -->
@@ -2366,15 +2394,15 @@ tailwind.config = {
 <!-- ══════════════════════════════════════════
      VIDEO LIGHTBOX
 ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="video-modal" onclick="if(event.target===this)closeVideoModal()">
+<div class="modal-overlay" id="video-modal" aria-hidden="true">
     <div class="video-shell">
-        <button type="button" class="video-close" onclick="closeVideoModal()" aria-label="Закрыть видео">
+        <button type="button" class="video-close" aria-label="Закрыть видео">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
         </button>
-        <video id="promo-video" controls playsinline preload="none"
+        <video id="promo-video" controls playsinline webkit-playsinline preload="metadata"
                controlslist="nodownload" disablepictureinpicture></video>
     </div>
 </div>
@@ -2446,17 +2474,53 @@ tailwind.config = {
      SCRIPTS
 ══════════════════════════════════════════ -->
 <script>
+/* ── Scroll lock (iOS + desktop: фон не скроллится под модалкой) ── */
+var _pageScrollLock = { depth: 0, y: 0 };
+
+function lockPageScroll() {
+    if (_pageScrollLock.depth === 0) {
+        _pageScrollLock.y = window.scrollY || document.documentElement.scrollTop || 0;
+        document.body.classList.add('scroll-locked');
+        document.body.style.top = '-' + _pageScrollLock.y + 'px';
+    }
+    _pageScrollLock.depth += 1;
+}
+
+function unlockPageScroll() {
+    if (_pageScrollLock.depth <= 0) return;
+    _pageScrollLock.depth -= 1;
+    if (_pageScrollLock.depth > 0) return;
+    document.body.classList.remove('scroll-locked');
+    document.body.style.top = '';
+    window.scrollTo(0, _pageScrollLock.y);
+}
+
 /* ── Modal & Menu ── */
 function toggleModal(id) {
     var modal = document.getElementById(id);
+    var opening = !modal.classList.contains('active');
     modal.classList.toggle('active');
-    document.body.classList.toggle('modal-open');
+    if (opening) {
+        document.body.classList.add('modal-open');
+        lockPageScroll();
+    } else {
+        document.body.classList.remove('modal-open');
+        unlockPageScroll();
+    }
 }
 
 function toggleMobileMenu() {
+    var menu = document.getElementById('mobile-menu');
+    var opening = !menu.classList.contains('open');
     document.getElementById('burger-btn').classList.toggle('active');
-    document.getElementById('mobile-menu').classList.toggle('open');
-    document.body.classList.toggle('modal-open');
+    menu.classList.toggle('open');
+    if (opening) {
+        document.body.classList.add('modal-open');
+        lockPageScroll();
+    } else {
+        document.body.classList.remove('modal-open');
+        unlockPageScroll();
+    }
 }
 
 /* ── Video Lightbox ── */
@@ -2467,14 +2531,25 @@ function videoApiBase() {
         : 'https://api.aurora-career.ru';
 }
 
+function markVideoShellReady() {
+    var modal = document.getElementById('video-modal');
+    if (!modal || !modal.classList.contains('active')) return;
+    var shell = modal.querySelector('.video-shell');
+    if (shell) shell.classList.add('shell-ready');
+}
+
 function openVideoModal() {
     var modal = document.getElementById('video-modal');
     var shell = modal.querySelector('.video-shell');
     var video = document.getElementById('promo-video');
 
+    if (shell) shell.classList.remove('shell-ready');
+    modal.setAttribute('aria-hidden', 'false');
+
     // Lazily assign src — src не сбрасываем, чтобы currentTime сохранялся между открытиями
     if (!video.src) {
         video.src = videoApiBase() + '/video/aurora-intro.mp4';
+        try { video.load(); } catch (e) {}
     }
 
     // Вычисляем transform-origin так, чтобы раскрытие шло из центра кружка, а не из центра экрана
@@ -2496,6 +2571,7 @@ function openVideoModal() {
     }
 
     document.body.classList.add('modal-open');
+    lockPageScroll();
     auroraShaderPause();
     var heroPreview = document.getElementById('hero-b-preview-video');
     if (heroPreview) {
@@ -2506,20 +2582,70 @@ function openVideoModal() {
     requestAnimationFrame(function() {
         requestAnimationFrame(function() {
             modal.classList.add('active');
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+                window.matchMedia('(pointer: coarse)').matches) {
+                markVideoShellReady();
+            } else {
+                setTimeout(markVideoShellReady, 720);
+            }
         });
     });
 }
 
 function closeVideoModal() {
     var modal = document.getElementById('video-modal');
+    var shell = modal.querySelector('.video-shell');
     var video = document.getElementById('promo-video');
     if (document.fullscreenElement) {
         if (document.exitFullscreen) { document.exitFullscreen(); }
     }
     try { video.pause(); } catch (e) {}
+    if (shell) shell.classList.remove('shell-ready');
     modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('modal-open');
+    unlockPageScroll();
     auroraShaderResume();
+}
+
+function initVideoModal() {
+    var modal = document.getElementById('video-modal');
+    if (!modal || modal.dataset.inited === '1') return;
+    modal.dataset.inited = '1';
+
+    var shell = modal.querySelector('.video-shell');
+    var closeBtn = modal.querySelector('.video-close');
+    var video = document.getElementById('promo-video');
+
+    if (shell) {
+        shell.addEventListener('transitionend', function (e) {
+            if (e.propertyName === 'transform') markVideoShellReady();
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeVideoModal();
+        });
+    }
+
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeVideoModal();
+    });
+
+    modal.addEventListener('touchmove', function (e) {
+        if (e.target === modal) e.preventDefault();
+    }, { passive: false });
+
+    if (video) {
+        video.addEventListener('click', function () {
+            if (!video.paused) return;
+            var p = video.play();
+            if (p && p.catch) p.catch(function () {});
+        });
+    }
 }
 
 document.addEventListener('keydown', function(e) {
@@ -2569,7 +2695,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (window.HeroWave) window.HeroWave.init();
     if (window.HeroInteractive) window.HeroInteractive.init();
-    if (window.HeroBVideoScroll) window.HeroBVideoScroll.init();
+    // VIDEO_HIDDEN: if (window.HeroBVideoScroll) window.HeroBVideoScroll.init();
+    initVideoModal();
 
     renderReviewsMasonry();
 
@@ -2990,6 +3117,7 @@ function openHeroDemoModal() {
     if (!modal) return;
     modal.classList.add('on');
     document.body.classList.add('modal-open');
+    lockPageScroll();
     auroraShaderPause();
 }
 
@@ -2998,6 +3126,7 @@ function closeHeroDemoModal() {
     if (!modal) return;
     modal.classList.remove('on');
     document.body.classList.remove('modal-open');
+    unlockPageScroll();
     auroraShaderResume();
 }
 
@@ -3097,7 +3226,7 @@ function openReviewsModal() {
     var overlay = document.getElementById('reviews-overlay');
     if (!overlay) return;
     overlay.classList.add('open');
-    document.body.classList.add('reviews-lock');
+    lockPageScroll();
     var body = document.getElementById('reviews-modal-body');
     if (body) body.scrollTop = 0;
     auroraShaderPause();
@@ -3107,7 +3236,7 @@ function closeReviewsModal() {
     var overlay = document.getElementById('reviews-overlay');
     if (!overlay) return;
     overlay.classList.remove('open');
-    document.body.classList.remove('reviews-lock');
+    unlockPageScroll();
     auroraShaderResume();
 }
 </script>
