@@ -1171,6 +1171,70 @@ tailwind.config = {
     }
     #results .bubble:last-child,
     #reviews-overlay .bubble:last-child { margin-bottom: 0; }
+    /* Превью полного отзыва в блоке results — высота фиксирована, карточка не растёт */
+    #results .bubble-preview {
+        padding-bottom: 22px;
+    }
+    #results .bubble-preview .bubble-body {
+        max-height: 6.75em;
+        overflow: hidden;
+        position: relative;
+    }
+    #results .bubble-preview.is-clamped .bubble-body::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1.6em;
+        background: linear-gradient(to bottom, transparent, rgba(28, 32, 58, 0.92));
+        pointer-events: none;
+    }
+    #results .bubble-preview .bubble-text {
+        margin: 0;
+        white-space: pre-wrap;
+    }
+    #results .bubble-more {
+        display: none;
+        margin: 6px 0 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: #36c9e8;
+        cursor: pointer;
+        text-align: left;
+        transition: color 0.18s ease;
+    }
+    #results .bubble-more:hover { color: #7ee8ff; }
+    #results .bubble-more:focus-visible {
+        outline: 2px solid #36c9e8;
+        outline-offset: 2px;
+        border-radius: 4px;
+    }
+    #results .bubble-preview.is-clamped .bubble-more { display: inline-block; }
+    #reviews-overlay .r-card.r-card-flash {
+        animation: reviewCardFlash 1.15s ease-out 1;
+    }
+    @keyframes reviewCardFlash {
+        0%, 100% {
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+        }
+        40% {
+            border-color: rgba(54, 201, 232, 0.75);
+            box-shadow: 0 0 0 2px rgba(54, 201, 232, 0.45), 0 0 32px rgba(54, 201, 232, 0.22);
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        #reviews-overlay .r-card.r-card-flash { animation: none; }
+        #reviews-overlay .r-card.r-card-flash {
+            border-color: rgba(54, 201, 232, 0.65);
+            box-shadow: 0 0 0 2px rgba(54, 201, 232, 0.35);
+        }
+    }
     #results .tm,
     #reviews-overlay .tm {
         position: absolute;
@@ -2019,7 +2083,7 @@ tailwind.config = {
             </div>
             <div class="vdiv" aria-hidden="true"></div>
             <div class="part review">
-                <div class="review-card">
+                <div class="review-card" data-preview-review="anton-kiselev">
                     <div class="tg-head">
                         <div class="ava" style="background:linear-gradient(135deg,#4a7bff,#8b5cf6)">A</div>
                         <div>
@@ -2027,8 +2091,6 @@ tailwind.config = {
                             <div class="tg-sub">Пользователь Авроры</div>
                         </div>
                     </div>
-                    <div class="bubble">282 отклика - 7 собеседований<span class="tm">11:04</span></div>
-                    <div class="bubble">2 оффера. Закрыл поиск за месяц.<span class="tm">11:05</span></div>
                 </div>
             </div>
         </div>
@@ -2050,7 +2112,7 @@ tailwind.config = {
             </div>
             <div class="vdiv" aria-hidden="true"></div>
             <div class="part review">
-                <div class="review-card">
+                <div class="review-card" data-preview-review="stanislav-k">
                     <div class="tg-head">
                         <div class="ava" style="background:linear-gradient(135deg,#36c9e8,#4a7bff)">С</div>
                         <div>
@@ -2058,8 +2120,6 @@ tailwind.config = {
                             <div class="tg-sub">SA/BA аналитик</div>
                         </div>
                     </div>
-                    <div class="bubble">9 декабря - пробный старт, первые 30 откликов.<span class="tm">14:32</span></div>
-                    <div class="bubble">17 декабря - оффер на полную удалёнку по РФ.<span class="tm">14:33</span></div>
                 </div>
             </div>
         </div>
@@ -2079,7 +2139,7 @@ tailwind.config = {
             </div>
             <div class="vdiv" aria-hidden="true"></div>
             <div class="part review">
-                <div class="review-card">
+                <div class="review-card" data-preview-review="rustem">
                     <div class="tg-head">
                         <div class="ava" style="background:linear-gradient(135deg,#8b5cf6,#36c9e8)">Р</div>
                         <div>
@@ -2087,7 +2147,6 @@ tailwind.config = {
                             <div class="tg-sub">Data-инженер</div>
                         </div>
                     </div>
-                    <div class="bubble">При ручном поиске ~20 откликов из 40–50, 3 встречи, 1 оффер. Экономит время.<span class="tm">17:14</span></div>
                 </div>
             </div>
         </div>
@@ -2710,6 +2769,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initVideoModal();
 
     renderReviewsMasonry();
+    initResultsReviewPreviews();
+    window.addEventListener('resize', scheduleResultsPreviewClamp, { passive: true });
 
     var hdr = document.getElementById('site-header');
     if (hdr) {
@@ -3144,6 +3205,7 @@ function closeHeroDemoModal() {
 /* ── Reviews modal (masonry) ── */
 var HERO_REVIEWS = [
     {
+        id: 'sergey',
         name: 'Сергей',
         sub: 'Пользователь Авроры',
         av: 'av-c',
@@ -3151,6 +3213,7 @@ var HERO_REVIEWS = [
         text: 'Кстати тоже сегодня получил оффер с помощью Авроры, спасибо)'
     },
     {
+        id: 'marina-ignatyeva-1',
         name: 'Марина Игнатьева',
         sub: 'Пользовательница Авроры',
         av: 'av-p',
@@ -3158,6 +3221,7 @@ var HERO_REVIEWS = [
         text: 'Сегодня была на собеседовании и хочу поделиться деталькой) Одна из руководительниц отметила, что пригласили меня благодаря сопроводительному письму — просто очень понравилось, как написано) Благодарю Вас, Команда Авроры!'
     },
     {
+        id: 'marina-ignatyeva-2',
         name: 'Марина Игнатьева',
         sub: 'Пользовательница Авроры',
         av: 'av-p',
@@ -3165,6 +3229,7 @@ var HERO_REVIEWS = [
         text: 'Всем добрый день! Сегодня первый день Аврора поработала полноценно — я победила свой страх запускать Автопилот) Сопроводительные письма и отклики работодатели видят, назначают собеседования! Я увидела, что Аврора не просто умничка, а реально работает) Всем сердцем благодарю Вас, команда Авроры. Это просто ЧУДО, что я Вас встретила 🙏❤️'
     },
     {
+        id: 'anastasia',
         name: 'Анастасия',
         sub: 'Frontend-разработчик',
         av: 'av-c',
@@ -3172,6 +3237,7 @@ var HERO_REVIEWS = [
         text: 'Я фронт, но Аврора откликалась и на бэк, и на QA, и даже на C# 😃 Отдельное спасибо за анализ резюме — доработала по рекомендациям, и буквально на следующий день на меня вышел сам работодатель, без отклика. Прошла второй этап, дали оффер. Продолжайте в том же духе ✊🏻'
     },
     {
+        id: 'stanislav-k',
         name: 'Станислав К.',
         sub: 'SA/BA аналитик',
         av: 'av-b',
@@ -3179,6 +3245,7 @@ var HERO_REVIEWS = [
         text: 'По датам: 9 декабря — пробный старт, первые 30 откликов. 11 декабря — оплата, отклики без ограничений. 17 декабря — на руках оффер, который стал моим текущим местом работы. Полная удалёнка по РФ — когда все говорили, что удалёнки больше нет.'
     },
     {
+        id: 'alex-mayer',
         name: 'Alex Mayer',
         sub: 'IT-специалист',
         av: 'av-p',
@@ -3186,6 +3253,7 @@ var HERO_REVIEWS = [
         text: 'Всем привет! Аврора сработала, сегодня получил оффер (всё как я хотел). Подключил в начале марта, высококонкурентная вакансия. IT.'
     },
     {
+        id: 'rustem',
         name: 'Рустем',
         sub: 'Data-инженер',
         av: 'av-b',
@@ -3193,6 +3261,7 @@ var HERO_REVIEWS = [
         text: 'Прокомментирую как пользователь. Бот выполняет задачи: при верной настройке создаёт сопроводительные и отправляет отклики на hh. При ручном поиске я набирал ~20 откликов из 40–50, и уже 3 реальных встречи (из которых 1 готовый оффер). Реально экономит время.'
     },
     {
+        id: 'anton-kiselev',
         name: 'Anton Kiselëv',
         sub: 'Пользователь Авроры',
         av: 'av-p',
@@ -3200,6 +3269,13 @@ var HERO_REVIEWS = [
         text: 'Откликов: 282. Живых коммуникаций (не боты и не анкеты): 9. Реальных собесов: 7. Офферов: 2. Принял: 1 — вышел сегодня. Срок активного поиска: 2 февраля — 5 марта.'
     }
 ];
+
+function findHeroReview(id) {
+    for (var i = 0; i < HERO_REVIEWS.length; i++) {
+        if (HERO_REVIEWS[i].id === id) return HERO_REVIEWS[i];
+    }
+    return null;
+}
 
 function escapeHtml(s) {
     return String(s)
@@ -3209,13 +3285,64 @@ function escapeHtml(s) {
         .replace(/"/g, '&quot;');
 }
 
+function buildResultsPreviewBubble(r) {
+    return '<div class="bubble bubble-preview" data-review-id="' + escapeHtml(r.id) + '">' +
+        '<div class="bubble-body"><p class="bubble-text">' + escapeHtml(r.text) + '</p></div>' +
+        '<button type="button" class="bubble-more" hidden>читать далее</button>' +
+        '<span class="tm">' + escapeHtml(r.time) + '</span>' +
+        '</div>';
+}
+
+function updateResultsPreviewClamp(bubble) {
+    var body = bubble.querySelector('.bubble-body');
+    var more = bubble.querySelector('.bubble-more');
+    if (!body || !more) return;
+    bubble.classList.remove('is-clamped');
+    more.hidden = true;
+    var maxH = parseFloat(getComputedStyle(body).maxHeight);
+    if (!isFinite(maxH)) return;
+    if (body.scrollHeight > maxH + 1) {
+        bubble.classList.add('is-clamped');
+        more.hidden = false;
+    }
+}
+
+function initResultsReviewPreviews() {
+    document.querySelectorAll('#results [data-preview-review]').forEach(function (card) {
+        var id = card.getAttribute('data-preview-review');
+        var review = findHeroReview(id);
+        if (!review) return;
+        var old = card.querySelector('.bubble-preview');
+        if (old) old.remove();
+        card.insertAdjacentHTML('beforeend', buildResultsPreviewBubble(review));
+        var bubble = card.querySelector('.bubble-preview');
+        var more = bubble && bubble.querySelector('.bubble-more');
+        if (more) {
+            more.addEventListener('click', function () {
+                openReviewsModal(id);
+            });
+        }
+        if (bubble) updateResultsPreviewClamp(bubble);
+    });
+}
+
+var _previewClampTicking = false;
+function scheduleResultsPreviewClamp() {
+    if (_previewClampTicking) return;
+    _previewClampTicking = true;
+    requestAnimationFrame(function () {
+        _previewClampTicking = false;
+        document.querySelectorAll('#results .bubble-preview').forEach(updateResultsPreviewClamp);
+    });
+}
+
 function renderReviewsMasonry() {
     var masonry = document.getElementById('reviews-masonry');
     if (!masonry) return;
     masonry.innerHTML = HERO_REVIEWS.map(function (r) {
         var initial = (r.name.trim().charAt(0) || '?').toUpperCase();
         var sub = r.sub ? '<div class="r-role">' + escapeHtml(r.sub) + '</div>' : '';
-        return '<div class="r-card">' +
+        return '<div class="r-card" id="review-' + escapeHtml(r.id) + '" data-review-id="' + escapeHtml(r.id) + '">' +
             '<div class="r-head">' +
             '<div class="r-av ' + r.av + '">' + initial + '</div>' +
             '<div><div class="r-name">' + escapeHtml(r.name) + '</div>' + sub + '</div>' +
@@ -3227,7 +3354,23 @@ function renderReviewsMasonry() {
     }).join('');
 }
 
-function openReviewsModal() {
+function highlightReviewCard(reviewId) {
+    var card = document.getElementById('review-' + reviewId);
+    var body = document.getElementById('reviews-modal-body');
+    if (!card || !body) return;
+    var bodyRect = body.getBoundingClientRect();
+    var cardRect = card.getBoundingClientRect();
+    body.scrollTop += cardRect.top - bodyRect.top - 20;
+    card.classList.remove('r-card-flash');
+    void card.offsetWidth;
+    card.classList.add('r-card-flash');
+    card.addEventListener('animationend', function onEnd() {
+        card.classList.remove('r-card-flash');
+        card.removeEventListener('animationend', onEnd);
+    });
+}
+
+function openReviewsModal(highlightReviewId) {
     var overlay = document.getElementById('reviews-overlay');
     if (!overlay) return;
     overlay.classList.add('open');
@@ -3235,6 +3378,13 @@ function openReviewsModal() {
     var body = document.getElementById('reviews-modal-body');
     if (body) body.scrollTop = 0;
     auroraShaderPause();
+    if (highlightReviewId) {
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                highlightReviewCard(highlightReviewId);
+            });
+        });
+    }
 }
 
 function closeReviewsModal() {
