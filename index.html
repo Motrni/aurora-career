@@ -1171,41 +1171,30 @@ tailwind.config = {
     }
     #results .bubble:last-child,
     #reviews-overlay .bubble:last-child { margin-bottom: 0; }
-    /* Превью полного отзыва в блоке results — высота фиксирована, карточка не растёт */
+    /* Превью полного отзыва — ровно 3 строки, текст обрезается по словам (JS) */
     #results .bubble-preview {
         padding-bottom: 22px;
     }
     #results .bubble-preview .bubble-body {
-        max-height: 6.75em;
-        overflow: hidden;
         position: relative;
-    }
-    #results .bubble-preview.is-clamped .bubble-body::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 1.6em;
-        background: linear-gradient(to bottom, transparent, rgba(28, 32, 58, 0.92));
-        pointer-events: none;
+        line-height: 1.5;
+        /* Fallback без JS: жёсткий обрез на 3 строки */
+        max-height: 4.5em;
+        overflow: hidden;
     }
     #results .bubble-preview .bubble-text {
         margin: 0;
-        white-space: pre-wrap;
     }
     #results .bubble-more {
-        display: none;
-        margin: 6px 0 0;
-        padding: 0;
         border: 0;
+        padding: 0;
+        margin: 0;
         background: none;
         font: inherit;
-        font-size: 13px;
         font-weight: 600;
         color: #36c9e8;
         cursor: pointer;
-        text-align: left;
+        white-space: nowrap;
         transition: color 0.18s ease;
     }
     #results .bubble-more:hover { color: #7ee8ff; }
@@ -1214,7 +1203,6 @@ tailwind.config = {
         outline-offset: 2px;
         border-radius: 4px;
     }
-    #results .bubble-preview.is-clamped .bubble-more { display: inline-block; }
     #reviews-overlay .r-card.r-card-flash {
         animation: reviewCardFlash 1.15s ease-out 1;
     }
@@ -3285,25 +3273,47 @@ function escapeHtml(s) {
         .replace(/"/g, '&quot;');
 }
 
+var PREVIEW_MAX_LINES = 3;
+
 function buildResultsPreviewBubble(r) {
-    return '<div class="bubble bubble-preview" data-review-id="' + escapeHtml(r.id) + '">' +
-        '<div class="bubble-body"><p class="bubble-text">' + escapeHtml(r.text) + '</p></div>' +
-        '<button type="button" class="bubble-more" hidden>читать далее</button>' +
+    return '<div class="bubble bubble-preview" data-review-id="' + escapeHtml(r.id) + '" data-full-text="' + escapeHtml(r.text) + '">' +
+        '<div class="bubble-body">' +
+        '<span class="bubble-text">' + escapeHtml(r.text) + '</span>' +
+        '<button type="button" class="bubble-more" hidden> читать далее</button>' +
+        '</div>' +
         '<span class="tm">' + escapeHtml(r.time) + '</span>' +
         '</div>';
 }
 
+// Обрезаем текст по словам так, чтобы пузырь занимал максимум 3 строки,
+// а в конце последней строки стоял инлайн «… читать далее».
 function updateResultsPreviewClamp(bubble) {
     var body = bubble.querySelector('.bubble-body');
+    var textEl = bubble.querySelector('.bubble-text');
     var more = bubble.querySelector('.bubble-more');
-    if (!body || !more) return;
-    bubble.classList.remove('is-clamped');
+    if (!body || !textEl || !more) return;
+
+    var full = bubble.getAttribute('data-full-text') || textEl.textContent;
+
+    var lh = parseFloat(getComputedStyle(body).lineHeight);
+    if (!isFinite(lh) || lh <= 0) {
+        lh = parseFloat(getComputedStyle(body).fontSize) * 1.5;
+    }
+    var maxH = lh * PREVIEW_MAX_LINES + 1;
+
+    // Сброс к полному тексту, кнопка скрыта
+    textEl.textContent = full;
     more.hidden = true;
-    var maxH = parseFloat(getComputedStyle(body).maxHeight);
-    if (!isFinite(maxH)) return;
-    if (body.scrollHeight > maxH + 1) {
-        bubble.classList.add('is-clamped');
-        more.hidden = false;
+
+    if (body.scrollHeight <= maxH) return; // всё влезает в 3 строки
+
+    // Нужна обрезка — показываем кнопку и режем по словам
+    more.hidden = false;
+    var words = full.split(/\s+/);
+    while (words.length > 1) {
+        words.pop();
+        textEl.textContent = words.join(' ') + '… ';
+        if (body.scrollHeight <= maxH) break;
     }
 }
 
