@@ -1361,16 +1361,19 @@ tailwind.config = {
         white-space: pre-wrap;
     }
     #reviews-overlay .r-time {
-        display: block;
-        text-align: right;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 4px;
         font-size: 11.5px;
         color: #6b7398;
         margin-top: 7px;
     }
-    #reviews-overlay .r-time .v {
+    #reviews-overlay .r-time .dc {
+        width: 16px;
+        height: 10px;
         color: #36c9e8;
-        letter-spacing: -2px;
-        margin-left: 3px;
+        flex: 0 0 auto;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2011,21 +2014,21 @@ tailwind.config = {
                 <div class="stages">
                     <div class="stage" data-w="100%"><b data-n="282">0</b><span>откликов</span></div>
                     <div class="stage" data-w="72%"><b data-n="7">0</b><span>собеседований</span></div>
-                    <div class="stage win" data-w="52%"><b data-n="2">0</b><span>оффера ✓</span></div>
+                    <div class="stage win" data-w="52%"><b data-n="2">0</b><span>оффера</span></div>
                 </div>
             </div>
             <div class="vdiv" aria-hidden="true"></div>
             <div class="part review">
                 <div class="review-card">
                     <div class="tg-head">
-                        <div class="ava" style="background:linear-gradient(135deg,#4a7bff,#8b5cf6)">А</div>
+                        <div class="ava" style="background:linear-gradient(135deg,#4a7bff,#8b5cf6)">A</div>
                         <div>
-                            <div class="tg-name">Антон</div>
-                            <div class="tg-sub">Backend-разработчик</div>
+                            <div class="tg-name">Anton Kiselëv</div>
+                            <div class="tg-sub">Пользователь Авроры</div>
                         </div>
                     </div>
-                    <div class="bubble">282 отклика → 7 собеседований<span class="tm">11:04<svg class="dc"><use href="#dc"/></svg></span></div>
-                    <div class="bubble">2 оффера ✓ Закрыл поиск за месяц<span class="tm">11:05<svg class="dc"><use href="#dc"/></svg></span></div>
+                    <div class="bubble">282 отклика → 7 собеседований<span class="tm">11:04</span></div>
+                    <div class="bubble">2 оффера. Закрыл поиск за месяц.<span class="tm">11:05</span></div>
                 </div>
             </div>
         </div>
@@ -2051,12 +2054,12 @@ tailwind.config = {
                     <div class="tg-head">
                         <div class="ava" style="background:linear-gradient(135deg,#36c9e8,#4a7bff)">С</div>
                         <div>
-                            <div class="tg-name">Станислав</div>
+                            <div class="tg-name">Станислав К.</div>
                             <div class="tg-sub">SA/BA аналитик</div>
                         </div>
                     </div>
-                    <div class="bubble">От запуска до оффера на удалёнку — 8 дней 🚀<span class="tm">14:32<svg class="dc"><use href="#dc"/></svg></span></div>
-                    <div class="bubble">Получил удалёнку, когда все говорили, что её больше нет.<span class="tm">14:32<svg class="dc"><use href="#dc"/></svg></span></div>
+                    <div class="bubble">9 декабря — пробный старт, первые 30 откликов.<span class="tm">14:32</span></div>
+                    <div class="bubble">17 декабря — оффер на полную удалёнку по РФ.<span class="tm">14:33</span></div>
                 </div>
             </div>
         </div>
@@ -2084,7 +2087,7 @@ tailwind.config = {
                             <div class="tg-sub">Data-инженер</div>
                         </div>
                     </div>
-                    <div class="bubble">Ручной точечный поиск проигрывает умной автоматизации — это факт.<span class="tm">09:18<svg class="dc"><use href="#dc"/></svg></span></div>
+                    <div class="bubble">При ручном поиске ~20 откликов из 40–50, 3 встречи, 1 оффер. Экономит время.<span class="tm">17:14</span></div>
                 </div>
             </div>
         </div>
@@ -2493,9 +2496,14 @@ function unlockPageScroll() {
     if (_pageScrollLock.depth <= 0) return;
     _pageScrollLock.depth -= 1;
     if (_pageScrollLock.depth > 0) return;
+    var y = _pageScrollLock.y;
     document.body.classList.remove('scroll-locked');
     document.body.style.top = '';
-    window.scrollTo(0, _pageScrollLock.y);
+    var html = document.documentElement;
+    var prevScroll = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+    window.scrollTo(0, y);
+    html.style.scrollBehavior = prevScroll;
 }
 
 /* ── Modal & Menu ── */
@@ -3168,7 +3176,7 @@ var HERO_REVIEWS = [
         sub: 'SA/BA аналитик',
         av: 'av-b',
         time: '14:32',
-        text: 'По датам: 9 декабря — пробный старт, первые 30 откликов. 11 декабря — оплата, отклики без ограничений. 17 декабря — на руках оффер, который стал моим текущим местом работы. Полная удалёнка по РФ — когда все говорили, что удалёнки больше нет. Аврора ❤️'
+        text: 'По датам: 9 декабря — пробный старт, первые 30 откликов. 11 декабря — оплата, отклики без ограничений. 17 декабря — на руках оффер, который стал моим текущим местом работы. Полная удалёнка по РФ — когда все говорили, что удалёнки больше нет.'
     },
     {
         name: 'Alex Mayer',
@@ -3190,13 +3198,6 @@ var HERO_REVIEWS = [
         av: 'av-p',
         time: '23:24',
         text: 'Откликов: 282. Живых коммуникаций (не боты и не анкеты): 9. Реальных собесов: 7. Офферов: 2. Принял: 1 — вышел сегодня. Срок активного поиска: 2 февраля — 5 марта.'
-    },
-    {
-        name: 'Антон',
-        sub: 'Backend-разработчик',
-        av: 'av-c',
-        time: '11:05',
-        text: '282 отклика → 7 собеседований → 2 оффера. Закрыл поиск за месяц.'
     }
 ];
 
@@ -3220,7 +3221,8 @@ function renderReviewsMasonry() {
             '<div><div class="r-name">' + escapeHtml(r.name) + '</div>' + sub + '</div>' +
             '</div>' +
             '<div class="r-msg">' + escapeHtml(r.text) +
-            '<span class="r-time">' + escapeHtml(r.time) + '<span class="v">✓✓</span></span></div>' +
+            '<span class="r-time">' + escapeHtml(r.time) +
+            '<svg class="dc" aria-hidden="true"><use href="#dc"/></svg></span></div>' +
             '</div>';
     }).join('');
 }
@@ -3239,6 +3241,9 @@ function closeReviewsModal() {
     var overlay = document.getElementById('reviews-overlay');
     if (!overlay) return;
     overlay.classList.remove('open');
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+    }
     unlockPageScroll();
     auroraShaderResume();
 }
